@@ -1,0 +1,51 @@
+2016-06-21 17:30:44[ERROR] no one can handl it
+	file: G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 116
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 206
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\index.php at line 5
+	script: /index.php
+	uri: /abc.html
+2016-06-21 17:32:22[ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 116
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 206
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\index.php at line 5
+	uri: /abc.html
+2016-06-21 17:33:02 [ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 116
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 206
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\index.php at line 5
+	uri: /abc.html
+2016-06-21 17:35:20 [ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 116
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 206
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\index.php at line 5
+	uri: /abc.html
+2016-06-21 17:36:05 [ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 116
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 206
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\index.php at line 5
+	uri: /abc.html
+2016-06-21 17:40:27 [ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 152
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 209
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\index.php at line 5
+	uri: /abc.html
+2016-06-21 17:41:49 [ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 152
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 209
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\aaa\index.php at line 5
+	uri: /aaa/index.php
+2016-06-21 17:41:52 [ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 152
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 209
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\aaa\index.php at line 5
+	uri: /aaa/index.php
+2016-06-21 17:42:01 [ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 152
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 209
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\aaa\index.php at line 5
+	uri: /aaa/index.php
+2016-06-21 17:42:19 [ERROR] no one can handl it
+	G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\router\Router.php at line 152
+		G:\wwwroot\phpweb\wula\wulaphp\wula\wulaphp\app\App.php at line 209
+			G:\wwwroot\phpweb\wula\wulaphp\wula\demo\public\index.php at line 5
+	uri: /aaa/index.php

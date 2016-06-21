@@ -1,0 +1,9 @@
+# Zend Studio
+.settings
+.buildpath
+.project
+.idea
+
+# composer
+vendor/
+composer.lock
