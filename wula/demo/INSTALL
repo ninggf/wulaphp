@@ -1,0 +1,71 @@
+1.install with apache (with rewrite module)
+    edit your apache configure file httpd.conf or others,then add the following fragment in main or virtualhost section
+	
+	1.1 default sites
+    DocumentRoot "your_project_public_dir"
+	<Directory "your_web_public_dir">
+		<FilesMatch ".*\.tpl$">
+		    Order allow,deny
+		    Deny from all
+		</FilesMatch>
+		Options FollowSymLinks -Indexes
+		AllowOverride all
+		Order allow,deny
+		Allow from all
+	</Directory>
+	
+	
+	1.2 virtual host
+	
+    <VirtualHost *:80>
+		<Directory "your_project_public_dir">
+			<FilesMatch ".*\.tpl$">
+			    Order allow,deny
+			    Deny from all
+			</FilesMatch>
+			Options FollowSymLinks
+			AllowOverride All
+			Order allow,deny
+			Allow from all
+		</Directory>		
+	    ServerAdmin your-email-address
+	    DocumentRoot "your_project_public_dir"
+	    ErrorDocument 404 /index.php
+	    ServerName your-domain
+	    # some directives can be here
+	</VirtualHost>
+
+2.install with nginx
+
+	server {
+        listen       80;
+        server_name  your_server_name;
+        #access_log  off;
+        #error_log   off;
+        root your_project_public_dir;
+        location / {
+            index index.php index.html index.htm;
+            if (!-f $request_filename){            	
+                #rewrite “^(.*)$” index.php?_url=$1 last;
+                # above for 0.x and below for 1.x
+                rewrite ^(.*)$ index.php?_url=$1 last;
+            }
+        }
+        location ~ /(modules)/.+\.tpl$ {
+                return 404;
+        }        
+        error_page  404              /404.html;
+        location ~ \.php$ {
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            fastcgi_param  SCRIPT_FILENAME  $document_root/$fastcgi_script_name;
+            fastcgi_param  HTTP_REFERER  $http_referer;
+            fastcgi_param  REQUEST_URI	 $request_uri;
+            set $path_info $fastcgi_path_info;
+			fastcgi_param PATH_INFO $path_info;
+            include        fastcgi_params;
+        }
+		location ~ /\.ht {
+			deny  all;
+		}
+    }
