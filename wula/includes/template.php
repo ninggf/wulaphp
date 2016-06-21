@@ -1,10 +1,6 @@
 <?php
 use wulaphp\mvc\view\ThemeView;
 use wulaphp\mvc\view\SmartyView;
-/*
- * kissgo framework that keep it simple and stupid, go go go ~~ @author Leo Ning @package kissgo.libs $Id$
- */
-defined ( 'KISSGO' ) or exit ( 'No direct script access allowed' );
 
 function get_condition_value($name, $conditions, $default = '') {
     if (isset ( $conditions [$name] )) {

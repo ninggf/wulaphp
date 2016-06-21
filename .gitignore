@@ -3,6 +3,8 @@
 .buildpath
 .project
 .idea
+*.log
+conf/*_dev.php
 
 # composer
 vendor/
