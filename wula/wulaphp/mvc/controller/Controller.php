@@ -1,6 +1,7 @@
 <?php
 namespace wulaphp\mvc\controller;
 
+<<<<<<< HEAD
 use wulaphp\mvc\view\SmartyView;
 
 abstract class Controller {
@@ -24,6 +25,17 @@ abstract class Controller {
     }
 
     public function _afterRun($action, $view) {
+=======
+abstract class Controller {
+
+    public function __construct() {
+    }
+
+    protected function beforeRun($method) {
+    }
+
+    protected function postRun($mehtod, $view) {
+>>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
         return $view;
     }
 }

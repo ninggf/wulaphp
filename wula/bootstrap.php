@@ -33,8 +33,13 @@ define ( 'WEB_ROOT', WWWROOT );
 
 define ( 'LIBS_PATH', APPROOT . LIBS_DIR . DS );
 defined ( 'TMP_PATH' ) or define ( 'TMP_PATH', APPROOT . 'tmp' . DS );
+<<<<<<< HEAD
 define ( 'MODULES_PATH', WWWROOT . MODULE_DIR . DS );
 define ( 'MODULE_ROOT', MODULES_PATH );
+=======
+define ( 'MODULES_PATH', APPROOT . MODULE_DIR . DS );
+define ( 'MODULE_ROOT', WWWROOT . MODULE_DIR . DS );
+>>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
 /* 定义日志级别 */
 define ( 'DEBUG_OFF', 5 );
 define ( 'DEBUG_ERROR', 4 );
@@ -148,7 +153,11 @@ if (is_file ( APPROOT . LIBS_DIR . '/common.php' )) {
 }
 require WULA_ROOT . 'includes/common.php';
 
+<<<<<<< HEAD
 App::init ();
+=======
+App::start ();
+>>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
 define ( 'WULA_BOOTSTRAPPED', microtime ( true ) );
 
 //end of bootstrap.php

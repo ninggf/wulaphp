@@ -17,6 +17,11 @@ abstract class View implements \ArrayAccess, Renderable {
 
     protected $data;
 
+<<<<<<< HEAD
+=======
+    protected $relatedPath;
+
+>>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
     protected $headers = array ();
 
     protected $sytles = array ();
@@ -25,7 +30,11 @@ abstract class View implements \ArrayAccess, Renderable {
         'head' => array (),'foot' => array ()
     );
 
+<<<<<<< HEAD
     protected $cache_expire = 0;
+=======
+    protected $title = null;
+>>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
 
     /**
      *
@@ -44,7 +53,11 @@ abstract class View implements \ArrayAccess, Renderable {
             $this->tpl = str_replace ( '/', DS, $data );
             $this->data = array ();
         } else {
+<<<<<<< HEAD
             trigger_error ( 'no template file!', E_USER_ERROR );
+=======
+            trigger_error ( 'no template file!' );
+>>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
         }
         
         if (is_array ( $headers )) {
@@ -76,10 +89,13 @@ abstract class View implements \ArrayAccess, Renderable {
         }
     }
 
+<<<<<<< HEAD
     public function expire($expire) {
         $this->cache_expire = intval ( $expire );
     }
 
+=======
+>>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
     public function addStyle($file) {
         if (is_array ( $file )) {
             foreach ( $file as $f ) {
@@ -151,6 +167,18 @@ abstract class View implements \ArrayAccess, Renderable {
         }
         $this->setHeader ();
     }
+<<<<<<< HEAD
+=======
+
+    public function setRelatedPath($path) {
+        if ($this->tpl && $this->tpl {0} == '@') {
+            $this->tpl = substr ( $this->tpl, 1 );
+        } else {
+            $this->relatedPath = $path;
+        }
+    }
+
+>>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
     /**
      * 设置输出头
      */
