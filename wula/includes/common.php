@@ -2,114 +2,19 @@
 /*
  * global functions 负责加载系统提供的第三方函数库.各应用的第三方函数库，请在各应用的includes/autoload.php中加载。
  */
-
 /**
- * 根据规则生成URL.
+ * 从数组取值，如果数组中无指定key，则返回默认值.
  *
- * @param string $pattern
- * @param array $data array('aid','tid','trid','model','create_time','name','path','page')
- * @return string
+ * @param string $name
+ * @param array $array
+ * @param mixed $default
+ * @return mixed
  */
-function parse_page_url($pattern, $data) {
-    static $ps = array (
-        '{aid}','{Y}','{M}','{D}','{timestamp}','{pinyin}','{py}','{typedir}','{cc}','{page}','{tid}','{trid}','{mid}','{path}','{rpath}','{title}','{title2}'
-    );
-    
-    $r [0] = isset ( $data ['aid'] ) ? $data ['aid'] : 0;
-    
-    if (isset ( $data ['create_time'] )) {
-        $time = $data ['create_time'];
-    } else {
-        $time = time ();
+function aryget($name, $array, $default = '') {
+    if (isset ( $array [$name] )) {
+        return $array [$name];
     }
-    $r [1] = date ( 'Y', $time );
-    $r [2] = date ( 'm', $time );
-    $r [3] = date ( 'd', $time );
-    $r [4] = $time;
-    
-    if (isset ( $data ['name'] )) {
-        $r [5] = Pinyin::c ( $data ['name'] );
-        $r [6] = Pinyin::c ( $data ['name'], true );
-    } else {
-        $r [5] = '';
-        $r [6] = '';
-    }
-    
-    if (isset ( $data ['basedir'] )) {
-        $r [7] = $data ['basedir'];
-    } else {
-        $r [7] = '';
-    }
-    
-    $r [8] = 'cc';
-    $r [9] = isset ( $data ['page'] ) ? $data ['page'] : 1;
-    $r [10] = isset ( $data ['tid'] ) ? $data ['tid'] : 0;
-    $r [11] = isset ( $data ['trid'] ) ? $data ['trid'] : 0;
-    $r [12] = isset ( $data ['model'] ) ? $data ['model'] : 0;
-    if (isset ( $data ['path'] ) && ! empty ( $data ['path'] )) {
-        $r [13] = trim ( $data ['path'], '/' );
-        $paths = explode ( '/', $r [13] );
-        array_shift ( $paths );
-        $r [14] = implode ( '/', $paths );
-    } else {
-        $r [13] = '';
-        $r [14] = '';
-    }
-    $r [15] = isset ( $data ['title'] ) ? $data ['title'] : '';
-    $r [16] = isset ( $data ['title2'] ) ? $data ['title2'] : '';
-    return ltrim ( str_replace ( $ps, $r, $pattern ), '/' );
-}
-
-/**
- * 得到关键词列表.
- *
- * @param array $keywords
- * @param string $string
- * @return array
- */
-function get_keywords($keywords, $string = '', $count = null, $dict = null) {
-    if ($keywords) {
-        $keywords = preg_split ( '#,+#', trim ( trim ( str_replace ( array (
-            '，',' ','　','-',';','；','－'
-        ), ',', $keywords ) ), ',' ) );
-        $keywords = implode ( ' ', $keywords );
-    } else if (extension_loaded ( 'scws' ) && $string) {
-        $scws = scws_new ();
-        $scws->set_charset ( 'utf8' );
-        $attr = null;
-        if ($dict && file_exists ( $dict )) {
-            @$scws->set_dict ( $dict );
-            $attr = 'nk';
-            $scws->set_multi ( SCWS_MULTI_NONE );
-        } else {
-            $scws->set_multi ( SCWS_MULTI_ZMAIN );
-        }
-        $scws->set_duality ( false );
-        $scws->set_ignore ( true );
-        $scws->send_text ( $string );
-        if ($count == null) {
-            $tmp = $scws->get_tops ( cfg ( 'keywords_count@cms', 5 ), $attr );
-        } else {
-            $tmp = $scws->get_tops ( $count, $attr );
-        }
-        if ($tmp) {
-            $keywords = array ();
-            foreach ( $tmp as $keyword ) {
-                $keywords [] = $keyword ['word'];
-            }
-            $keywords = implode ( ' ', $keywords );
-        }
-        $scws->close ();
-    }
-    if (! empty ( $keywords )) {
-        return array (
-            str_replace ( ' ', ',', $keywords ),convert_search_keywords ( $keywords )
-        );
-    } else {
-        return array (
-            '',''
-        );
-    }
+    return $default;
 }
 
 /**
@@ -170,27 +75,6 @@ function thefilename($filename) {
         $filename = mb_convert_encoding ( $filename, "UTF-8", $encode );
     }
     return $filename;
-}
-
-/**
- * 发送邮件.
- *
- * @param array $to 接收人
- * @param string $subject 主题
- * @param string $content 正文
- * @param array $attachments 附件
- * @param string 正文类型
- * @return boolean true发送成功,如果失败false
- */
-function sendmail($to, $subject, $message, $attachments = array(), $type = 'html') {
-    global $__mailer;
-    if ($__mailer == null) {
-        $__mailer = new DefaultMailer ();
-    }
-    if (! empty ( $type )) {
-        $__mailer->setMessageType ( $type );
-    }
-    return $__mailer->send ( $to, $subject, $message, $attachments );
 }
 
 /**
@@ -487,7 +371,7 @@ function sess_del($name, $default = '') {
 function rqst($name, $default = '', $xss_clean = true) {
     global $__rqst;
     if (! $__rqst) {
-        $__rqst = Request::getInstance ();
+        $__rqst = wulaphp\io\Request::getInstance ();
     }
     return $__rqst->get ( $name, $default, $xss_clean );
 }
@@ -495,7 +379,7 @@ function rqst($name, $default = '', $xss_clean = true) {
 function arg($name, $default = '') {
     global $__rqst;
     if (! $__rqst) {
-        $__rqst = Request::getInstance ();
+        $__rqst = wulaphp\io\Request::getInstance ();
     }
     return $__rqst->get ( $name, $default, false );
 }
@@ -1080,15 +964,15 @@ function inner_str($str, $str1, $str2, $include_str1 = true) {
         return null;
     }
 }
-// use cookie for session id
-@ini_set ( 'session.use_cookies', 1 );
+
 /**
  * 得到session名.
  *
  * @return mixed
-*/
+ *
+ */
 function get_session_name() {
-    return apply_filter ( 'get_session_name', md5 ( WEB_ROOT ) );
+    return md5 ( WEB_ROOT );
 }
 include WULA_ROOT . 'includes' . DS . 'template.php';
 // end of file functions.php

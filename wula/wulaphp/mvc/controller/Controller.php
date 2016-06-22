@@ -1,15 +1,29 @@
 <?php
 namespace wulaphp\mvc\controller;
 
+use wulaphp\mvc\view\SmartyView;
+
 abstract class Controller {
 
-    public function __construct() {
+    protected $module;
+
+    public function __construct($module) {
+        $this->module = $module;
     }
 
-    protected function beforeRun($method) {
+    public function __invoke($tpl, $data = array(), $headers = array()) {
+        if ($tpl {0} == '@') {
+            $tpl = substr ( $tpl, 1 ) . '.tpl';
+        } else {
+            $tpl = $this->module . '/views/' . $tpl . '.tpl';
+        }
+        $view = new SmartyView ( $data, $tpl, $headers );
     }
 
-    protected function postRun($mehtod, $view) {
+    public function _beforeRun($action) {
+    }
+
+    public function _afterRun($action, $view) {
         return $view;
     }
 }

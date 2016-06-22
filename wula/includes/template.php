@@ -1,14 +1,6 @@
 <?php
 use wulaphp\mvc\view\ThemeView;
 use wulaphp\mvc\view\SmartyView;
-
-function get_condition_value($name, $conditions, $default = '') {
-    if (isset ( $conditions [$name] )) {
-        return $conditions [$name];
-    }
-    return $default;
-}
-
 /**
  * merge arguments.
  *
@@ -72,18 +64,6 @@ function template($tpl, $data = array(), $headers = array('Content-Type'=>'text/
     $data ['_theme_dir'] = THEME_DIR;
     $data ['_module_dir'] = MODULE_DIR;
     return new ThemeView ( $data, $tplfile, $headers );
-}
-
-/**
- * the views in modules.
- *
- * @param string $tpl
- * @param array $data
- * @param array $headers
- * @return SmartyView
- */
-function view($tpl, $data = array(), $headers = array('Content-Type'=>'text/html')) {
-    return new SmartyView ( $data, $tpl, $headers );
 }
 
 /**
@@ -187,10 +167,6 @@ function smarty_modifiercompiler_kk($params, $compiler) {
  */
 function smarty_modifiercompiler_assets($params, $compiler) {
     return "safe_url(ASSETS_URL." . $params [0] . ",true)";
-}
-
-function smarty_modifiercompiler_module($params, $compiler) {
-    return "safe_url(MODULE_URL." . $params [0] . ',true)';
 }
 
 function smarty_modifiercompiler_app($params, $compiler) {
@@ -338,8 +314,4 @@ function smarty_modifiercompiler_render($ary, $compiler) {
 
 function smarty_modifiercompiler_media($params, $compiler) {
     return 'the_media_src(' . $params [0] . ')';
-}
-
-function smarty_modifiercompiler_tags($params, $compiler) {
-    return 'TagForm::applyTags (' . $params [0] . ')';
 }

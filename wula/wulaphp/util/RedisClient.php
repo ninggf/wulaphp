@@ -12,7 +12,7 @@ class RedisClient {
         if (count ( $cnf ) == 1) {
             $cnf [1] = 6379;
         }
-        $redis = new Redis ();
+        $redis = new \Redis ();
         if (count ( $cnf ) > 2) {
             $rst = $redis->connect ( $cnf [0], $cnf [1], $cnf [2] );
         } else {
@@ -20,9 +20,9 @@ class RedisClient {
         }
         if ($rst) {
             $redis->select ( $database );
-            $redis->setOption ( Redis::OPT_SERIALIZER, Redis::SERIALIZER_PHP );
+            $redis->setOption ( \Redis::OPT_SERIALIZER, \Redis::SERIALIZER_PHP );
             if ($prefix) {
-                $redis->setOption ( Redis::OPT_PREFIX, $prefix . ':' );
+                $redis->setOption ( \Redis::OPT_PREFIX, $prefix . ':' );
             }
             return $redis;
         } else {

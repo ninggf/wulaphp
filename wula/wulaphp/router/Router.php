@@ -2,7 +2,6 @@
 namespace wulaphp\router;
 
 use wulaphp\router\hook\RouterHookTrigger;
-use wulaphp\mvc\view\View;
 use wulaphp\io\Response;
 
 /**
@@ -15,12 +14,6 @@ class Router {
 
     private $modules;
 
-    private $url;
-
-    private $uri;
-
-    private $args = array ();
-
     private $xssCleaner;
 
     private $dispatchers = array ();
@@ -29,9 +22,12 @@ class Router {
 
     private $postDispatchers = array ();
 
+    private $urlParsedInfo;
+
     public function __construct($modules = null) {
         $this->modules = $modules;
         $this->xssCleaner = new \ci\XssCleaner ();
+        $this->register ( new DefaultDispatcher (), 100 );
         $trigger = new RouterHookTrigger ();
         $trigger->register ( $this );
     }
@@ -115,25 +111,26 @@ class Router {
         if ($uri == '/' || ! $uri) {
             $uri = '/index.html';
         }
-        $this->uri = $uri;
-        $this->url = trim ( parse_url ( $uri, PHP_URL_PATH ), '/' );
-        $args = parse_url ( $uri, PHP_URL_QUERY );
-        if ($args) {
-            parse_str ( $args, $this->args );
-            $this->xssCleaner->xss_clean ( $this->args );
+        $url = trim ( parse_url ( $uri, PHP_URL_PATH ), '/' );
+        $query = parse_url ( $uri, PHP_URL_QUERY );
+        $args = array ();
+        if ($query) {
+            parse_str ( $query, $args );
+            $this->xssCleaner->xss_clean ( $args );
         }
         $view = null;
         foreach ( $this->preDispatchers as $dispatchers ) {
             foreach ( $dispatchers as $d ) {
-                $view = $d->preDispatch ( $this->url, $this, $view );
+                $view = $d->preDispatch ( $url, $this, $view );
             }
         }
-        if ($view instanceof View) {
+        if ($view) {
             $response->output ( $view );
         } else {
+            $this->urlParsedInfo = new UrlParsedInfo ( $uri, $url, $args );
             foreach ( $this->dispatchers as $dispatchers ) {
                 foreach ( $dispatchers as $d ) {
-                    $view = $d->dispatch ( $this->url, $this );
+                    $view = $d->dispatch ( $url, $this, $this->urlParsedInfo );
                     if ($view) {
                         break;
                     }
@@ -144,15 +141,15 @@ class Router {
             }
             foreach ( $this->postDispatchers as $dispatchers ) {
                 foreach ( $dispatchers as $d ) {
-                    $view = $d->preDispatch ( $this->url, $this, $view );
+                    $view = $d->postDispatch ( $url, $this, $view );
                 }
             }
-            if ($view instanceof View) {
+            if ($view) {
                 $response->output ( $view );
-                log_error ( 'no one can handl it' );
+            } else if (DEBUG == DEBUG_DEBUG) {
+                trigger_error ( 'no route for ' . $uri, E_USER_ERROR );
             } else {
-                log_error ( 'no one can handl it' );
-                echo '404';
+                Response::respond ( 404 );
             }
         }
         $response->close ();

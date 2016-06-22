@@ -30,9 +30,6 @@ class SmartyView extends View {
      * 绘制
      */
     public function render() {
-        if ($this->relatedPath) {
-            $this->tpl = $this->relatedPath . $this->tpl;
-        }
         $tpl = MODULES_PATH . $this->tpl;
         $devMod = App::bcfg ( 'develop_mode' );
         if (is_file ( $tpl )) {

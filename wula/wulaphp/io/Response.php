@@ -169,34 +169,7 @@ class Response extends Trigger implements IResponseAlter {
         }
         exit ();
     }
-
-    /**
-     * 显出错信息.
-     *
-     * @param string $message
-     * @param number $status
-     */
-    public static function showErrorMsg($message, $status = 500) {
-        status_header ( $status );
-        if (isset ( $_SERVER ["HTTP_X_AJAX_TYPE"] )) {
-            @header ( 'X-AJAX-MESSAGE:1' );
-            echo is_array ( $message ) ? json_encode ( $message ) : $message;
-        } else {
-            $tpl = 'error_' . $status . '.tpl';
-            if (tpl_exists ( $tpl )) {
-                $view = template ( $tpl, array (
-                    'message' => $message
-                ) );
-            } else {
-                $view = template ( 'error.tpl', array (
-                    'message' => $message
-                ) );
-            }
-            echo $view->render ();
-        }
-        exit ();
-    }
-
+   
     /**
      * 设置cookie.
      *
@@ -211,7 +184,7 @@ class Response extends Trigger implements IResponseAlter {
         $settings = App::cfg ();
         $cookie_setting = array_merge2 ( array (
             'expire' => 0,'path' => '/','domain' => '','security' => false
-        ), $settings [COOKIE] );
+        ), $settings->get ( 'cookie', array () ) );
         if ($expire == null) {
             $expire = intval ( $cookie_setting ['expire'] );
         }
@@ -227,7 +200,7 @@ class Response extends Trigger implements IResponseAlter {
         if ($expire != 0) {
             $expire = time () + $expire;
         }
-        setcookie ( $name, $value, $expire, $path, $domain, $security );
+        @setcookie ( $name, $value, $expire, $path, $domain, $security );
     }
 
     /**
