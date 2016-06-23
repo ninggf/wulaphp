@@ -1,17 +1,6 @@
 <?php
 use wulaphp\mvc\view\ThemeView;
 use wulaphp\mvc\view\SmartyView;
-<<<<<<< HEAD
-=======
-
-function get_condition_value($name, $conditions, $default = '') {
-    if (isset ( $conditions [$name] )) {
-        return $conditions [$name];
-    }
-    return $default;
-}
-
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
 /**
  * merge arguments.
  *
@@ -78,21 +67,6 @@ function template($tpl, $data = array(), $headers = array('Content-Type'=>'text/
 }
 
 /**
-<<<<<<< HEAD
-=======
- * the views in modules.
- *
- * @param string $tpl
- * @param array $data
- * @param array $headers
- * @return SmartyView
- */
-function view($tpl, $data = array(), $headers = array('Content-Type'=>'text/html')) {
-    return new SmartyView ( $data, $tpl, $headers );
-}
-
-/**
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
  * 解析smarty参数.
  *
  * 将参数中 '" 去除比,如 '1' 转换为1.
@@ -195,13 +169,6 @@ function smarty_modifiercompiler_assets($params, $compiler) {
     return "safe_url(ASSETS_URL." . $params [0] . ",true)";
 }
 
-<<<<<<< HEAD
-=======
-function smarty_modifiercompiler_module($params, $compiler) {
-    return "safe_url(MODULE_URL." . $params [0] . ',true)';
-}
-
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
 function smarty_modifiercompiler_app($params, $compiler) {
     $params = smarty_argstr ( $params );
     return "Router::url($params)";
@@ -348,10 +315,3 @@ function smarty_modifiercompiler_render($ary, $compiler) {
 function smarty_modifiercompiler_media($params, $compiler) {
     return 'the_media_src(' . $params [0] . ')';
 }
-<<<<<<< HEAD
-=======
-
-function smarty_modifiercompiler_tags($params, $compiler) {
-    return 'TagForm::applyTags (' . $params [0] . ')';
-}
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87

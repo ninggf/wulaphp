@@ -1,11 +1,8 @@
 <?php
 namespace wulaphp\plugin;
 
-<<<<<<< HEAD
 use wulaphp\util\ObjectCaller;
 
-=======
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
 /**
  * 插件触发器基类.
  *
@@ -77,11 +74,7 @@ abstract class Trigger {
                 $methods = self::$methodChain [$impl] [$method];
                 foreach ( $methods as $priority => $pmethods ) {
                     foreach ( $pmethods as $obj ) {
-<<<<<<< HEAD
                         $arg = ObjectCaller::callObjMethod ( $obj [0], $obj [1], $args );
-=======
-                        $arg = $this->callObjMethod ( $obj [0], $obj [1], $args );
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
                         $args [0] = $arg;
                     }
                 }
@@ -102,11 +95,7 @@ abstract class Trigger {
                 $methods = self::$methodChain [$impl] [$method];
                 foreach ( $methods as $priority => $pmethods ) {
                     foreach ( $pmethods as $obj ) {
-<<<<<<< HEAD
-                        $this->ObjectCaller ( $obj [0], $obj [1], $args );
-=======
-                        $this->callObjMethod ( $obj [0], $obj [1], $args );
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
+                       ObjectCaller::callObjMethod ( $obj [0], $obj [1], $args );
                     }
                 }
             }
@@ -132,36 +121,4 @@ abstract class Trigger {
             ksort ( self::$methodChain [$impl] [$name], SORT_NUMERIC );
         }
     }
-<<<<<<< HEAD
-=======
-
-    /**
-     * 调用方法
-     *
-     * @param Object $obj
-     * @param string $method
-     * @param array $args
-     * @return mixed
-     */
-    private function callObjMethod($obj, $method, $args) {
-        $cnt = count ( $args );
-        switch ($cnt) {
-            case 0 :
-                return $obj->{$method} ();
-            case 1 :
-                return $obj->{$method} ( $args [0] );
-            case 2 :
-                return $obj->{$method} ( $args [0], $args [1] );
-            case 3 :
-                return $obj->{$method} ( $args [0], $args [1], $args [2] );
-            case 4 :
-                return $obj->{$method} ( $args [0], $args [1], $args [2], $args [3] );
-            case 5 :
-                return $obj->{$method} ( $args [0], $args [1], $args [2], $args [3], $args [4] );
-            case 6 :
-            default :
-                return $obj->{$method} ( $args [0], $args [1], $args [2], $args [3], $args [4], $args [5] );
-        }
-    }
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
 }

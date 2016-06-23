@@ -56,11 +56,7 @@ class App {
      *
      * @return App
      */
-<<<<<<< HEAD
-    public static function init() {
-=======
     public static function start() {
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
         if (! self::$app) {
             self::$app = new App ();
         }
@@ -167,13 +163,8 @@ class App {
      */
     public static function register($name, $file = null) {
         $name = strtolower ( $name );
-<<<<<<< HEAD
         if ($name == 'wulaphp') {
             trigger_error ( 'the name of module cannot be wulaphp!', E_USER_ERROR );
-=======
-        if ($name == 'phpeffi') {
-            trigger_error ( 'the name of module cannot be phpeffi!', E_USER_ERROR );
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
         }
         if (! preg_match ( '/^[a-z]+$/', $name )) {
             trigger_error ( 'the name of module must be made of "a-z"' );
@@ -188,7 +179,6 @@ class App {
     }
 
     /**
-<<<<<<< HEAD
      * 获取模块信息.
      *
      * @param string $module
@@ -227,8 +217,6 @@ class App {
     }
 
     /**
-=======
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
      * 加载模块中定义的类.
      *
      * @param string $cls
@@ -248,11 +236,7 @@ class App {
         }
     }
 
-<<<<<<< HEAD
     public static function run() {
-=======
-    public static function route() {
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
         if (! isset ( $_SERVER ['REQUEST_URI'] )) {
             trigger_error ( 'Your web server did not provide REQUEST_URI, stop route request.', E_USER_ERROR );
         }

@@ -2,10 +2,6 @@
 namespace wulaphp\router;
 
 use wulaphp\router\hook\RouterHookTrigger;
-<<<<<<< HEAD
-=======
-use wulaphp\mvc\view\View;
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
 use wulaphp\io\Response;
 
 /**
@@ -18,15 +14,6 @@ class Router {
 
     private $modules;
 
-<<<<<<< HEAD
-=======
-    private $url;
-
-    private $uri;
-
-    private $args = array ();
-
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
     private $xssCleaner;
 
     private $dispatchers = array ();
@@ -35,18 +22,12 @@ class Router {
 
     private $postDispatchers = array ();
 
-<<<<<<< HEAD
     private $urlParsedInfo;
 
     public function __construct($modules = null) {
         $this->modules = $modules;
         $this->xssCleaner = new \ci\XssCleaner ();
         $this->register ( new DefaultDispatcher (), 100 );
-=======
-    public function __construct($modules = null) {
-        $this->modules = $modules;
-        $this->xssCleaner = new \ci\XssCleaner ();
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
         $trigger = new RouterHookTrigger ();
         $trigger->register ( $this );
     }
@@ -130,26 +111,16 @@ class Router {
         if ($uri == '/' || ! $uri) {
             $uri = '/index.html';
         }
-<<<<<<< HEAD
         $url = trim ( parse_url ( $uri, PHP_URL_PATH ), '/' );
         $query = parse_url ( $uri, PHP_URL_QUERY );
         $args = array ();
         if ($query) {
             parse_str ( $query, $args );
             $this->xssCleaner->xss_clean ( $args );
-=======
-        $this->uri = $uri;
-        $this->url = trim ( parse_url ( $uri, PHP_URL_PATH ), '/' );
-        $args = parse_url ( $uri, PHP_URL_QUERY );
-        if ($args) {
-            parse_str ( $args, $this->args );
-            $this->xssCleaner->xss_clean ( $this->args );
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
         }
         $view = null;
         foreach ( $this->preDispatchers as $dispatchers ) {
             foreach ( $dispatchers as $d ) {
-<<<<<<< HEAD
                 $view = $d->preDispatch ( $url, $this, $view );
             }
         }
@@ -160,17 +131,6 @@ class Router {
             foreach ( $this->dispatchers as $dispatchers ) {
                 foreach ( $dispatchers as $d ) {
                     $view = $d->dispatch ( $url, $this, $this->urlParsedInfo );
-=======
-                $view = $d->preDispatch ( $this->url, $this, $view );
-            }
-        }
-        if ($view instanceof View) {
-            $response->output ( $view );
-        } else {
-            foreach ( $this->dispatchers as $dispatchers ) {
-                foreach ( $dispatchers as $d ) {
-                    $view = $d->dispatch ( $this->url, $this );
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
                     if ($view) {
                         break;
                     }
@@ -181,7 +141,6 @@ class Router {
             }
             foreach ( $this->postDispatchers as $dispatchers ) {
                 foreach ( $dispatchers as $d ) {
-<<<<<<< HEAD
                     $view = $d->postDispatch ( $url, $this, $view );
                 }
             }
@@ -191,17 +150,6 @@ class Router {
                 trigger_error ( 'no route for ' . $uri, E_USER_ERROR );
             } else {
                 Response::respond ( 404 );
-=======
-                    $view = $d->preDispatch ( $this->url, $this, $view );
-                }
-            }
-            if ($view instanceof View) {
-                $response->output ( $view );
-                log_error ( 'no one can handl it' );
-            } else {
-                log_error ( 'no one can handl it' );
-                echo '404';
->>>>>>> d465f215465f717072bb66f0ee650bf4b4a7de87
             }
         }
         $response->close ();
