@@ -1,0 +1,11 @@
+# Zend Studio
+.settings
+.buildpath
+.project
+.idea
+*.log
+conf/*_dev.php
+
+# composer
+vendor/
+composer.lock
