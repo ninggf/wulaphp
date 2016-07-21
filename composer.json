@@ -1,8 +1,8 @@
 {
   "name" : "wulaphp/wulaphp",
-  "description" : "一个由社区成员开发的，基于PHP 5.3.9 或更高版本的WEB应用开发利器。",
+  "description" : "一个由社区成员开发的，基于PHP 5.6.0 或更高版本的WEB应用开发利器。",
   "require" : {
-    "php" : ">=5.3.9",
+    "php" : ">=5.6.0",
     "ext-json" : "*",
     "ext-pdo" : "*",
     "ext-mbstring" : "*",
@@ -11,7 +11,7 @@
   },
   "license" : "MIT",
   "keywords" : [ "PHP", "MVC", "RBAC", "ACL", "plugin", "extension" ],
-  "time" : "2016-06-21",
+  "time" : "2016-07-21",
   "authors" : [ {
     "name" : "Leo Ning",
     "email" : "windywany@163.com"
