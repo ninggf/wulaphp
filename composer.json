@@ -1,31 +1,25 @@
 {
   "name" : "wulaphp/wulaphp",
   "description" : "一个由社区成员开发的，基于PHP 5.3.9 或更高版本的WEB应用开发利器。",
-  "version" : "0.1.0-dev",
   "require" : {
     "php" : ">=5.3.9",
     "ext-json" : "*",
     "ext-pdo" : "*",
-    "ext-mbstring" : "*",     
-    "ext-curl" : "*"
-    "ext-SPL" : "*",
-    "smarty/smarty" : "~3.1"
+    "ext-mbstring" : "*",
+    "ext-curl" : "*",
+    "ext-SPL" : "*"
   },
-  "authors" : [ {
-    "name" : "Leo Ning",
-    "email" : "windywany@163.com"
-  } ],
-  "scripts" : {
-    "post-root-package-install" : [ "php wula.cli.php --init" ]
-  },
-  "time" : "2016-06-21",
-  "keywords" : [ "PHP", "MVC", "RBAC", "ACL", "plugin", "extension", "mobileapp", "webapp" ],
+  "license" : "MIT",
+  "keywords" : [ "PHP", "MVC", "RBAC", "ACL", "plugin", "extension" ],
   "extra" : {
     "branch-alias" : {
       "dev-master" : "0.1.x-dev"
     }
   },
-  "license" : "MIT",
-  "type" : "project",
+  "time" : "2016-06-21",
+  "authors" : [ {
+    "name" : "Leo Ning",
+    "email" : "windywany@163.com"
+  } ],
   "homepage" : "http://www.wulaphp.com/"
 }
