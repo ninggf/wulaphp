@@ -11,12 +11,6 @@
   },
   "license" : "MIT",
   "keywords" : [ "PHP", "MVC", "RBAC", "ACL", "plugin", "extension" ],
-  "extra" : {
-    "branch-alias" : {
-      "dev-master" : "0.1.x-dev",
-	  "v1.0":"1.0.0"
-    }
-  },
   "time" : "2016-06-21",
   "authors" : [ {
     "name" : "Leo Ning",
