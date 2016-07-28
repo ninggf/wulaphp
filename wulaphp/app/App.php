@@ -22,9 +22,7 @@ class App {
 
     private $moduleLoader;
 
-    private static $maps = array (
-        'dir2id' => array (),'id2dir' => array ()
-    );
+    private static $maps = array ('dir2id' => array (),'id2dir' => array () );
 
     private static $modules = array ();
 
@@ -36,6 +34,7 @@ class App {
         if ($configLoader instanceof \wulaphp\conf\BaseConfigurationLoader) {
             $configLoader->beforeLoad ();
             $this->configs ['default'] = $configLoader->loadConfig ();
+            $this->dbConfigs ['default'] = $configLoader->loadDatabaseConfig ();
             $configLoader->postLoad ();
             $this->configLoader = $configLoader;
         } else {
@@ -77,9 +76,9 @@ class App {
             @ini_set ( 'display_errors', 1 );
         }
         error_reporting ( KS_ERROR_REPORT_LEVEL );
-        $debug = intval ( $coreCfg->get ( 'timezone', 'Asia/Shanghai' ) );
+        $timezone = $coreCfg->get ( 'timezone', 'Asia/Shanghai' );
         // 时区设置
-        define ( 'TIMEZONE', 'Asia/Shanghai' );
+        define ( 'TIMEZONE', $timezone );
         date_default_timezone_set ( TIMEZONE );
         define ( 'BASE_URL', Router::detect ( true ) );
         define ( 'CONTEXT_URL', Router::detect () );
@@ -243,13 +242,6 @@ class App {
         if (! self::$app->router) {
             self::$app->router = new \wulaphp\router\Router ( self::$modules );
         }
-        if (isset ( $_SERVER ['REQUEST_URI'] )) {
-            self::$app->router->route ( $_SERVER ['REQUEST_URI'] );
-        } else if (isset ( $_SERVER ['PATH_INFO'] )) {
-            self::$app->router->route ( $_SERVER ['PATH_INFO'] );
-        } else {
-            trigger_error ( 'REQUEST_URI and PATH_INFO are missing!', E_USER_ERROR );
-            self::$app->router->route ( 'index.html' );
-        }
+        self::$app->router->route ( $_SERVER ['REQUEST_URI'] );
     }
 }
