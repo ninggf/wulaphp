@@ -2,7 +2,6 @@
 namespace wulaphp\router;
 
 use wulaphp\app\App;
-use wulaphp\plugin\Trigger;
 use wulaphp\util\ObjectCaller;
 
 /**
@@ -113,15 +112,11 @@ class DefaultDispatcher implements IURLDispatcher {
             // Action Controller 的 index方法
             $controllerClz = ucfirst ( $action ) . 'Controller';
             $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
-            $files [] = array (
-                $controller_file,$namespace . '\controllers\\' . $controllerClz,'index'
-            );
+            $files [] = array ($controller_file,$namespace . '\controllers\\' . $controllerClz,'index' );
             // 默认controller的action方法
             $controllerClz = ucfirst ( $module ) . 'Controller';
             $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
-            $files [] = array (
-                $controller_file,$namespace . '\controllers\\' . $controllerClz,$action
-            );
+            $files [] = array ($controller_file,$namespace . '\controllers\\' . $controllerClz,$action );
             
             foreach ( $files as $file ) {
                 list ( $controller_file, $controllerClz, $action ) = $file;
@@ -131,9 +126,7 @@ class DefaultDispatcher implements IURLDispatcher {
                         if ($action == 'index' && count ( $params ) > 0) {
                             $action = array_shift ( $params );
                         }
-                        return array (
-                            $controllerClz,$action,$params
-                        );
+                        return array ($controllerClz,$action,$params );
                     }
                 }
             }
@@ -145,9 +138,7 @@ class DefaultDispatcher implements IURLDispatcher {
             if (is_file ( $controller_file )) {
                 include $controller_file;
                 if (is_subclass_of ( $controllerClz, 'wulaphp\mvc\controller\Controller' )) {
-                    return array (
-                        $controllerClz,$action,$params
-                    );
+                    return array ($controllerClz,$action,$params );
                 }
             }
         }

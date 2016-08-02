@@ -1,6 +1,5 @@
 <?php
-use wulaphp\mvc\view\ThemeView;
-use wulaphp\mvc\view\SmartyView;
+
 /**
  * merge arguments.
  *
@@ -21,49 +20,6 @@ function merge_args($args, $default) {
         }
     }
     return $_args;
-}
-
-/**
- * load the template view.
- *
- * @param $tpl
- * @param array $data
- * @param array $headers
- * @global filter:get_custome_tplfile
- * @return ThemeView
- */
-function template($tpl, $data = array(), $headers = array('Content-Type'=>'text/html')) {
-    $theme = get_theme ();
-    $tplname = str_replace ( array (
-        '/','.'
-    ), '_', basename ( $tpl, '.tpl' ) );
-    $_tpl = THEME_DIR . DS . $theme . DS . $tpl;
-    $found = false;
-    $_tpl = apply_filter ( 'get_custome_tplfile', $_tpl, $data );
-    if (is_file ( THEME_PATH . $_tpl )) {
-        $tplfile = $_tpl;
-    } else {
-        $tplfile = THEME_DIR . '/default/' . $tpl;
-        $theme = 'default';
-    }
-    $template_func_file = THEME_PATH . THEME_DIR . DS . $theme . DS . 'template.php';
-    if (is_file ( $template_func_file )) {
-        include_once $template_func_file;
-        $func = 'prepare_template_data';
-        if (function_exists ( $func )) {
-            $func ( $data );
-        }
-        $func = 'prepare_' . $tplname . '_template_data';
-        if (function_exists ( $func )) {
-            $func ( $data );
-        }
-    }
-    $data ['_current_template'] = $tplfile;
-    $data ['_current_theme_path'] = THEME_DIR . '/' . $theme;
-    $data ['_theme_name'] = $theme;
-    $data ['_theme_dir'] = THEME_DIR;
-    $data ['_module_dir'] = MODULE_DIR;
-    return new ThemeView ( $data, $tplfile, $headers );
 }
 
 /**
@@ -130,13 +86,11 @@ function smarty_modifiercompiler_here($params, $compiler) {
     $tpl = str_replace ( DS, '/', dirname ( $compiler->template->source->filepath ) );
     $tpl = str_replace ( $base, '', $tpl );
     $url = ! empty ( $tpl ) ? trailingslashit ( $tpl ) : '';
-    return "safe_url ('{$url}'." . $params [0] . ',true)';
+    return "'{$url}'." . $params [0] . '';
 }
 
 function cleanhtml2simple($text) {
-    $text = str_ireplace ( array (
-        '[page]',' ','　',"\t","\r","\n",'&nbsp;'
-    ), '', $text );
+    $text = str_ireplace ( array ('[page]',' ','　',"\t","\r","\n",'&nbsp;' ), '', $text );
     $text = preg_replace ( '#</?[a-z0-9][^>]*?>#msi', '', $text );
     return $text;
 }
@@ -148,36 +102,6 @@ function smarty_modifiercompiler_clean($params, $compiler) {
 function smarty_modifiercompiler_kk($params, $compiler) {
     $var = $params [0];
     return "'<pre style=\"margin:5px;padding:5px;overflow:auto;\">',var_export($var,true),'</pre>'";
-}
-
-/**
- * Smarty static modifier plugin.
- *
- * <code>
- * {resource|static}
- * </code>
- *
- *
- * Type: modifier<br>
- * Name: static<br>
- * Purpose: 取静态资源的URL
- *
- * @param Smarty $compiler
- * @return string with compiled code
- */
-function smarty_modifiercompiler_assets($params, $compiler) {
-    return "safe_url(ASSETS_URL." . $params [0] . ",true)";
-}
-
-function smarty_modifiercompiler_app($params, $compiler) {
-    $params = smarty_argstr ( $params );
-    return "Router::url($params)";
-}
-
-function smarty_modifiercompiler_base($params, $compiler) {
-    $page = array_shift ( $params );
-    $output = "safe_url({$page},true)";
-    return $output;
 }
 
 function smarty_modifiercompiler_rstr($params, $compiler) {
@@ -274,33 +198,6 @@ function smarty_modifiercompiler_random($ary, $compiler) {
     return $output;
 }
 
-/**
- * Smarty params modifier plugin.
- *
- * <code>
- * {url|params:[args]}
- * </code>
- *
- *
- * Type: modifier<br>
- * Name: params<br>
- * Purpose: 为URL添加或删除参数
- *
- * @see build_page_url()
- * @param Smarty $compiler
- * @return string with compiled code
- */
-function smarty_modifiercompiler_params($ary, $compiler) {
-    if (count ( $ary ) < 1) {
-        trigger_error ( 'error usage of params', E_USER_WARNING );
-        return "'error usage of params'";
-    }
-    $url = array_shift ( $ary );
-    $args = empty ( $ary ) ? array () : smarty_argstr ( $ary );
-    $output = "build_page_url($url,$args)";
-    return $output;
-}
-
 function smarty_modifiercompiler_render($ary, $compiler) {
     if (count ( $ary ) < 1) {
         trigger_error ( 'error usage of render', E_USER_WARNING );
@@ -309,9 +206,5 @@ function smarty_modifiercompiler_render($ary, $compiler) {
     $render = $ary [0];
     array_shift ( $ary );
     $args = empty ( $ary ) ? '' : smarty_argstr ( $ary );
-    return "{$render} instanceof Renderable?{$render}->render($args):{$render}";
-}
-
-function smarty_modifiercompiler_media($params, $compiler) {
-    return 'the_media_src(' . $params [0] . ')';
+    return "{$render} instanceof \wulaphp\mvc\view\Renderable?{$render}->render($args):{$render}";
 }

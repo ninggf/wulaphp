@@ -46,11 +46,10 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      * @return DatabaseConfiguration
      */
     public function loadDatabaseConfig($name = 'default') {
-        $config = new DatabaseConfiguration ( $name );
         if ($name == 'default') {
-            $_wula_config_file = APPROOT . CONF_DIR . '/dbconf';
+            $_wula_config_file = APPROOT . CONF_DIR . '/dbconfig';
         } else {
-            $_wula_config_file = APPROOT . CONF_DIR . '/' . $name . '_dbconf';
+            $_wula_config_file = APPROOT . CONF_DIR . '/' . $name . '_dbconfig';
         }
         $wula_cfg_fiels [] = $_wula_config_file . '_' . APP_MODE . '.php';
         $wula_cfg_fiels [] = $_wula_config_file . '.php';

@@ -1,8 +1,34 @@
 <?php
 namespace wulaphp\db;
 
+use wulaphp\db\dialect\DatabaseDialect;
+use wulaphp\db\sql\InsertSQL;
+use wulaphp\db\sql\SaveQuery;
+use wulaphp\db\sql\UpdateSQL;
+use wulaphp\db\sql\DeleteSQL;
+use wulaphp\db\sql\Query;
+
 class DatabaseConnection {
-    
+
+    private $dialect = null;
+
+    public $error = null;
+
+    public function __construct($dialect) {
+        if (! $dialect instanceof DatabaseDialect) {
+            trigger_error ( 'the dialect is not instance of DatabaseDialect', E_USER_ERROR );
+        }
+        $this->dialect = $dialect;
+    }
+
+    /**
+     *
+     * @return \wulaphp\db\dialect\DatabaseDialect
+     */
+    public function getDialect() {
+        return $this->dialect;
+    }
+
     /**
      * start a database transaction
      *
@@ -10,11 +36,11 @@ class DatabaseConnection {
      * @return boolean
      */
     function start() {
-        $dialect = DatabaseDialect::getDialect ( $name );
+        $dialect = $this->dialect;
         try {
             return $dialect->beginTransaction ();
         } catch ( \Exception $e ) {
-            DatabaseDialect::$lastErrorMassge = $e->getMessage ();
+            $this->error = $e->getMessage ();
             return false;
         }
     }
@@ -25,11 +51,11 @@ class DatabaseConnection {
      * @param string $name database or config
      */
     function commit() {
-        $dialect = DatabaseDialect::getDialect ( $name );
+        $dialect = $this->dialect;
         try {
             return $dialect->commit ();
-        } catch ( PDOException $e ) {
-            DatabaseDialect::$lastErrorMassge = $e->getMessage ();
+        } catch ( \PDOException $e ) {
+            $this->error = $e->getMessage ();
             return false;
         }
     }
@@ -40,11 +66,11 @@ class DatabaseConnection {
      * @param string $name database or config
      */
     function rollback() {
-        $dialect = DatabaseDialect::getDialect ( $name );
+        $dialect = $this->dialect;
         try {
             return $dialect->rollBack ();
-        } catch ( PDOException $e ) {
-            DatabaseDialect::$lastErrorMassge = $e->getMessage ();
+        } catch ( \PDOException $e ) {
+            $this->error = $e->getMessage ();
             return false;
         }
     }
@@ -56,7 +82,9 @@ class DatabaseConnection {
      * @param array $batch
      */
     function insert($datas, $batch = false) {
-        return new InsertSQL ( $datas, $batch );
+        $sql = new InsertSQL ( $datas, $batch );
+        $sql->setDb ( $this );
+        return $sql;
     }
 
     /**
@@ -68,7 +96,9 @@ class DatabaseConnection {
      * @return SaveQuery
      */
     function save($data, $where, $idf = 'id') {
-        return new SaveQuery ( $data, $where, $idf );
+        $sql = new SaveQuery ( $data, $where, $idf );
+        $sql->setDb ( $this );
+        return $sql;
     }
 
     /**
@@ -78,7 +108,13 @@ class DatabaseConnection {
      * @return Query
      */
     function select($fields = '*') {
-        return new Query ( func_get_args () );
+        $args = func_get_args ();
+        if (! $args) {
+            $args = '*';
+        }
+        $sql = new Query ( $args );
+        $sql->setDb ( $this );
+        return $sql;
     }
 
     /**
@@ -88,7 +124,7 @@ class DatabaseConnection {
      */
     function lock($table, $dialect = null) {
         if ($dialect == null) {
-            $dialect = DatabaseDialect::getDialect ();
+            $dialect = $this->dialect;
         }
         $table = $dialect->getTableName ( $table );
         $dialect->query ( "LOCK TABLES `" . $table . "` " );
@@ -96,7 +132,7 @@ class DatabaseConnection {
 
     function unlock($dialect = null) {
         if ($dialect == null) {
-            $dialect = DatabaseDialect::getDialect ();
+            $dialect = $this->dialect;
         }
         $dialect->query ( "UNLOCK TABLES" );
     }
@@ -108,7 +144,9 @@ class DatabaseConnection {
      * @return UpdateSQL
      */
     function update($table) {
-        return new UpdateSQL ( $table );
+        $sql = new UpdateSQL ( $table );
+        $sql->setDb ( $this );
+        return $sql;
     }
 
     /**
@@ -117,7 +155,9 @@ class DatabaseConnection {
      * @return DeleteSQL
      */
     function delete() {
-        return new DeleteSQL ( func_get_args () );
+        $sql = new DeleteSQL ( func_get_args () );
+        $sql->setDb ( $this );
+        return $sql;
     }
 
     /**
@@ -128,21 +168,21 @@ class DatabaseConnection {
      * @return mixed
      */
     function exec($sql, $name = null) {
-        $dialect = DatabaseDialect::getDialect ( $name );
+        $dialect = $this->dialect;
         if (is_null ( $dialect )) {
             return false;
         }
         try {
             $dialect->exec ( $sql );
-        } catch ( Exception $e ) {
-            DatabaseDialect::$lastErrorMassge = $e->getMessage ();
+        } catch ( \Exception $e ) {
+            $this->error = $e->getMessage ();
             return false;
         }
         return true;
     }
 
     function query($sql, $name = null) {
-        $dialect = DatabaseDialect::getDialect ( $name );
+        $dialect = $this->dialect;
         if (is_null ( $dialect )) {
             return null;
         }
@@ -155,7 +195,7 @@ class DatabaseConnection {
                 return $result;
             }
         } catch ( \Exception $e ) {
-            DatabaseDialect::$lastErrorMassge = $e->getMessage ();
+            $this->error = $e->getMessage ();
         }
         return null;
     }

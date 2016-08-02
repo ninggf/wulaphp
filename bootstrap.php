@@ -139,8 +139,6 @@ spl_autoload_register ( function ($clz) {
 	}
 	// 处理未找到类情况.
 } );
-// 加载数据库类库
-require WULA_ROOT.'wulaphp/db/db.php';
 // 加载composer兼容的autoloader
 $app_vendors = APPROOT . VENDORS_DIR . DS . 'autoload.php';
 if (is_file ( $app_vendors )) {
