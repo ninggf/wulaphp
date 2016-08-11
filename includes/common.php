@@ -950,11 +950,19 @@ function inner_str($str, $str1, $str2, $include_str1 = true) {
  *
  */
 function get_session_name() {
-    return md5 ( WEB_ROOT );
+    return '_S_' . APPID;
 }
 
+/**
+ * 生成SQL中不可变字符.
+ *
+ * @param string $val
+ * @param string $alias
+ * @return \wulaphp\db\sql\ImmutableValue
+ */
 function imv($val, $alias = null) {
     return new \wulaphp\db\sql\ImmutableValue ( $val, $alias );
 }
+include WULA_ROOT . 'includes' . DS . 'plugin.php';
 include WULA_ROOT . 'includes' . DS . 'template.php';
 // end of file functions.php

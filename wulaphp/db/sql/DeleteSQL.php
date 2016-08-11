@@ -18,15 +18,12 @@ class DeleteSQL extends QueryBuilder {
      * @return DeleteSQL
      * @deprecated
      *
-     *
-     *
-     *
      */
     public function using($using) {
         $this->using [] = self::parseAs ( $using );
         return $this;
     }
-
+    
     /**
      * perform the delete sql, false for deleting failed.
      * Just call count() function for short.

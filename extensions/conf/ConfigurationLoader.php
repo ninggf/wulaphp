@@ -46,6 +46,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      * @return DatabaseConfiguration
      */
     public function loadDatabaseConfig($name = 'default') {
+        $config = new DatabaseConfiguration ( 'default' );
         if ($name == 'default') {
             $_wula_config_file = APPROOT . CONF_DIR . '/dbconfig';
         } else {

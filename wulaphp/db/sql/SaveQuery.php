@@ -33,7 +33,7 @@ class SaveQuery extends QueryBuilder {
         return 0;
     }
 
-    public function save() {
+    private function save() {
         if (empty ( $this->intoTable )) {
             $this->error = 'no table specified!';
             return false;

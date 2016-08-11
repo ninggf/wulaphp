@@ -235,6 +235,10 @@ abstract class QueryBuilder implements \Countable {
         return empty ( $this->error ) ? true : false;
     }
 
+    public function perform($checkNum = false) {
+        return $this->exec ( $checkNum );
+    }
+
     /**
      * 执行update,insert,delete语句.
      *
