@@ -12,7 +12,7 @@ defined ( 'APPROOT' ) or die ( 'please define APPROOT' );
  *
  * @var string
  */
-define ( 'WULA_VERSION', 'O.1.0' );
+define ( 'WULA_VERSION', '1.0.1' );
 /**
  * 发行标记.
  *
