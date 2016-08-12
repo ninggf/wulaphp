@@ -39,8 +39,8 @@ class SmartyView extends View {
             $tpl = explode ( '/', $tpl );
             array_pop ( $tpl );
             $sub = implode ( DS, $tpl );
-            $this->__smarty->compile_dir = TMP_PATH . '#tpls_c' . DS . $sub; // 模板编译目录
-            $this->__smarty->cache_dir = TMP_PATH . '#tpls_cache' . DS . $sub; // 模板缓存目录
+            $this->__smarty->compile_dir = TMP_PATH . 'tpls_c' . DS . $sub; // 模板编译目录
+            $this->__smarty->cache_dir = TMP_PATH . 'tpls_cache' . DS . $sub; // 模板缓存目录
             $trigger = new SmartyHookTrigger ();
             $trigger->init_smarty_engine ( $this->__smarty );
             $trigger->init_view_smarty_engine ( $this->__smarty );

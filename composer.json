@@ -9,6 +9,9 @@
     "ext-curl" : "*",
     "ext-SPL" : "*"
   },
+  "require-dev" : {
+  	"smarty/smarty": "~3.1"
+  },
   "license" : "MIT",
   "keywords" : [ "PHP", "MVC", "RBAC", "ACL", "plugin", "extension" ],
   "time" : "2016-07-21",
@@ -16,5 +19,13 @@
     "name" : "Leo Ning",
     "email" : "windywany@163.com"
   } ],
+  "extra": {
+    "branch-alias": {
+        "dev-master": "1.0.x-dev"
+    }
+  },
+  "support": {
+        "issues": "https://github.com/ninggf/wulaphp/issues"
+  },
   "homepage" : "http://www.wulaphp.com/"
 }
