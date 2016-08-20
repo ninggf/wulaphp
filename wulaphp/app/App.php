@@ -3,6 +3,8 @@ namespace wulaphp\app;
 
 use wulaphp\conf\Configuration;
 use wulaphp\router\Router;
+use wulaphp\db\DatabaseConnection;
+use wulaphp\db\dialect\DatabaseDialect;
 
 /**
  * 应用管理器.
@@ -12,8 +14,6 @@ use wulaphp\router\Router;
  */
 class App {
 
-    private $dbConfigs = array ();
-
     private $configs = array ();
 
     private $router;
@@ -22,9 +22,7 @@ class App {
 
     private $moduleLoader;
 
-    private static $maps = array (
-        'dir2id' => array (),'id2dir' => array ()
-    );
+    private static $maps = array ('dir2id' => array (),'id2dir' => array () );
 
     private static $modules = array ();
 
@@ -77,13 +75,50 @@ class App {
             @ini_set ( 'display_errors', 1 );
         }
         error_reporting ( KS_ERROR_REPORT_LEVEL );
-        $debug = intval ( $coreCfg->get ( 'timezone', 'Asia/Shanghai' ) );
+        $timezone = $coreCfg->get ( 'timezone', 'Asia/Shanghai' );
         // 时区设置
-        define ( 'TIMEZONE', 'Asia/Shanghai' );
+        define ( 'TIMEZONE', $timezone );
         date_default_timezone_set ( TIMEZONE );
         define ( 'BASE_URL', Router::detect ( true ) );
         define ( 'CONTEXT_URL', Router::detect () );
         return self::$app;
+    }
+
+    /**
+     * 获取数据库连接实例.
+     *
+     * @param string $name 数据库配置名.
+     * @return DatabaseConnection {@link DatabaseConnection}
+     */
+    public static function db($name = 'default') {
+        static $dbs = [ ];
+        if ($name instanceof DatabaseConnection) {
+            return $name;
+        }
+        $config = false;
+        if (is_array ( $name )) {
+            $tmpname = implode ( '_', $name );
+            if (isset ( $dbs [$tmpname] )) {
+                return $dbs [$tmpname];
+            }
+            $config = $name;
+            $name = $tmpname;
+        } else if (is_string ( $name )) {
+            if (isset ( $dbs [$name] )) {
+                return $dbs [$name];
+            }
+            $config = self::$app->configLoader->loadDatabaseConfig ( $name );
+        }
+        if ($config) {
+            $dialect = DatabaseDialect::getDialect ( $config );
+            if ($dialect) {
+                $db = new DatabaseConnection ( $dialect );
+                $dbs [$name] = $db;
+                return $db;
+            }
+        }
+        trigger_error ( 'cannot connect to the database', E_USER_ERROR );
+        return null;
     }
 
     /**
@@ -243,13 +278,6 @@ class App {
         if (! self::$app->router) {
             self::$app->router = new \wulaphp\router\Router ( self::$modules );
         }
-        if (isset ( $_SERVER ['REQUEST_URI'] )) {
-            self::$app->router->route ( $_SERVER ['REQUEST_URI'] );
-        } else if (isset ( $_SERVER ['PATH_INFO'] )) {
-            self::$app->router->route ( $_SERVER ['PATH_INFO'] );
-        } else {
-            trigger_error ( 'REQUEST_URI and PATH_INFO are missing!', E_USER_ERROR );
-            self::$app->router->route ( 'index.html' );
-        }
+        self::$app->router->route ( $_SERVER ['REQUEST_URI'] );
     }
 }

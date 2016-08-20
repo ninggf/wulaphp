@@ -11,9 +11,7 @@ class DatabaseConfiguration extends Configuration {
 
     public function __construct($name) {
         parent::__construct ( $name );
-        $this->settings = array (
-            'driver' => 'MySQL','port' => '3306','host' => 'localhost','dbname' => '','user' => 'root','password' => '888888','encoding' => 'UTF8'
-        );
+        $this->settings = array ('driver' => 'MySQL','port' => '3306','host' => 'localhost','dbname' => '','user' => 'root','password' => '888888','encoding' => 'UTF8' );
     }
 
     public function host($host) {
@@ -46,5 +44,9 @@ class DatabaseConfiguration extends Configuration {
 
     public function options($options) {
         $this->settings ['options'] = $options;
+    }
+
+    public function __toString() {
+        return implode ( '_', $this->settings );
     }
 }

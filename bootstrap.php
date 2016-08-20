@@ -12,7 +12,7 @@ defined ( 'APPROOT' ) or die ( 'please define APPROOT' );
  *
  * @var string
  */
-define ( 'WULA_VERSION', 'O.1.0' );
+define ( 'WULA_VERSION', '1.0.1' );
 /**
  * 发行标记.
  *
@@ -23,6 +23,7 @@ define ( 'WULA_RELEASE', 'dev' );
 defined ( 'WULA_ROOT' ) or define ( 'WULA_ROOT', __DIR__ . DS );
 defined ( 'WWWROOT_DIR' ) or define ( 'WWWROOT_DIR', 'public' );
 defined ( 'MODULE_DIR' ) or define ( 'MODULE_DIR', 'modules' );
+defined ( 'THEME_DIR' ) or define ( 'THEME_DIR', 'themes' );
 defined ( 'CONF_DIR' ) or define ( 'CONF_DIR', 'conf' );
 defined ( 'LIBS_DIR' ) or define ( 'LIBS_DIR', 'includes' );
 defined ( 'VENDORS_DIR' ) or define ( 'VENDORS_DIR', 'vendor' );
@@ -34,6 +35,7 @@ define ( 'WEB_ROOT', WWWROOT );
 define ( 'LIBS_PATH', APPROOT . LIBS_DIR . DS );
 defined ( 'TMP_PATH' ) or define ( 'TMP_PATH', APPROOT . 'tmp' . DS );
 define ( 'MODULES_PATH', WWWROOT . MODULE_DIR . DS );
+define ( 'THEME_PATH', WWWROOT . THEME_DIR . DS );
 define ( 'MODULE_ROOT', MODULES_PATH );
 /* 定义日志级别 */
 define ( 'DEBUG_OFF', 5 );
@@ -139,6 +141,7 @@ spl_autoload_register ( function ($clz) {
 	}
 	// 处理未找到类情况.
 } );
+// 加载composer兼容的autoloader
 $app_vendors = APPROOT . VENDORS_DIR . DS . 'autoload.php';
 if (is_file ( $app_vendors )) {
 	include $app_vendors;

@@ -3,6 +3,7 @@ namespace extensions\conf;
 
 use wulaphp\conf\BaseConfigurationLoader;
 use wulaphp\conf\Configuration;
+use wulaphp\conf\DatabaseConfiguration;
 
 /**
  * 系统默认配置加载器.
@@ -42,8 +43,24 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      * {@inheritDoc}
      *
      * @see \wulaphp\conf\BaseConfigurationLoader::loadDatabaseConfig()
+     * @return DatabaseConfiguration
      */
-    public function loadDatabaseConfig($name = '') {
-        // TODO Auto-generated method stub
+    public function loadDatabaseConfig($name = 'default') {
+        $config = new DatabaseConfiguration ( 'default' );
+        if ($name == 'default') {
+            $_wula_config_file = APPROOT . CONF_DIR . '/dbconfig';
+        } else {
+            $_wula_config_file = APPROOT . CONF_DIR . '/' . $name . '_dbconfig';
+        }
+        $wula_cfg_fiels [] = $_wula_config_file . '_' . APP_MODE . '.php';
+        $wula_cfg_fiels [] = $_wula_config_file . '.php';
+        foreach ( $wula_cfg_fiels as $_wula_config_file ) {
+            if (is_file ( $_wula_config_file )) {
+                include $_wula_config_file;
+                break;
+            }
+        }
+        unset ( $_wula_config_file, $wula_cfg_fiels );
+        return $config;
     }
 }

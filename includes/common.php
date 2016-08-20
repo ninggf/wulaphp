@@ -25,9 +25,7 @@ function aryget($name, $array, $default = '') {
  */
 function pure_comman_string($string) {
     if ($string) {
-        return trim ( trim ( str_replace ( array (
-            '，',' ','　','-',';','；','－'
-        ), ',', $string ) ), ',' );
+        return trim ( trim ( str_replace ( array ('，',' ','　','-',';','；','－' ), ',', $string ) ), ',' );
     }
     return '';
 }
@@ -118,8 +116,7 @@ function get_status_header_desc($code) {
     $code = abs ( intval ( $code ) );
     
     if (! isset ( $output_header_to_desc )) {
-        $output_header_to_desc = array (
-            100 => 'Continue',101 => 'Switching Protocols',102 => 'Processing',
+        $output_header_to_desc = array (100 => 'Continue',101 => 'Switching Protocols',102 => 'Processing',
 
         200 => 'OK',201 => 'Created',202 => 'Accepted',203 => 'Non-Authoritative Information',204 => 'No Content',205 => 'Reset Content',206 => 'Partial Content',207 => 'Multi-Status',226 => 'IM Used',
 
@@ -127,8 +124,7 @@ function get_status_header_desc($code) {
 
         400 => 'Bad Request',401 => 'Unauthorized',402 => 'Payment Required',403 => 'Forbidden',404 => 'Not Found',405 => 'Method Not Allowed',406 => 'Not Acceptable',407 => 'Proxy Authentication Required',408 => 'Request Timeout',409 => 'Conflict',410 => 'Gone',411 => 'Length Required',412 => 'Precondition Failed',413 => 'Request Entity Too Large',414 => 'Request-URI Too Long',415 => 'Unsupported Media Type',416 => 'Requested Range Not Satisfiable',417 => 'Expectation Failed',422 => 'Unprocessable Entity',423 => 'Locked',424 => 'Failed Dependency',426 => 'Upgrade Required',
 
-        500 => 'Internal Server Error',501 => 'Not Implemented',502 => 'Bad Gateway',503 => 'Service Unavailable',504 => 'Gateway Timeout',505 => 'HTTP Version Not Supported',506 => 'Variant Also Negotiates',507 => 'Insufficient Storage',510 => 'Not Extended'
-        );
+        500 => 'Internal Server Error',501 => 'Not Implemented',502 => 'Bad Gateway',503 => 'Service Unavailable',504 => 'Gateway Timeout',505 => 'HTTP Version Not Supported',506 => 'Variant Also Negotiates',507 => 'Insufficient Storage',510 => 'Not Extended' );
     }
     
     if (isset ( $output_header_to_desc [$code] )) {
@@ -147,9 +143,7 @@ function untrailingslashit($string) {
 }
 
 function sanitize_file_name($filename) {
-    $special_chars = array (
-        "?","[","]","/","\\","=","<",">",":",";",",","'","\"","&","$","#","*","(",")","|","~","`","!","{","}",chr ( 0 )
-    );
+    $special_chars = array ("?","[","]","/","\\","=","<",">",":",";",",","'","\"","&","$","#","*","(",")","|","~","`","!","{","}",chr ( 0 ) );
     $filename = str_replace ( $special_chars, '', $filename );
     $filename = preg_replace ( '/[\s-]+/', '-', $filename );
     $filename = trim ( $filename, '.-_' );
@@ -163,9 +157,7 @@ function sanitize_file_name($filename) {
     $filename = array_shift ( $parts );
     $extension = array_pop ( $parts );
     
-    $mimes = array (
-        'tmp','txt','jpg','gif','png','rar','zip','gzip','ppt'
-    );
+    $mimes = array ('tmp','txt','jpg','gif','png','rar','zip','gzip','ppt' );
     
     // Loop over any intermediate extensions. Munge them with a trailing
     // underscore if they are a 2 - 5 character
@@ -242,9 +234,7 @@ function find_files($dir = '.', $pattern = '', $excludes = array(), $recursive =
         $fhd = @opendir ( $dir );
         if ($fhd) {
             $excludes = is_array ( $excludes ) ? $excludes : array ();
-            $_excludes = array_merge ( $excludes, array (
-                '.','..'
-            ) );
+            $_excludes = array_merge ( $excludes, array ('.','..' ) );
             while ( ($file = readdir ( $fhd )) !== false ) {
                 if ($recursive && is_dir ( $dir . $file ) && ! in_array ( $file, $_excludes )) {
                     if ($stop == 0 || $recursive <= $stop) {
@@ -325,9 +315,7 @@ function unkeepargs($url, $exclude = array()) {
     $regex = array ();
     $rpm = array ();
     if (is_string ( $exclude )) {
-        $exclude = array (
-            $exclude
-        );
+        $exclude = array ($exclude );
     }
     foreach ( $exclude as $ex ) {
         $regex [] = '/&?' . $ex . '=[^&]*/';
@@ -611,9 +599,7 @@ function merge_add($ary1, $ary2, $sep = ' ') {
  */
 function log_message($message, $trace_info, $level, $origin = null, $file = '') {
     static $fb = false;
-    static $log_name = array (
-        DEBUG_INFO => 'INFO',DEBUG_WARN => 'WARN',DEBUG_DEBUG => 'DEBUG',DEBUG_ERROR => 'ERROR'
-    );
+    static $log_name = array (DEBUG_INFO => 'INFO',DEBUG_WARN => 'WARN',DEBUG_DEBUG => 'DEBUG',DEBUG_ERROR => 'ERROR' );
     if (empty ( $trace_info )) {
         return;
     }
@@ -735,11 +721,7 @@ function authcode($string, $operation = 'DECODE', $key = '', $expiry = 0) {
  */
 function convert_search_keywords($keywords) {
     $keywords = json_encode ( $keywords );
-    return str_replace ( array (
-        '\u','"','1','2','3','4','5','6','7','8','9','0'
-    ), array (
-        'u','','A','B','C','D','E','F','G','H','I','J'
-    ), $keywords );
+    return str_replace ( array ('\u','"','1','2','3','4','5','6','7','8','9','0' ), array ('u','','A','B','C','D','E','F','G','H','I','J' ), $keywords );
 }
 
 /**
@@ -748,9 +730,7 @@ function convert_search_keywords($keywords) {
  * @return array array(min,minop,max,maxop)
  */
 function parse_version_pair($versions) {
-    $rst = array (
-        false,'',false,''
-    );
+    $rst = array (false,'',false,'' );
     if (preg_match ( '#^([\[\(])(.*?),(.*?)([\]\)])$#', $versions, $m )) {
         if ($m [2]) {
             $rst [0] = $m [2];
@@ -863,9 +843,7 @@ function html_escape($string, $esc_type = 'html', $char_set = null, $double_enco
         
         case 'javascript' :
             // escape quotes and backslashes, newlines, etc.
-            return strtr ( $string, array (
-                '\\' => '\\\\',"'" => "\\'",'"' => '\\"',"\r" => '\\r',"\n" => '\\n','</' => '<\/'
-            ) );
+            return strtr ( $string, array ('\\' => '\\\\',"'" => "\\'",'"' => '\\"',"\r" => '\\r',"\n" => '\\n','</' => '<\/' ) );
         
         default :
             return $string;
@@ -972,7 +950,19 @@ function inner_str($str, $str1, $str2, $include_str1 = true) {
  *
  */
 function get_session_name() {
-    return md5 ( WEB_ROOT );
+    return '_S_' . APPID;
 }
+
+/**
+ * 生成SQL中不可变字符.
+ *
+ * @param string $val
+ * @param string $alias
+ * @return \wulaphp\db\sql\ImmutableValue
+ */
+function imv($val, $alias = null) {
+    return new \wulaphp\db\sql\ImmutableValue ( $val, $alias );
+}
+include WULA_ROOT . 'includes' . DS . 'plugin.php';
 include WULA_ROOT . 'includes' . DS . 'template.php';
 // end of file functions.php
