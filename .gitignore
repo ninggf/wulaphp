@@ -1,11 +1,14 @@
-# Zend Studio
+# ide
 .settings
 .buildpath
 .project
 .idea
 *.log
+.vscode
+dummy.php
 conf/*_dev.php
-
+.DS_Store
+*.bak
 # composer
 vendor/
 composer.lock

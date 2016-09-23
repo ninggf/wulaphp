@@ -18,8 +18,7 @@ class Cache implements \ArrayAccess {
             if (App::cfg ( 'develop_mode' )) {
                 $cache = new Cache ();
             } else {
-                $trigger = new CacheHookTrigger ();
-                $cache = $trigger->get_cache_manager ( null );
+            	$cache = apply_filter('get_cache_manager',null);
                 if (! $cache instanceof Cache) {
                     $cache = new Cache ();
                 }
