@@ -30,6 +30,9 @@ class Cache implements \ArrayAccess {
 					$loader = new ConfigurationLoader();
 					$cfg    = $loader->loadConfig('cache');
 				}
+				if (!$cfg->getb('enabled')) {
+					return new Cache();
+				}
 				$cache = apply_filter('get_' . $type . '_cache', null, $cfg);
 				if (!$cache instanceof Cache) {
 					$cache = new Cache ();

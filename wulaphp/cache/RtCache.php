@@ -24,12 +24,7 @@ namespace wulaphp\cache {
 				$loader  = new ConfigurationLoader();
 				$cluster = $loader->loadConfig('cluster');
 				if ($cluster->getb('enabled')) {
-					$type = $cluster->get('type', CLUSTER_TYPE_REDIS);
-					if ($type == CLUSTER_TYPE_REDIS) {
-						$cache = RedisCache::getInstance($cluster);
-					} else {
-						$cache = MemcachedCache::getInstance($cluster);
-					}
+					$cache = RedisCache::getInstance($cluster);
 					if ($cache instanceof Cache) {
 						RtCache::$CACHE = $cache;
 					} else {
