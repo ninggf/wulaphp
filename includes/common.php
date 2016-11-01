@@ -1,7 +1,4 @@
 <?php
-/*
- * global functions 负责加载系统提供的第三方函数库.各应用的第三方函数库，请在各应用的includes/autoload.php中加载。
- */
 /**
  * 从数组取值，如果数组中无指定key，则返回默认值.
  *
@@ -125,17 +122,8 @@ function get_status_header_desc($code) {
 	$code = abs(intval($code));
 
 	if (!isset ($output_header_to_desc)) {
-		$output_header_to_desc = array(100 => 'Continue', 101 => 'Switching Protocols', 102 => 'Processing',
-
-		                               200 => 'OK', 201 => 'Created', 202 => 'Accepted', 203 => 'Non-Authoritative Information', 204 => 'No Content', 205 => 'Reset Content', 206 => 'Partial Content', 207 => 'Multi-Status', 226 => 'IM Used',
-
-		                               300 => 'Multiple Choices', 301 => 'Moved Permanently', 302 => 'Found', 303 => 'See Other', 304 => 'Not Modified', 305 => 'Use Proxy', 306 => 'Reserved', 307 => 'Temporary Redirect',
-
-		                               400 => 'Bad Request', 401 => 'Unauthorized', 402 => 'Payment Required', 403 => 'Forbidden', 404 => 'Not Found', 405 => 'Method Not Allowed', 406 => 'Not Acceptable', 407 => 'Proxy Authentication Required', 408 => 'Request Timeout', 409 => 'Conflict', 410 => 'Gone', 411 => 'Length Required', 412 => 'Precondition Failed', 413 => 'Request Entity Too Large', 414 => 'Request-URI Too Long', 415 => 'Unsupported Media Type', 416 => 'Requested Range Not Satisfiable', 417 => 'Expectation Failed', 422 => 'Unprocessable Entity', 423 => 'Locked', 424 => 'Failed Dependency', 426 => 'Upgrade Required',
-
-		                               500 => 'Internal Server Error', 501 => 'Not Implemented', 502 => 'Bad Gateway', 503 => 'Service Unavailable', 504 => 'Gateway Timeout', 505 => 'HTTP Version Not Supported', 506 => 'Variant Also Negotiates', 507 => 'Insufficient Storage', 510 => 'Not Extended');
+		$output_header_to_desc = array(100 => 'Continue', 101 => 'Switching Protocols', 102 => 'Processing', 200 => 'OK', 201 => 'Created', 202 => 'Accepted', 203 => 'Non-Authoritative Information', 204 => 'No Content', 205 => 'Reset Content', 206 => 'Partial Content', 207 => 'Multi-Status', 226 => 'IM Used', 300 => 'Multiple Choices', 301 => 'Moved Permanently', 302 => 'Found', 303 => 'See Other', 304 => 'Not Modified', 305 => 'Use Proxy', 306 => 'Reserved', 307 => 'Temporary Redirect', 400 => 'Bad Request', 401 => 'Unauthorized', 402 => 'Payment Required', 403 => 'Forbidden', 404 => 'Not Found', 405 => 'Method Not Allowed', 406 => 'Not Acceptable', 407 => 'Proxy Authentication Required', 408 => 'Request Timeout', 409 => 'Conflict', 410 => 'Gone', 411 => 'Length Required', 412 => 'Precondition Failed', 413 => 'Request Entity Too Large', 414 => 'Request-URI Too Long', 415 => 'Unsupported Media Type', 416 => 'Requested Range Not Satisfiable', 417 => 'Expectation Failed', 422 => 'Unprocessable Entity', 423 => 'Locked', 424 => 'Failed Dependency', 426 => 'Upgrade Required', 500 => 'Internal Server Error', 501 => 'Not Implemented', 502 => 'Bad Gateway', 503 => 'Service Unavailable', 504 => 'Gateway Timeout', 505 => 'HTTP Version Not Supported', 506 => 'Variant Also Negotiates', 507 => 'Insufficient Storage', 510 => 'Not Extended');
 	}
-
 	if (isset ($output_header_to_desc [ $code ])) {
 		return $output_header_to_desc [ $code ];
 	} else {
@@ -156,23 +144,13 @@ function sanitize_file_name($filename) {
 	$filename      = str_replace($special_chars, '', $filename);
 	$filename      = preg_replace('/[\s-]+/', '-', $filename);
 	$filename      = trim($filename, '.-_');
-	// Split the filename into a base and extension[s]
-	$parts = explode('.', $filename);
-	// Return if only one extension
+	$parts         = explode('.', $filename);
 	if (count($parts) <= 2) return $filename;
-
-	// Process multiple extensions
 	$filename  = array_shift($parts);
 	$extension = array_pop($parts);
-
-	$mimes = array('tmp', 'txt', 'jpg', 'gif', 'png', 'rar', 'zip', 'gzip', 'ppt');
-
-	// Loop over any intermediate extensions. Munge them with a trailing
-	// underscore if they are a 2 - 5 character
-	// long alpha string not in the extension whitelist.
+	$mimes     = array('tmp', 'txt', 'jpg', 'gif', 'png', 'rar', 'zip', 'gzip', 'ppt');
 	foreach (( array )$parts as $part) {
 		$filename .= '.' . $part;
-
 		if (preg_match('/^[a-zA-Z]{2,5}\d?$/', $part)) {
 			$allowed = false;
 			foreach ($mimes as $ext_preg => $mime_match) {
@@ -201,7 +179,7 @@ function unique_filename($dir, $filename, $unique_filename_callback = null) {
 	if ($unique_filename_callback && is_callable($unique_filename_callback)) {
 		$filename = $unique_filename_callback ($dir, $name);
 	} else {
-		$number = '';
+		$number = 0;
 		if ($ext && strtolower($ext) != $ext) {
 			$ext2      = strtolower($ext);
 			$filename2 = preg_replace('|' . preg_quote($ext) . '$|', $ext2, $filename);
@@ -263,9 +241,10 @@ function find_files($dir = '.', $pattern = '', $excludes = array(), $recursive =
 }
 
 /**
- * 删除目录.
+ * 删除目录及其内容,如果$keep为true则将目录本身也删除.
  *
  * @param string $dir
+ * @param bool   $keep
  *
  * @return bool
  */
@@ -320,10 +299,10 @@ function keepargs($url, $include = array()) {
 }
 
 /**
- * 去除URL中的参数.
+ * 删除URL中的参数.
  *
- * @param string url
- * @param array  要去除的参数
+ * @param string $url
+ * @param array  $exclude 要删除的参数
  *
  * @return string
  */
@@ -528,42 +507,54 @@ function get_query_string() {
  * 记录debug信息.
  *
  * @param string $message
+ * @param string $file
  */
 function log_debug($message, $file = '') {
 	$trace = debug_backtrace();
-	log_message($message, $trace, DEBUG_DEBUG, $trace, $file);
+	log_message($message, $trace, DEBUG_DEBUG, $file);
 }
 
 /**
  * 记录info信息.
  *
  * @param string $message
+ * @param string $file
  */
 function log_info($message, $file = '') {
 	$trace = debug_backtrace();
-	log_message($message, $trace, DEBUG_INFO, $trace, $file);
+	log_message($message, $trace, DEBUG_INFO, $file);
 }
 
 /**
  * 记录warn信息.
  *
  * @param string $message
+ * @param string $file
  */
 function log_warn($message, $file = '') {
 	$trace = debug_backtrace();
-	log_message($message, $trace, DEBUG_WARN, $trace, $file);
+	log_message($message, $trace, DEBUG_WARN, $file);
 }
 
 /**
  * 记录error信息.
  *
  * @param string $message
+ * @param string $file
  */
 function log_error($message, $file = '') {
 	$trace = debug_backtrace();
-	log_message($message, $trace, DEBUG_ERROR, $trace, $file);
+	log_message($message, $trace, DEBUG_ERROR, $file);
 }
 
+/**
+ * 为url添加参数。
+ *
+ * @param string $url
+ * @param array  $args
+ *
+ * @return string
+ */
 function url_append_args($url, $args) {
 	if (strpos($url, '?') === false) {
 		return $url . '?' . http_build_query($args);
@@ -628,10 +619,9 @@ function merge_add($ary1, $ary2, $sep = ' ') {
  * @param string $message
  * @param array  $trace_info
  * @param int    $level
- * @param string $origin
+ * @param string $file
  */
-function log_message($message, $trace_info, $level, $origin = null, $file = '') {
-	static $fb = false;
+function log_message($message, $trace_info, $level, $file = '') {
 	static $log_name = array(DEBUG_INFO => 'INFO', DEBUG_WARN => 'WARN', DEBUG_DEBUG => 'DEBUG', DEBUG_ERROR => 'ERROR');
 	if (empty ($trace_info)) {
 		return;
@@ -643,6 +633,15 @@ function log_message($message, $trace_info, $level, $origin = null, $file = '') 
 			$msg .= "\t\t{$trace_info[1]['file']} at line {$trace_info[1]['line']}\n";
 			if (isset ($trace_info [2]) && $trace_info [2]) {
 				$msg .= "\t\t\t{$trace_info[2]['file']} at line {$trace_info[2]['line']}\n";
+			}
+			if (isset ($trace_info [3]) && $trace_info [3]) {
+				$msg .= "\t\t\t\t{$trace_info[3]['file']} at line {$trace_info[3]['line']}\n";
+			}
+			if (isset ($trace_info [4]) && $trace_info [4]) {
+				$msg .= "\t\t\t\t{$trace_info[4]['file']} at line {$trace_info[4]['line']}\n";
+			}
+			if (isset ($trace_info [5]) && $trace_info [5]) {
+				$msg .= "\t\t\t\t{$trace_info[5]['file']} at line {$trace_info[5]['line']}\n";
 			}
 		}
 		if (isset ($_SERVER ['REQUEST_URI'])) {
@@ -662,8 +661,9 @@ function log_message($message, $trace_info, $level, $origin = null, $file = '') 
  * @return string
  */
 function rand_str($len = 8, $chars = "a-z,0-9,$,_,!,@,#,=,~,$,%,^,&,*,(,),+,?,:,{,},[,],A-Z") {
-	$characters = explode(',', $chars);
-	$num        = count($characters);
+	$characters  = explode(',', $chars);
+	$num         = count($characters);
+	$array_allow = [];
 	for ($i = 0; $i < $num; $i++) {
 		if (substr_count($characters [ $i ], '-') > 0) {
 			$character_range = explode('-', $characters [ $i ]);
@@ -678,9 +678,8 @@ function rand_str($len = 8, $chars = "a-z,0-9,$,_,!,@,#,=,~,$,%,^,&,*,(,),+,?,:,
 
 	// 生成随机字符串
 	mt_srand(( double )microtime() * 1000000);
-	$code  = array();
-	$index = 0;
-	$i     = 0;
+	$code = array();
+	$i    = 0;
 	while ($i < $len) {
 		$index   = mt_rand(0, count($array_allow) - 1);
 		$code [] = $array_allow [ $index ];
@@ -750,19 +749,6 @@ function authcode($string, $operation = 'DECODE', $key = '', $expiry = 0) {
 }
 
 /**
- * 将关键词转换成数据库可以识别的格式.
- *
- * @param string $keywords
- *
- * @return string
- */
-function convert_search_keywords($keywords) {
-	$keywords = json_encode($keywords);
-
-	return str_replace(array('\u', '"', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'), array('u', '', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'), $keywords);
-}
-
-/**
  *
  * @param string $versions format:[(min,max)]
  *
@@ -819,10 +805,6 @@ function get_then_unset(&$ary) {
 }
 
 function html_escape($string, $esc_type = 'html', $char_set = null, $double_encode = true) {
-	static $_double_encode = null;
-	if ($_double_encode === null) {
-		$_double_encode = version_compare(PHP_VERSION, '5.2.3', '>=');
-	}
 
 	if (!$char_set) {
 		$char_set = 'UTF-8';
@@ -830,40 +812,10 @@ function html_escape($string, $esc_type = 'html', $char_set = null, $double_enco
 
 	switch ($esc_type) {
 		case 'html' :
-			if ($_double_encode) {
-				// php >=5.3.2 - go native
-				return htmlspecialchars($string, ENT_QUOTES, $char_set, $double_encode);
-			} else {
-				if ($double_encode) {
-					// php <5.2.3 - only handle double encoding
-					return htmlspecialchars($string, ENT_QUOTES, $char_set);
-				} else {
-					// php <5.2.3 - prevent double encoding
-					$string = htmlspecialchars($string, ENT_QUOTES, $char_set);
-
-					return $string;
-				}
-			}
-
 		case 'htmlall' :
-			// mb_convert_encoding ignores htmlspecialchars()
-			if ($_double_encode) {
-				// php >=5.3.2 - go native
-				$string = htmlspecialchars($string, ENT_QUOTES, $char_set, $double_encode);
-			} else {
-				if ($double_encode) {
-					// php <5.2.3 - only handle double encoding
-					$string = htmlspecialchars($string, ENT_QUOTES, $char_set);
-				} else {
-					// php <5.2.3 - prevent double encoding
-					$string = htmlspecialchars($string, ENT_QUOTES, $char_set);
+			$string = htmlspecialchars($string, ENT_QUOTES, $char_set, $double_encode);
 
-					return $string;
-				}
-
-				// htmlentities() won't convert everything, so use mb_convert_encoding
-				return mb_convert_encoding($string, 'HTML-ENTITIES', $char_set);
-			}
+			return $string;
 		case 'url' :
 			return rawurlencode($string);
 
@@ -894,6 +846,13 @@ function html_escape($string, $esc_type = 'html', $char_set = null, $double_enco
 	}
 }
 
+/**
+ * 时间差
+ *
+ * @param integer $time
+ *
+ * @return string
+ */
 function timediff($time) {
 	static $ctime = false;
 	if ($ctime === false) {
@@ -1005,7 +964,7 @@ function inner_str($str, $str1, $str2, $include_str1 = true) {
  * @filter  get_session_name session_name
  */
 function get_session_name() {
-	return apply_filter('get_session_name', '_S_' . APPID);
+	return apply_filter('get_session_name', '_sid_' . APPID);
 }
 
 /**
@@ -1020,6 +979,21 @@ function imv($val, $alias = null) {
 	return new \wulaphp\db\sql\ImmutableValue ($val, $alias);
 }
 
-include WULA_ROOT . 'includes' . DS . 'plugin.php';
-include WULA_ROOT . 'includes' . DS . 'template.php';
+/**
+ * 去除字符串中的所有html标签,换行,空格等.
+ *
+ * @param string $text
+ *
+ * @return string
+ */
+function cleanhtml2simple($text) {
+	$text = str_ireplace(array('[page]', ' ', '　', "\t", "\r", "\n", '&nbsp;'), '', $text);
+	$text = preg_replace('#</?[a-z0-9][^>]*?>#msi', '', $text);
+
+	return $text;
+}
+
+include WULA_ROOT . 'includes/plugin.php';
+include WULA_ROOT . 'includes/kernelimpl.php';
+include WULA_ROOT . 'includes/template.php';
 // end of file functions.php

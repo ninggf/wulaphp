@@ -1,8 +1,6 @@
 <?php
 namespace wulaphp\mvc\view;
 
-use wulaphp\app\App;
-
 /**
  * Smarty视图
  *
@@ -20,7 +18,7 @@ class SmartyView extends View {
 
 	public function __construct($data = array(), $tpl = '', $headers = array('Content-Type' => 'text/html')) {
 		if (!isset ($headers ['Content-Type'])) {
-			$headers ['Content-Type'] = 'text/html';
+			$headers ['Content-Type'] = 'text/html; charset=utf8';
 		}
 		parent::__construct($data, $tpl, $headers);
 	}
@@ -31,28 +29,28 @@ class SmartyView extends View {
 	 * @filter init_view_smarty_engine $smarty
 	 */
 	public function render() {
-		$tpl    = MODULES_PATH . $this->tpl;
-		$devMod = App::bcfg('develop_mode');
+		$tpl    = MODULES_PATH . $this->tpl . '.tpl';
+		$devMod = APP_MODE == 'dev';
 		if (is_file($tpl)) {
-			$this->__smarty               = new \Smarty ();
-			$this->__smarty->template_dir = MODULES_PATH; // 模板目录
-			$tpl                          = str_replace(DS, '/', $this->tpl);
-			$tpl                          = explode('/', $tpl);
-			array_pop($tpl);
-			$sub                         = implode(DS, $tpl);
-			$this->__smarty->compile_dir = TMP_PATH . 'tpls_c' . DS . $sub; // 模板编译目录
-			$this->__smarty->cache_dir   = TMP_PATH . 'tpls_cache' . DS . $sub; // 模板缓存目录
+			$this->__smarty = new \Smarty ();
+			$tpl            = str_replace(DS, '/', $this->tpl);
+			$tpl            = explode('/', $tpl);
+			$sub            = implode(DS, array_slice($tpl, 0, -1));
+
+			$this->__smarty->setTemplateDir(MODULES_PATH);
+			$this->__smarty->setCompileDir(TMP_PATH . 'tpls_c' . DS . $sub);
+			$this->__smarty->setCacheDir(TMP_PATH . 'tpls_cache' . DS . $sub);
+			$this->__smarty->setDebugTemplate(SMARTY_DIR . 'debug.tpl');
 			fire('init_smarty_engine', $this->__smarty);
 			fire('init_view_smarty_engine', $this->__smarty);
 			$this->__smarty->compile_check = true;
-			$this->__smarty->_dir_perms    = 0755;
 			if ($devMod) {
-				$this->__smarty->compile_check = true;
+				$this->__smarty->compile_check   = true;
+				$this->__smarty->caching         = false;
+				$this->__smarty->debugging_ctrl  = 'URL';
+				$this->__smarty->smarty_debug_id = '_debug_' . APPID;
 			} else {
 				$this->__smarty->compile_check = false;
-			}
-			if ($devMod) {
-				$this->__smarty->caching = false;
 			}
 			$this->__smarty->error_reporting = KS_ERROR_REPORT_LEVEL;
 		} else {
@@ -66,7 +64,10 @@ class SmartyView extends View {
 		$this->__smarty->assign('_css_files', $this->sytles);
 		$this->__smarty->assign('_js_files', $this->scripts);
 		$this->__smarty->assign('_current_template_file', $this->tpl);
+		@ob_start(PHP_OUTPUT_HANDLER_CLEANABLE);
+		$this->__smarty->display($this->tpl . '.tpl');
+		$content = @ob_get_clean();
 
-		return $this->__smarty->fetch($this->tpl);
+		return $content;
 	}
 }

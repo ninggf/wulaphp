@@ -2,6 +2,9 @@
 namespace wulaphp\router;
 
 use wulaphp\app\App;
+use wulaphp\cache\RtCache;
+use wulaphp\mvc\controller\Controller;
+use wulaphp\mvc\view\SmartyView;
 use wulaphp\util\ObjectCaller;
 
 /**
@@ -15,76 +18,147 @@ class DefaultDispatcher implements IURLDispatcher {
 	/**
 	 * 将url 分发到模块控制器里的action.
 	 *
-	 * @see \wulaphp\router\IURLDispatcher::dispatch()
+	 * @param string        $url
+	 * @param Router        $router
+	 * @param UrlParsedInfo $parsedInfo ;
+	 *
+	 * @return \wulaphp\mvc\view\View
 	 */
 	public function dispatch($url, $router, $parsedInfo) {
 		$controllers = explode('/', $url);
 		$pms         = array();
 		$len         = count($controllers);
+		$module      = '';
+		$prefix      = null;
+		$action      = 'index';
 		if ($len == 0) {
 			return null;
 		} else if ($len == 1 && !empty ($controllers [0])) {
 			$module = $controllers [0];
-			$action = 'index';
+
 		} else if ($len == 2) {
 			$module = $controllers [0];
-			$action = $controllers [1];
+			if (App::checkUrlPrefix($module)) {
+				$prefix = $module;
+				$module = $controllers[1];
+			} else {
+				$action = $controllers [1];
+			}
 		} else if ($len > 2) {
 			$module = $controllers [0];
-			$action = $controllers [1];
-			$pms    = array_slice($controllers, 2);
+			if (App::checkUrlPrefix($module)) {
+				$prefix = $module;
+				$module = $controllers[1];
+				$action = $controllers [2];
+				$pms    = array_slice($controllers, 3);
+			} else {
+				$action = $controllers [1];
+				$pms    = array_slice($controllers, 2);
+			}
 		}
 		$module    = strtolower($module);
 		$namespace = App::dir2id($module, true);
 		if ($namespace) {
 			$action = strtolower($action);
-			$app    = $this->findApp($module, $action, $pms, $namespace);
+			$app    = RtCache::get($url);
+			if (!$app) {
+				$app = $this->findApp($module, $action, $pms, $namespace);
+				RtCache::add($url, $app);
+			} else {
+				if (is_file($app[3])) {
+					include $app[3];
+				} else {
+					$app = $this->findApp($module, $action, $pms, $namespace);
+					RtCache::add($url, $app);
+				}
+			}
 			if ($app) {
 				list ($controllerClz, $action, $pms) = $app;
-				try {
-					$rm  = strtolower($_SERVER ['REQUEST_METHOD']);
-					$clz = new $controllerClz ($module);
-					// 存在index_get,index_post,add_get add_post这新的方法.
-					if (method_exists($clz, $action . '_' . $rm)) {
-						$action = $action . '_' . $rm;
-					} else if (!method_exists($clz, $action)) {
-						array_unshift($pms, $action);
-						$action = 'index';
-					}
-					if (method_exists($clz, $action . '_' . $rm)) {
-						$action = $action . '_' . $rm;
-					}
+				if (in_array($action, ['beforerun', 'afterrun', 'geturlprefix'])) {
+					RtCache::delete($url);
 
-					if (method_exists($clz, $action)) {
-						$ref    = new \ReflectionObject ($clz);
-						$method = $ref->getMethod($action);
-						$params = $method->getParameters();
-						if (count($params) < count($pms)) {
-							if (DEBUG == DEBUG_DEBUG) {
-								trigger_error('the count of parameters of "' . $controllerClz . '::' . $action . '" does not match, except ' . count($params) . ' but ' . count($pms) . ' given.', E_USER_ERROR);
-							} else {
+					return null;
+				}
+				try {
+					$clz = new $controllerClz (App::getModule($namespace));
+					if ($clz instanceof Controller) {
+						$cprefix = '';
+						if (method_exists($clz->clzName, 'getURLPrefix')) {
+							$tmpPrefix = ObjectCaller::callClzMethod($clz->clzName, 'getURLPrefix');
+							$cprefix   = $tmpPrefix && isset($tmpPrefix[1]) ? $tmpPrefix[1] : '';
+						}
+						if (($cprefix || $prefix) && $cprefix != $prefix) {
+							RtCache::delete($url);
+
+							return null;
+						}
+						$rm = ucfirst(strtolower($_SERVER ['REQUEST_METHOD']));
+						// 存在index_get,index_post,add_get add_post这新的方法.
+						$md          = $action . $rm;
+						$actionFound = false;
+						if (method_exists($clz, $md)) {
+							$action      = $md;
+							$actionFound = true;
+						} else if (!method_exists($clz, $action)) {
+							array_unshift($pms, $action);
+							$action = 'index';
+						}
+						$md = $action . $rm;
+						if (method_exists($clz, $md)) {
+							$action      = $md;
+							$actionFound = true;
+						} else if (method_exists($clz, $action)) {
+							$actionFound = true;
+						}
+
+						if ($actionFound) {
+							$ref    = $clz->reflectionObj;
+							$method = $ref->getMethod($action);
+							if (!$method->isPublic()) {
 								return null;
 							}
-						}
-						$view = $clz->_beforeRun($action);
-						if ($view) {
+							$params = $method->getParameters();
+							if (count($params) < count($pms)) {
+								if (DEBUG == DEBUG_DEBUG) {
+									trigger_error('the count of parameters of "' . $controllerClz . '::' . $action . '" does not match, except ' . count($params) . ' but ' . count($pms) . ' given.', E_USER_ERROR);
+								} else {
+									return null;
+								}
+							}
+							$clz->beforeRun($action, $method);
+							$args = array();
+							if ($params) {
+								$idx = 0;
+								foreach ($params as $p) {
+									$name    = $p->getName();
+									$def     = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
+									$value   = rqst($name, $def, true);
+									$args [] = $value;
+									$idx++;
+								}
+							}
+							$view = ObjectCaller::callObjMethod($clz, $action, $args);
+							$view = $clz->afterRun($action, $view);
+							if ($view instanceof SmartyView) {
+								$tpl = $view->getTemplate();
+								if ($tpl) {
+									if ($tpl{0} == '~') {
+										$tpl     = substr($tpl, 1);
+										$tpls    = explode('/', $tpl);
+										$tpls[0] = App::id2dir($tpls[0]);
+										$tpl     = implode('/', $tpls);
+										unset($tpls[0]);
+									} else {
+										$tpl = $module . '/views/' . $tpl;
+									}
+									$view->setTemplate($tpl);
+								} else {
+									$view->setTemplate($module . '/views/' . $action);
+								}
+							}
+
 							return $view;
 						}
-						$args = array();
-						if ($params) {
-							$idx = 0;
-							foreach ($params as $p) {
-								$name    = $p->getName();
-								$def     = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
-								$value   = rqst($name, $def, true);
-								$args [] = $value;
-								$idx++;
-							}
-						}
-						$view = ObjectCaller::callObjMethod($clz, $action, $args);
-						$view = $clz->_afterRun($action, $view);
-
-						return $view;
 					}
 				} catch (\ReflectionException $e) {
 					if (DEBUG == DEBUG_DEBUG) {
@@ -114,7 +188,7 @@ class DefaultDispatcher implements IURLDispatcher {
 		}
 		if ($action != 'index') {
 			// Action Controller 的 index方法
-			$controllerClz   = ucfirst($action) . 'Controller';
+			$controllerClz   = str_replace('-', '', ucwords($action, '-')) . 'Controller';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$files []        = array($controller_file, $namespace . '\controllers\\' . $controllerClz, 'index');
 			// 默认controller的action方法
@@ -131,19 +205,19 @@ class DefaultDispatcher implements IURLDispatcher {
 							$action = array_shift($params);
 						}
 
-						return array($controllerClz, $action, $params);
+						return array($controllerClz, $action, $params, $controller_file);
 					}
 				}
 			}
 		} else {
 			// 默认Controller的index方法
-			$controllerClz   = ucfirst($module) . 'Controller';
+			$controllerClz   = str_replace('-', '', ucwords($module, '-')) . 'Controller';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$controllerClz   = $namespace . '\controllers\\' . $controllerClz;
 			if (is_file($controller_file)) {
 				include $controller_file;
 				if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
-					return array($controllerClz, $action, $params);
+					return array($controllerClz, $action, $params, $controller_file);
 				}
 			}
 		}

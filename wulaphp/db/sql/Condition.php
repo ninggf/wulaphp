@@ -1,5 +1,6 @@
 <?php
 namespace wulaphp\db\sql;
+
 use wulaphp\db\dialect\DatabaseDialect;
 
 /**
@@ -66,9 +67,14 @@ class Condition implements \ArrayAccess, \Countable {
 	 *
 	 * @return string
 	 */
-	public function getWhereCondition($dialect, $values) {
+	public function getWhereCondition(DatabaseDialect $dialect, $values) {
 		/*
-		 * || - or @ - existi !@ - not exist $ - null or not null
+		 * || - or
+		 * @  - exist
+		 * !@ - not exist
+		 * $ - null or not null
+		 * ~ - 正则匹配,
+		 * !~ - 正则不匹配。
 		 */
 		$cons = array();
 		foreach ($this->conditions as $con) {
@@ -138,7 +144,8 @@ class Condition implements \ArrayAccess, \Countable {
 						}
 						$cons [] = $filed . ' ' . $op . ' (' . implode(',', $vs) . ')';
 					} else if ($value instanceof ImmutableValue) {
-						$cons [] = $filed . ' ' . $op . ' (' . $dialect->sanitize($value->__toString($dialect)) . ')';
+						$value->setDialect($dialect);
+						$cons [] = $filed . ' ' . $op . ' (' . $dialect->sanitize($value->__toString()) . ')';
 					} else {
 						array_shift($cons);
 					}
@@ -146,13 +153,14 @@ class Condition implements \ArrayAccess, \Countable {
 					$op      = str_replace('!', 'NOT ', $op);
 					$cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
 				} else if ($op == 'MATCH') {
-					$cons [] = "MATCH({$filed}) AGAINST(" . $values->addValue($filed, $value) . ')';
+					$cons [] = "MATCH({$filed}) AGAINST (" . $values->addValue($filed, $value) . ')';
 				} else if ($op == '~' || $op == '!~') {
 					$op      = str_replace(array('!', '~'), array('NOT ', 'REGEXP'), $op);
 					$cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
 				} else {
 					if ($value instanceof ImmutableValue) {
-						$val = $dialect->sanitize($value->__toString($dialect));
+						$value->setDialect($dialect);
+						$val = $dialect->sanitize($value->__toString());
 					} else if ($value instanceof Query) {
 						$value->setBindValues($values);
 						$value->setDialect($dialect);
@@ -182,13 +190,13 @@ class Condition implements \ArrayAccess, \Countable {
 	}
 
 	/**
-	 * (non-PHPdoc)
 	 * || - or
 	 * @ - existi
 	 * !@ - not exist
 	 * $ - null or not null
 	 *
-	 * @see ArrayAccess::offsetSet()
+	 * @param mixed $offset
+	 * @param mixed $value
 	 */
 	public function offsetSet($offset, $value) {
 		if (is_string($value) || is_numeric($value)) {

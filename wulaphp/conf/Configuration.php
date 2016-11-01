@@ -13,12 +13,20 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 
 	protected $name;
 
-	public function __construct($name) {
+	public function __construct($name = 'default') {
+		$this->name = $name;
+	}
+
+	public function setName($name) {
 		$this->name = $name;
 	}
 
 	public function name() {
 		return $this->name;
+	}
+
+	public function setConfigs($settings = []) {
+		$this->settings = $settings;
 	}
 
 	public function offsetExists($offset) {
@@ -47,6 +55,18 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 	 */
 	public function get($name, $default = '') {
 		return isset ($this->settings [ $name ]) ? $this->settings [ $name ] : $default;
+	}
+
+	public function getb($name, $default = false) {
+		$v = $this->get($name, $default);
+
+		return (bool)$v;
+	}
+
+	public function geti($name, $default = 0) {
+		$v = $this->get($name, $default);
+
+		return (int)$v;
 	}
 
 	/**

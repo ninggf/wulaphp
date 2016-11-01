@@ -9,9 +9,12 @@ namespace wulaphp\conf;
  */
 class DatabaseConfiguration extends Configuration {
 
-	public function __construct($name) {
+	public function __construct($name = 'default', $config = []) {
 		parent::__construct($name);
 		$this->settings = array('driver' => 'MySQL', 'port' => '3306', 'host' => 'localhost', 'dbname' => '', 'user' => 'root', 'password' => '888888', 'encoding' => 'UTF8');
+		if ($config) {
+			$this->settings = array_merge($this->settings, $config);
+		}
 	}
 
 	public function host($host) {

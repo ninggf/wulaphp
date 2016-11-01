@@ -12,8 +12,6 @@ use wulaphp\io\Response;
  */
 class Router {
 
-	private $modules;
-
 	private $xssCleaner;
 
 	private $dispatchers = array();
@@ -23,58 +21,33 @@ class Router {
 	private $postDispatchers = array();
 
 	private $urlParsedInfo;
+	/**
+	 * @var Router
+	 */
+	private static $INSTANCE;
 
 	/**
 	 * Router constructor.
 	 *
-	 * @param array $modules
 	 *
-	 * @filter register_dispatcher Router
+	 * @filter router\registerDispatcher Router
 	 */
-	public function __construct($modules = null) {
-		$this->modules    = $modules;
+	private function __construct() {
 		$this->xssCleaner = new XssCleaner();
-		$this->register(new DefaultDispatcher (), 100);
-		fire('register_dispatcher', $this);
+		$this->register(new DefaultDispatcher (), 0);
+		fire('router\registerDispatcher', $this);
 	}
 
 	/**
-	 * 检测系统BASE URL.
-	 *
-	 * @param boolean $full 是否返回全路径.
-	 *
-	 * @return string
+	 * 获取路由器实例.
+	 * @return \wulaphp\router\Router
 	 */
-	public static function detect($full = false) {
-		$script_name  = $_SERVER ['SCRIPT_NAME'];
-		$script_name  = trim(str_replace(WWWROOT, '', $script_name), '/');
-		$script_names = explode('/', $script_name);
-		array_pop($script_names);
-		$base = '/';
-		if (!empty ($script_names) && !is_file(WWWROOT . $script_name)) {
-			$web_roots = explode('/', trim(str_replace(DS, '/', WWWROOT), '/'));
-			$matchs    = array();
-			$pos       = 0;
-			foreach ($web_roots as $chunk) {
-				if ($chunk == $script_names [ $pos ]) {
-					$matchs [] = $chunk;
-					$pos++;
-				} else {
-					$matchs = array();
-					$pos    = 0;
-				}
-			}
-			if ($pos > 0) {
-				$base .= implode('/', $matchs) . '/';
-			}
-		}
-		if ($full) {
-			$host     = isset ($_SERVER ['HTTP_HOST']) ? $_SERVER ['HTTP_HOST'] : 'localhost';
-			$protocol = isset ($_SERVER ['HTTPS']) ? 'https://' : 'http://';
-			$base     = $protocol . $host . $base;
+	public static function getRouter() {
+		if (self::$INSTANCE == null) {
+			self::$INSTANCE = new Router();
 		}
 
-		return $base;
+		return self::$INSTANCE;
 	}
 
 	/**
@@ -130,7 +103,9 @@ class Router {
 		$view = null;
 		foreach ($this->preDispatchers as $dispatchers) {
 			foreach ($dispatchers as $d) {
-				$view = $d->preDispatch($url, $this, $view);
+				if ($d instanceof IURLPreDispatcher) {
+					$view = $d->preDispatch($url, $this, $view);
+				}
 			}
 		}
 		if ($view) {
@@ -139,9 +114,11 @@ class Router {
 			$this->urlParsedInfo = new UrlParsedInfo ($uri, $url, $args);
 			foreach ($this->dispatchers as $dispatchers) {
 				foreach ($dispatchers as $d) {
-					$view = $d->dispatch($url, $this, $this->urlParsedInfo);
-					if ($view) {
-						break;
+					if ($d instanceof IURLDispatcher) {
+						$view = $d->dispatch($url, $this, $this->urlParsedInfo);
+						if ($view) {
+							break;
+						}
 					}
 				}
 				if ($view) {
@@ -150,7 +127,9 @@ class Router {
 			}
 			foreach ($this->postDispatchers as $dispatchers) {
 				foreach ($dispatchers as $d) {
-					$view = $d->postDispatch($url, $this, $view);
+					if ($d instanceof IURLPostDispatcher) {
+						$view = $d->postDispatch($url, $this, $view);
+					}
 				}
 			}
 			if ($view) {

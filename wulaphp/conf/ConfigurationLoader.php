@@ -16,7 +16,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 	 * @see \wulaphp\conf\BaseConfigurationLoader::loadConfig()
 	 */
 	public function loadConfig($name = 'default') {
-		$config = new Configuration ($name);
+		$config = new Configuration($name);
 		if ($name == 'default') {
 			$_wula_config_file = APPROOT . CONF_DIR . '/config';
 		} else {
@@ -26,7 +26,13 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 		$wula_cfg_fiels [] = $_wula_config_file . '.php';
 		foreach ($wula_cfg_fiels as $_wula_config_file) {
 			if (is_file($_wula_config_file)) {
-				include $_wula_config_file;
+				$cfg = include $_wula_config_file;
+				if ($cfg instanceof Configuration) {
+					$cfg->setName($name);
+					$config = $cfg;
+				} elseif (is_array($cfg)) {
+					$config->setConfigs($cfg);
+				}
 				break;
 			}
 		}
@@ -37,9 +43,9 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 
 	/**
 	 * 加载数据库配置.
-	 * {@inheritDoc}
 	 *
-	 * @see \wulaphp\conf\BaseConfigurationLoader::loadDatabaseConfig()
+	 * @param string $name
+	 *
 	 * @return DatabaseConfiguration
 	 */
 	public function loadDatabaseConfig($name = 'default') {
@@ -53,7 +59,13 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 		$wula_cfg_fiels [] = $_wula_config_file . '.php';
 		foreach ($wula_cfg_fiels as $_wula_config_file) {
 			if (is_file($_wula_config_file)) {
-				include $_wula_config_file;
+				$cfg = include $_wula_config_file;
+				if ($cfg instanceof Configuration) {
+					$cfg->setName($name);
+					$config = $cfg;
+				} elseif (is_array($cfg)) {
+					$config->setConfigs($cfg);
+				}
 				break;
 			}
 		}
