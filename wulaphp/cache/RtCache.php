@@ -125,7 +125,7 @@ namespace {
 				$envs = [];
 			}
 			if (isset($envs['debug'])) {
-				$envs['debug'] = constant($envs['debug']);
+				$envs['debug'] = intval($envs['debug']);
 			}
 			if (APP_MODE != 'dev') {
 				$cache = RtCache::getLocalCache();
