@@ -1,6 +1,6 @@
 {
   "name": "wula/wulaphp",
-  "description": "一个由社区成员开发的，基于PHP 5.6.0 或更高版本的WEB应用开发利器。",
+  "description": "一个小巧的PHP MVC框架。它的名来自《异星战场》里那个速度极快的狗狗，它真的很快！",
   "require": {
 	"php": ">=5.6.0",
 	"ext-json": "*",
@@ -9,7 +9,7 @@
 	"ext-mbstring": "*",
 	"ext-curl": "*",
 	"ext-SPL": "*",
-	"smarty/smarty": "~3.1"
+	"smarty/smarty": "^3.1"
   },
   "license": "MIT",
   "keywords": [
@@ -33,7 +33,7 @@
   },
   "extra": {
 	"branch-alias": {
-	  "dev-master": "1.1.0-dev"
+	  "dev-master": "1.1-dev"
 	}
   },
   "support": {
