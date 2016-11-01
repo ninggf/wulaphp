@@ -65,6 +65,7 @@ abstract class Table extends View {
 				return $rst;
 			} else {
 				$this->checkSQL($sql);
+
 				return false;
 			}
 		} else {
