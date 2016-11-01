@@ -23,7 +23,7 @@
   "authors": [
 	{
 	  "name": "Leo Ning",
-	  "email": "windywany@163.com"
+	  "email": "windywany@gmail.com"
 	}
   ],
   "autoload": {
@@ -33,7 +33,7 @@
   },
   "extra": {
 	"branch-alias": {
-	  "dev-master": "0.1.x-dev"
+	  "dev-master": "1.0.0-dev"
 	}
   },
   "support": {
