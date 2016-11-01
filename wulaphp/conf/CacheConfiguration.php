@@ -34,6 +34,13 @@ class CacheConfiguration extends Configuration {
 	}
 
 	/**
+	 * @param bool $enabled
+	 */
+	public function enabled($enabled = true) {
+		$this->settings['enabled'] = $enabled;
+	}
+
+	/**
 	 * 自定义缓存器配置.
 	 *
 	 * @param string $type
