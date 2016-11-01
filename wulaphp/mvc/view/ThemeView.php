@@ -1,8 +1,6 @@
 <?php
 namespace wulaphp\mvc\view;
 
-use wulaphp\app\App;
-
 /**
  * 模板视图.
  *
@@ -39,31 +37,29 @@ class ThemeView extends View {
 	 * 绘制.
 	 */
 	public function render() {
-		$basedir = THEME_PATH;
-		$tpl     = $basedir . $this->tpl;
-		$devMod  = App::bcfg('develop_mode');
+		$tpl    = THEME_PATH . $this->tpl;
+		$devMod = APP_MODE == 'dev';
 		if (is_file($tpl)) {
-			$this->__smarty               = new \Smarty ();
-			$this->__smarty->template_dir = $basedir; // 模板目录
-			$tpl                          = str_replace(DS, '/', $this->tpl);
-			$tpl                          = explode('/', $tpl);
-			array_pop($tpl);
-			$sub                         = implode(DS, $tpl);
-			$this->__smarty->compile_dir = TMP_PATH . 'themes_c' . DS . $sub; // 模板编译目录
-			$this->__smarty->cache_dir   = TMP_PATH . 'themes_cache' . DS . $sub; // 模板缓存目录
+			$this->__smarty = new \Smarty ();
+			$tpl            = str_replace(DS, '/', $this->tpl);
+			$tpl            = explode('/', $tpl);
+			$sub            = implode(DS, array_slice($tpl, 0, -1));
+
+			$this->__smarty->setTemplateDir(THEME_PATH);
+			$this->__smarty->setCompileDir(TMP_PATH . 'themes_c' . DS . $sub);
+			$this->__smarty->setCacheDir(TMP_PATH . 'themes_cache' . DS . $sub);
+			$this->__smarty->setDebugTemplate(SMARTY_DIR . 'debug.tpl');
 			fire('init_smarty_engine', $this->__smarty);
 			fire('init_template_smarty_engine', $this->__smarty);
 			if ($devMod) {
-				$this->__smarty->compile_check = true;
-				$this->__smarty->force_compile = true;
+				$this->__smarty->compile_check   = true;
+				$this->__smarty->caching         = false;
+				$this->__smarty->debugging_ctrl  = 'URL';
+				$this->__smarty->smarty_debug_id = '_debug_' . APPID;
 			} else {
 				$this->__smarty->compile_check = false;
 			}
-			$this->__smarty->_dir_perms      = 0755;
 			$this->__smarty->error_reporting = KS_ERROR_REPORT_LEVEL;
-			if ($devMod) {
-				$this->__smarty->caching = false;
-			}
 		} else {
 			if ($devMod) {
 				die ('The view template ' . $tpl . ' is not found');
@@ -74,7 +70,9 @@ class ThemeView extends View {
 		$this->__smarty->assign('_css_files', $this->sytles);
 		$this->__smarty->assign('_js_files', $this->scripts);
 		$this->__smarty->assign('_current_template_file', $this->tpl);
-		$content = $this->__smarty->fetch($this->tpl);
+		@ob_start(PHP_OUTPUT_HANDLER_CLEANABLE);
+		$this->__smarty->display($this->tpl);
+		$content = @ob_get_clean();
 
 		return $content;
 	}

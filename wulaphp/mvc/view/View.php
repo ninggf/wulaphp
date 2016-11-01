@@ -12,7 +12,6 @@ namespace wulaphp\mvc\view;
  * @package view
  */
 abstract class View implements \ArrayAccess, Renderable {
-
 	protected $tpl = '';
 
 	protected $data;
@@ -72,6 +71,14 @@ abstract class View implements \ArrayAccess, Renderable {
 		} else if ($data) {
 			$this->data [ $data ] = $value;
 		}
+	}
+
+	public function getTemplate() {
+		return $this->tpl;
+	}
+
+	public function setTemplate($tpl) {
+		$this->tpl = $tpl;
 	}
 
 	public function expire($expire) {

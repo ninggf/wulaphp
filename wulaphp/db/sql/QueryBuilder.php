@@ -2,368 +2,458 @@
 namespace wulaphp\db\sql;
 
 use wulaphp\db\dialect\DatabaseDialect;
-use wulaphp\db\DatabaseConnection;
+use wulaphp\db\DialectException;
 
-abstract class QueryBuilder implements \Countable {
-    const LEFT = 'LEFT';
-    const RIGHT = 'RIGHT';
-    const INNER = '';
+abstract class QueryBuilder {
+	const LEFT  = 'LEFT';
+	const RIGHT = 'RIGHT';
+	const INNER = '';
 
-    private static $sqlCount = 0;
+	private static $sqlCount = 0;
+	protected      $alias;
+	/**
+	 * @var DatabaseDialect
+	 */
+	protected $dialect;
+	/**
+	 * @var BindValues
+	 */
+	protected $values;
 
-    protected $db;
+	protected $options = array();
 
-    protected $alias;
+	protected $from = array();
 
-    protected $dialect;
+	protected $joins = array();
 
-    protected $values;
+	protected $where = null;
 
-    protected $options = array ();
+	protected $having = array();
 
-    protected $from = array ();
+	protected $limit = null;
 
-    protected $joins = array ();
+	protected $group = array();
 
-    protected $where = null;
+	protected $order = array();
 
-    protected $having = array ();
+	protected $error = false;
 
-    protected $limit = null;
+	protected $errorSQL  = '';
+	protected $errorValues;
+	protected $dumpSQL   = null;
+	protected $exception = null;
 
-    protected $group = array ();
+	public function __construct() {
+	}
 
-    protected $order = array ();
+	public function __destruct() {
+		$this->close();
+	}
 
-    protected $error = false;
+	public function close() {
+		$this->alias   = null;
+		$this->dialect = null;
+		$this->values  = null;
+		$this->options = null;
+		$this->from    = null;
+		$this->joins   = null;
+		$this->where   = null;
+		$this->having  = null;
+		$this->limit   = null;
+		$this->group   = null;
+		$this->order   = null;
+	}
 
-    protected $errorSQL = '';
+	/**
+	 * @param DatabaseDialect $dialect
+	 *
+	 * @return QueryBuilder
+	 */
+	public function setDialect(DatabaseDialect $dialect) {
+		$this->dialect = $dialect;
 
-    protected $errorValues;
+		return $this;
+	}
 
-    public function __construct() {
-    }
+	/**
+	 * @param $table
+	 *
+	 * @return QueryBuilder
+	 */
+	public function from($table) {
+		$tables = func_get_args();
+		foreach ($tables as $table) {
+			$this->from [] = self::parseAs($table);
+		}
 
-    public function __destruct() {
-        $this->close ();
-    }
+		return $this;
+	}
 
-    public function close() {
-        $this->alias = null;
-        $this->dbconf = null;
-        $this->dialect = null;
-        $this->values = null;
-        $this->options = null;
-        $this->from = null;
-        $this->joins = null;
-        $this->where = null;
-        $this->having = null;
-        $this->limit = null;
-        $this->group = null;
-        $this->order = null;
-        $this->error = false;
-        $this->errorSQL = null;
-        $this->errorValues = null;
-    }
+	/**
+	 * @param        $table
+	 * @param        $on
+	 * @param string $type
+	 *
+	 * @return QueryBuilder
+	 */
+	public function join($table, $on, $type = QueryBuilder::LEFT) {
+		$table          = self::parseAs($table);
+		$join           = array($table [0], $on, $type . ' JOIN ', $table [1]);
+		$this->joins [] = $join;
 
-    public function setDb($db) {
-        if (! $db instanceof DatabaseConnection) {
-            trigger_error ( 'the connection is not expected', E_USER_ERROR );
-        }
-        $this->db = $db;
-        $this->dialect = $db->getDialect ();
-    }
+		return $this;
+	}
 
-    public function into($table) {
-        return $this;
-    }
+	/**
+	 * @param null $con
+	 * @param bool $append
+	 *
+	 * @return QueryBuilder
+	 */
+	public function where($con = null, $append = true) {
+		if (is_array($con) && !empty ($con)) {
+			$con = new Condition ($con);
+		}
+		if ($con) {
+			if ($append && $this->where) {
+				$this->where [] = $con;
+			} else {
+				$this->where = $con;
+			}
+		}
 
-    public function from($table) {
-        $tables = func_get_args ();
-        foreach ( $tables as $table ) {
-            $this->from [] = self::parseAs ( $table );
-        }
-        return $this;
-    }
+		return $this;
+	}
 
-    public function join($table, $on, $type = QueryBuilder::LEFT) {
-        $table = self::parseAs ( $table );
-        $join = array ($table [0],$on,$type . ' JOIN ',$table [1] );
-        $this->joins [] = $join;
-        return $this;
-    }
+	public function getCondition() {
+		return $this->where;
+	}
 
-    public function where($con = null, $append = true) {
-        if (is_array ( $con ) && ! empty ( $con )) {
-            $con = new Condition ( $con );
-        }
-        if ($con) {
-            if ($append && $this->where) {
-                $this->where [] = $con;
-            } else {
-                $this->where = $con;
-            }
-        }
-        return $this;
-    }
+	/**
+	 * @param $having
+	 *
+	 * @return QueryBuilder
+	 */
+	public function having($having) {
+		if (!empty ($having)) {
+			$this->having [] = $having;
+		}
 
-    public function getCondition() {
-        return $this->where;
-    }
+		return $this;
+	}
 
-    public function having($having) {
-        if (! empty ( $having )) {
-            $this->having [] = $having;
-        }
-        return $this;
-    }
+	/**
+	 * @param $fields
+	 *
+	 * @return QueryBuilder
+	 */
+	public function groupBy($fields) {
+		if (!empty ($fields)) {
+			$this->group [] = $fields;
+		}
 
-    public function groupBy($fields) {
-        if (! empty ( $fields )) {
-            $this->group [] = $fields;
-        }
-        return $this;
-    }
+		return $this;
+	}
 
-    public function asc($field) {
-        $this->order [] = array ($field,'ASC' );
-        return $this;
-    }
+	/**
+	 * @param $field
+	 *
+	 * @return QueryBuilder
+	 */
+	public function asc($field) {
+		$this->order [] = array($field, 'ASC');
 
-    public function desc($field) {
-        $this->order [] = array ($field,'DESC' );
-        return $this;
-    }
+		return $this;
+	}
 
-    public function rand($rand = 'RAND') {
-        $this->order [] = array (imv ( $rand ),'()' );
-        return $this;
-    }
+	/**
+	 * @param $field
+	 *
+	 * @return QueryBuilder
+	 */
+	public function desc($field) {
+		$this->order [] = array($field, 'DESC');
 
-    /**
-     * 排序
-     *
-     * @param string $field 排序字段，多个字段使用|分隔.
-     * @param string $order a or d
-     * @return QueryBuilder
-     */
-    public function sort($field, $order) {
-        $order = strtolower ( $order ) == 'a' ? 'ASC' : 'DESC';
-        $fields = explode ( '|', $field );
-        foreach ( $fields as $fields ) {
-            $this->order [] = array ($field,$order );
-        }
-        return $this;
-    }
+		return $this;
+	}
 
-    public function limit($start, $limit) {
-        $start = intval ( $start );
-        $limit = intval ( $limit );
-        if ($start < 0) {
-            $start = 0;
-        }
-        if ($limit == 0) {
-            $limit = 1;
-        }
-        $this->limit = array ($start,$limit );
-        return $this;
-    }
+	/**
+	 * @param string $rand
+	 *
+	 * @return QueryBuilder
+	 */
+	public function rand($rand = 'RAND') {
+		$this->order [] = array(imv($rand), '()');
 
-    public function alias($alias) {
-        $this->alias = $alias;
-        return $this;
-    }
+		return $this;
+	}
 
-    public function getAlias() {
-        return $this->alias;
-    }
+	/**
+	 * 排序
+	 *
+	 * @param string $field 排序字段，多个字段使用|分隔.
+	 * @param string $order a or d
+	 *
+	 * @return QueryBuilder
+	 */
+	public function sort($field, $order) {
+		$order  = strtolower($order) == 'a' ? 'ASC' : 'DESC';
+		$fields = explode('|', $field);
+		foreach ($fields as $field) {
+			$this->order [] = array($field, $order);
+		}
 
-    public function usedb($database) {
-        $this->dbconf = $database;
-        return $this;
-    }
+		return $this;
+	}
 
-    public function setDialect($dialect) {
-        if ($dialect) {
-            $this->dialect = $dialect;
-        }
-        return $this;
-    }
+	/**
+	 * @param int $start start position.
+	 * @param int $limit
+	 *
+	 * @return QueryBuilder
+	 */
+	public function limit($start, $limit) {
+		$start = intval($start);
+		$limit = intval($limit);
+		if ($start < 0) {
+			$start = 0;
+		}
+		if ($limit == 0) {
+			$limit = 1;
+		}
+		$this->limit = array($start, $limit);
 
-    /**
-     * get the dialect binding with this query.
-     *
-     * @return DatabaseDialect
-     */
-    public function getDialect() {
-        $this->checkDialect ();
-        return $this->dialect;
-    }
+		return $this;
+	}
 
-    protected function checkDialect() {
-    }
+	/**
+	 * @param $alias
+	 *
+	 * @return QueryBuilder
+	 */
+	public function alias($alias) {
+		$this->alias = $alias;
 
-    public function getBindValues() {
-        return $this->values;
-    }
+		return $this;
+	}
 
-    public function setBindValues($values) {
-        $this->values = $values;
-    }
+	public function getAlias() {
+		return $this->alias;
+	}
 
-    public function setPDOOptions($options) {
-        $this->options = $options;
-    }
+	/**
+	 * get the dialect binding with this query.
+	 *
+	 * @return DatabaseDialect
+	 */
+	public function getDialect() {
+		$this->checkDialect();
 
-    public function lastError() {
-        return $this->error;
-    }
+		return $this->dialect;
+	}
 
-    public function error() {
-        return $this->error;
-    }
+	protected function checkDialect() {
+		if (!$this->dialect instanceof DatabaseDialect) {
+			throw new DialectException('Cannot connect to database server');
+		}
+	}
 
-    public function lastSQL() {
-        return $this->errorSQL;
-    }
+	public function getBindValues() {
+		return $this->values;
+	}
 
-    public function lastValues() {
-        return $this->errorValues;
-    }
+	public function setBindValues($values) {
+		$this->values = $values;
+	}
 
-    public function success() {
-        return empty ( $this->error ) ? true : false;
-    }
+	public function setPDOOptions($options) {
+		$this->options = $options;
+	}
 
-    public function perform($checkNum = false) {
-        return $this->exec ( $checkNum );
-    }
+	public function lastError() {
+		return $this->error;
+	}
 
-    /**
-     * 执行update,insert,delete语句.
-     *
-     * @param boolean $checkNum false 不检测,null直接返回影响的数量
-     *        是否检测影响的条数.
-     * @return boolean
-     */
-    public function exec($checkNum = false) {
-        $cnt = $this->count ();
-        $this->close ();
-        if ($cnt === false) {
-            return false;
-        } else if (get_class ( $this ) == 'InsertSQL') {
-            if ($checkNum || is_null ( $checkNum )) {
-                return $cnt > 0;
-            } else {
-                $ids = $this->lastInsertIds ();
-                return $ids;
-            }
-        } else if (is_null ( $checkNum )) {
-            return $cnt;
-        } else if ($checkNum) {
-            return $cnt > 0;
-        } else {
-            return true;
-        }
-    }
+	public function error() {
+		return $this->error;
+	}
 
-    public static function addSqlCount() {
-        self::$sqlCount ++;
-    }
+	public function lastSQL() {
+		return $this->errorSQL;
+	}
 
-    public static function getSqlCount() {
-        return self::$sqlCount;
-    }
+	public function lastValues() {
+		return $this->errorValues;
+	}
 
-    protected function sanitize($var) {
-        $this->checkDialect ();
-        if (is_string ( $var )) {
-            return $this->dialect->sanitize ( $var );
-        } else if (is_array ( $var )) {
-            array_walk_recursive ( $var, array ($this,'sanitizeAry' ) );
-            return $var;
-        } else {
-            return $var;
-        }
-    }
+	/**
+	 * @param \PDOStatement|null $statement
+	 *
+	 * @return mixed
+	 */
+	public function dumpSQL(\PDOStatement $statement = null) {
+		if ($statement) {
+			@ob_start(PHP_OUTPUT_HANDLER_CLEANABLE);
+			$statement->debugDumpParams();
+			$this->dumpSQL = @ob_get_clean();
+		} else {
+			return $this->dumpSQL;
+		}
+	}
 
-    /**
-     * work through an array to sanitize it, do not call this function directly.
-     * it is used internally.
-     *
-     * @see sanitize()
-     *
-     * @param mixed $item
-     * @param mixed $key
-     * @deprecated .
-     */
-    public function sanitizeAry(&$item, $key) {
-        if (is_string ( $item )) {
-            $item = $this->dialect->sanitize ( $item );
-        }
-    }
+	public function success() {
+		return empty ($this->error) ? true : false;
+	}
 
-    protected static function parseAs($str) {
-        $table = preg_split ( '#\b(as|\s+)\b#i', trim ( $str ) );
-        if (count ( $table ) == 1) {
-            $name = $table [0];
-            $alias = null;
-        } else {
-            $name = $table [0];
-            $alias = trim ( array_pop ( $table ) );
-        }
-        return array (trim ( $name ),$alias );
-    }
+	public function perform($checkNum = false) {
+		return $this->exec($checkNum);
+	}
 
-    protected function prepareFrom($froms) {
-        $_froms = array ();
-        if ($froms) {
-            foreach ( $froms as $from ) {
-                $table = $this->dialect->getTableName ( $from [0] );
-                $alias = empty ( $from [1] ) ? $table : $from [1];
-                $_froms [] = array ($table,$alias );
-            }
-        }
-        return $_froms;
-    }
+	/**
+	 * 执行update,insert,delete语句.
+	 *
+	 * @param boolean $checkNum false 不检测,null直接返回影响的数量
+	 *                          是否检测影响的条数.
+	 *
+	 * @return boolean
+	 * @throws \PDOException
+	 */
+	public function exec($checkNum = false) {
+		$cnt = $this->count();
+		$this->close();
+		if ($cnt === false) {
+			if ($this->exception instanceof \PDOException) {
+				throw $this->exception;
+			}
 
-    protected function prepareJoins($joins) {
-        $_joins = array ();
-        if ($joins) {
-            foreach ( $joins as $join ) {
-                $table = $this->dialect->getTableName ( $join [0] );
-                $alias = empty ( $join [3] ) ? $table : $join [3];
-                $_joins [] = array ($table,$join [1],$join [2],$alias );
-            }
-        }
-        return $_joins;
-    }
+			return false;
+		} else if ($this instanceof InsertSQL) {
+			if ($checkNum || is_null($checkNum)) {
+				return $cnt > 0;
+			} else {
+				$ids = $this->lastInsertIds();
 
-    /**
-     * prepare the fields in select SQL
-     *
-     * @param array $fields
-     * @param BindValues $values
-     * @return string
-     */
-    protected function prepareFields($fields, $values) {
-        $_fields = array ();
-        foreach ( $fields as $field ) {
-            if ($field instanceof Query) { // sub-select SQL as field
-                $field->setDialect ( $this->dialect );
-                $field->setBindValues ( $values );
-                $as = $field->getAlias ();
-                if ($as) {
-                    $_fields [] = '(' . $field->__toString () . ') AS ' . $this->sanitize ( '`' . $as . '`' );
-                }
-            } else { // this is simple field
-                $_fields [] = $this->sanitize ( $field );
-            }
-        }
-        if ($_fields) {
-            return implode ( ',', $_fields );
-        } else {
-            return false;
-        }
-    }
+				return $ids;
+			}
+		} else if (is_null($checkNum)) {
+			return $cnt;
+		} else if ($checkNum) {
+			return $cnt > 0;
+		} else {
+			return true;
+		}
+	}
+
+	public static function addSqlCount() {
+		self::$sqlCount++;
+	}
+
+	public static function getSqlCount() {
+		return self::$sqlCount;
+	}
+
+	protected function sanitize($var) {
+		$this->checkDialect();
+		if (is_string($var)) {
+			return $this->dialect->sanitize($var);
+		} else if (is_array($var)) {
+			array_walk_recursive($var, array($this, 'sanitizeAry'));
+
+			return $var;
+		} else {
+			return $var;
+		}
+	}
+
+	/**
+	 * work through an array to sanitize it, do not call this function directly.
+	 * it is used internally.
+	 *
+	 * @see        sanitize()
+	 *
+	 * @param mixed $item
+	 *
+	 * @deprecated .
+	 */
+	public function sanitizeAry(&$item) {
+		if (is_string($item)) {
+			$item = $this->dialect->sanitize($item);
+		}
+	}
+
+	protected static function parseAs($str) {
+		$table = preg_split('#\b(as|\s+)\b#i', trim($str));
+		if (count($table) == 1) {
+			$name  = $table [0];
+			$alias = null;
+		} else {
+			$name  = $table [0];
+			$alias = trim(array_pop($table));
+		}
+
+		return array(trim($name), $alias);
+	}
+
+	protected function prepareFrom($froms) {
+		$_froms = array();
+		if ($froms) {
+			foreach ($froms as $from) {
+				$table     = $this->dialect->getTableName($from [0]);
+				$alias     = empty ($from [1]) ? $table : $from [1];
+				$_froms [] = array($table, $alias);
+			}
+		}
+
+		return $_froms;
+	}
+
+	protected function prepareJoins($joins) {
+		$_joins = array();
+		if ($joins) {
+			foreach ($joins as $join) {
+				$table     = $this->dialect->getTableName($join [0]);
+				$alias     = empty ($join [3]) ? $table : $join [3];
+				$_joins [] = array($table, $join [1], $join [2], $alias);
+			}
+		}
+
+		return $_joins;
+	}
+
+	/**
+	 * prepare the fields in select SQL
+	 *
+	 * @param array      $fields
+	 * @param BindValues $values
+	 *
+	 * @return string
+	 */
+	protected function prepareFields($fields, $values) {
+		$_fields = array();
+		foreach ($fields as $field) {
+			if ($field instanceof Query) { // sub-select SQL as field
+				$field->setDialect($this->dialect);
+				$field->setBindValues($values);
+				$as = $field->getAlias();
+				if ($as) {
+					$_fields [] = '(' . $field . ') AS ' . $this->sanitize('`' . $as . '`');
+				}
+			} elseif ($field instanceof ImmutableValue) {
+				$_fields [] = $field->__toString();
+			} else { // this is simple field
+				$_fields [] = $this->sanitize($field);
+			}
+		}
+		if ($_fields) {
+			return implode(',', $_fields);
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * 执行方法.
+	 * @return mixed
+	 */
+	public abstract function count();
 }

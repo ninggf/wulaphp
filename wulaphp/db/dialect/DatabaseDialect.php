@@ -37,6 +37,9 @@ abstract class DatabaseDialect extends \PDO {
 	 */
 	public final static function getDialect($options = null) {
 		try {
+			if (!$options instanceof DatabaseConfiguration) {
+				$options = new DatabaseConfiguration('', $options);
+			}
 			$name                  = $options->__toString();
 			self::$lastErrorMassge = false;
 			if (!isset (self::$INSTANCE [ $name ])) {
