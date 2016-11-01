@@ -12,7 +12,7 @@ use wulaphp\cache\RtCache;
  * @author    leo <windywany@163.com>
  * @copyright 2016 wulaphp dev group.
  * @package   wulaphp
- * @version   1.0.0
+ * @version   1.1.0
  */
 /**
  *  the APPROOT and WWWROOT must be defined.
@@ -20,9 +20,8 @@ use wulaphp\cache\RtCache;
 defined('APPROOT') or die ('please define APPROOT');
 defined('WWWROOT') or die ('please define WWWROOT');
 defined('APPID') or die('please give your application a ID with "define(\'APPID\',\'appid\')" in file "' . APPROOT . 'bootstrap.php"');
-
-define('WULA_VERSION', '1.0.0');
-define('WULA_RELEASE', 'dev');
+define('WULA_VERSION', '1.1.0');
+define('WULA_RELEASE', 'beta');
 /* 常用目录定义 */
 define('DS', DIRECTORY_SEPARATOR);
 define('WULA_ROOT', __DIR__ . DS);
