@@ -469,9 +469,7 @@ class App {
 			$id = $clzs[0];
 
 			$ctr = preg_replace('#Controller$#', '', $clzs[2]);
-			$ctr = preg_replace_callback('#([A-Z])#', function ($m) {
-				return '-' . strtolower($m[1]);
-			}, lcfirst($ctr));
+			$ctr = lcfirst($ctr);
 			if ($id != $ctr) {
 				$id .= '/' . $ctr;
 			}
@@ -561,7 +559,6 @@ class App {
 		} else {
 			$uri = $_SERVER ['REQUEST_URI'];
 		}
-		$uri = explode('?', $uri);
-		self::$app->router->route($uri[0]);
+		self::$app->router->route($uri);
 	}
 }

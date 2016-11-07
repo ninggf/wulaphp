@@ -13,14 +13,13 @@ use wulaphp\io\Response;
 class Router {
 
 	private $xssCleaner;
-
-	private $dispatchers = array();
-
-	private $preDispatchers = array();
-
+	private $dispatchers     = array();
+	private $preDispatchers  = array();
 	private $postDispatchers = array();
 
 	private $urlParsedInfo;
+	private $requestURL;
+	private $queryParams;
 	/**
 	 * @var Router
 	 */
@@ -48,6 +47,35 @@ class Router {
 		}
 
 		return self::$INSTANCE;
+	}
+
+	/**
+	 * 当前是否在请求$url页面.
+	 *
+	 * @param string $url
+	 *
+	 * @return bool
+	 */
+	public static function is($url) {
+		$r = self::getRouter();
+
+		return $url == $r->requestURL;
+	}
+
+	/**
+	 * 请求是否与正则匹配.
+	 *
+	 * @param string $pattern 测试正则表达式.
+	 *
+	 * @return bool|array 匹配结果.
+	 */
+	public static function match($pattern) {
+		$r = self::getRouter();
+		if (preg_match($pattern, $r->requestURL, $ms)) {
+			return $ms;
+		}
+
+		return false;
 	}
 
 	/**
@@ -87,20 +115,25 @@ class Router {
 	 * 将URL解析后分发给分发器处理.
 	 *
 	 * @param string $uri
+	 *
+	 * @filter router\parse_url url
 	 */
 	public function route($uri = '') {
 		$response = Response::getInstance();
 		if ($uri == '/' || !$uri) {
 			$uri = '/index.html';
 		}
-		$url   = trim(parse_url($uri, PHP_URL_PATH), '/');
-		$query = parse_url($uri, PHP_URL_QUERY);
-		$args  = array();
+		$url              = apply_filter('router\parse_url', trim(parse_url($uri, PHP_URL_PATH), '/'));
+		$this->requestURL = $url;
+		$query            = parse_url($uri, PHP_URL_QUERY);
+		$args             = array();
 		if ($query) {
 			parse_str($query, $args);
 			$this->xssCleaner->xss_clean($args);
 		}
-		$view = null;
+		$this->queryParams = $args;
+		$view              = null;
+		//预处理，读取缓存的好时机
 		foreach ($this->preDispatchers as $dispatchers) {
 			foreach ($dispatchers as $d) {
 				if ($d instanceof IURLPreDispatcher) {
@@ -111,6 +144,7 @@ class Router {
 		if ($view) {
 			$response->output($view);
 		} else {
+			// 真正分发
 			$this->urlParsedInfo = new UrlParsedInfo ($uri, $url, $args);
 			foreach ($this->dispatchers as $dispatchers) {
 				foreach ($dispatchers as $d) {
@@ -125,6 +159,7 @@ class Router {
 					break;
 				}
 			}
+			// 分发后处理，缓存内容的好时机.
 			foreach ($this->postDispatchers as $dispatchers) {
 				foreach ($dispatchers as $d) {
 					if ($d instanceof IURLPostDispatcher) {

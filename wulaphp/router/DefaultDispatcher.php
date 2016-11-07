@@ -35,7 +35,9 @@ class DefaultDispatcher implements IURLDispatcher {
 			return null;
 		} else if ($len == 1 && !empty ($controllers [0])) {
 			$module = $controllers [0];
-
+			if ($module == 'index.html') {
+				$module = 'home';//首页分发给Home模块的默认控制器HomeController.
+			}
 		} else if ($len == 2) {
 			$module = $controllers [0];
 			if (App::checkUrlPrefix($module)) {
@@ -59,8 +61,7 @@ class DefaultDispatcher implements IURLDispatcher {
 		$module    = strtolower($module);
 		$namespace = App::dir2id($module, true);
 		if ($namespace) {
-			$action = strtolower($action);
-			$app    = RtCache::get($url);
+			$app = RtCache::get($url);
 			if (!$app) {
 				$app = $this->findApp($module, $action, $pms, $namespace);
 				RtCache::add($url, $app);
@@ -188,7 +189,7 @@ class DefaultDispatcher implements IURLDispatcher {
 		}
 		if ($action != 'index') {
 			// Action Controller 的 index方法
-			$controllerClz   = str_replace('-', '', ucwords($action, '-')) . 'Controller';
+			$controllerClz   = ucwords($action) . 'Controller';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$files []        = array($controller_file, $namespace . '\controllers\\' . $controllerClz, 'index');
 			// 默认controller的action方法
@@ -211,7 +212,7 @@ class DefaultDispatcher implements IURLDispatcher {
 			}
 		} else {
 			// 默认Controller的index方法
-			$controllerClz   = str_replace('-', '', ucwords($module, '-')) . 'Controller';
+			$controllerClz   = ucwords($module) . 'Controller';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$controllerClz   = $namespace . '\controllers\\' . $controllerClz;
 			if (is_file($controller_file)) {

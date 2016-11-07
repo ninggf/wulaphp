@@ -648,7 +648,7 @@ function log_message($message, $trace_info, $level, $file = '') {
 			$msg .= "\turi: " . $_SERVER ['REQUEST_URI'] . "\n";
 		}
 		$dest_file = $file ? $file . '.log' : 'wula.log';
-		@error_log($msg, 3, APPROOT . 'logs' . DS . $dest_file);
+		@error_log($msg, 3, LOGS_PATH . $dest_file);
 	}
 }
 
