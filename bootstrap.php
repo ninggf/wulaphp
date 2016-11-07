@@ -31,14 +31,17 @@ defined('CONF_DIR') or define('CONF_DIR', 'conf');
 defined('LIBS_DIR') or define('LIBS_DIR', 'includes');
 defined('EXTENSION_DIR') or define('EXTENSION_DIR', 'extensions');
 defined('WWWROOT_DIR') or define('WWWROOT_DIR', '/');
+defined('TMP_DIR') or define('TMP_DIR', 'tmp');
+defined('LOGS_DIR') or define('LOGS_DIR', 'logs');
 define('WEB_ROOT', WWWROOT);//alias of WWWROOT
 define('EXTENSIONS_PATH', APPROOT . EXTENSION_DIR . DS);
 define('LIBS_PATH', APPROOT . LIBS_DIR . DS);
-define('TMP_PATH', APPROOT . 'tmp' . DS);
+define('TMP_PATH', APPROOT . TMP_DIR . DS);
 define('CONFIG_PATH', APPROOT . CONF_DIR . DS);
 define('MODULES_PATH', WWWROOT . MODULE_DIR . DS);
 define('MODULE_ROOT', MODULES_PATH);
 define('THEME_PATH', WWWROOT . THEME_DIR . DS);
+define('LOGS_PATH', APPROOT . LOGS_DIR . DS);
 defined('MODULE_LOADER_CLASS') or define('MODULE_LOADER_CLASS', 'wulaphp\app\ModuleLoader');
 defined('EXTENSION_LOADER_CLASS') or define('EXTENSION_LOADER_CLASS', 'wulaphp\app\ExtensionLoader');
 defined('CONFIG_LOADER_CLASS') or define('CONFIG_LOADER_CLASS', 'wulaphp\conf\ConfigurationLoader ');
