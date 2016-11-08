@@ -84,8 +84,8 @@ class DefaultDispatcher implements IURLDispatcher {
 					$clz = new $controllerClz (App::getModule($namespace));
 					if ($clz instanceof Controller) {
 						$cprefix = '';
-						if (method_exists($clz->clzName, 'getURLPrefix')) {
-							$tmpPrefix = ObjectCaller::callClzMethod($clz->clzName, 'getURLPrefix');
+						if (method_exists($clz->clzName, 'urlGroup')) {
+							$tmpPrefix = ObjectCaller::callClzMethod($clz->clzName, 'urlGroup');
 							$cprefix   = $tmpPrefix && isset($tmpPrefix[1]) ? $tmpPrefix[1] : '';
 						}
 						if (($cprefix || $prefix) && $cprefix != $prefix) {
