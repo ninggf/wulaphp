@@ -130,10 +130,10 @@ class App {
 		foreach (self::$modules as $id => $module) {
 			if (self::$app->moduleLoader->isEnabled($module)) {
 				self::$enabledModules[ $id ] = $module;
-				if (method_exists($module->clzName, 'getURLPrefix')) {
-					$prefix = ObjectCaller::callClzMethod($module->clzName, 'getURLPrefix');
+				if (method_exists($module->clzName, 'urlGroup')) {
+					$prefix = ObjectCaller::callClzMethod($module->clzName, 'urlGroup');
 					if ($prefix) {
-						self::registerUrlPrefix($prefix);
+						self::registerUrlGroup($prefix);
 					}
 				}
 				$module->autoBind();
@@ -393,7 +393,7 @@ class App {
 	 * @param array $prefix
 	 *
 	 */
-	private static function registerUrlPrefix(array $prefix) {
+	private static function registerUrlGroup(array $prefix) {
 		if (isset($prefix[0]) && isset($prefix[1])) {
 			$char = $prefix[0];
 			if (!in_array($char, ['~', '!', '@', '#', '%', '^', '&', '*'])) {
@@ -474,8 +474,8 @@ class App {
 				$id .= '/' . $ctr;
 			}
 			$prefix = '';
-			if (method_exists($clz, 'getURLPrefix')) {
-				$tprefix = ObjectCaller::callClzMethod($clz, 'getURLPrefix');
+			if (method_exists($clz, 'urlGroup')) {
+				$tprefix = ObjectCaller::callClzMethod($clz, 'urlGroup');
 				if ($tprefix && isset($tprefix[0])) {
 					$prefix = $tprefix[0];
 				}
