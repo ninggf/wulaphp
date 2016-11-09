@@ -14,9 +14,6 @@ use wulaphp\cache\RtCache;
  * @package   wulaphp
  * @version   1.1.0
  */
-/**
- *  the APPROOT and WWWROOT must be defined.
- */
 defined('APPROOT') or die ('please define APPROOT');
 defined('WWWROOT') or die ('please define WWWROOT');
 defined('APPID') or die('please give your application a ID with "define(\'APPID\',\'appid\')" in file "' . APPROOT . 'bootstrap.php"');
@@ -45,11 +42,14 @@ define('LOGS_PATH', APPROOT . LOGS_DIR . DS);
 defined('MODULE_LOADER_CLASS') or define('MODULE_LOADER_CLASS', 'wulaphp\app\ModuleLoader');
 defined('EXTENSION_LOADER_CLASS') or define('EXTENSION_LOADER_CLASS', 'wulaphp\app\ExtensionLoader');
 defined('CONFIG_LOADER_CLASS') or define('CONFIG_LOADER_CLASS', 'wulaphp\conf\ConfigurationLoader ');
-define('DEBUG_OFF', 5);
-define('DEBUG_ERROR', 4);
-define('DEBUG_INFO', 3);
-define('DEBUG_WARN', 2);
-define('DEBUG_DEBUG', 1);
+
+// 日志级别.
+define('DEBUG_OFF', 0);
+define('DEBUG_ERROR', 400);
+define('DEBUG_WARN', 300);
+define('DEBUG_INFO', 200);
+define('DEBUG_DEBUG', 100);
+// 开发模式
 if (!defined('APP_MODE')) {
 	if (isset($_SERVER['APPMODE'])) {
 		define('APP_MODE', $_SERVER['APPMODE']);
@@ -57,6 +57,7 @@ if (!defined('APP_MODE')) {
 		define('APP_MODE', 'dev');
 	}
 }
+
 // 过滤输入
 if (@ini_get('register_globals')) {
 	die ('please close "register_globals" in php.ini file.');
@@ -94,7 +95,6 @@ if (!function_exists('curl_init')) {
 
 /* 开启缓冲区 (特别重要) */
 @ob_start();
-//@header('Content-Type: text/html; charset=utf-8');
 /* 应用编码只支持UTF8 */
 mb_internal_encoding('UTF-8');
 mb_regex_encoding('UTF-8');
@@ -169,8 +169,8 @@ spl_autoload_register(function ($clz) {
 	fire('loader\loadClass', $clz);
 });
 /* 加载第三方函数库 */
-require LIBS_PATH . 'common.php';
 require WULA_ROOT . 'includes/common.php';
+require LIBS_PATH . 'common.php';
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
-fire('wulaphp\bootstrapped');
+fire('bootstrapped');

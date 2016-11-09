@@ -8,10 +8,13 @@ class ModuleLoader {
 	 * 加载启动文件bootstrap.php注册模块.
 	 */
 	public function load() {
-		$modules = $this->scanModules();
+		global $_wula_namespace_classpath;
+		$_wula_namespace_classpath['tmpmodules'] = MODULES_PATH;
+		$modules                                 = $this->scanModules();
 		foreach ($modules as $file) {
 			@include $file;
 		}
+		unset($_wula_namespace_classpath['tmpmodules']);
 	}
 
 	/**

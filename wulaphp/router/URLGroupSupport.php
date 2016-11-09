@@ -16,5 +16,7 @@ trait URLGroupSupport {
 	 *         0 - '~', '!', '@', '#', '%', '^', '&', '*'中的一个.
 	 *         1 - group string. 字母，数字，下划线的组合.
 	 */
-	public abstract static function urlGroup();
+	public static function urlGroup() {
+		return ['', ''];
+	}
 }

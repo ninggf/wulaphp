@@ -1,10 +1,4 @@
 <?php
-/**
- *
- * User: Leo Ning.
- * Date: 13/10/2016 11:22
- */
-
 namespace wulaphp\cache;
 
 use wulaphp\conf\Configuration;

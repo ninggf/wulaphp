@@ -105,7 +105,7 @@ class App {
 			self::$app = new App ();
 		}
 		$debug = App::icfg('debug', DEBUG_WARN);
-		if ($debug < 1 || $debug > 5) {
+		if ($debug < 100 || $debug > 5) {
 			$debug = DEBUG_WARN;
 		}
 		define('DEBUG', $debug);
@@ -132,7 +132,7 @@ class App {
 				self::$enabledModules[ $id ] = $module;
 				if (method_exists($module->clzName, 'urlGroup')) {
 					$prefix = ObjectCaller::callClzMethod($module->clzName, 'urlGroup');
-					if ($prefix) {
+					if ($prefix && $prefix[0]) {
 						self::registerUrlGroup($prefix);
 					}
 				}

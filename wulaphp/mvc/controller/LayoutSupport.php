@@ -10,7 +10,6 @@ use wulaphp\app\App;
  * @package wulaphp\mvc\controller
  */
 trait LayoutSupport {
-
 	/**
 	 * @param string $tpl
 	 * @param array  $data
@@ -53,7 +52,5 @@ trait LayoutSupport {
 	 *
 	 * @return array
 	 */
-	protected function onInitLayoutData($data) {
-		return $data;
-	}
+	protected abstract function onInitLayoutData($data);
 }

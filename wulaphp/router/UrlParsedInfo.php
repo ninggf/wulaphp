@@ -26,7 +26,7 @@ class UrlParsedInfo {
 	public function base($page) {
 		static $urls = false;
 		if ($urls === false) {
-			$urls [0] = BASE_URL;
+			$urls [0] = WWWROOT_DIR;
 			$urls [1] = $this->path;
 			$urls [2] = '/';
 			$urls [3] = $this->name;
