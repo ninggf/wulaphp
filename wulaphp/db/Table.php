@@ -23,15 +23,6 @@ abstract class Table extends View {
 	 */
 	public function __construct($db) {
 		parent::__construct($db);
-		if ($this->myTraits) {
-			foreach ($this->myTraits as $tt) {
-				$fname = $tt;
-				$func  = 'onInit' . $fname;
-				if (method_exists($this, $func)) {
-					$this->$func();
-				}
-			}
-		}
 	}
 
 	/**

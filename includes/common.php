@@ -618,37 +618,30 @@ function merge_add($ary1, $ary2, $sep = ' ') {
  *
  * @param string $message
  * @param array  $trace_info
- * @param int    $level
+ * @param int    $level debug,info,warn,error
  * @param string $file
+ *
+ * @filter logger\getLogger $logger $level $file
  */
-function log_message($message, $trace_info, $level, $file = '') {
-	static $log_name = array(DEBUG_INFO => 'INFO', DEBUG_WARN => 'WARN', DEBUG_DEBUG => 'DEBUG', DEBUG_ERROR => 'ERROR');
+function log_message($message, $trace_info, $level, $file = 'wula') {
+	static $loggers = [];
+	if (!isset($loggers[ $level ][ $file ])) {
+		//获取日志器.
+		$log = apply_filter('logger\getLogger', new \wulaphp\util\CommonLogger($file), $level, $file);
+		if ($log instanceof Psr\Log\LoggerInterface) {
+			$logger = $log;
+		} else {
+			$logger = null;
+		}
+		$loggers[ $level ][ $file ] = $logger;
+	}
+
 	if (empty ($trace_info)) {
 		return;
 	}
-	if ($level >= DEBUG) {
-		$ln  = $log_name [ $level ];
-		$msg = date("Y-m-d H:i:s") . " [$ln] {$message}\n\t{$trace_info[0]['file']} at line {$trace_info[0]['line']}\n";
-		if (isset ($trace_info [1]) && $trace_info [1]) {
-			$msg .= "\t\t{$trace_info[1]['file']} at line {$trace_info[1]['line']}\n";
-			if (isset ($trace_info [2]) && $trace_info [2]) {
-				$msg .= "\t\t\t{$trace_info[2]['file']} at line {$trace_info[2]['line']}\n";
-			}
-			if (isset ($trace_info [3]) && $trace_info [3]) {
-				$msg .= "\t\t\t\t{$trace_info[3]['file']} at line {$trace_info[3]['line']}\n";
-			}
-			if (isset ($trace_info [4]) && $trace_info [4]) {
-				$msg .= "\t\t\t\t{$trace_info[4]['file']} at line {$trace_info[4]['line']}\n";
-			}
-			if (isset ($trace_info [5]) && $trace_info [5]) {
-				$msg .= "\t\t\t\t{$trace_info[5]['file']} at line {$trace_info[5]['line']}\n";
-			}
-		}
-		if (isset ($_SERVER ['REQUEST_URI'])) {
-			$msg .= "\turi: " . $_SERVER ['REQUEST_URI'] . "\n";
-		}
-		$dest_file = $file ? $file . '.log' : 'wula.log';
-		@error_log($msg, 3, LOGS_PATH . $dest_file);
+
+	if ($level >= DEBUG && $loggers[ $level ][ $file ]) {
+		$loggers[ $level ][ $file ]->log($level, $message, $trace_info);
 	}
 }
 
@@ -991,6 +984,17 @@ function cleanhtml2simple($text) {
 	$text = preg_replace('#</?[a-z0-9][^>]*?>#msi', '', $text);
 
 	return $text;
+}
+
+/**
+ * 取当前用户的通行证.
+ *
+ * @param string $type 通行证类型.
+ *
+ * @return \wulaphp\auth\Passport
+ */
+function whoami($type = 'default') {
+	return \wulaphp\auth\Passport::get($type);
 }
 
 include WULA_ROOT . 'includes/plugin.php';

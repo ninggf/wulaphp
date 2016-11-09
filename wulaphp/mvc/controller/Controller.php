@@ -3,13 +3,12 @@ namespace wulaphp\mvc\controller;
 
 use wulaphp\app\Module;
 use wulaphp\mvc\view\View;
-use wulaphp\util\TraitObject;
 
 /**
  * Class Controller
  * @package wulaphp\mvc\controller
  */
-abstract class Controller extends TraitObject {
+abstract class Controller {
 	/**
 	 * @var \wulaphp\app\Module
 	 */
@@ -23,27 +22,10 @@ abstract class Controller extends TraitObject {
 	private $afterFeatures  = [];
 
 	public function __construct(Module $module) {
-		parent::__construct();
 		$this->clzName       = get_class($this);
 		$this->module        = $module;
 		$this->reflectionObj = new \ReflectionObject($this);
-		if ($this->myTraits) {
-			foreach ($this->myTraits as $tt) {
-				$fname = $tt;
-				$func  = 'onInit' . $fname;
-				if (method_exists($this, $func)) {
-					$this->$func();
-				}
-				$bfname = 'beforeRunIn' . $fname;
-				if (method_exists($this, $bfname)) {
-					$this->beforeFeatures[] = $bfname;
-				}
-				$afname = 'afterRunIn' . $fname;
-				if (method_exists($this, $afname)) {
-					$this->afterFeatures[] = $afname;
-				}
-			}
-		}
+		$this->parseTraits();
 	}
 
 	/**
@@ -55,7 +37,7 @@ abstract class Controller extends TraitObject {
 	public function beforeRun($action, $refMethod) {
 		if ($this->beforeFeatures) {
 			foreach ($this->beforeFeatures as $feature) {
-				$this->$feature($action, $refMethod);
+				$this->$feature($refMethod);
 			}
 		}
 	}
@@ -74,5 +56,38 @@ abstract class Controller extends TraitObject {
 		}
 
 		return $view;
+	}
+
+	private function parseTraits() {
+		$parents = class_parents($this);
+		unset($parents['wulaphp\mvc\controller\Controller']);
+		$traits = class_uses($this);
+		if ($parents) {
+			foreach ($parents as $p) {
+				$tt = class_uses($p);
+				if ($tt) {
+					$traits = array_merge($traits, $tt);
+				}
+			}
+		}
+		if ($traits) {
+			foreach ($traits as $tt) {
+				$tts   = explode('\\', $tt);
+				$fname = $tts[ count($tts) - 1 ];
+				$func  = 'onInit' . $fname;
+				if (method_exists($this, $func)) {
+					$this->$func();
+				}
+				$bfname = 'beforeRunIn' . $fname;
+				if (method_exists($this, $bfname)) {
+					$this->beforeFeatures[] = $bfname;
+				}
+				$afname = 'afterRunIn' . $fname;
+				if (method_exists($this, $afname)) {
+					$this->afterFeatures[] = $afname;
+				}
+			}
+		}
+		unset($parents, $traits);
 	}
 }
