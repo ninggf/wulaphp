@@ -5,7 +5,6 @@ namespace wulaphp\db;
 use wulaphp\app\App;
 use wulaphp\db\sql\Query;
 use wulaphp\db\sql\QueryBuilder;
-use wulaphp\util\TraitObject;
 
 /**
  * View 提供查询等与修改无关的操作.
@@ -13,7 +12,7 @@ use wulaphp\util\TraitObject;
  * @package wulaphp\mvc\model
  * @author  Leo Ning <windywany@gmail.com>
  */
-abstract class View extends TraitObject {
+abstract class View {
 	public    $table       = null;
 	protected $tableName;
 	protected $qualifiedName;
@@ -35,7 +34,6 @@ abstract class View extends TraitObject {
 	 *            数据库实例.
 	 */
 	public function __construct($db = null) {
-		parent::__construct();
 		$tb          = explode("\\", get_class($this));
 		$this->alias = preg_replace('#(View|Table)$#', '', array_pop($tb));
 		if (!$this->table) {

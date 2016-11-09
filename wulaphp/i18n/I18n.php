@@ -16,7 +16,7 @@ namespace wulaphp\i18n {
 					if ($f->isFile()) {
 						$fname    = $f->getFilename();
 						$lf       = $dir . '/' . $lang . '/' . $fname;
-						$language = @include $lf;
+						$language = include $lf;
 						if (is_array($language)) {
 							self::$languages = array_merge(self::$languages, $language);
 						}
@@ -44,9 +44,5 @@ namespace {
 		$domain = isset($text[1]) ? $text[1] : 'core';
 
 		return I18n::translate($str, $domain, $args);
-	}
-
-	function ___($text) {
-
 	}
 }
