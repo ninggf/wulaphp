@@ -150,8 +150,8 @@ function smarty_modifiercompiler_res($params, $compiler) {
 	return "wulaphp\\app\\App::res({$params[0]})";
 }
 
-function smarty_modifiercompiler_static($params, $compiler) {
-	return "wulaphp\\app\\App::static({$params[0]})";
+function smarty_modifiercompiler_assets($params, $compiler) {
+	return "wulaphp\\app\\App::assets({$params[0]})";
 }
 
 function smarty_modifiercompiler_timeread($params, $compiler) {
@@ -170,6 +170,7 @@ function smarty_modifiercompiler_timeread($params, $compiler) {
  * Name: checked<br>
  * Purpose: 根据值输出checked="checked"
  *
+ * @param mixed  $value
  * @param Smarty $compiler
  *
  * @return string with compiled code
@@ -190,6 +191,7 @@ function smarty_modifiercompiler_checked($value, $compiler) {
  * Name: status<br>
  * Purpose: 将值做为LIST中的KEY输出LIST对应的值
  *
+ * @param mixed  $status
  * @param Smarty $compiler
  *
  * @return string with compiled code
@@ -198,7 +200,7 @@ function smarty_modifiercompiler_status($status, $compiler) {
 	if (count($status) < 2) {
 		trigger_error('error usage of status', E_USER_WARNING);
 
-		return "'error usage of status'";
+		return "''";
 	}
 	$key        = "$status[0]";
 	$status_str = "$status[1]";
@@ -209,9 +211,9 @@ function smarty_modifiercompiler_status($status, $compiler) {
 
 function smarty_modifiercompiler_random($ary, $compiler) {
 	if (count($ary) < 1) {
-		trigger_error('error usage of random', E_USER_WARNING);
+		//trigger_error('error usage of random', E_USER_WARNING);
 
-		return "'error usage of random'";
+		return "''";
 	}
 	$output = "is_array({$ary[0]})?{$ary[0]}[array_rand({$ary[0]})]:''";
 
@@ -258,6 +260,7 @@ function view($data = array(), $tpl = '', $headers = array('Content-Type' => 'te
  * @return \wulaphp\mvc\view\ThemeView
  */
 function template($tpl, $data = array(), $headers = array('Content-Type' => 'text/html')) {
+	static $called_funcs = [];
 	$theme   = apply_filter('get_theme', 'default');
 	$tplname = str_replace(array('/', '.'), '_', basename($tpl, '.tpl'));
 	list($_tpl, $theme) = apply_filter('get_custome_tplfile', [$tpl, $theme], $data);
@@ -272,11 +275,14 @@ function template($tpl, $data = array(), $headers = array('Content-Type' => 'tex
 	if (is_file($template_func_file)) {
 		include_once $template_func_file;
 		$func = $theme . '_' . $tplname . '_template_data';
-		if (function_exists($func)) {
+		if (function_exists($func) && !isset($called_funcs[ $func ])) {
+			$called_funcs[ $func ] = 1;
 			$func ($data);
+
 		}
 		$func = $theme . '_template_data';
-		if (function_exists($func)) {
+		if (function_exists($func) && !isset($called_funcs[ $func ])) {
+			$called_funcs[ $func ] = 1;
 			$func ($data);
 		}
 	}
@@ -284,4 +290,76 @@ function template($tpl, $data = array(), $headers = array('Content-Type' => 'tex
 	$data ['_theme_name']       = $theme;
 
 	return new \wulaphp\mvc\view\ThemeView($data, $tplfile, $headers);
+}
+
+/**
+ * 合并资源(JS or CSS).
+ *
+ * @param string $content
+ * @param string $file js or css file
+ * @param string $ver  版本号
+ *
+ * @return string
+ */
+function combinate_resources($content, $file, $ver) {
+	if (APP_MODE == 'dev' || !\wulaphp\app\App::bcfg('combinate_resource')) {
+		return $content;
+	}
+
+	$type     = pathinfo(strtolower($file), PATHINFO_EXTENSION);
+	$path     = apply_filter('combinater\getPath', 'files');
+	$url      = apply_filter('combinater\getURL', WWWROOT_DIR) . $path . '/' . $file . '?ver=' . $ver;
+	$destFile = WWWROOT . $path . DS . $file;
+	$dir      = dirname($destFile);
+	if (!is_dir($dir)) {
+		@mkdir($dir, 0755, true);
+	}
+	if (!is_dir($dir)) {
+		return $content;
+	}
+	if ($type == 'css') {
+		$reg = '#href\s*=\s*"([^"]+)"#i';
+	} else {
+		$reg = '#src\s*=\s*"([^"]+)"#i';
+	}
+	$files = [];
+	if (preg_match_all($reg, $content, $ms)) {
+		foreach ($ms[1] as $res) {
+			$files[] = WWWROOT . substr($res, strlen(WWWROOT_DIR));
+		}
+	}
+
+	if ($type == 'js') {
+		\wulaphp\util\ResourceCombinater::combinateJS($files, $destFile);
+		$tag = '<script type="text/javascript" src="' . $url . '"></script>';
+	} else {
+		\wulaphp\util\ResourceCombinater::combinateCSS($files, $destFile);
+		$tag = '<link rel="stylesheet" type="text/css" href="' . $url . '">';
+	}
+
+	return $tag;
+}
+
+/**
+ * 压缩
+ *
+ * @param string $content
+ * @param string $type css or js
+ *
+ * @return string
+ */
+function minify_resources($content, $type) {
+	static $cm = false;
+	if (APP_MODE == 'dev') {
+		return $content;
+	}
+	if ($type == 'js') {
+		return JSMin::minify($content);
+	} else {
+		if ($cm === false) {
+			$cm = new CSSmin ();
+		}
+
+		return $cm->run($content);
+	}
 }
