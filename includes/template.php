@@ -299,29 +299,39 @@ function template($tpl, $data = array(), $headers = array('Content-Type' => 'tex
  * @param string $file js or css file
  * @param string $ver  版本号
  *
+ * @filter combinater\getPath file
+ * @filter combinater\getURL WWWROOT_DIR
  * @return string
  */
 function combinate_resources($content, $file, $ver) {
 	if (APP_MODE == 'dev' || !\wulaphp\app\App::bcfg('combinate_resource')) {
 		return $content;
 	}
-
-	$type     = pathinfo(strtolower($file), PATHINFO_EXTENSION);
+	if (!$content) {
+		return '';
+	}
+	$md5      = md5($content . $ver);
+	$info     = pathinfo(strtolower($file), PATHINFO_DIRNAME | PATHINFO_EXTENSION);
+	$type     = $info['extension'];
+	$file     = trailingslashit($info['dirname']) . $md5 . '.' . $type;
 	$path     = apply_filter('combinater\getPath', 'files');
-	$url      = apply_filter('combinater\getURL', WWWROOT_DIR) . $path . '/' . $file . '?ver=' . $ver;
+	$url      = trailingslashit(apply_filter('combinater\getURL', WWWROOT_DIR) . $path) . $file . '?ver=' . $ver;
 	$destFile = WWWROOT . $path . DS . $file;
 	$dir      = dirname($destFile);
 	if (!is_dir($dir)) {
 		@mkdir($dir, 0755, true);
 	}
+
 	if (!is_dir($dir)) {
 		return $content;
 	}
+
 	if ($type == 'css') {
 		$reg = '#href\s*=\s*"([^"]+)"#i';
 	} else {
 		$reg = '#src\s*=\s*"([^"]+)"#i';
 	}
+
 	$files = [];
 	if (preg_match_all($reg, $content, $ms)) {
 		foreach ($ms[1] as $res) {
