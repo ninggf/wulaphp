@@ -278,12 +278,28 @@ function template($tpl, $data = array(), $headers = array('Content-Type' => 'tex
 		if (function_exists($func) && !isset($called_funcs[ $func ])) {
 			$called_funcs[ $func ] = 1;
 			$func ($data);
-
 		}
 		$func = $theme . '_template_data';
 		if (function_exists($func) && !isset($called_funcs[ $func ])) {
 			$called_funcs[ $func ] = 1;
 			$func ($data);
+		}
+	}
+	if ($theme != 'default') {
+		$template_func_file = THEME_PATH . 'default' . DS . 'template.php';
+		if (is_file($template_func_file)) {
+			include_once $template_func_file;
+			$func = 'default_' . $tplname . '_template_data';
+			if (function_exists($func) && !isset($called_funcs[ $func ])) {
+				$called_funcs[ $func ] = 1;
+				$func ($data);
+
+			}
+			$func = 'default_template_data';
+			if (function_exists($func) && !isset($called_funcs[ $func ])) {
+				$called_funcs[ $func ] = 1;
+				$func ($data);
+			}
 		}
 	}
 	$data ['_current_template'] = $tplfile;

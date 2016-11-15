@@ -176,7 +176,6 @@ function fire($hook, $arg = '') {
 function apply_filter($filter, $value) {
 	global $__ksg_rtk_hooks, $__ksg_sorted_hooks, $__ksg_triggering_hooks;
 	$filter                    = __rt_real_hook($filter);
-	$args                      = array();
 	$__ksg_triggering_hooks [] = $filter;
 
 	if (!isset ($__ksg_rtk_hooks [ $filter ])) {
@@ -192,9 +191,7 @@ function apply_filter($filter, $value) {
 
 	reset($__ksg_rtk_hooks [ $filter ]);
 
-	if (empty ($args)) {
-		$args = func_get_args();
-	}
+	$args = func_get_args();
 
 	do {
 		foreach (( array )current($__ksg_rtk_hooks [ $filter ]) as $the_) {
