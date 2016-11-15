@@ -105,6 +105,50 @@ abstract class QueryBuilder {
 	}
 
 	/**
+	 * left join.
+	 *
+	 * @param string $table
+	 * @param array  ...$on
+	 *
+	 * @return QueryBuilder
+	 */
+	public function left($table, ...$on) {
+		$this->join($table, $on[0] . '=' . $on[1], self::LEFT);
+
+		return $this;
+	}
+
+	/**
+	 * right join.
+	 *
+	 * @param string $table
+	 * @param array  ...$on
+	 *
+	 * @return  QueryBuilder;
+	 */
+	public function right($table, ...$on) {
+		$this->join($table, $on[0] . '=' . $on[1], self::RIGHT);
+
+		return $this;
+	}
+
+	/**
+	 * inner join.
+	 *
+	 * @param string $table
+	 * @param array  ...$on
+	 *
+	 * @return QueryBuilder
+	 */
+	public function inner($table, ...$on) {
+		$this->join($table, $on[0] . '=' . $on[1], self::INNER);
+
+		return $this;
+	}
+
+	/**
+	 * 条件.
+	 *
 	 * @param null $con
 	 * @param bool $append
 	 *
@@ -125,8 +169,22 @@ abstract class QueryBuilder {
 		return $this;
 	}
 
+	/**
+	 * get the where condition.
+	 *
+	 * @return Condition
+	 */
 	public function getCondition() {
 		return $this->where;
+	}
+
+	/**
+	 * alias of getCondition.
+	 *
+	 * @return \wulaphp\db\sql\Condition
+	 */
+	public function getWhere() {
+		return $this->getCondition();
 	}
 
 	/**
@@ -178,6 +236,8 @@ abstract class QueryBuilder {
 	}
 
 	/**
+	 * MySQL的随机排序.
+	 *
 	 * @param string $rand
 	 *
 	 * @return QueryBuilder
@@ -197,16 +257,18 @@ abstract class QueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public function sort($field, $order) {
-		$order  = strtolower($order) == 'a' ? 'ASC' : 'DESC';
+		$orders = explode('|', strtolower($order));
 		$fields = explode('|', $field);
-		foreach ($fields as $field) {
-			$this->order [] = array($field, $order);
+		foreach ($fields as $i => $field) {
+			$this->order [] = array($field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]);
 		}
 
 		return $this;
 	}
 
 	/**
+	 * limit.
+	 *
 	 * @param int $start start position.
 	 * @param int $limit
 	 *
@@ -227,6 +289,23 @@ abstract class QueryBuilder {
 	}
 
 	/**
+	 * page.
+	 *
+	 * @param int $pageNo
+	 * @param int $limit
+	 *
+	 * @return \wulaphp\db\sql\QueryBuilder
+	 */
+	public function page($pageNo, $limit) {
+		$pageNo = intval($pageNo);
+		if ($pageNo < 0) {
+			$pageNo = 0;
+		}
+
+		return $this->limit($pageNo * $limit, $limit);
+	}
+
+	/**
 	 * @param $alias
 	 *
 	 * @return QueryBuilder
@@ -237,6 +316,10 @@ abstract class QueryBuilder {
 		return $this;
 	}
 
+	/**
+	 *
+	 * @return string the alias of the table this query used.
+	 */
 	public function getAlias() {
 		return $this->alias;
 	}
