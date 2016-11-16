@@ -107,10 +107,13 @@ $_wula_classpath = array();
 global $_wula_namespace_classpath;
 $_wula_namespace_classpath    = array();
 $_wula_namespace_classpath [] = WULA_ROOT;
+// 扩展目录
 if (is_dir(EXTENSIONS_PATH)) {
 	$_wula_namespace_classpath [] = EXTENSIONS_PATH;
 }
+// 系统内置基于第三方扩展.
 $_wula_namespace_classpath [] = WULA_ROOT . 'vendors' . DS;
+$_wula_classpath []           = WULA_ROOT . 'vendors' . DS;
 /*配置加载*/
 include WULA_ROOT . 'wulaphp/conf/Configuration.php';
 include WULA_ROOT . 'wulaphp/conf/CacheConfiguration.php';
@@ -170,7 +173,9 @@ spl_autoload_register(function ($clz) {
 });
 /* 加载第三方函数库 */
 require WULA_ROOT . 'includes/common.php';
-require LIBS_PATH . 'common.php';
+if (is_file(LIBS_PATH . 'common.php')) {
+	require LIBS_PATH . 'common.php';
+}
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
 fire('bootstrapped');

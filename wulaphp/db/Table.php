@@ -23,6 +23,7 @@ abstract class Table extends View {
 	 */
 	public function __construct($db) {
 		parent::__construct($db);
+		$this->parseTraits();
 	}
 
 	/**
@@ -200,5 +201,33 @@ abstract class Table extends View {
 		}
 
 		return $rst;
+	}
+
+	/**
+	 * 初始化Traits.
+	 */
+	private function parseTraits() {
+		$parents = class_parents($this);
+		unset($parents['wulaphp\db\Table']);
+		$traits = class_uses($this);
+		if ($parents) {
+			foreach ($parents as $p) {
+				$tt = class_uses($p);
+				if ($tt) {
+					$traits = array_merge($traits, $tt);
+				}
+			}
+		}
+		if ($traits) {
+			foreach ($traits as $tt) {
+				$tts   = explode('\\', $tt);
+				$fname = $tts[ count($tts) - 1 ];
+				$func  = 'onInit' . $fname;
+				if (method_exists($this, $func)) {
+					$this->$func();
+				}
+			}
+		}
+		unset($parents, $traits);
 	}
 }
