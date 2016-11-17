@@ -15,7 +15,7 @@ class SimpleTable extends Table {
 	 * @param string                         $table
 	 * @param \wulaphp\db\DatabaseConnection $db
 	 */
-	public function __construct($table, $db = null) {
+	public function __construct($table, DatabaseConnection $db = null) {
 		$this->table = $table;
 		if (empty($table)) {
 			throw new \InvalidArgumentException('$table is invalide');

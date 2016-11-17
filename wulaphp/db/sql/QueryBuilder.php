@@ -76,15 +76,13 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * @param $table
+	 * @param string $table
+	 * @param string $alias
 	 *
 	 * @return QueryBuilder
 	 */
-	public function from($table) {
-		$tables = func_get_args();
-		foreach ($tables as $table) {
-			$this->from [] = self::parseAs($table);
-		}
+	public function from($table, $alias = null) {
+		$this->from [] = self::parseAs($table, $alias);
 
 		return $this;
 	}
@@ -464,11 +462,11 @@ abstract class QueryBuilder {
 		}
 	}
 
-	protected static function parseAs($str) {
+	protected static function parseAs($str, $alias1 = null) {
 		$table = preg_split('#\b(as|\s+)\b#i', trim($str));
 		if (count($table) == 1) {
 			$name  = $table [0];
-			$alias = null;
+			$alias = $alias1;
 		} else {
 			$name  = $table [0];
 			$alias = trim(array_pop($table));
