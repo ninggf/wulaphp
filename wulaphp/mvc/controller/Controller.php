@@ -14,6 +14,7 @@ abstract class Controller {
 	 */
 	public $module;
 	public $clzName;
+	public $ctrName;
 	/**
 	 * @var \ReflectionObject
 	 */
@@ -25,6 +26,7 @@ abstract class Controller {
 		$this->clzName       = get_class($this);
 		$this->module        = $module;
 		$this->reflectionObj = new \ReflectionObject($this);
+		$this->ctrName       = strtolower(preg_replace('#(Controller)$#', '', $this->reflectionObj->getShortName()));
 		$this->parseTraits();
 	}
 

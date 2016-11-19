@@ -134,7 +134,7 @@ class DefaultDispatcher implements IURLDispatcher {
 									$name    = $p->getName();
 									$def     = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
 									$value   = rqst($name, $def, true);
-									$args [] = $value;
+									$args [] = urldecode($value);
 									$idx++;
 								}
 							}
@@ -153,8 +153,10 @@ class DefaultDispatcher implements IURLDispatcher {
 										$tpl = $module . '/views/' . $tpl;
 									}
 									$view->setTemplate($tpl);
-								} else {
+								} elseif ($namespace == $clz->ctrName) {
 									$view->setTemplate($module . '/views/' . $action);
+								} else {
+									$view->setTemplate($module . '/views/' . $clz->ctrName . '/' . $action);
 								}
 							}
 
@@ -193,7 +195,7 @@ class DefaultDispatcher implements IURLDispatcher {
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$files []        = array($controller_file, $namespace . '\controllers\\' . $controllerClz, 'index');
 			// 默认controller的action方法
-			$controllerClz   = ucfirst($module) . 'Controller';
+			$controllerClz   = ucfirst($namespace) . 'Controller';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$files []        = array($controller_file, $namespace . '\controllers\\' . $controllerClz, $action);
 
