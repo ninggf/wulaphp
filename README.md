@@ -17,4 +17,4 @@
 - 基于redis或memcached的缓存支持.
 
 
-具体文档请传送至[http://www.wulaphp.com/](http://www.wulaphp.com/])。
+具体文档请传送至[http://www.wulaphp.com/](http://www.wulaphp.com/)。
