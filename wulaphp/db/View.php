@@ -33,7 +33,7 @@ abstract class View {
 	 * @param DatabaseConnection $db
 	 *            数据库实例.
 	 */
-	public function __construct($db = null) {
+	public function __construct(DatabaseConnection $db = null) {
 		$tb          = explode("\\", get_class($this));
 		$this->alias = preg_replace('#(View|Table)$#', '', array_pop($tb));
 		if (!$this->table) {

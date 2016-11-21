@@ -328,7 +328,7 @@ class App {
 			self::$maps ['dir2id'] [ $dir ]  = $name;
 			self::$maps ['id2dir'] [ $name ] = $dir;
 		}
-		self::$modules [ $dir ] = $module;
+		self::$modules [ $name ] = $module;
 	}
 
 	/**
