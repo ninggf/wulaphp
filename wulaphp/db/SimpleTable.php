@@ -12,13 +12,13 @@ class SimpleTable extends Table {
 	/**
 	 * SimpleTable constructor.
 	 *
-	 * @param string                         $table
-	 * @param \wulaphp\db\DatabaseConnection $db
+	 * @param string                          $table
+	 * @param string|array|DatabaseConnection $db
 	 */
-	public function __construct($table, DatabaseConnection $db = null) {
+	public function __construct($table, $db = null) {
 		$this->table = $table;
 		if (empty($table)) {
-			throw new \InvalidArgumentException('$table is invalide');
+			throw new \InvalidArgumentException('$table is empty');
 		}
 		parent::__construct($db);
 	}

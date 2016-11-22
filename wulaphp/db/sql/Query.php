@@ -57,7 +57,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 	 * @param string|Query $field
 	 * @param string       $alias
 	 *
-	 * @return QueryBuilder
+	 * @return Query
 	 */
 	public function field($field, $alias = null) {
 		if (is_string($field)) {
