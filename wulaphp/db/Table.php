@@ -19,9 +19,9 @@ abstract class Table extends View {
 	/**
 	 * Table constructor.
 	 *
-	 * @param \wulaphp\db\DatabaseConnection $db
+	 * @param string|array|DatabaseConnection $db
 	 */
-	public function __construct(DatabaseConnection $db = null) {
+	public function __construct($db = null) {
 		parent::__construct($db);
 		$this->parseTraits();
 	}

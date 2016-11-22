@@ -4,6 +4,15 @@ namespace wulaphp\db\sql;
 use wulaphp\db\dialect\DatabaseDialect;
 use wulaphp\db\DialectException;
 
+/**
+ * 查询基类
+ *
+ * @package wulaphp\db\sql
+ * @method toArray()
+ * @method get($index = 0, $field = null)
+ * @method exist($filed = null)
+ * @method field($field, $alias = null)
+ */
 abstract class QueryBuilder {
 	const LEFT  = 'LEFT';
 	const RIGHT = 'RIGHT';
@@ -278,7 +287,7 @@ abstract class QueryBuilder {
 		if ($start < 0) {
 			$start = 0;
 		}
-		if ($limit == 0) {
+		if (!$limit) {
 			$limit = 1;
 		}
 		$this->limit = array($start, $limit);
