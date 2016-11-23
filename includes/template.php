@@ -327,7 +327,7 @@ function combinate_resources($content, $file, $ver) {
 		return '';
 	}
 	$md5      = md5($content . $ver);
-	$info     = pathinfo(strtolower($file), PATHINFO_DIRNAME | PATHINFO_EXTENSION);
+	$info     = pathinfo(strtolower($file));
 	$type     = $info['extension'];
 	$file     = trailingslashit($info['dirname']) . $md5 . '.' . $type;
 	$path     = apply_filter('combinater\getPath', 'files');
