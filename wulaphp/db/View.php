@@ -51,6 +51,20 @@ abstract class View {
 	}
 
 	/**
+	 * 指定此表的别名.
+	 *
+	 * @param string $alias
+	 *
+	 * @return $this
+	 */
+	public function alias($alias) {
+		$this->alias         = $alias;
+		$this->qualifiedName = $this->table . ' AS ' . $this->alias;
+
+		return $this;
+	}
+
+	/**
 	 * 取一条记录.
 	 *
 	 * @param int|array $id

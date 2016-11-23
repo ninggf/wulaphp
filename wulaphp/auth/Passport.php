@@ -71,8 +71,10 @@ class Passport {
 	/**
 	 * 从SESSION中注销.
 	 */
-	public function logout() {
+	public final function logout() {
+		fire('passport\on' . ucfirst($this->type) . 'PassportLogout', $this);
 		$_SESSION[ self::SESSION_NAME . '_' . $this->type ] = '';
+
 	}
 
 	/**
@@ -80,7 +82,7 @@ class Passport {
 	 *
 	 * @return bool
 	 */
-	public function login() {
+	public final function login() {
 		$this->isLogin = $this->doAuth();
 		if ($this->isLogin) {
 			fire('passport\on' . ucfirst($this->type) . 'PassportLogin', $this);

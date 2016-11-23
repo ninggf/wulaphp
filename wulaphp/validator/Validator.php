@@ -3,6 +3,7 @@
 namespace wulaphp\validator;
 
 use wulaphp\db\sql\ImmutableValue;
+use wulaphp\db\View;
 
 /**
  * 数据检验器.
@@ -10,13 +11,23 @@ use wulaphp\db\sql\ImmutableValue;
  *
  * @author  Leo Ning <windywany@gmail.com>
  * @since   1.0.0
+ * @property array $fields
  */
 trait Validator {
 	private $rules    = [];
 	private $rulesIdx = [];
 	private $ruleKeys = [];
 
-	protected abstract function onInitValidator();
+	protected function onInitValidator() {
+		if (!$this instanceof View) {
+			trigger_error('The trait, Validator, only used by subclass of wulaphp\db\View', E_USER_WARNING);
+
+			return;
+		}
+		if (isset(self::$fields) && self::$fields) {
+			// TODO: 从注解中解析出验证规则.
+		}
+	}
 
 	/**
 	 * 数据校验规则.
@@ -38,6 +49,26 @@ trait Validator {
 		}
 
 		return $this->rules;
+	}
+
+	/**
+	 * 验证数据.
+	 *
+	 * @param array $data  待验证的数据.
+	 * @param array $rules 验证规则.
+	 *
+	 * @return bool
+	 * @throws ValidateException
+	 */
+	public function validate(array $data, array $rules) {
+		$this->rules    = [];
+		$this->rulesIdx = [];
+		$this->ruleKeys = [];
+		foreach ($rules as $field => $rule) {
+			$this->addRule($field, $rule);
+		}
+
+		return $this->validateNewData($data);
 	}
 
 	/**
@@ -130,7 +161,7 @@ trait Validator {
 	private function validateData($rules, $data) {
 		$errors = [];
 		foreach ($rules as $field => $rule) {
-			$valid = $this->validate($field, $data, $rule);
+			$valid = $this->validateField($field, $data, $rule);
 			if ($valid !== true) {
 				$errors[ $field ] = $valid;
 			}
@@ -149,7 +180,7 @@ trait Validator {
 	 *
 	 * @return bool|mixed
 	 */
-	private function validate($field, $data, $rules) {
+	private function validateField($field, $data, $rules) {
 		foreach ($rules as $rule) {
 			list($m, $ops, $msg) = $rule;
 			$valid_m = 'v_' . $m;
