@@ -997,6 +997,48 @@ function whoami($type = 'default') {
 	return \wulaphp\auth\Passport::get($type);
 }
 
+function wula_exception_handler($e) {
+	global $argv;
+	if (DEBUG < DEBUG_ERROR) {
+		if ($argv) {
+			echo $e->getMessage(), "\n";
+			echo $e->getTraceAsString(), "\n";
+		} else {
+			$stack  = [];
+			$msg    = $e->getMessage();
+			$tracks = $e->getTrace();
+
+			$f = $e->getFile();
+			$l = $e->getLine();
+			array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
+			foreach ($tracks as $i => $t) {
+				$tss     = ['<tr>'];
+				$tss[]   = "<td bgcolor=\"#eeeeec\" align=\"center\">$i</i>";
+				$tss[]   = "<td bgcolor=\"#eeeeec\">{$t['function']}( )</td>";
+				$f       = str_replace(APPROOT, '', $t['file']);
+				$tss[]   = "<td bgcolor=\"#eeeeec\">{$f}<b>:</b>{$t['line']}</td>";
+				$tss []  = '</tr>';
+				$stack[] = implode('', $tss);
+			}
+			$errorFile = file_get_contents(__DIR__ . '/debug.tpl');
+			$errorFile = str_replace(['{$message}', '{$stackInfo}'], [$msg, implode('', $stack)], $errorFile);
+			echo $errorFile;
+			exit(0);
+		}
+	} else {
+		log_error($e->getMessage() . "\n" . $e->getTraceAsString(), 'exceptions');
+		if ($argv) {
+			exit(1);
+		} else {
+			\wulaphp\io\Response::respond(500, $e->getMessage());
+		}
+	}
+}
+
+function throw_exception($message) {
+	throw new Exception($message);
+}
+
 include WULA_ROOT . 'includes/plugin.php';
 include WULA_ROOT . 'includes/kernelimpl.php';
 include WULA_ROOT . 'includes/template.php';

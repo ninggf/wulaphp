@@ -171,11 +171,15 @@ spl_autoload_register(function ($clz) {
 	// 处理未找到类情况.
 	fire('loader\loadClass', $clz);
 });
+
 /* 加载第三方函数库 */
 require WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
 	require LIBS_PATH . 'common.php';
 }
+// 全局异常处理函数
+set_exception_handler('wula_exception_handler');
+
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
 fire('bootstrapped');

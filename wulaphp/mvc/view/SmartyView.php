@@ -54,10 +54,7 @@ class SmartyView extends View {
 			}
 			$this->__smarty->error_reporting = KS_ERROR_REPORT_LEVEL;
 		} else {
-			if ($devMod) {
-				die ('The view template ' . $tpl . ' is not found');
-			}
-			trigger_error('The view template ' . $tpl . ' is not found', E_USER_ERROR);
+			throw new \Exception('The view template ' . $tpl . ' is not found');
 		}
 
 		$this->__smarty->assign($this->data); // 变量

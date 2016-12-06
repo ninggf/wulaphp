@@ -117,6 +117,7 @@ class Router {
 	 * @param string $uri
 	 *
 	 * @filter router\parse_url url
+	 * @throws \Exception when no router
 	 */
 	public function route($uri = '') {
 		$response = Response::getInstance();
@@ -169,8 +170,8 @@ class Router {
 			}
 			if ($view) {
 				$response->output($view);
-			} else if (DEBUG == DEBUG_DEBUG) {
-				trigger_error('no route for ' . $uri, E_USER_ERROR);
+			} else if (DEBUG < DEBUG_ERROR) {
+				throw new \Exception('no route for ' . $uri);
 			} else {
 				Response::respond(404);
 			}
