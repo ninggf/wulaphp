@@ -214,7 +214,7 @@ class DefaultDispatcher implements IURLDispatcher {
 			}
 		} else {
 			// 默认Controller的index方法
-			$controllerClz   = ucwords($module) . 'Controller';
+			$controllerClz   = ucwords($namespace) . 'Controller';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$controllerClz   = $namespace . '\controllers\\' . $controllerClz;
 			if (is_file($controller_file)) {
