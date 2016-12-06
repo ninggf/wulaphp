@@ -18,7 +18,6 @@ class CreateTableCommand extends ArtisanCommand {
 	}
 
 	protected function execute($options) {
-		throw new \Exception('asdfasdf');
 		$table = $this->opt();
 		if (!$table) {
 			$this->help('miss <table> name');
