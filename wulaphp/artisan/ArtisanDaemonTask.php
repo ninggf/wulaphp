@@ -24,6 +24,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			exit(0);
 		} elseif (0 === $pid) {
 			umask(0);
+			$mypid = posix_getpid();
 			openlog('daemon-' . $cmd, LOG_PID | LOG_PERROR, LOG_USER);
 			$sid = posix_setsid();
 			if ($sid < 0) {
@@ -36,8 +37,8 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			fclose(STDERR);
 
 			$STDIN  = fopen('/dev/null', 'r');
-			$STDOUT = fopen($cmd . '.out', 'wb');
-			$STDERR = fopen($cmd . '.err', 'wb');
+			$STDOUT = fopen(LOGS_PATH . $cmd . '-' . $mypid . '.out', 'wb');
+			$STDERR = fopen(LOGS_PATH . $cmd . '-' . $mypid . '.err', 'wb');
 
 			$this->doStartLoop($options);
 
@@ -56,7 +57,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 		while (count($this->workers) < $parallel) {
 			$pid = pcntl_fork();
 			if (0 === $pid) {
-				define('KISS_CLI_PID', posix_getpid());
+				define('ARTISAN_TASK_PID', posix_getpid());
 				$this->isParent = false;
 				$this->taskId   = $i;
 				$this->initSignal();

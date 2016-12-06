@@ -10,7 +10,7 @@ abstract class ArtisanCommand {
 		$opts = $this->getOpts();
 		echo wordwrap($this->desc(), 72, "\n  ") . "\n\n";
 		echo "USAGE:\n";
-		echo "  #php artisan.php " . $this->cmd() . ' [options] ' . "\n";
+		echo "  #php artisan " . $this->cmd() . ' [options] ' . $this->argDesc() . "\n";
 		foreach ($opts as $opt => $msg) {
 			$opss = explode(':', $opt);
 			$l    = count($opss);
@@ -68,6 +68,7 @@ abstract class ArtisanCommand {
 						} elseif (strpos('-', $v) === 0) {
 							break;
 						} else {
+							$argv[ $j ]      = null;
 							$options[ $key ] = $v;
 							break;
 						}
@@ -103,6 +104,10 @@ abstract class ArtisanCommand {
 		$options = $this->getOptions();
 
 		return $this->execute($options);
+	}
+
+	protected function argDesc() {
+		return '';
 	}
 
 	public abstract function cmd();

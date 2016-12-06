@@ -11,13 +11,13 @@ class ArtisanHelpCommand extends ArtisanCommand {
 			echo "artisan manager script from wula.\n\n";
 			echo "USAGE:\n";
 		}
-		echo "  #php artisan <command> [options]\n\n";
+		echo "  #php artisan <command> [options] [args]\n\n";
 		echo "  command list:\n";
 
 		foreach ($commands as $name => $cmd) {
-			echo wordwrap("     " . str_pad($name, 20, ' ', STR_PAD_RIGHT) . $cmd->desc(), 72, "\n  ") . "\n";
+			echo wordwrap("     " . str_pad($name, 20, ' ', STR_PAD_RIGHT) . $cmd->desc(), 72, "\n" . str_pad('', 25, ' ', STR_PAD_RIGHT)) . "\n";
 		}
-		echo "\n  #php artisan help <command> to list command options\n";
+		echo "\n  #php artisan help <command> to list command options and args\n";
 		exit(1);
 	}
 
