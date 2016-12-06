@@ -2,6 +2,7 @@
 namespace wulaphp\db\dialect;
 
 use wulaphp\conf\DatabaseConfiguration;
+use wulaphp\db\DialectException;
 use wulaphp\db\sql\BindValues;
 use wulaphp\db\sql\Condition;
 
@@ -34,31 +35,35 @@ abstract class DatabaseDialect extends \PDO {
 	 * @param DatabaseConfiguration $options
 	 *
 	 * @return DatabaseDialect
+	 * @throws DialectException
 	 */
 	public final static function getDialect($options = null) {
 		try {
 			if (!$options instanceof DatabaseConfiguration) {
 				$options = new DatabaseConfiguration('', $options);
 			}
+			if (defined('ARTISAN_TASK_PID')) {
+				$pid = ARTISAN_TASK_PID;
+			} else {
+				$pid = 0;
+			}
 			$name                  = $options->__toString();
 			self::$lastErrorMassge = false;
-			if (!isset (self::$INSTANCE [ $name ])) {
+			if (!isset (self::$INSTANCE[ $pid ] [ $name ])) {
 				$driver    = isset ($options ['driver']) && !empty ($options ['driver']) ? $options ['driver'] : 'MySQL';
 				$driverClz = 'wulaphp\db\dialect\\' . $driver . 'Dialect';
 				if (!is_subclass_of($driverClz, 'wulaphp\db\dialect\DatabaseDialect')) {
-					trigger_error('the dialect ' . $driverClz . ' is not found!', E_USER_ERROR);
+					throw new DialectException('the dialect ' . $driverClz . ' is not found!');
 				}
 				$dr = new $driverClz ($options);
 				$dr->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 				$dr->onConnected();
-				self::$INSTANCE [ $name ] = $dr;
+				self::$INSTANCE [ $pid ][ $name ] = $dr;
 			}
 
-			return self::$INSTANCE [ $name ];
+			return self::$INSTANCE[ $pid ] [ $name ];
 		} catch (\PDOException $e) {
-			trigger_error($e->getMessage(), E_USER_ERROR);
-
-			return null;
+			throw new DialectException($e->getMessage());
 		}
 	}
 

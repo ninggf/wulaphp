@@ -28,9 +28,9 @@ class Request implements \ArrayAccess {
 	 */
 	private static $xss_cleaner;
 
-	private static $INSTANCE = null;
-
-	private static $UUID = false;
+	private static $INSTANCE   = null;
+	private static $santitized = false;
+	private static $UUID       = false;
 
 	public static $_GET = array();
 
@@ -41,7 +41,10 @@ class Request implements \ArrayAccess {
 		if (Request::$xss_cleaner == null) {
 			Request::$xss_cleaner = new XssCleaner();
 		}
-		$this->_sanitize_globals();
+		if (!self::$santitized) {
+			self::$santitized = true;
+			$this->sanitizeGlobals();
+		}
 	}
 
 	/**
@@ -52,14 +55,22 @@ class Request implements \ArrayAccess {
 	 * @return Request
 	 */
 	public static function getInstance($use_xss_clean = null) {
-		if (self::$INSTANCE == null) {
-			self::$INSTANCE = new self ($use_xss_clean);
-		}
-		if (is_bool($use_xss_clean)) {
-			self::$INSTANCE->set_cleaner_enable($use_xss_clean);
-		}
+		if (defined('ARTISAN_TASK_PID')) {
+			if (!isset(self::$INSTANCE[ ARTISAN_TASK_PID ])) {
+				self::$INSTANCE[ ARTISAN_TASK_PID ] = new self ($use_xss_clean);
+			}
 
-		return self::$INSTANCE;
+			return self::$INSTANCE[ ARTISAN_TASK_PID ];
+		} else {
+			if (self::$INSTANCE == null) {
+				self::$INSTANCE = new self ($use_xss_clean);
+			}
+			if (is_bool($use_xss_clean)) {
+				self::$INSTANCE->set_cleaner_enable($use_xss_clean);
+			}
+
+			return self::$INSTANCE;
+		}
 	}
 
 	/**
@@ -190,25 +201,25 @@ class Request implements \ArrayAccess {
 	}
 
 	// 处理全局输入
-	private function _sanitize_globals() {
+	private function sanitizeGlobals() {
 		Request::$_GET  = $_GET;
 		Request::$_POST = $_POST;
 		$this->getData  = array_merge(array(), $_GET);
 		$this->postData = array_merge(array(), $_POST);
-		$_GET           = $this->_clean_input_data($_GET);
-		$_POST          = $this->_clean_input_data($_POST);
-		$_REQUEST       = $this->_clean_input_data($_REQUEST);
+		$_GET           = $this->cleanInputData($_GET);
+		$_POST          = $this->cleanInputData($_POST);
+		$_REQUEST       = $this->cleanInputData($_REQUEST);
 		unset ($_COOKIE ['$Version']);
 		unset ($_COOKIE ['$Path']);
 		unset ($_COOKIE ['$Domain']);
-		$_COOKIE = $this->_clean_input_data($_COOKIE);
+		$_COOKIE = $this->cleanInputData($_COOKIE);
 	}
 
-	private function _clean_input_data($str) {
+	private function cleanInputData($str) {
 		if (is_array($str)) {
 			$new_array = array();
 			foreach ($str as $key => $val) {
-				$new_array [ $this->_clean_input_keys($key) ] = $this->_clean_input_data($val);
+				$new_array [ $this->cleanInputKeys($key) ] = $this->cleanInputData($val);
 			}
 
 			return $new_array;
@@ -227,7 +238,7 @@ class Request implements \ArrayAccess {
 		return $str;
 	}
 
-	private function _clean_input_keys($str) {
+	private function cleanInputKeys($str) {
 		if (!preg_match('/^[a-z0-9:_\-\/-\\\\*]+$/i', $str)) {
 			log_error('Disallowed Key Characters:' . $str);
 			exit ('Disallowed Key Characters:' . $str);
