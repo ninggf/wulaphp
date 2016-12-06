@@ -5,6 +5,7 @@ use wulaphp\conf\Configuration;
 use wulaphp\conf\ConfigurationLoader;
 use wulaphp\db\DatabaseConnection;
 use wulaphp\db\dialect\DatabaseDialect;
+use wulaphp\db\DialectException;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
 use wulaphp\router\Router;
@@ -105,7 +106,7 @@ class App {
 			self::$app = new App ();
 		}
 		$debug = App::icfg('debug', DEBUG_WARN);
-		if ($debug < 100 || $debug > 5) {
+		if ($debug > 400 || $debug < 0) {
 			$debug = DEBUG_WARN;
 		}
 		define('DEBUG', $debug);
@@ -148,7 +149,8 @@ class App {
 	 *
 	 * @param string $name 数据库配置名.
 	 *
-	 * @return DatabaseConnection {@link DatabaseConnection}
+	 * @return DatabaseConnection
+	 * @throws DialectException
 	 */
 	public static function db($name = 'default') {
 		static $dbs = [];
@@ -179,7 +181,6 @@ class App {
 			}
 		}
 
-		//trigger_error('cannot connect to the database', E_USER_ERROR);
 		return null;
 	}
 
