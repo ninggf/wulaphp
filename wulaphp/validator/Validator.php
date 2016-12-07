@@ -3,7 +3,6 @@
 namespace wulaphp\validator;
 
 use wulaphp\db\sql\ImmutableValue;
-use wulaphp\db\View;
 
 /**
  * 数据检验器.
@@ -14,18 +13,45 @@ use wulaphp\db\View;
  * @property array $fields
  */
 trait Validator {
-	private $rules    = [];
-	private $rulesIdx = [];
-	private $ruleKeys = [];
+	private   $rules          = [];
+	private   $rulesIdx       = [];
+	private   $ruleKeys       = [];
+	protected $preDefinedRule = ['required' => true, 'equalTo' => true, 'notEqualTo' => true, 'notEqual' => true, 'num' => true, 'number' => true, 'digits' => true, 'min' => true, 'max' => true, 'gt' => true, 'ge' => true, 'lt' => true, 'le' => true, 'range' => true, 'minlength' => true, 'maxlength' => true, 'rangelength' => true, 'callback' => true, 'pattern' => true, 'regexp' => true, 'email' => true, 'url' => true, 'ip' => true, 'date' => true, 'datetime' => true];
 
-	protected function onInitValidator() {
-		if (!$this instanceof View) {
-			trigger_error('The trait, Validator, only used by subclass of wulaphp\db\View', E_USER_WARNING);
-
-			return;
+	protected function onInitValidator($fields = []) {
+		if (empty($fields)) {
+			if (isset($this->fields) && $this->fields) {
+				$fields = $this->fields;
+			}
 		}
-		if (isset(self::$fields) && self::$fields) {
-			// TODO: 从注解中解析出验证规则.
+		if ($fields) {
+			foreach ($fields as $field => $def) {
+				$rule = [];
+				$ann  = $def['annotation'];
+				$anns = $ann->getAll();
+				foreach ($anns as $an => $va) {
+					if (isset($this->preDefinedRule[ $an ])) {
+						$r   = $va ? explode(' => ', $va) : [];
+						$len = count($r);
+						if ($len == 0) {
+							$rule[ $an ] = null;
+						} else {
+							if (preg_match('/^\(.+?\)$/', $r[0])) {
+								if (isset($r[1])) {
+									$rule[ $an . $r[0] ] = $r[1];
+								} else {
+									$rule[ $an . $r[0] ] = null;
+								}
+							} else {
+								$rule[ $an ] = $r[0];
+							}
+						}
+					}
+				}
+				if ($rule) {
+					$this->addRule($field, $rule);
+				}
+			}
 		}
 	}
 
@@ -206,10 +232,10 @@ trait Validator {
 		$parsed = [false];
 		if (preg_match('#^([a-z]+)\s*\(([^\)]*)\)\s*$#i', $rule, $ms)) {
 			$method = trim($ms[1]);
-			$ops    = explode(',', trim($ms[2]));
+			$ops    = trim($ms[2]);
 		} else {
 			$method = trim($rule);
-			$ops    = [];
+			$ops    = '';
 		}
 		$parsed[0] = $method;
 		$parsed[1] = $ops;
@@ -222,6 +248,7 @@ trait Validator {
 		//如果$exp为空,那么需要检测此字段。
 		$needCheck = true;
 		if (!empty($exp)) {
+			$exp       = explode(',', $exp);
 			$needCheck = false;
 			foreach ($exp as $e) {
 				$es  = explode('&&', $e);
@@ -245,7 +272,7 @@ trait Validator {
 		}
 
 		if (!isset($data[ $field ])) {
-			return $message;
+			return empty ($message) ? __('required', $field) : sprintf($message, $field);
 		}
 
 		$value = $data[ $field ];
@@ -266,7 +293,6 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		$exp   = $exp[0];
 		$rst   = false;
 		if (isset ($data [ $exp ])) {
 			$rst = $value == $data [ $exp ];
@@ -284,7 +310,6 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		$exp   = $exp[0];
 		$rst   = false;
 		if (isset ($data [ $exp ])) {
 			$rst = $value != $data [ $exp ];
@@ -302,7 +327,7 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		$rst   = $value != $exp[0];
+		$rst   = $value != $exp;
 		if ($rst) {
 			return true;
 		} else {
@@ -347,10 +372,10 @@ trait Validator {
 		}
 		$value = $data[ $field ];
 		$value = floatval($value);
-		if ($value >= floatval($exp[0])) {
+		if ($value >= floatval($exp)) {
 			return true;
 		} else {
-			return empty ($message) ? __('min@validator', $exp[0]) : vsprintf($message, $exp);
+			return empty ($message) ? __('min@validator', $exp) : vsprintf($message, [$exp]);
 		}
 	}
 
@@ -361,10 +386,10 @@ trait Validator {
 		}
 		$value = $data[ $field ];
 		$value = floatval($value);
-		if ($value <= floatval($exp[0])) {
+		if ($value <= floatval($exp)) {
 			return true;
 		} else {
-			return empty ($message) ? __('max@validator', $exp[0]) : vsprintf($message, $exp);
+			return empty ($message) ? __('max@validator', $exp) : vsprintf($message, [$exp]);
 		}
 	}
 
@@ -374,10 +399,10 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		if ($value > $exp[0]) {
+		if ($value > $exp) {
 			return true;
 		} else {
-			return empty ($message) ? __('gt@validator', $exp[0]) : vsprintf($message, $exp);
+			return empty ($message) ? __('gt@validator', $exp) : vsprintf($message, [$exp]);
 		}
 	}
 
@@ -387,10 +412,10 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		if ($value >= $exp[0]) {
+		if ($value >= $exp) {
 			return true;
 		} else {
-			return empty ($message) ? __('ge@validator', $exp[0]) : vsprintf($message, $exp);
+			return empty ($message) ? __('ge@validator', $exp) : vsprintf($message, [$exp]);
 		}
 	}
 
@@ -400,10 +425,10 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		if ($value < $exp[0]) {
+		if ($value < $exp) {
 			return true;
 		} else {
-			return empty ($message) ? __('lt@validator', $exp[0]) : vsprintf($message, $exp);
+			return empty ($message) ? __('lt@validator', $exp) : vsprintf($message, [$exp]);
 		}
 	}
 
@@ -413,10 +438,10 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		if ($value <= $exp[0]) {
+		if ($value <= $exp) {
 			return true;
 		} else {
-			return empty ($message) ? __('le@validator', $exp[0]) : vsprintf($message, $exp);
+			return empty ($message) ? __('le@validator', $exp) : vsprintf($message, [$exp]);
 		}
 	}
 
@@ -425,6 +450,7 @@ trait Validator {
 		if ($this->isEmpty($field, $data)) {
 			return true;
 		}
+		$exp   = explode(',', $exp);
 		$value = $data[ $field ];
 		if (count($exp) >= 2) {
 			$value = floatval($value);
@@ -445,10 +471,10 @@ trait Validator {
 		}
 		$value = $data[ $field ];
 		$value = function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
-		if ($value >= intval($exp[0])) {
+		if ($value >= intval($exp)) {
 			return true;
 		} else {
-			return empty ($message) ? __('minlength@validator', $exp[0]) : vsprintf($message, $exp);
+			return empty ($message) ? __('minlength@validator', $exp) : vsprintf($message, [$exp]);
 		}
 	}
 
@@ -459,10 +485,10 @@ trait Validator {
 		}
 		$value = $data[ $field ];
 		$value = function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
-		if ($value <= intval($exp[0])) {
+		if ($value <= intval($exp)) {
 			return true;
 		} else {
-			return empty ($message) ? __('maxlength@validator', $exp[0]) : vsprintf($message, $exp);
+			return empty ($message) ? __('maxlength@validator', $exp) : vsprintf($message, [$exp]);
 		}
 	}
 
@@ -472,7 +498,8 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		if (is_array($exp) && count($exp) >= 2) {
+		$exp   = explode(',', $exp);
+		if (count($exp) >= 2) {
 			$value = function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
 			if ($value >= intval($exp [0]) && $value <= intval($exp [1])) {
 				return true;
@@ -490,12 +517,12 @@ trait Validator {
 			return true;
 		}
 		$value    = $data[ $field ];
-		$callback = isset($exp[0]) ? $exp[0] : false;
+		$callback = $exp ? $exp : false;
 		if ($callback && method_exists($this, $callback)) {
 			return $this->$callback($value, $data, $message);
 		}
 
-		return __('callback@validator', $callback);
+		return empty($message) ? __('callback@validator', $callback) : $message;
 	}
 
 	protected function v_pattern($field, $exp, $data, $message) {
@@ -511,7 +538,7 @@ trait Validator {
 		if ($value instanceof ImmutableValue) {
 			return true;
 		}
-		if (@preg_match($exp[0], $value)) {
+		if (@preg_match($exp, $value)) {
 			return true;
 		} else {
 			return empty ($message) ? __('regexp@validator', $value) : sprintf($message, $value);
@@ -554,7 +581,7 @@ trait Validator {
 		}
 		$value = $data[ $field ];
 		if (function_exists('filter_var')) {
-			$rst = filter_var($value, FILTER_VALIDATE_IP, $exp[0] == '6' ? FILTER_FLAG_IPV6 : FILTER_FLAG_IPV4);
+			$rst = filter_var($value, FILTER_VALIDATE_IP, $exp == '6' ? FILTER_FLAG_IPV6 : FILTER_FLAG_IPV4);
 		} else {
 			$rst = ip2long($value) === false ? false : true;
 		}
@@ -567,7 +594,7 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		$sp    = is_string($exp[0]) && strlen($exp[0]) == 1 ? $exp[0] : '-';
+		$sp    = is_string($exp) && strlen($exp) == 1 ? $exp : '-';
 		$value = explode($sp, $value);
 		if (count($value) == 3 && @checkdate(ltrim($value [1], '0'), ltrim($value [2], '0'), $value [0])) {
 			return true;
@@ -581,7 +608,7 @@ trait Validator {
 			return true;
 		}
 		$value = $data[ $field ];
-		$sp    = is_string($exp[0]) && strlen($exp[0]) == 1 ? $exp[0] : '-';
+		$sp    = is_string($exp) && strlen($exp) == 1 ? $exp : '-';
 		$times = explode(' ', $value);
 		$value = explode($sp, $times [0]);
 		if (count($value) == 3 && isset ($times [1]) && @checkdate(ltrim($value [1], '0'), ltrim($value [2], '0'), $value [0])) {

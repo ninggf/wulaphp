@@ -15,12 +15,14 @@ abstract class FormTable extends Table {
 	 *
 	 * @var array
 	 */
-	private static $fields = false;
+	protected static $_fields_ = false;
+	protected        $fields   = [];
 
 	public function __construct($db = null) {
-		if (self::$fields === false) {
+		if (self::$_fields_ === false) {
 			$this->parseFields();
 		}
+		$this->fields = self::$_fields_;
 		parent::__construct($db);
 	}
 
@@ -39,7 +41,7 @@ abstract class FormTable extends Table {
 		} else {
 			$excepts = $excepts ? explode(',', $excepts) : [];
 		}
-		foreach (self::$fields as $key => $v) {
+		foreach (self::$_fields_ as $key => $v) {
 			if (in_array($key, $excepts)) {
 				continue;
 			}
@@ -65,7 +67,7 @@ abstract class FormTable extends Table {
 	protected function filterFields(&$data) {
 		$keys = array_keys($data);
 		foreach ($keys as $key) {
-			if (!isset(self::$fields[ $key ]) || self::$fields[ $key ]['skip']) {
+			if (!isset(self::$_fields_[ $key ]) || self::$_fields_[ $key ]['skip']) {
 				unset($data[ $key ]);
 			}
 		}
@@ -80,14 +82,14 @@ abstract class FormTable extends Table {
 	 * 5. 第三方插件支持的注解.
 	 */
 	private function parseFields() {
-		self::$fields = [];
-		$refobj       = new \ReflectionObject($this);
-		$fields       = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
+		self::$_fields_ = [];
+		$refobj         = new \ReflectionObject($this);
+		$fields         = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
 		foreach ($fields as $field) {
 			$fname = $field->getName();
 			if (preg_match('/^field_(.+)$/', $fname, $ms)) {
-				$ann                    = new Annotation($field);
-				self::$fields[ $ms[1] ] = ['annotation' => $ann, 'property' => $fname, 'var' => $ann->getString('var', 'string'), 'skip' => $ann->has('skip'), 'name' => $ann->getString('name', $ms[1]), 'default' => $field->getValue($this)];
+				$ann                      = new Annotation($field);
+				self::$_fields_[ $ms[1] ] = ['annotation' => $ann, 'property' => $fname, 'var' => $ann->getString('var', 'string'), 'skip' => $ann->has('skip'), 'name' => $ann->getString('name', $ms[1]), 'default' => $this->{$fname}];
 			}
 		}
 	}

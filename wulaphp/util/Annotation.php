@@ -87,4 +87,13 @@ class Annotation {
 
 		return $default;
 	}
+
+	/**
+	 * 取全部注解.
+	 *
+	 * @return array
+	 */
+	public function getAll() {
+		return $this->annotations;
+	}
 }
