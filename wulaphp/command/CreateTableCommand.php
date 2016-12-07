@@ -66,7 +66,7 @@ class CreateTableCommand extends ArtisanCommand {
 					$def[] = ' * @required ';
 				}
 				$def[]    = ' */';
-				$def[]    = 'public $' . $field['Field'] . (isset($field['Default']) ? ' = \'' . $field['Default'] . "'" : '') . ';';
+				$def[]    = 'public $field_' . $field['Field'] . (isset($field['Default']) ? ' = \'' . $field['Default'] . "'" : '') . ';';
 				$fields[] = implode("\n    ", $def);
 			}
 			$fieldString = implode("\n", $fields);
