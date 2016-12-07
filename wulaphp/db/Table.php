@@ -165,7 +165,7 @@ abstract class Table extends View {
 	public function delete($con) {
 		$rst = false;
 		if (is_int($con)) {
-			$con[ $this->primaryKeys[0] ] = $con;
+			$con = [$this->primaryKeys[0] => $con];
 		}
 		if ($con) {
 			$sql = new DeleteSQL();
