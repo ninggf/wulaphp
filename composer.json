@@ -9,7 +9,9 @@
 	"ext-mbstring": "*",
 	"ext-curl": "*",
 	"ext-SPL": "*",
-	"smarty/smarty": "^3.1",
+	"smarty/smarty": "^3.1"
+  },
+  "require-dev": {
 	"psr/log": "^1.0"
   },
   "license": "MIT",
