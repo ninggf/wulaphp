@@ -25,7 +25,7 @@ class DatabaseConnection {
 
 	public function __construct($dialect) {
 		if (!$dialect instanceof DatabaseDialect) {
-			trigger_error('the dialect is not instance of DatabaseDialect', E_USER_ERROR);
+			throw new \Exception('the dialect is not instance of DatabaseDialect');
 		}
 		$this->dialect = $dialect;
 	}

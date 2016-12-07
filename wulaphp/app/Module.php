@@ -19,7 +19,7 @@ abstract class Module {
 		$this->clzName = get_class($this);
 		$ns            = explode('\\', $this->clzName);
 		if (count($ns) != 2) {
-			trigger_error('Wrong definition of ' . $this->clzName, E_USER_ERROR);
+			throw new \Exception('the namespace of ' . $this->clzName . ' is not allowed.');
 		}
 		$this->namespace = strtolower($ns[0]);
 

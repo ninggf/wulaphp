@@ -17,24 +17,24 @@ class CreateModuleCommand extends ArtisanCommand {
 		$rtn = 0;
 		$dir = $this->opt();
 		if (!$dir) {
-			$this->help('miss <module> name');
+			$this->help('missing <module> name');
 
 			return 1;
 		}
 		$namespace = isset($options['n']) ? $options['n'] : $dir;
 		if (!preg_match('#^[a-z][a-z_\-\d]*$#', $dir)) {
-			$this->log('ERROR: illegal module name: ' . $dir);
+			$this->error('illegal module name: ' . $dir);
 
 			return 1;
 		}
 		if (!preg_match('#^[a-z][a-z_\d]*$#', $namespace)) {
-			$this->log('ERROR: illegal namespace: ' . $namespace);
+			$this->error('illegal namespace: ' . $namespace);
 
 			return 1;
 		}
 		$modulePath = MODULES_PATH . $dir . DS;
 		if (file_exists($modulePath)) {
-			$this->log('ERROR: the module ' . $dir . ' is exist.');
+			$this->error('the module ' . $dir . ' is exist.');
 
 			return 1;
 		}
@@ -42,7 +42,7 @@ class CreateModuleCommand extends ArtisanCommand {
 			//创建目录
 
 			if (!mkdir($modulePath)) {
-				$this->log('ERROR: cannot create dir for module: ' . $modulePath);
+				$this->error('cannot create dir for module: ' . $modulePath);
 				$rtn = 1;
 				break;
 			}
@@ -67,7 +67,7 @@ class CreateModuleCommand extends ArtisanCommand {
 			$bootstrap = file_get_contents(__DIR__ . '/tpl/index.tpl');
 			file_put_contents($modulePath . 'views/index.tpl', $bootstrap);
 
-			$this->log('module ' . $dir . ' created successfully.');
+			$this->success('module ' . $dir . ' created successfully.');
 			break;
 		}
 

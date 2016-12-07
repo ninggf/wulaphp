@@ -65,7 +65,7 @@ class App {
 			$configLoader->postLoad();
 			$this->configLoader = $configLoader;
 		} else {
-			trigger_error('no ConfigurationLoader found!', E_USER_ERROR);
+			throw new \Exception('no ConfigurationLoader found!');
 		}
 		I18n::addLang(WULA_ROOT . 'lang');
 		// 加载扩展
@@ -79,7 +79,7 @@ class App {
 			$this->extensionLoader = $extensionLoader;
 			$this->extensionLoader->load();
 		} else {
-			trigger_error('no ExtensionLoader found!', E_USER_ERROR);
+			throw new \Exception('no ExtensionLoader found!');
 		}
 		// 加载模块
 		$clz = MODULE_LOADER_CLASS;
@@ -92,7 +92,7 @@ class App {
 			$this->moduleLoader = $moduleLoader;
 			$this->moduleLoader->load();
 		} else {
-			trigger_error('no ModuleLoader found!', E_USER_ERROR);
+			throw new \Exception('no ModuleLoader found!');
 		}
 	}
 
@@ -314,15 +314,17 @@ class App {
 	/**
 	 * 注册模块.
 	 *
-	 * @param Module $module ;
+	 * @param Module $module
+	 *
+	 * @throws \Exception
 	 */
 	public static function register(Module $module) {
 		$name = $module->getNamespace();
 		if ($name == 'wulaphp') {
-			trigger_error('the name of module cannot be wulaphp!', E_USER_ERROR);
+			throw new \Exception('the name of module cannot be wulaphp!');
 		}
-		if (!preg_match('/^[a-z]+$/i', $name)) {
-			trigger_error('the name of module must be made of "a-z"');
+		if (!preg_match('/^[a-z][a-z_\d]+$/i', $name)) {
+			throw new \Exception('the name of module must be made of "a-z_0-9"');
 		}
 		$dir = $module->getDirname();
 		if ($dir != $name) {
@@ -549,7 +551,7 @@ class App {
 	 */
 	public static function run() {
 		if (!isset ($_SERVER ['REQUEST_URI'])) {
-			trigger_error('Your web server did not provide REQUEST_URI, stop route request.', E_USER_ERROR);
+			throw new \Exception('Your web server did not provide REQUEST_URI, stop route request.');
 		}
 		if (!self::$app->router) {
 			self::$app->router = Router::getRouter();

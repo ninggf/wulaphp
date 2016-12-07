@@ -20,14 +20,14 @@ class CreateTableCommand extends ArtisanCommand {
 	protected function execute($options) {
 		$table = $this->opt();
 		if (!$table) {
-			$this->help('miss <table> name');
+			$this->help('missing <table> name');
 
 			return 1;
 		}
 
 		$namespace = App::dir2id($options['m'], true);
 		if (!$namespace) {
-			$this->log('ERROR: the module "' . $options['m'] . '" was not found!');
+			$this->error('the module "' . $options['m'] . '" was not found!');
 
 			return 1;
 		}
@@ -35,13 +35,13 @@ class CreateTableCommand extends ArtisanCommand {
 		$namespace  = $namespace . '\models;';
 		$modulePath = MODULES_PATH . $options['m'] . DS;
 		if (!is_dir($modulePath . 'models') && !@mkdir($modulePath . 'models')) {
-			$this->log('ERROR: cannot create  "' . $options['m'] . '/models " directory!');
+			$this->error('cannot create  "' . $options['m'] . '/models " directory!');
 
 			return 1;
 		}
 		$tableCls = str_replace('_', '', ucwords($table, '_'));
 		if (is_file($modulePath . 'models/' . $tableCls . 'Table.php')) {
-			$this->log($modulePath . 'models/' . $tableCls . 'Table.php is exist!');
+			$this->error($modulePath . 'models/' . $tableCls . 'Table.php is exist!');
 
 			return 0;
 		}
@@ -49,7 +49,7 @@ class CreateTableCommand extends ArtisanCommand {
 		try {
 			$desc = App::db()->query("show full columns from `{$table}`");
 			if (!$desc) {
-				$this->log('the table "' . $table . '" is not exist');
+				$this->error('the table "' . $table . '" is not exist');
 
 				return 1;
 			}
@@ -75,9 +75,9 @@ class CreateTableCommand extends ArtisanCommand {
 			$bootstrap = str_replace(['{$namespace}', '{$table}', '{$fields}'], [$namespace, $tableCls, $fieldString], $bootstrap);
 
 			file_put_contents($modulePath . 'models/' . $tableCls . 'Table.php', $bootstrap);
-			$this->log(wordwrap('the table class ' . $tableCls . 'Table created successfully in ' . $modulePath . 'models/' . $tableCls . 'Table.php', 72));
+			$this->success(wordwrap('the table class ' . $tableCls . 'Table created successfully in ' . $modulePath . 'models/' . $tableCls . 'Table.php', 72));
 		} catch (DialectException $e) {
-			$this->log('ERROR: ' . $e->getMessage());
+			$this->error($e->getMessage());
 
 			return 1;
 		}

@@ -3,22 +3,27 @@ namespace wulaphp\artisan;
 
 class ArtisanHelpCommand extends ArtisanCommand {
 	public function help($message = '') {
+		$color = new Colors();
 		global $commands;
 		if ($message) {
-			echo "ERROR:\n";
+			echo $color->str("ERROR:\n", 'red');
 			echo "  " . wordwrap($message, 72, "\n  ") . "\n\n";
 		} else {
-			echo "artisan manager script from wula.\n\n";
-			echo "USAGE:\n";
+			echo "\nartisan manager script from wula.\n\n";
+			echo $color->str("USAGE:\n", 'green');
 		}
 		echo "  #php artisan <command> [options] [args]\n\n";
 		echo "  command list:\n";
 
 		foreach ($commands as $name => $cmd) {
-			echo wordwrap("     " . str_pad($name, 20, ' ', STR_PAD_RIGHT) . $cmd->desc(), 72, "\n" . str_pad('', 25, ' ', STR_PAD_RIGHT)) . "\n";
+			echo wordwrap("     " . $color->str(str_pad($name, 20, ' ', STR_PAD_RIGHT), 'green') . $cmd->desc(), 100, "\n" . str_pad('', 25, ' ', STR_PAD_RIGHT)) . "\n";
 		}
-		echo "\n  #php artisan help <command> to list command options and args\n";
-		exit(1);
+		echo "\n  #php artisan help <command> to list command options and args\n\n";
+		if ($message) {
+			exit(1);
+		} else {
+			exit(0);
+		}
 	}
 
 	protected function execute($options) {

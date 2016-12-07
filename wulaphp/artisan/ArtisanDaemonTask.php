@@ -17,6 +17,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			$this->log('miss pcntl');
 			exit(1);
 		}
+
 		$cmd     = $this->cmd();
 		$options = $this->getOptions();
 		$pid     = pcntl_fork();
@@ -95,6 +96,11 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 	// 运行完成处理
 	protected function tearDown(&$options) {
 
+	}
+
+	// 是否是单例
+	protected function isSingle() {
+		return false;
 	}
 
 	private function initSignal() {

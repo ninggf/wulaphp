@@ -2,31 +2,44 @@
 namespace wulaphp\artisan;
 
 abstract class ArtisanCommand {
+	protected $color;
+
+	public function __construct() {
+		$this->color = new Colors();
+	}
+
 	public function help($message = '') {
+		$color = $this->color;
 		if ($message) {
-			echo "ERROR:\n";
+			echo $color->str("ERROR:\n", 'red');
 			echo "  " . wordwrap($message, 72, "\n  ") . "\n\n";
 		}
 		$opts = $this->getOpts();
 		echo wordwrap($this->desc(), 72, "\n  ") . "\n\n";
-		echo "USAGE:\n";
-		echo "  #php artisan " . $this->cmd() . ' [options] ' . $this->argDesc() . "\n";
+		echo $color->str("USAGE:\n", 'green');
+		echo "  #php artisan " . $this->cmd() . ' [options] ' . $color->str($this->argDesc(), 'blue') . "\n\n";
+
 		foreach ($opts as $opt => $msg) {
 			$opss = explode(':', $opt);
 			$l    = count($opss);
 			$arg  = $opss[ $l - 1 ];
 			$str  = str_pad($opss[0] . ($arg && $l == 2 ? " <$arg>" : ($arg && $l == 3 ? " [$arg]" : '')), 24, ' ', STR_PAD_RIGHT);
-			echo wordwrap("    -" . $str . $msg, 72, "\n ") . "\n";
+			echo "    " . $color->str('-' . $str, 'green') . wordwrap($msg, 72, str_pad("\n", 28, ' ', STR_PAD_RIGHT)) . "\n";
 		}
 		$opts = $this->getLongOpts();
 		foreach ($opts as $opt => $msg) {
 			$opss = explode(':', $opt);
 			$l    = count($opss);
 			$arg  = $opss[ $l - 1 ];
-			$str  = str_pad($opss[0] . ($arg && $l == 2 ? " <$arg>" : ($arg && $l == 3 ? " [$arg]" : '')), 24, ' ', STR_PAD_RIGHT);
-			echo wordwrap("    --" . $str . $msg, 72, "\n ") . "\n";
+			$str  = str_pad($opss[0] . ($arg && $l == 2 ? " <$arg>" : ($arg && $l == 3 ? " [$arg]" : '')), 23, ' ', STR_PAD_RIGHT);
+			echo "    " . $color->str('--' . $str, 'green') . wordwrap($msg, 72, str_pad("\n", 28, ' ', STR_PAD_RIGHT)) . "\n";
 		}
-		exit(1);
+		echo "\n";
+		if ($message) {
+			exit (1);
+		} else {
+			exit (0);
+		}
 	}
 
 	protected function getOpts() {
@@ -76,7 +89,7 @@ abstract class ArtisanCommand {
 				}
 			}
 			if ($r == 2 && !isset($options[ $key ])) {
-				$this->help('Miss option:' . $o);
+				$this->help('Missing option: ' . $this->color->str($o, 'red'));
 			}
 		}
 
@@ -96,6 +109,20 @@ abstract class ArtisanCommand {
 	}
 
 	protected function log($message) {
+		echo $message, "\n";
+		flush();
+	}
+
+	protected function error($message) {
+		$color = $this->color;
+		echo $color->str("ERROR:\n", 'red');
+		echo $message, "\n";
+		flush();
+	}
+
+	protected function success($message) {
+		$color = $this->color;
+		echo $color->str("SUCCESS:\n", 'green');
 		echo $message, "\n";
 		flush();
 	}

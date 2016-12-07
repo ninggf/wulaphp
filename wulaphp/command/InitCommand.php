@@ -14,6 +14,7 @@ class InitCommand extends ArtisanCommand {
 	}
 
 	protected function execute($options) {
+		$this->log($this->color->str("initializing ... "));
 		$this->log("\tchmod ( 'tmp', 0777 )");
 		chmod('tmp', 0777);
 		$this->log("\tchmod ( 'logs', 0777 )");
@@ -25,6 +26,9 @@ class InitCommand extends ArtisanCommand {
 		$this->log("\tgenerated appid: " . $appid);
 		$content = file_get_contents('bootstrap.php');
 		$content = str_replace("'app1'", "'app" . $appid . "'", $content);
-		file_put_contents('bootstrap.php', $content);
+		//file_put_contents('bootstrap.php', $content);
+		$this->log($this->color->str('done!'));
+
+		return 0;
 	}
 }

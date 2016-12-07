@@ -121,7 +121,7 @@ class DefaultDispatcher implements IURLDispatcher {
 							$params = $method->getParameters();
 							if (count($params) < count($pms)) {
 								if (DEBUG == DEBUG_DEBUG) {
-									trigger_error('the count of parameters of "' . $controllerClz . '::' . $action . '" does not match, except ' . count($params) . ' but ' . count($pms) . ' given.', E_USER_ERROR);
+									throw new \Exception('the count of parameters of "' . $controllerClz . '::' . $action . '" does not match, except ' . count($params) . ' arg(s) but ' . count($pms) . ' given.');
 								} else {
 									return null;
 								}
@@ -165,7 +165,7 @@ class DefaultDispatcher implements IURLDispatcher {
 					}
 				} catch (\ReflectionException $e) {
 					if (DEBUG == DEBUG_DEBUG) {
-						trigger_error(var_export($e, true), E_USER_ERROR);
+						throw $e;
 					}
 				}
 			}
