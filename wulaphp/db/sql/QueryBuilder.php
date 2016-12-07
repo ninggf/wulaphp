@@ -19,6 +19,7 @@ abstract class QueryBuilder {
 	const INNER = '';
 
 	private static $sqlCount = 0;
+	protected      $sql;
 	protected      $alias;
 	/**
 	 * @var DatabaseDialect
@@ -546,4 +547,10 @@ abstract class QueryBuilder {
 	 * @return mixed
 	 */
 	public abstract function count();
+
+	/**
+	 *
+	 * @return string
+	 */
+	public abstract function getSqlString();
 }

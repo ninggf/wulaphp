@@ -207,8 +207,12 @@ abstract class View {
 	 * @param QueryBuilder $sql
 	 */
 	protected function checkSQL(QueryBuilder $sql) {
-		$this->errors     = $sql->lastError();
-		$this->lastSQL    = $sql->lastSQL();
+		$this->errors = $sql->lastError();
+		if ($this->errors) {
+			$this->lastSQL = $sql->lastSQL();
+		} else {
+			$this->lastSQL = $sql->getSqlString();
+		}
 		$this->lastValues = $sql->lastValues();
 		$this->dumpSQL    = $sql->dumpSQL();
 	}

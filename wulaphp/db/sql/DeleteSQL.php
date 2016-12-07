@@ -39,10 +39,11 @@ class DeleteSQL extends QueryBuilder {
 			return false;
 		}
 		$this->checkDialect();
-		$values = new BindValues ();
-		$from   = $this->prepareFrom($this->sanitize($this->from));
-		$using  = $this->prepareFrom($this->sanitize($this->using));
-		$sql    = $this->dialect->getDeleteSQL($from [0], $using, $this->where, $values);
+		$values    = new BindValues ();
+		$from      = $this->prepareFrom($this->sanitize($this->from));
+		$using     = $this->prepareFrom($this->sanitize($this->using));
+		$sql       = $this->dialect->getDeleteSQL($from [0], $using, $this->where, $values);
+		$this->sql = $sql;
 		if ($sql) {
 			try {
 				$statement = $this->dialect->prepare($sql);
@@ -87,5 +88,9 @@ class DeleteSQL extends QueryBuilder {
 		}
 
 		return false;
+	}
+
+	public function getSqlString() {
+		return $this->sql;
 	}
 }

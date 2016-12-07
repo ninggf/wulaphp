@@ -360,6 +360,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 		$this->values    = null;
 		$this->resultSet = array();
 		$sql             = $this->getSQL();
+		$this->sql       = $sql;
 		if ($sql) {
 			try {
 				$this->options [ \PDO::ATTR_CURSOR ] = \PDO::CURSOR_SCROLL;
@@ -467,6 +468,10 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 			log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
 		}
 		$this->countperformed = true;
+	}
+
+	public function getSqlString() {
+		return $this->sql;
 	}
 
 	/**

@@ -36,9 +36,10 @@ class UpdateSQL extends QueryBuilder {
 			return false;
 		}
 		$this->checkDialect();
-		$values = new BindValues ();
-		$froms  = $this->prepareFrom($this->sanitize($this->from));
-		$sql    = $this->dialect->getUpdateSQL($froms [0] [0], $this->data, $this->where, $values);
+		$values    = new BindValues ();
+		$froms     = $this->prepareFrom($this->sanitize($this->from));
+		$sql       = $this->dialect->getUpdateSQL($froms [0] [0], $this->data, $this->where, $values);
+		$this->sql = $sql;
 		if ($sql) {
 			try {
 				$statement = $this->dialect->prepare($sql);
@@ -84,4 +85,9 @@ class UpdateSQL extends QueryBuilder {
 
 		return false;
 	}
+
+	public function getSqlString() {
+		return $this->sql;
+	}
+
 }
