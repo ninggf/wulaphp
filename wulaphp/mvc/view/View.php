@@ -29,6 +29,8 @@ abstract class View implements \ArrayAccess, Renderable {
 	 * @param string|array $data
 	 * @param string       $tpl
 	 * @param array        $headers
+	 *
+	 * @throws \Exception
 	 */
 	public function __construct($data = array(), $tpl = '', $headers = array()) {
 		if (empty ($data)) {

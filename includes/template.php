@@ -312,24 +312,22 @@ function template($tpl, $data = array(), $headers = array('Content-Type' => 'tex
  * 合并资源(JS or CSS).
  *
  * @param string $content
- * @param string $file js or css file
+ * @param string $type js or css
  * @param string $ver  版本号
  *
  * @filter combinater\getPath file
  * @filter combinater\getURL WWWROOT_DIR
  * @return string
  */
-function combinate_resources($content, $file, $ver) {
-	if (APP_MODE == 'dev' || !\wulaphp\app\App::bcfg('combinate_resource')) {
+function combinate_resources($content, $type, $ver) {
+	if (APP_MODE == 'dev' || !\wulaphp\app\App::bcfg('resource.combinate')) {
 		return $content;
 	}
 	if (!$content) {
 		return '';
 	}
 	$md5      = md5($content . $ver);
-	$info     = pathinfo(strtolower($file));
-	$type     = $info['extension'];
-	$file     = trailingslashit($info['dirname']) . $md5 . '.' . $type;
+	$file     = $type . DS . $md5 . '.' . $type;
 	$path     = apply_filter('combinater\getPath', 'files');
 	$url      = trailingslashit(apply_filter('combinater\getURL', WWWROOT_DIR) . $path) . $file . '?ver=' . $ver;
 	$destFile = WWWROOT . $path . DS . $file;
@@ -376,7 +374,7 @@ function combinate_resources($content, $file, $ver) {
  */
 function minify_resources($content, $type) {
 	static $cm = false;
-	if (APP_MODE == 'dev') {
+	if (APP_MODE == 'dev' || !\wulaphp\app\App::bcfg('resource.minify')) {
 		return $content;
 	}
 	if ($type == 'js') {

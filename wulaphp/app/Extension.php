@@ -11,16 +11,10 @@ abstract class Extension {
 	protected $bound = false;
 
 	public function __construct() {
-		$this->reflection = $ref = new \ReflectionObject($this);
-
-		$this->clzName = get_class($this);
-		$ns            = explode('\\', $this->clzName);
-		if (count($ns) != 2) {
-			throw new \Exception('the namespace of ' . $this->clzName . ' is not allowed.');
-		}
+		$this->reflection     = $ref = new \ReflectionObject($this);
+		$this->clzName        = get_class($this);
 		$vs                   = $this->getVersionList();
 		$this->currentVersion = array_pop(array_keys($vs));
-		unset($ns, $ms);
 	}
 
 	public function getCurrentVersion() {

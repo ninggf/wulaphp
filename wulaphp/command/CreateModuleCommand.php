@@ -2,6 +2,7 @@
 
 namespace wulaphp\command;
 
+use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
 
 class CreateModuleCommand extends ArtisanCommand {
@@ -22,19 +23,28 @@ class CreateModuleCommand extends ArtisanCommand {
 			return 1;
 		}
 		$namespace = isset($options['n']) ? $options['n'] : $dir;
+
 		if (!preg_match('#^[a-z][a-z_\-\d]*$#', $dir)) {
-			$this->error('illegal module name: ' . $dir);
+			$this->error('illegal module name: ' . $this->color->str($dir, 'white', 'red') );
 
 			return 1;
 		}
-		if (!preg_match('#^[a-z][a-z_\d]*$#', $namespace)) {
-			$this->error('illegal namespace: ' . $namespace);
+
+		if (!preg_match('#^[a-z][a-z_\d]+(\\\\[a-z][a-z_\-\d]+)*$#', $namespace)) {
+			$this->error('illegal namespace: ' . $this->color->str($namespace, 'white', 'red'));
 
 			return 1;
 		}
+
 		$modulePath = MODULES_PATH . $dir . DS;
 		if (file_exists($modulePath)) {
-			$this->error('the module ' . $dir . ' is exist.');
+			$this->error('the directory ' . $this->color->str($dir, 'white', 'red') . ' is exist.');
+
+			return 1;
+		}
+		$module = App::getModule($namespace);
+		if ($module) {
+			$this->error('the namespace ' . $this->color->str($namespace, 'white', 'red') . ' of a module is exist.');
 
 			return 1;
 		}
@@ -49,6 +59,7 @@ class CreateModuleCommand extends ArtisanCommand {
 
 			mkdir($modulePath . 'controllers');
 			mkdir($modulePath . 'views');
+			mkdir($modulePath . 'views' . DS . 'index');
 			mkdir($modulePath . 'classes');
 			mkdir($modulePath . 'models');
 
@@ -60,12 +71,12 @@ class CreateModuleCommand extends ArtisanCommand {
 
 			// 创建默认控制器.
 			$bootstrap = file_get_contents(__DIR__ . '/tpl/controller.tpl');
-			$bootstrap = str_replace(['{$namespace}', '{$module}'], [$namespace, $module], $bootstrap);
+			$bootstrap = str_replace(['{$namespace}', '{$module}'], [$namespace, 'Index'], $bootstrap);
 			file_put_contents($modulePath . 'controllers/' . $module . 'Controller.php', $bootstrap);
 
 			//视图
 			$bootstrap = file_get_contents(__DIR__ . '/tpl/index.tpl');
-			file_put_contents($modulePath . 'views/index.tpl', $bootstrap);
+			file_put_contents($modulePath . 'views/index/index.tpl', $bootstrap);
 
 			$this->success('module ' . $dir . ' created successfully.');
 			break;

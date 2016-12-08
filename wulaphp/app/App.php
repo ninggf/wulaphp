@@ -321,11 +321,12 @@ class App {
 	public static function register(Module $module) {
 		$name = $module->getNamespace();
 		if ($name == 'wulaphp') {
-			throw new \Exception('the name of module cannot be wulaphp!');
+			throw new \Exception('the namespace of ' . $module->clzName . ' cannot be wulaphp!');
 		}
-		if (!preg_match('/^[a-z][a-z_\d]+$/i', $name)) {
-			throw new \Exception('the name of module must be made of "a-z_0-9"');
+		if (!preg_match('/^[a-z][a-z_\d]+(\\\\[a-z][a-z_\d]+)*$/i', $name)) {
+			throw new \Exception('the namespace "' . $name . '" of ' . $module->clzName . ' is invalide.');
 		}
+
 		$dir = $module->getDirname();
 		if ($dir != $name) {
 			self::$maps ['dir2id'] [ $dir ]  = $name;
@@ -430,12 +431,13 @@ class App {
 	 *
 	 * @return string
 	 */
-	public static function url($url) {
+	public static function url($url, $replace = true) {
 		$url = ltrim($url, '/');
 
 		$urls = explode('/', $url);
-
-		$urls[0] = App::id2dir($urls[0]);
+		if ($replace) {
+			$urls[0] = App::id2dir($urls[0]);
+		}
 		if (self::$prefix) {
 			$urls[0] = str_replace(self::$prefix['char'], self::$prefix['prefix'], $urls[0]);
 		}
@@ -450,32 +452,46 @@ class App {
 	 */
 	public static function action($url) {
 		static $prefixes = [];
-		$urls   = explode('::', $url);
-		$clz    = trim($url);
-		$action = '';
-		if (count($urls) == 2) {
-			$clz    = $urls[0];
-			$action = $urls[1] != 'index' ? $urls[1] : '';
-		}
+		$clz = trim($url);
 		if (!$clz) {
 			return '#';
 		}
+
+		$urls = explode('::', $clz);
+
+		$action = '';
+
+		if (count($urls) == 2) {
+			$clz    = trim(trim($urls[0]), '\\');
+			$action = $urls[1] != 'index' ? $urls[1] : '';
+		}
+
 		if (!isset($prefixes[ $clz ])) {
-			if (!class_exists($clz) || !is_subclass_of($clz, 'wulaphp\mvc\controller\Controller')) {
-				return '#';
-			}
 			$clzs = explode('\\', $clz);
-			if (count($clzs) != 3) {
+
+			$ctrClz = array_pop($clzs);
+			array_pop($clzs);
+
+			$id = implode('\\', $clzs);
+
+			$path = App::id2dir($id);
+			if (!is_file(MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php')) {
 				return '#';
+			} else {
+				include_once MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php';
+				if (!class_exists($clz) || !is_subclass_of($clz, 'wulaphp\mvc\controller\Controller')) {
+					return '#';
+				}
 			}
 
-			$id = $clzs[0];
+			$ctr = preg_replace('#Controller$#', '', $ctrClz);
 
-			$ctr = preg_replace('#Controller$#', '', $clzs[2]);
-			$ctr = lcfirst($ctr);
-			if ($id != $ctr) {
-				$id .= '/' . $ctr;
+			$ctr = Router::addSlash($ctr);
+
+			if ('index' != $ctr) {
+				$path .= '/' . $ctr;
 			}
+
 			$prefix = '';
 			if (method_exists($clz, 'urlGroup')) {
 				$tprefix = ObjectCaller::callClzMethod($clz, 'urlGroup');
@@ -484,12 +500,12 @@ class App {
 				}
 			}
 
-			$prefixes[ $clz ] = $prefix . $id;
+			$prefixes[ $clz ] = $prefix . $path;
 		}
-		if ($action) {
-			return self::url($prefixes[ $clz ] . '/' . $action);
+		if ($action && $action != 'index') {
+			return self::url($prefixes[ $clz ] . '/' . Router::addSlash($action), false);
 		} else {
-			return self::url($prefixes[ $clz ]);
+			return self::url($prefixes[ $clz ], false);
 		}
 	}
 

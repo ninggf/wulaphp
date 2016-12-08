@@ -178,4 +178,18 @@ class Router {
 		}
 		$response->close();
 	}
+
+	public static function removeSlash($string) {
+		return preg_replace_callback('/-([a-z])/', function ($ms) {
+			return strtoupper($ms[1]);
+		}, $string);
+	}
+
+	public static function addSlash($string) {
+		$string = lcfirst($string);
+
+		return preg_replace_callback('#[A-Z]#', function ($r) {
+			return '-' . strtolower($r [0]);
+		}, $string);
+	}
 }

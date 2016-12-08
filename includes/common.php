@@ -999,7 +999,7 @@ function whoami($type = 'default') {
 
 function wula_exception_handler($e) {
 	global $argv;
-	if (DEBUG < DEBUG_ERROR) {
+	if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
 		if ($argv) {
 			echo $e->getMessage(), "\n";
 			echo $e->getTraceAsString(), "\n";

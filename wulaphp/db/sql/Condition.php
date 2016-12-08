@@ -127,10 +127,11 @@ class Condition implements \ArrayAccess, \Countable {
 					} else {
 						$cons [] = $filed . ' IS NOT NULL';
 					}
-				} else if ($op == 'BETWEEN') { // between
+				} else if ($op == 'BETWEEN' || $op == 'BT' || $op == '!BT' || $op == '!BETWEEN') { // between
+					$op      = str_replace('!', 'NOT ', $op);
 					$val1    = $values->addValue($filed, $value [0]);
 					$val2    = $values->addValue($filed, $value [1]);
-					$cons [] = $filed . ' BETWEEN ' . $val1 . ' AND ' . $val2;
+					$cons [] = $filed . ' ' . $op . ' ' . $val1 . ' AND ' . $val2;
 				} else if ($op == 'IN' || $op == '!IN') { // in
 					$op = str_replace('!', 'NOT ', $op);
 					if ($value instanceof Query) { // sub-select as 'IN' or 'NOT IN' values.

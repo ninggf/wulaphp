@@ -32,7 +32,7 @@ class CreateTableCommand extends ArtisanCommand {
 			return 1;
 		}
 
-		$namespace  = $namespace . '\models;';
+		$namespace  = $namespace . '\models';
 		$modulePath = MODULES_PATH . $options['m'] . DS;
 		if (!is_dir($modulePath . 'models') && !@mkdir($modulePath . 'models')) {
 			$this->error('cannot create  "' . $options['m'] . '/models " directory!');

@@ -14,10 +14,11 @@ abstract class ArtisanCommand {
 			echo $color->str("ERROR:\n", 'red');
 			echo "  " . wordwrap($message, 72, "\n  ") . "\n\n";
 		}
-		$opts = $this->getOpts();
+		$opts  = $this->getOpts();
+		$lopts = $this->getLongOpts();
 		echo wordwrap($this->desc(), 72, "\n  ") . "\n\n";
 		echo $color->str("USAGE:\n", 'green');
-		echo "  #php artisan " . $this->cmd() . ' [options] ' . $color->str($this->argDesc(), 'blue') . "\n\n";
+		echo "  #php artisan " . $this->cmd() . (($opts || $lopts) ? ' [options] ':' ') . $color->str($this->argDesc(), 'blue') . "\n\n";
 
 		foreach ($opts as $opt => $msg) {
 			$opss = explode(':', $opt);
@@ -26,8 +27,8 @@ abstract class ArtisanCommand {
 			$str  = str_pad($opss[0] . ($arg && $l == 2 ? " <$arg>" : ($arg && $l == 3 ? " [$arg]" : '')), 24, ' ', STR_PAD_RIGHT);
 			echo "    " . $color->str('-' . $str, 'green') . wordwrap($msg, 72, str_pad("\n", 28, ' ', STR_PAD_RIGHT)) . "\n";
 		}
-		$opts = $this->getLongOpts();
-		foreach ($opts as $opt => $msg) {
+
+		foreach ($lopts as $opt => $msg) {
 			$opss = explode(':', $opt);
 			$l    = count($opss);
 			$arg  = $opss[ $l - 1 ];
