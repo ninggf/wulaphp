@@ -25,7 +25,7 @@ class CreateModuleCommand extends ArtisanCommand {
 		$namespace = isset($options['n']) ? $options['n'] : $dir;
 
 		if (!preg_match('#^[a-z][a-z_\-\d]*$#', $dir)) {
-			$this->error('illegal module name: ' . $this->color->str($dir, 'white', 'red') );
+			$this->error('illegal module name: ' . $this->color->str($dir, 'white', 'red'));
 
 			return 1;
 		}
@@ -62,8 +62,8 @@ class CreateModuleCommand extends ArtisanCommand {
 			mkdir($modulePath . 'views' . DS . 'index');
 			mkdir($modulePath . 'classes');
 			mkdir($modulePath . 'models');
-
-			$module = ucfirst($namespace);
+			$ns     = explode('\\', $namespace);
+			$module = ucfirst($ns[0]);
 			// 创建引导文件
 			$bootstrap = file_get_contents(__DIR__ . '/tpl/bootstrap.tpl');
 			$bootstrap = str_replace(['{$namespace}', '{$module}'], [$namespace, $module], $bootstrap);
@@ -72,12 +72,16 @@ class CreateModuleCommand extends ArtisanCommand {
 			// 创建默认控制器.
 			$bootstrap = file_get_contents(__DIR__ . '/tpl/controller.tpl');
 			$bootstrap = str_replace(['{$namespace}', '{$module}'], [$namespace, 'Index'], $bootstrap);
-			file_put_contents($modulePath . 'controllers/' . $module . 'Controller.php', $bootstrap);
+			file_put_contents($modulePath . 'controllers/IndexController.php', $bootstrap);
 
 			//视图
 			$bootstrap = file_get_contents(__DIR__ . '/tpl/index.tpl');
 			file_put_contents($modulePath . 'views/index/index.tpl', $bootstrap);
-
+			if (isset($options['c'])) {
+				$bootstrap = file_get_contents(__DIR__ . '/tpl/composer.json');
+				$bootstrap = str_replace(['{$name}', '{$type}'], ['wula/' . $dir, 'module'], $bootstrap);
+				file_put_contents($modulePath . 'composer.json', $bootstrap);
+			}
 			$this->success('module ' . $dir . ' created successfully.');
 			break;
 		}
@@ -86,7 +90,7 @@ class CreateModuleCommand extends ArtisanCommand {
 	}
 
 	protected function getOpts() {
-		return ['n::namespace' => 'the namespace of the module'];
+		return ['n::namespace' => 'the namespace of the module', 'c' => 'create composer.json for module'];
 	}
 
 	protected function argDesc() {

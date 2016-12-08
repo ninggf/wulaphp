@@ -16,18 +16,19 @@ class CreateExtensionCommand extends ArtisanCommand {
 	protected function execute($options) {
 		$extension = $this->opt();
 		if (!$extension) {
-			$this->help('missing <extension namespace>');
+			$this->help('missing <name>');
 
 			return 1;
 		}
-		if (!preg_match('#^[a-z][a-z_\d]+(\\\\[a-z][a-z_\-\d]+)*$#', $extension)) {
+		if (!preg_match('#^[a-z][a-z_\d]+(/[a-z][a-z_\-\d]+)*$#', $extension)) {
 			$this->error('illegal namespace: ' . $this->color->str($extension, 'white', 'red'));
 
 			return 1;
 		}
-		$extensions = explode('\\', $extension);
-
-		$path = implode(DS, $extensions);
+		$composerName = $extension;
+		$extensions   = explode('/', $extension);
+		$extension    = implode('\\', $extensions);
+		$path         = implode(DS, $extensions);
 
 		if (is_dir(EXTENSIONS_PATH . $path)) {
 			$this->error('the directory ' . $this->color->str($path, 'white', 'red') . ' is exist');
@@ -47,16 +48,21 @@ class CreateExtensionCommand extends ArtisanCommand {
 			$bootstrap = str_replace(['{$namespace}', '{$extension}'], [$extension, ucfirst($fileName)], $bootstrap);
 			file_put_contents(EXTENSIONS_PATH . $path . DS . $fileName . '.php', $bootstrap);
 		}
-		$this->success('the extension ' . $this->color->str($extension, 'green') . ' is created successfully');
+		if (isset($options['c'])) {
+			$bootstrap = file_get_contents(__DIR__ . '/tpl/composer.json');
+			$bootstrap = str_replace(['{$name}', '{$type}'], [$composerName, 'extension'], $bootstrap);
+			file_put_contents(EXTENSIONS_PATH . $path . DS . 'composer.json', $bootstrap);
+		}
+		$this->success('the extension ' . $this->color->str($composerName, 'green') . ' is created successfully');
 
 		return 0;
 	}
 
 	public function getOpts() {
-		return ['b' => 'create the bootstrap.php for the extension'];
+		return ['b' => 'create the bootstrap file for the extension', 'c' => 'create composer.json for extension'];
 	}
 
 	protected function argDesc() {
-		return '<extension namespace>';
+		return '<name>';
 	}
 }
