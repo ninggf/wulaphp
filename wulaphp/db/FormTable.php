@@ -16,6 +16,7 @@ abstract class FormTable extends Table {
 	 * @var array
 	 */
 	protected static $_fields_ = false;
+	protected static $queryFields;
 	protected        $fields   = [];
 
 	public function __construct($db = null) {
@@ -89,8 +90,13 @@ abstract class FormTable extends Table {
 			$fname = $field->getName();
 			if (preg_match('/^field_(.+)$/', $fname, $ms)) {
 				$ann                      = new Annotation($field);
-				self::$_fields_[ $ms[1] ] = ['annotation' => $ann, 'property' => $fname, 'var' => $ann->getString('var', 'string'), 'skip' => $ann->has('skip'), 'name' => $ann->getString('name', $ms[1]), 'default' => $this->{$fname}];
+				$fieldName                = $ann->getString('name', $ms[1]);
+				self::$_fields_[ $ms[1] ] = ['annotation' => $ann, 'property' => $fname, 'var' => $ann->getString('var', 'string'), 'skip' => $ann->has('skip'), 'name' => $fieldName, 'default' => $this->{$fname}];
+				self::$queryFields[]      = "`{$fieldName}`";
 			}
+		}
+		if (self::$queryFields) {
+			self::$queryFields = implode(',', self::$queryFields);
 		}
 	}
 }

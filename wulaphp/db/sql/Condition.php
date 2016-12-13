@@ -20,11 +20,13 @@ class Condition implements \ArrayAccess, \Countable {
 	private $conditions = array();
 
 	private $uniques = array();
+	private $alias   = null;
 
-	public function __construct($con = array()) {
+	public function __construct($con = array(), $alias = null) {
+		$this->alias = $alias;
 		if ($con && is_array($con)) {
 			foreach ($con as $key => $value) {
-				$this->conditions [] = array($key, $value);
+				$this->offsetSet($key, $value);
 			}
 		}
 	}

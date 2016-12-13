@@ -12,15 +12,35 @@ use wulaphp\db\DialectException;
  * @method get($index = 0, $field = null)
  * @method exist($filed = null)
  * @method field($field, $alias = null)
+ * @method tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0)
  */
 abstract class QueryBuilder {
 	const LEFT  = 'LEFT';
 	const RIGHT = 'RIGHT';
 	const INNER = '';
 
-	private static $sqlCount = 0;
-	protected      $sql;
+	private static $sqlCount    = 0;
+	protected      $sql         = null;
 	protected      $alias;
+	protected      $options     = array();
+	protected      $from        = array();
+	protected      $joins       = array();
+	protected      $where       = null;
+	protected      $having      = array();
+	protected      $limit       = null;
+	protected      $group       = array();
+	protected      $order       = array();
+	protected      $error       = false;
+	protected      $errorSQL    = '';
+	protected      $errorValues = null;
+	protected      $dumpSQL     = null;
+	protected      $exception   = null;
+	protected      $performed   = false;
+	protected      $whereData   = [];
+	/**
+	 * @var \PDOStatement
+	 */
+	protected $statement = null;
 	/**
 	 * @var DatabaseDialect
 	 */
@@ -28,33 +48,7 @@ abstract class QueryBuilder {
 	/**
 	 * @var BindValues
 	 */
-	protected $values;
-
-	protected $options = array();
-
-	protected $from = array();
-
-	protected $joins = array();
-
-	protected $where = null;
-
-	protected $having = array();
-
-	protected $limit = null;
-
-	protected $group = array();
-
-	protected $order = array();
-
-	protected $error = false;
-
-	protected $errorSQL  = '';
-	protected $errorValues;
-	protected $dumpSQL   = null;
-	protected $exception = null;
-
-	public function __construct() {
-	}
+	protected $values = null;
 
 	public function __destruct() {
 		$this->close();
@@ -160,21 +154,36 @@ abstract class QueryBuilder {
 	 * @param null $con
 	 * @param bool $append
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function where($con = null, $append = true) {
 		if (is_array($con) && !empty ($con)) {
-			$con = new Condition ($con);
+			$con = new Condition ($con, $this->alias);
 		}
 		if ($con) {
 			if ($append && $this->where) {
 				$this->where [] = $con;
 			} else {
-				$this->where = $con;
+				$this->performed = false;
+				$this->sql       = null;
+				$this->where     = $con;
 			}
 		}
 
 		return $this;
+	}
+
+	/**
+	 * 更新条件中的数据.
+	 *
+	 * @param $data
+	 */
+	public function updateWhereData($data) {
+		$this->performed = false;
+		foreach ($data as $key => $value) {
+			$name                     = Condition::safeField($key);
+			$this->whereData[ $name ] = $value;
+		}
 	}
 
 	/**
@@ -280,7 +289,7 @@ abstract class QueryBuilder {
 	 * @param int $start start position.
 	 * @param int $limit
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function limit($start, $limit) {
 		$start = intval($start);
@@ -292,6 +301,9 @@ abstract class QueryBuilder {
 			$limit = 1;
 		}
 		$this->limit = array($start, $limit);
+		if ($this->statement) {
+			$this->updateWhereData([':limit_0' => $start, ':limit_1' => $limit]);
+		}
 
 		return $this;
 	}
@@ -302,7 +314,7 @@ abstract class QueryBuilder {
 	 * @param int $pageNo
 	 * @param int $limit
 	 *
-	 * @return \wulaphp\db\sql\QueryBuilder
+	 * @return $this
 	 */
 	public function page($pageNo, $limit) {
 		$pageNo = intval($pageNo);

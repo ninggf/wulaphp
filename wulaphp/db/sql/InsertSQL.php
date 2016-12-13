@@ -14,7 +14,6 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	private $keyField = null;
 
 	public function __construct($datas, $batch = false) {
-		parent::__construct();
 		$this->datas = $datas;
 		$this->batch = $batch;
 	}

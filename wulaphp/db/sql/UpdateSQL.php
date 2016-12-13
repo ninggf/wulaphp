@@ -12,7 +12,6 @@ class UpdateSQL extends QueryBuilder {
 	private $data = array();
 
 	public function __construct($table) {
-		parent::__construct();
 		$this->from($table);
 	}
 

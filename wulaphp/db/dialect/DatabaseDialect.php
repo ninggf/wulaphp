@@ -137,15 +137,15 @@ abstract class DatabaseDialect extends \PDO {
 	/**
 	 * get a select SQL for retreiving data from database.
 	 *
-	 * @param array      $fields
-	 * @param array      $from
-	 * @param array      $joins
-	 * @param Condition  $where
-	 * @param array      $having
-	 * @param array      $group
-	 * @param array      $order
-	 * @param array      $limit
-	 * @param BindValues $values
+	 * @param array|string $fields
+	 * @param array        $from
+	 * @param array        $joins
+	 * @param Condition    $where
+	 * @param array        $having
+	 * @param array        $group
+	 * @param array        $order
+	 * @param array        $limit
+	 * @param BindValues   $values
 	 *
 	 * @return string
 	 */
@@ -154,13 +154,13 @@ abstract class DatabaseDialect extends \PDO {
 	/**
 	 * get a select sql for geting the count from database
 	 *
-	 * @param array      $field
-	 * @param array      $from
-	 * @param array      $joins
-	 * @param Condition  $where
-	 * @param array      $having
-	 * @param array      $group
-	 * @param BindValues $values
+	 * @param array|string $field
+	 * @param array        $from
+	 * @param array        $joins
+	 * @param Condition    $where
+	 * @param array        $having
+	 * @param array        $group
+	 * @param BindValues   $values
 	 *
 	 * @return string
 	 */
