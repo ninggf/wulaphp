@@ -180,10 +180,7 @@ abstract class QueryBuilder {
 	 */
 	public function updateWhereData($data) {
 		$this->performed = false;
-		foreach ($data as $key => $value) {
-			$name                     = Condition::safeField($key);
-			$this->whereData[ $name ] = $value;
-		}
+		$this->whereData = array_merge($this->whereData, $data);
 	}
 
 	/**
@@ -423,7 +420,6 @@ abstract class QueryBuilder {
 	 */
 	public function exec($checkNum = false) {
 		$cnt = $this->count();
-		$this->close();
 		if ($cnt === false) {
 			if ($this->exception instanceof \PDOException) {
 				throw $this->exception;

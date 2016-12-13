@@ -470,9 +470,9 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			try {
 				if ($this->values) {
 					foreach ($this->values as $value) {
-						list ($name, $val, $type, $field) = $value;
+						list ($name, $val, $type, $field, $rkey) = $value;
 						if ($this->whereData) {
-							$val = isset($this->whereData[ $field ]) ? $this->whereData[ $field ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
+							$val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
 						}
 						if (!$this->statement->bindValue($name, $val, $type)) {
 							$this->errorSQL    = $this->sql;

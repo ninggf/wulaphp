@@ -95,26 +95,41 @@ class MySQLDialect extends DatabaseDialect {
 
 	/**
 	 * @param array      $from
-	 * @param array      $using
+	 * @param array      $joins
 	 * @param Condition  $where
 	 * @param BindValues $values
+	 * @param array      $order
+	 * @param array      $limit
 	 *
 	 * @return string
 	 */
-	public function getDeleteSQL($from, $using, $where, $values) {
-		$sql [] = 'DELETE FROM ' . $from [0];
-		if ($using) {
-			$using = $from + $using;
-			$us    = array();
-			foreach ($using as $u) {
-				$us [] = $u [0];
+	public function getDeleteSQL($from, $joins, $where, $values, $order, $limit) {
+		$len = count($joins);
+		if ($len == 0) {
+			$sql [] = 'DELETE FROM ' . $from [0][0];
+		} else {
+			$sql [] = 'DELETE ' . $from[0][1] . ' FROM ' . implode(' AS ', $from [0]);
+			foreach ($joins as $join) {
+				$sql [] = $join [2] . ' ' . $join [0] . ' AS ' . $join [3] . ' ON (' . $join [1] . ')';
 			}
-			$sql [] = 'USING';
-			$sql [] = implode(',', $us);
 		}
+
 		if ($where && count($where) > 0) {
 			$sql [] = 'WHERE';
 			$sql [] = $where->getWhereCondition($this, $values);
+		}
+		if ($len == 0) {
+			if ($order) {
+				$_orders = array();
+				foreach ($order as $o) {
+					$_orders [] = $o [0] . ' ' . $o [1];
+				}
+				$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
+			}
+			if ($limit) {
+				$limit2 = $values->addValue('limit', $limit [1]);
+				$sql [] = 'LIMIT ' . $limit2;
+			}
 		}
 
 		return implode(' ', $sql);
@@ -125,11 +140,23 @@ class MySQLDialect extends DatabaseDialect {
 	 * @param array      $data
 	 * @param Condition  $where
 	 * @param BindValues $values
+	 * @param array      $order
+	 * @param array      $limit
 	 *
 	 * @return string
 	 */
-	public function getUpdateSQL($table, $data, $where, $values) {
-		$sql    = array('UPDATE', $table, 'SET');
+	public function getUpdateSQL($table, $data, $where, $values, $order, $limit) {
+		$len = count($table);
+		if ($len == 1) {
+			$sql = array('UPDATE', implode(' AS ', $table[0]), 'SET');
+		} else {
+			$tables = [];
+			foreach ($table as $t) {
+				$tables[] = implode(' AS ', $t);
+			}
+			$sql = array('UPDATE', implode(' , ', $tables), 'SET');
+		}
+
 		$fields = array();
 		foreach ($data as $field => $value) {
 			$field = Condition::cleanField($field);
@@ -143,10 +170,25 @@ class MySQLDialect extends DatabaseDialect {
 				$fields [] = $this->sanitize($field) . ' = ' . $values->addValue($field, $value);
 			}
 		}
+
 		$sql [] = implode(' , ', $fields);
 		if ($where && count($where) > 0) {
 			$sql [] = 'WHERE';
 			$sql [] = $where->getWhereCondition($this, $values);
+		}
+
+		if ($len == 1) {
+			if ($order) {
+				$_orders = array();
+				foreach ($order as $o) {
+					$_orders [] = $o [0] . ' ' . $o [1];
+				}
+				$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
+			}
+			if ($limit) {
+				$limit2 = $values->addValue('limit', $limit [1]);
+				$sql [] = 'LIMIT ' . $limit2;
+			}
 		}
 
 		return implode(' ', $sql);

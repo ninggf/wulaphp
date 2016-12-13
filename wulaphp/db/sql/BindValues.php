@@ -14,9 +14,10 @@ class BindValues implements \IteratorAggregate {
 	private $values = array();
 
 	public function addValue($field, $value) {
-		$field = Condition::safeField($field);
-		$index = isset ($this->names [ $field ]) ? $this->names [ $field ] : 0;
-		$key   = ':' . $field . '_' . $index;
+		$rfield = str_replace('`', '', $field);
+		$field  = Condition::safeField($field);
+		$index  = isset ($this->names [ $field ]) ? $this->names [ $field ] : 0;
+		$key    = ':' . $field . '_' . $index;
 		if (is_numeric($value)) {
 			$type = \PDO::PARAM_STR;
 		} else if (is_bool($value)) {
@@ -27,7 +28,7 @@ class BindValues implements \IteratorAggregate {
 		} else {
 			$type = \PDO::PARAM_STR;
 		}
-		$this->values []        = array($key, $value, $type, $field);
+		$this->values []        = array($key, $value, $type, $field, $rfield);
 		$this->names [ $field ] = ++$index;
 
 		return $key;

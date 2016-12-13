@@ -184,22 +184,26 @@ abstract class DatabaseDialect extends \PDO {
 	 * @param array      $data
 	 * @param Condition  $where
 	 * @param BindValues $values
+	 * @param array      $order
+	 * @param array      $limit
 	 *
 	 * @return string
 	 */
-	public abstract function getUpdateSQL($table, $data, $where, $values);
+	public abstract function getUpdateSQL($table, $data, $where, $values, $order, $limit);
 
 	/**
 	 * get the delete SQL
 	 *
 	 * @param string     $from
-	 * @param array      $using
+	 * @param array      $joins
 	 * @param Condition  $where
 	 * @param BindValues $values
+	 * @param array      $order
+	 * @param array      $limit
 	 *
 	 * @return string
 	 */
-	public abstract function getDeleteSQL($from, $using, $where, $values);
+	public abstract function getDeleteSQL($from, $joins, $where, $values, $order, $limit);
 
 	/**
 	 * list the databases.

@@ -293,11 +293,11 @@ class DatabaseConnection {
 	/**
 	 * 更新.
 	 *
-	 * @param string $table
+	 * @param array $table
 	 *
 	 * @return \wulaphp\db\sql\UpdateSQL
 	 */
-	public function update($table) {
+	public function update(...$table) {
 		$sql = new UpdateSQL($table);
 		$sql->setDialect($this->dialect);
 
@@ -306,6 +306,7 @@ class DatabaseConnection {
 
 	/**
 	 * 删除.
+	 *
 	 * @return \wulaphp\db\sql\DeleteSQL
 	 */
 	public function delete() {
