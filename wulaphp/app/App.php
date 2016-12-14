@@ -549,7 +549,11 @@ class App {
 		if (count($pkg) > 1) {
 			$module = $pkg [0];
 			if (!isset(self::$modules[ $module ])) {
-				return null;
+				$module .= '\\' . $pkg[1];
+				array_shift($pkg);
+				if (!isset(self::$modules[ $module ])) {
+					return null;
+				}
 			}
 			if (isset (self::$maps ['id2dir'] [ $module ])) {
 				$pkg [0] = self::$maps ['id2dir'] [ $module ];
