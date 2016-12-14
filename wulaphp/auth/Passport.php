@@ -80,10 +80,12 @@ class Passport {
 	/**
 	 * 登录
 	 *
+	 * @param mixed $data 登录验证使用的数据
+	 *
 	 * @return bool
 	 */
-	public final function login() {
-		$this->isLogin = $this->doAuth();
+	public final function login($data = null) {
+		$this->isLogin = $this->doAuth($data);
 		if ($this->isLogin) {
 			fire('passport\on' . ucfirst($this->type) . 'PassportLogin', $this);
 			$this->store();
@@ -118,9 +120,11 @@ class Passport {
 	/**
 	 * 登录认证.
 	 *
+	 * @param mixed $data 验证使用的数据
+	 *
 	 * @return bool 认证成功返回true,反之返回false.
 	 */
-	protected function doAuth() {
+	protected function doAuth($data = null) {
 		return false;
 	}
 
