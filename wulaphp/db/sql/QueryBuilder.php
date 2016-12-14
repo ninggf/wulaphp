@@ -92,8 +92,8 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * @param        $table
-	 * @param        $on
+	 * @param string $table
+	 * @param string $on
 	 * @param string $type
 	 *
 	 * @return QueryBuilder
@@ -126,7 +126,7 @@ abstract class QueryBuilder {
 	 * @param string $table
 	 * @param array  ...$on
 	 *
-	 * @return  QueryBuilder;
+	 * @return  QueryBuilder
 	 */
 	public function right($table, ...$on) {
 		$this->join($table, $on[0] . '=' . $on[1], self::RIGHT);
@@ -177,10 +177,14 @@ abstract class QueryBuilder {
 	 * 更新条件中的数据.
 	 *
 	 * @param $data
+	 *
+	 * @return QueryBuilder
 	 */
 	public function updateWhereData($data) {
 		$this->performed = false;
 		$this->whereData = array_merge($this->whereData, $data);
+
+		return $this;
 	}
 
 	/**
@@ -265,14 +269,14 @@ abstract class QueryBuilder {
 	/**
 	 * 排序
 	 *
-	 * @param string $field 排序字段，多个字段使用|分隔.
+	 * @param string $field 排序字段，多个字段使用,分隔.
 	 * @param string $order a or d
 	 *
 	 * @return QueryBuilder
 	 */
 	public function sort($field, $order) {
-		$orders = explode('|', strtolower($order));
-		$fields = explode('|', $field);
+		$orders = explode(',', strtolower($order));
+		$fields = explode(',', $field);
 		foreach ($fields as $i => $field) {
 			$this->order [] = array($field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]);
 		}
@@ -306,14 +310,14 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * page.
+	 * 分页
 	 *
-	 * @param int $pageNo
-	 * @param int $limit
+	 * @param int $pageNo 页数
+	 * @param int $limit  默认每页20条
 	 *
 	 * @return $this
 	 */
-	public function page($pageNo, $limit) {
+	public function page($pageNo, $limit = 20) {
 		$pageNo = intval($pageNo);
 		if ($pageNo < 0) {
 			$pageNo = 0;
@@ -358,14 +362,25 @@ abstract class QueryBuilder {
 		}
 	}
 
+	/**
+	 * @return \wulaphp\db\sql\BindValues
+	 */
 	public function getBindValues() {
 		return $this->values;
 	}
 
+	/**
+	 * @param BindValues $values
+	 */
 	public function setBindValues($values) {
 		$this->values = $values;
 	}
 
+	/**
+	 * 设置PDO option,只影响PDOStatement。
+	 *
+	 * @param array $options
+	 */
 	public function setPDOOptions($options) {
 		$this->options = $options;
 	}
@@ -396,15 +411,29 @@ abstract class QueryBuilder {
 			@ob_start(PHP_OUTPUT_HANDLER_CLEANABLE);
 			$statement->debugDumpParams();
 			$this->dumpSQL = @ob_get_clean();
+
+			return null;
 		} else {
 			return $this->dumpSQL;
 		}
 	}
 
+	/**
+	 * 上次执行是否成功.
+	 *
+	 * @return bool
+	 */
 	public function success() {
 		return empty ($this->error) ? true : false;
 	}
 
+	/**
+	 * alias of exec.
+	 *
+	 * @param bool $checkNum
+	 *
+	 * @return bool
+	 */
 	public function perform($checkNum = false) {
 		return $this->exec($checkNum);
 	}

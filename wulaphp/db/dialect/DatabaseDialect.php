@@ -245,6 +245,16 @@ abstract class DatabaseDialect extends \PDO {
 	public abstract function getCharset();
 
 	/**
+	 * 取WHERE条件字符串.
+	 *
+	 * @param array      $conditions
+	 * @param BindValues $values
+	 *
+	 * @return string
+	 */
+	public abstract function buildWhereString($conditions, $values);
+
+	/**
 	 * prepare the construct option, the return must be an array, detail listed following:
 	 * 1.
 	 * dsn
