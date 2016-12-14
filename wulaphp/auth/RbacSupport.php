@@ -17,9 +17,10 @@ trait RbacSupport {
 
 	/**
 	 * @param \Reflector $method
+	 *
 	 */
 	protected function beforeRunInRbacSupport(\Reflector $method) {
-		if ($this->passport) {
+		if ($this->passport instanceof Passport) {
 			$annotation = new Annotation($method);
 			$login      = $annotation->has('login');
 			$acl        = $annotation->getArray('acl');
@@ -28,15 +29,19 @@ trait RbacSupport {
 			if ($login && !$this->passport->isLogin) {
 				$this->needLogin();
 			}
-			$rst = false;
+			$rst = true;
 			if ($acl) {
 				$res = array_shift($acl);
 				$rst = $this->passport->cando($res, $acl);
-			} elseif ($roles) {
+			}
+			// 同时还要有角色 $roles
+			if ($rst && $roles) {
 				$rst = $this->passport->is($roles);
 			}
+
 			if (!$rst) {
 				$msg = $annotation->getString('aclmsg');
+
 				$this->onDenied($msg);
 			}
 		} else {
