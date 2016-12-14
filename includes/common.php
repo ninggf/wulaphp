@@ -356,32 +356,105 @@ function sess_del($name, $default = '') {
 	return $value;
 }
 
+/**
+ * 取数据.
+ *
+ * @param string $name
+ * @param string $default
+ * @param bool   $xss_clean
+ *
+ * @return mixed
+ */
 function rqst($name, $default = '', $xss_clean = true) {
 	global $__rqst;
-	if (!$__rqst) {
+	if (defined('ARTISAN_TASK_PID')) {
+		$__rqst = \wulaphp\io\Request::getInstance();
+	} else if (!$__rqst) {
 		$__rqst = wulaphp\io\Request::getInstance();
 	}
 
 	return $__rqst->get($name, $default, $xss_clean);
 }
 
+/**
+ * 一次取多个值.
+ *
+ * @param array $names 表单中的字段名.
+ * @param bool  $xss_clean
+ * @param array $map   表单字段与结果字段的映射
+ *
+ * @return array
+ */
+function rqsts($names, $xss_clean = true, $map = []) {
+	global $__rqst;
+	if (defined('ARTISAN_TASK_PID')) {
+		$__rqst = \wulaphp\io\Request::getInstance();
+	} else if (!$__rqst) {
+		$__rqst = wulaphp\io\Request::getInstance();
+	}
+	$rqts = [];
+	foreach ($names as $key => $default) {
+		if (is_numeric($key)) {
+			$fname   = $default;
+			$default = '';
+		} else {
+			$fname = $key;
+		}
+		$rname          = isset($map[ $fname ]) ? $map[ $fname ] : $fname;
+		$rqts[ $rname ] = $__rqst->get($fname, $default, $xss_clean);
+	}
+
+	return $rqts;
+}
+
+/**
+ * @param string $name
+ * @param string $default
+ *
+ * @return mixed
+ */
 function arg($name, $default = '') {
 	global $__rqst;
-	if (!$__rqst) {
+	if (defined('ARTISAN_TASK_PID')) {
+		$__rqst = \wulaphp\io\Request::getInstance();
+	} else if (!$__rqst) {
 		$__rqst = wulaphp\io\Request::getInstance();
 	}
 
 	return $__rqst->get($name, $default, false);
 }
 
+/**
+ * 是否有该请求数据.
+ *
+ * @param string $name
+ *
+ * @return bool
+ */
 function rqset($name) {
 	return isset ($_GET [ $name ]) || isset ($_POST [ $name ]);
 }
 
+/**
+ * 取int型参数。
+ *
+ * @param string $name
+ * @param int    $default
+ *
+ * @return int
+ */
 function irqst($name, $default = 0) {
 	return intval(rqst($name, $default, true));
 }
 
+/**
+ * 取float型参数.
+ *
+ * @param string $name
+ * @param int    $default
+ *
+ * @return float
+ */
 function frqst($name, $default = 0) {
 	return floatval(rqst($name, $default, true));
 }
@@ -997,6 +1070,9 @@ function whoami($type = 'default') {
 	return \wulaphp\auth\Passport::get($type);
 }
 
+/**
+ * @param Exception $e
+ */
 function wula_exception_handler($e) {
 	global $argv;
 	if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
