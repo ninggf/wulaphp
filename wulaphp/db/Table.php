@@ -110,16 +110,22 @@ abstract class Table extends View {
 	}
 
 	/**
-	 * 更新数据.
+	 * 更新数据或获取UpdateSQL实例.
 	 *
-	 * @param array    $data 数据.
-	 * @param array    $con  更新条件.
-	 * @param \Closure $cb   数据处理器.
+	 * @param array|null $data 数据.
+	 * @param array|null $con  更新条件.
+	 * @param \Closure   $cb   数据处理器.
 	 *
-	 * @return bool 成功true，失败false.
+	 * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
 	 * @throws ValidateException
 	 */
-	public function update($data, $con = null, $cb = null) {
+	public function update($data = null, $con = null, $cb = null) {
+		if ($data === null) {
+			$sql = new UpdateSQL($this->qualifiedName);
+			$sql->setDialect($this->dialect);
+
+			return $sql;
+		}
 		if ($con && !is_array($con)) {
 			$con = [$this->primaryKeys[0] => $con];
 		}
@@ -156,13 +162,19 @@ abstract class Table extends View {
 	}
 
 	/**
-	 * 删除记录.
+	 * 删除记录或获取DeleteSQL实例.
 	 *
 	 * @param array|int $con 条件或主键.
 	 *
-	 * @return boolean 成功true，失败false.
+	 * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
 	 */
-	public function delete($con) {
+	public function delete($con = null) {
+		if ($con === null) {
+			$sql = new DeleteSQL();
+			$sql->from($this->qualifiedName)->setDialect($this->dialect);
+
+			return $sql;
+		}
 		$rst = false;
 		if (is_int($con)) {
 			$con = [$this->primaryKeys[0] => $con];
@@ -220,7 +232,7 @@ abstract class Table extends View {
 	 */
 	private function parseTraits() {
 		$parents = class_parents($this);
-		unset($parents['wulaphp\db\Table']);
+		unset($parents['wulaphp\db\Table'], $parents['wulaphp\db\View']);
 		$traits = class_uses($this);
 		if ($parents) {
 			foreach ($parents as $p) {
