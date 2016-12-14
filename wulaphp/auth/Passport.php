@@ -17,12 +17,10 @@ class Passport {
 	/**
 	 * Passport constructor.
 	 *
-	 * @param int    $uid
-	 * @param string $type
+	 * @param int $uid
 	 */
-	public function __construct($uid = 0, $type = 'default') {
-		$this->uid  = $uid;
-		$this->type = $type;
+	public function __construct($uid = 0) {
+		$this->uid = $uid;
 	}
 
 	/**
@@ -37,6 +35,7 @@ class Passport {
 			if ($passport) {
 				self::$INSTANCES[ $type ] = @unserialize($passport);
 			} else {
+				$defaultPassport->type    = $type;
 				self::$INSTANCES[ $type ] = $defaultPassport;
 			}
 		}
@@ -45,9 +44,9 @@ class Passport {
 	}
 
 	public function __sleep() {
-		//不需要self::$INSTANCES
+		$vars = get_object_vars($this);
 
-		return get_object_vars($this);
+		return array_keys($vars);
 	}
 
 	public function __wakeup() {
