@@ -8,6 +8,7 @@ use wulaphp\db\dialect\DatabaseDialect;
 use wulaphp\db\DialectException;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
+use wulaphp\io\Response;
 use wulaphp\router\Router;
 use wulaphp\util\ObjectCaller;
 
@@ -425,9 +426,28 @@ class App {
 	}
 
 	/**
+	 * 重定向.
+	 *
+	 * @param string $url
+	 * @param array  $args
+	 */
+	public static function redirect($url, $args = []) {
+		if (strpos($url, '\\') !== false) {
+			$url = self::action($url);
+		} else {
+			$url = self::url($url);
+		}
+		if (!empty($args)) {
+			$url .= '?' . http_build_query($args);
+		}
+		Response::redirect($url);
+	}
+
+	/**
 	 * 生成模块url.
 	 *
 	 * @param string $url
+	 * @param bool   $replace
 	 *
 	 * @return string
 	 */
