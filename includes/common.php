@@ -432,7 +432,7 @@ function arg($name, $default = '') {
  * @return bool
  */
 function rqset($name) {
-	return isset ($_GET [ $name ]) || isset ($_POST [ $name ]);
+	return isset ($_REQUEST[ $name ]);
 }
 
 /**
