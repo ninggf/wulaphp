@@ -11,9 +11,21 @@ use wulaphp\util\Annotation;
  *
  * @package wulaphp\auth
  *
- * @property Passport $passport
+ * @property Passport          $passport
+ * @property \ReflectionObject $reflectionObj
  */
 trait RbacSupport {
+	private $globalRbacSetting = ['login' => false];
+
+	protected function onInitRbacSupport() {
+		if ($this->reflectionObj instanceof \ReflectionObject) {
+			$ann                               = new Annotation($this->reflectionObj);
+			$this->globalRbacSetting['login']  = $ann->has('login');
+			$this->globalRbacSetting['roles']  = $ann->getArray('roles');
+			$this->globalRbacSetting['acl']    = $ann->getArray('acl');
+			$this->globalRbacSetting['aclmsg'] = $ann->getString('aclmsg');
+		}
+	}
 
 	/**
 	 * @param \Reflector $method
@@ -22,10 +34,26 @@ trait RbacSupport {
 	protected function beforeRunInRbacSupport(\Reflector $method) {
 		if ($this->passport instanceof Passport) {
 			$annotation = new Annotation($method);
-			$login      = $annotation->has('login');
-			$acl        = $annotation->getArray('acl');
-			$roles      = $annotation->getArray('roles');
-			$login      = $login || $acl || $roles;
+			$nologin    = $annotation->has('login');
+			if ($nologin) {//不需要登录
+				return;
+			}
+
+			$login = $annotation->has('login') || $this->globalRbacSetting['login'];
+
+			if ($annotation->has('acl')) {
+				$acl = $annotation->getArray('acl');
+			} else {
+				$acl = $this->globalRbacSetting['acl'];
+			}
+
+			if ($annotation->has('roles')) {
+				$roles = $annotation->getArray('roles');
+			} else {
+				$roles = $this->globalRbacSetting['roles'];
+			}
+
+			$login = $login || $acl || $roles;
 			if ($login && !$this->passport->isLogin) {
 				$this->needLogin();
 			}
@@ -40,12 +68,12 @@ trait RbacSupport {
 			}
 
 			if (!$rst) {
-				$msg = $annotation->getString('aclmsg');
+				$msg = $annotation->getString('aclmsg') || $this->globalRbacSetting['aclmsg'];
 
 				$this->onDenied($msg);
 			}
 		} else {
-			$this->onDenied('');
+			$this->onDenied($this->globalRbacSetting['aclmsg']);
 		}
 	}
 
