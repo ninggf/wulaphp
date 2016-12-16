@@ -115,7 +115,7 @@ abstract class QueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public function left($table, ...$on) {
-		$this->join($table, $on[0] . '=' . $on[1], self::LEFT);
+		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::LEFT);
 
 		return $this;
 	}
@@ -129,7 +129,7 @@ abstract class QueryBuilder {
 	 * @return  QueryBuilder
 	 */
 	public function right($table, ...$on) {
-		$this->join($table, $on[0] . '=' . $on[1], self::RIGHT);
+		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::RIGHT);
 
 		return $this;
 	}
@@ -143,7 +143,7 @@ abstract class QueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public function inner($table, ...$on) {
-		$this->join($table, $on[0] . '=' . $on[1], self::INNER);
+		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::INNER);
 
 		return $this;
 	}
@@ -310,20 +310,22 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * 分页
+	 * 分页.
 	 *
-	 * @param int $pageNo 页数
+	 * @see QueryBuilder::limit()
+	 *
+	 * @param int $pageNo 页数,从1开始.
 	 * @param int $limit  默认每页20条
 	 *
 	 * @return $this
 	 */
 	public function page($pageNo, $limit = 20) {
 		$pageNo = intval($pageNo);
-		if ($pageNo < 0) {
-			$pageNo = 0;
+		if ($pageNo <= 0) {
+			$pageNo = 1;
 		}
 
-		return $this->limit($pageNo * $limit, $limit);
+		return $this->limit(($pageNo - 1) * $limit, $limit);
 	}
 
 	/**
