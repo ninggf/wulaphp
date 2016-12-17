@@ -33,7 +33,7 @@ class MySQLDialect extends DatabaseDialect {
 		if ($order) {
 			$_orders = array();
 			foreach ($order as $o) {
-				$_orders [] = $o [0] . ' ' . $o [1];
+				$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
 			}
 			$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
 		}
@@ -123,7 +123,7 @@ class MySQLDialect extends DatabaseDialect {
 			if ($order) {
 				$_orders = array();
 				foreach ($order as $o) {
-					$_orders [] = $o [0] . ' ' . $o [1];
+					$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
 				}
 				$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
 			}
@@ -183,7 +183,7 @@ class MySQLDialect extends DatabaseDialect {
 			if ($order) {
 				$_orders = array();
 				foreach ($order as $o) {
-					$_orders [] = $o [0] . ' ' . $o [1];
+					$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
 				}
 				$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
 			}
@@ -348,7 +348,7 @@ class MySQLDialect extends DatabaseDialect {
 					array_shift($cons);
 				}
 			} else { // others
-				$ops = explode(' ', $filed);
+				$ops = preg_split('#\s+#', $filed);
 				if (count($ops) == 1) {
 					$filed = $ops [0];
 					$op    = '=';
@@ -356,7 +356,7 @@ class MySQLDialect extends DatabaseDialect {
 					$op    = array_pop($ops);
 					$filed = implode(' ', $ops);
 				}
-				$op    = strtoupper(trim($op));
+				$op    = strtoupper($op);
 				$filed = Condition::cleanField($filed);
 				if ($op == '$') { // null or not null
 					if (is_null($value)) {
@@ -364,13 +364,13 @@ class MySQLDialect extends DatabaseDialect {
 					} else {
 						$cons [] = $filed . ' IS NOT NULL';
 					}
-				} else if ($op == 'BETWEEN' || $op == 'BT' || $op == '!BT' || $op == '!BETWEEN') { // between
-					$op      = str_replace('!', 'NOT ', $op);
+				} else if ($op == 'BETWEEN' || $op == '#' || $op == '!#' || $op == '!BETWEEN') { // between
+					$op      = str_replace(['!', '#'], ['NOT ', 'BETWEEN'], $op);
 					$val1    = $values->addValue($filed, $value [0]);
 					$val2    = $values->addValue($filed, $value [1]);
 					$cons [] = $filed . ' ' . $op . ' ' . $val1 . ' AND ' . $val2;
-				} else if ($op == 'IN' || $op == '!IN') { // in
-					$op = str_replace('!', 'NOT ', $op);
+				} else if ($op == 'IN' || $op == '!IN' || $op == '@' || $op == '!@') { // in
+					$op = str_replace(['!', '@'], ['NOT ', 'IN'], $op);
 					if ($value instanceof Query) { // sub-select as 'IN' or 'NOT IN' values.
 						$value->setBindValues($values);
 						$value->setDialect($dialect);
@@ -387,10 +387,10 @@ class MySQLDialect extends DatabaseDialect {
 					} else {
 						array_shift($cons);
 					}
-				} else if ($op == 'LIKE' || $op == '!LIKE') { // like
-					$op      = str_replace('!', 'NOT ', $op);
+				} else if ($op == 'LIKE' || $op == '!LIKE' || $op == '%' || $op == '!%') { // like
+					$op      = str_replace(['!', '%'], ['NOT ', 'LIKE'], $op);
 					$cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
-				} else if ($op == 'MATCH') {
+				} else if ($op == 'MATCH' || $op == ' *') {
 					$cons [] = "MATCH({$filed}) AGAINST (" . $values->addValue($filed, $value) . ')';
 				} else if ($op == '~' || $op == '!~') {
 					$op      = str_replace(array('!', '~'), array('NOT ', 'REGEXP'), $op);
