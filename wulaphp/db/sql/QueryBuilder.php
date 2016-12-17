@@ -10,9 +10,11 @@ use wulaphp\db\DialectException;
  * @package wulaphp\db\sql
  * @method toArray()
  * @method get($index = 0, $field = null)
+ * @method first()
  * @method exist($filed = null)
  * @method field($field, $alias = null)
  * @method tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0)
+ * @method total($field)
  */
 abstract class QueryBuilder {
 	const LEFT  = 'LEFT';
@@ -151,8 +153,8 @@ abstract class QueryBuilder {
 	/**
 	 * 条件.
 	 *
-	 * @param array $con
-	 * @param bool  $append
+	 * @param array|Condition $con
+	 * @param bool            $append
 	 *
 	 * @return $this
 	 */
@@ -267,14 +269,20 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * 排序
+	 * 排序,多个排序字段用','分隔.
+	 *
+	 * 当<code>$field</code>为null时，尝试从请求中读取sort[name]做为$field，sort[dir] 做为$order.
 	 *
 	 * @param string $field 排序字段，多个字段使用,分隔.
 	 * @param string $order a or d
 	 *
 	 * @return QueryBuilder
 	 */
-	public function sort($field, $order) {
+	public function sort($field = null, $order = 'a') {
+		if ($field === null) {
+			$field = rqst('sort.name');
+			$order = rqst('sort.dir', 'a');
+		}
 		$orders = explode(',', strtolower($order));
 		$fields = explode(',', $field);
 		foreach ($fields as $i => $field) {
@@ -287,14 +295,19 @@ abstract class QueryBuilder {
 	/**
 	 * limit.
 	 *
-	 * @param int $start start position.
-	 * @param int $limit
+	 * @param int      $start start position or limit.
+	 * @param int|null $limit
 	 *
 	 * @return $this
 	 */
-	public function limit($start, $limit) {
-		$start = intval($start);
-		$limit = intval($limit);
+	public function limit($start, $limit = null) {
+		if ($limit === null) {
+			$limit = intval($start);
+			$start = 0;
+		} else {
+			$start = intval($start);
+			$limit = intval($limit);
+		}
 		if ($start < 0) {
 			$start = 0;
 		}
@@ -311,21 +324,26 @@ abstract class QueryBuilder {
 
 	/**
 	 * 分页.
+	 * 如果$pageNo等于null，那么直接读取page[page]做为$pageNo和page[size]做为$size.
 	 *
 	 * @see QueryBuilder::limit()
 	 *
-	 * @param int $pageNo 页数,从1开始.
-	 * @param int $limit  默认每页20条
+	 * @param int|null $pageNo 页数,从1开始.
+	 * @param int      $size   默认每页20条
 	 *
 	 * @return $this
 	 */
-	public function page($pageNo, $limit = 20) {
+	public function page($pageNo = null, $size = 20) {
+		if ($pageNo === null) {
+			$pageNo = irqst('page.page', 1);
+			$size   = irqst('page.size', 20);
+		}
 		$pageNo = intval($pageNo);
 		if ($pageNo <= 0) {
 			$pageNo = 1;
 		}
 
-		return $this->limit(($pageNo - 1) * $limit, $limit);
+		return $this->limit(($pageNo - 1) * $size, $size);
 	}
 
 	/**

@@ -175,35 +175,41 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			$this->field($filed);
 		}
 
-		return $this->count($filed) > 0;
+		return $this->total($filed) > 0;
+	}
+
+	/**
+	 * 符合条件的记录总数.
+	 *
+	 * Specify the $field argument to perform a 'select count($field)'
+	 * operation, if the SQL has a having sub-sql, please note that the $field
+	 * variables must contain the fields.
+	 *
+	 * @param string $field
+	 *
+	 * @return int
+	 */
+	public function total($field = '*') {
+		if (!$this->countperformed || $this->whereData) {
+			$this->performCount($field);
+		}
+
+		return $this->count;
 	}
 
 	/**
 	 * 1.
 	 * The implementation of Countable interface, so, you can count this class
 	 * instance directly to get the size of the result set.<br/>
-	 * 2. Specify the $field argument to perform a 'select count($field)'
-	 * operation, if the SQL has a having sub-sql, please note that the $field
-	 * variables must contain the fields.
 	 *
-	 * @return integer the number of result set or the count total or false on error
-	 *         SQL.
+	 * @return integer the number of result set.
 	 */
 	public function count() {
-		$field = func_get_args();
-		if ($field == null) {
-			if (!$this->performed) {
-				$this->select();
-			}
-
-			return $this->size;
-		} else {
-			if (!$this->countperformed || $this->whereData) {
-				call_user_func_array(array($this, 'performCount'), func_get_args());
-			}
-
-			return $this->count;
+		if (!$this->performed) {
+			$this->select();
 		}
+
+		return $this->size;
 	}
 
 	public function offsetExists($offset) {
@@ -240,10 +246,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	/**
 	 * 取一行或一行中的一个字段的值.
 	 *
-	 * @param integer|string $index
-	 *            结果集中的行号或字段名.
-	 * @param string         $field
-	 *            结果集中的字段名.
+	 * @param integer|string $index 结果集中的行号或字段名.
+	 * @param string         $field 结果集中的字段名.
 	 *
 	 * @return mixed
 	 */
@@ -268,6 +272,24 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		}
 
 		return null;
+	}
+
+	/**
+	 * 读取第一条记录.
+	 *
+	 * @param array $default 默认值.
+	 *
+	 * @return array|mixed
+	 */
+	public function first($default = []) {
+		if (!$this->performed) {
+			$this->select();
+		}
+		if (isset ($this->resultSets [0])) {
+			return $this->resultSets[0];
+		}
+
+		return $default;
 	}
 
 	/**
@@ -509,13 +531,13 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	/**
 	 * perform the select count($field) statement.
 	 *
+	 * @param string $field
 	 */
-	private function performCount() {
+	private function performCount($field = '*') {
 		$this->checkDialect();
 		$this->count = false;
 		$values      = new BindValues ();
-		$fields      = func_get_args();
-		$fields [0]  = 'COUNT(' . $fields [0] . ')';
+		$fields [0]  = 'COUNT(' . $field . ')';
 		$fields      = $this->prepareFields($fields, $values);
 		$from        = $this->prepareFrom($this->sanitize($this->from));
 		$joins       = $this->prepareJoins($this->sanitize($this->joins));
