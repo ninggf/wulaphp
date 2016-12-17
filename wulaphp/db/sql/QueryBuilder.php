@@ -151,12 +151,12 @@ abstract class QueryBuilder {
 	/**
 	 * 条件.
 	 *
-	 * @param null $con
-	 * @param bool $append
+	 * @param array $con
+	 * @param bool  $append
 	 *
 	 * @return $this
 	 */
-	public function where($con = null, $append = true) {
+	public function where($con, $append = true) {
 		if (is_array($con) && !empty ($con)) {
 			$con = new Condition ($con, $this->alias);
 		}
