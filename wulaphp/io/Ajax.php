@@ -34,6 +34,7 @@ class Ajax {
 	const         ACT_CLICK    = 'click';//点击元素
 	const         ACT_REDIRECT = 'redirect';//重定向
 	const         ACT_VALIDATE = 'validate';//表单验证
+	const         ACT_SCRIPT   = 'script';//JS
 
 	/**
 	 * 成功.
@@ -177,5 +178,17 @@ class Ajax {
 		$args = ['errors' => $errors];
 
 		return new JsonView(['code' => self::WARNING, 'target' => $target, 'message' => $message, 'args' => $args, 'action' => self::ACT_VALIDATE]);
+	}
+
+	/**
+	 * 直接运行$script.
+	 *
+	 * @param string $script
+	 * @param string $message
+	 *
+	 * @return \wulaphp\mvc\view\JsonView
+	 */
+	public static function script($script, $message = '') {
+		return new JsonView(['code' => self::SUCCESS, 'target' => $script, 'message' => $message, 'action' => self::ACT_SCRIPT]);
 	}
 }
