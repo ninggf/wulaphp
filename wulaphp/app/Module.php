@@ -96,9 +96,14 @@ abstract class Module {
 		return true;
 	}
 
+	public function getAuthor() {
+		return 'wula team';
+	}
+
 	public abstract function getName();
 
 	public abstract function getDescription();
 
 	public abstract function getHomePageURL();
+
 }
