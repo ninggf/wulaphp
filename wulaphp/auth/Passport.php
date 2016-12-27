@@ -73,7 +73,6 @@ class Passport {
 	public final function logout() {
 		fire('passport\on' . ucfirst($this->type) . 'PassportLogout', $this);
 		$_SESSION[ self::SESSION_NAME . '_' . $this->type ] = '';
-
 	}
 
 	/**

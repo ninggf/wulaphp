@@ -62,6 +62,21 @@ class DefaultDispatcher implements IURLDispatcher {
 		}
 		$module    = strtolower($module);
 		$namespace = App::dir2id($module, true);
+		//查找默认模块
+		if (!$namespace) {
+			// uri=prefix 需要查找module与重置$action为index
+			if ($len == 1 && ($dir = App::checkUrlPrefix($module))) {
+				$prefix    = $module;
+				$namespace = $dir;
+				$module    = App::id2dir($namespace);
+				$action    = 'index';
+			} elseif ($prefix) {
+				// uri = prefix/action，需要查找module且重置$action
+				$action    = $module;
+				$namespace = App::checkUrlPrefix($prefix);
+				$module    = App::id2dir($namespace);
+			}
+		}
 		if ($namespace) {
 			$app = RtCache::get($url);
 			if (!$app) {
@@ -71,7 +86,9 @@ class DefaultDispatcher implements IURLDispatcher {
 				include $app[3];
 			} else {
 				$app = $this->findApp($module, $action, $pms, $namespace);
-				RtCache::add($url, $app);
+				if ($app) {
+					RtCache::add($url, $app);
+				}
 			}
 			if ($app) {
 				list ($controllerClz, $action, $pms, $_controllerFile, $controllerSlag, $actionSlag) = $app;

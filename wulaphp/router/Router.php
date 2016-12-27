@@ -53,11 +53,15 @@ class Router {
 	 * 当前是否在请求$url页面.
 	 *
 	 * @param string $url
+	 * @param bool   $regexp
 	 *
 	 * @return bool
 	 */
-	public static function is($url) {
+	public static function is($url, $regexp = false) {
 		$r = self::getRouter();
+		if ($regexp) {
+			return preg_match('`^' . $url . '$`', $r->requestURL);
+		}
 
 		return $url == $r->requestURL;
 	}
@@ -134,6 +138,7 @@ class Router {
 		}
 		$this->queryParams = $args;
 		$view              = null;
+		fire('router\beforeDispatch', $this);
 		//预处理，读取缓存的好时机
 		foreach ($this->preDispatchers as $dispatchers) {
 			foreach ($dispatchers as $d) {

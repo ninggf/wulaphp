@@ -16,12 +16,12 @@ use wulaphp\util\Annotation;
  * @property \ReflectionObject $reflectionObj
  */
 trait RbacSupport {
-	private $globalRbacSetting = ['login' => false];
+	protected $globalRbacSetting = ['login' => false];
 
 	protected function onInitRbacSupport() {
 		if ($this->reflectionObj instanceof \ReflectionObject) {
 			$ann                               = new Annotation($this->reflectionObj);
-			$this->globalRbacSetting['login']  = $ann->has('login');
+			$this->globalRbacSetting['login']  = $this->globalRbacSetting['login'] || $ann->has('login');
 			$this->globalRbacSetting['roles']  = $ann->getArray('roles');
 			$this->globalRbacSetting['acl']    = $ann->getArray('acl');
 			$this->globalRbacSetting['aclmsg'] = $ann->getString('aclmsg');
