@@ -51,14 +51,18 @@ class App {
 	 * @var App
 	 */
 	private static $app = null;
+	public static  $REQUEST_URI;
 
 	private function __construct() {
+		self::$app = $this;
 		/* 加载配置文件 */
 		$clz = CONFIG_LOADER_CLASS;
 		if (class_exists($clz)) {
 			$configLoader = new $clz();
-		} else {
+		} elseif ($clz == 'wulaphp\app\ConfigurationLoader') {
 			$configLoader = new ConfigurationLoader ();
+		} else {
+			throw new \Exception('cannot find configuration loader: ' . $clz);
 		}
 		if ($configLoader instanceof ConfigurationLoader) {
 			$configLoader->beforeLoad();
@@ -86,8 +90,10 @@ class App {
 		$clz = MODULE_LOADER_CLASS;
 		if (class_exists($clz)) {
 			$moduleLoader = new $clz();
-		} else {
+		} elseif ($clz == 'wulaphp\app\ModuleLoader') {
 			$moduleLoader = new ModuleLoader();
+		} else {
+			throw new \Exception('cannot find module loader: ' . $clz);
 		}
 		if ($moduleLoader instanceof ModuleLoader) {
 			$this->moduleLoader = $moduleLoader;
@@ -104,7 +110,7 @@ class App {
 	 */
 	public static function start() {
 		if (!self::$app) {
-			self::$app = new App ();
+			new App ();
 		}
 		$debug = App::icfg('debug', DEBUG_WARN);
 		if ($debug > 400 || $debug < 0) {
@@ -135,7 +141,7 @@ class App {
 				if (method_exists($module->clzName, 'urlGroup')) {
 					$prefix = ObjectCaller::callClzMethod($module->clzName, 'urlGroup');
 					if ($prefix && $prefix[0]) {
-						self::registerUrlGroup($prefix);
+						self::registerUrlGroup($prefix, $module->getNamespace());
 					}
 				}
 				$module->autoBind();
@@ -327,13 +333,14 @@ class App {
 		if (!preg_match('/^[a-z][a-z_\d]+(\\\\[a-z][a-z_\d]+)*$/i', $name)) {
 			throw new \Exception('the namespace "' . $name . '" of ' . $module->clzName . ' is invalide.');
 		}
-
-		$dir = $module->getDirname();
-		if ($dir != $name) {
-			self::$maps ['dir2id'] [ $dir ]  = $name;
-			self::$maps ['id2dir'] [ $name ] = $dir;
+		if (self::$app->moduleLoader->isEnabled($module)) {
+			$dir = $module->getDirname();
+			if ($dir != $name) {
+				self::$maps ['dir2id'] [ $dir ]  = $name;
+				self::$maps ['id2dir'] [ $name ] = $dir;
+			}
+			self::$modules [ $name ] = $module;
 		}
-		self::$modules [ $name ] = $module;
 	}
 
 	/**
@@ -395,10 +402,10 @@ class App {
 	}
 
 	/**
-	 * @param array $prefix
-	 *
+	 * @param array  $prefix
+	 * @param string $namespace
 	 */
-	private static function registerUrlGroup(array $prefix) {
+	private static function registerUrlGroup(array $prefix, $namespace) {
 		if (isset($prefix[0]) && isset($prefix[1])) {
 			$char = $prefix[0];
 			if (!in_array($char, ['~', '!', '@', '#', '%', '^', '&', '*'])) {
@@ -410,7 +417,7 @@ class App {
 			}
 			self::$prefix['char'][]      = $char;
 			self::$prefix['prefix'][]    = $p . '/';
-			self::$prefix['check'][ $p ] = 1;
+			self::$prefix['check'][ $p ] = $namespace;
 		} else {
 			throw new \InvalidArgumentException('prefix is invalid');
 		}
@@ -419,10 +426,10 @@ class App {
 	/**
 	 * @param string $prefix
 	 *
-	 * @return bool
+	 * @return null|string
 	 */
 	public static function checkUrlPrefix($prefix) {
-		return isset(self::$prefix['check'][ $prefix ]);
+		return isset(self::$prefix['check'][ $prefix ]) ? self::$prefix['check'][ $prefix ] : null;
 	}
 
 	/**
@@ -456,7 +463,11 @@ class App {
 
 		$urls = explode('/', $url);
 		if ($replace) {
-			$urls[0] = App::id2dir($urls[0]);
+			if (preg_match('/^([~!@#%\^&\*])(.+)$/', $urls[0], $ms)) {
+				$urls[0] = $ms[1] . App::id2dir($ms[2]);
+			} else {
+				$urls[0] = App::id2dir($urls[0]);
+			}
 		}
 		if (self::$prefix) {
 			$urls[0] = str_replace(self::$prefix['char'], self::$prefix['prefix'], $urls[0]);
