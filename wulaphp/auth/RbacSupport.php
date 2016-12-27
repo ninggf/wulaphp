@@ -2,6 +2,7 @@
 
 namespace wulaphp\auth;
 
+use wulaphp\mvc\view\View;
 use wulaphp\util\Annotation;
 
 /**
@@ -29,16 +30,21 @@ trait RbacSupport {
 
 	/**
 	 * @param \Reflector $method
+	 * @param View       $view
 	 *
+	 * @return mixed
 	 */
-	protected function beforeRunInRbacSupport(\Reflector $method) {
+	protected function beforeRunInRbacSupport(\Reflector $method, $view) {
 		if ($this->passport instanceof Passport) {
 			$annotation = new Annotation($method);
-			$nologin    = $annotation->has('login');
-			if ($nologin) {//不需要登录
-				return;
+
+			//不需要登录
+			$nologin = $annotation->has('nologin');
+			if ($nologin) {
+				return $view;
 			}
 
+			//登录检测
 			$login = $annotation->has('login') || $this->globalRbacSetting['login'];
 
 			if ($annotation->has('acl')) {
@@ -55,7 +61,7 @@ trait RbacSupport {
 
 			$login = $login || $acl || $roles;
 			if ($login && !$this->passport->isLogin) {
-				$this->needLogin();
+				return $this->needLogin();
 			}
 			$rst = true;
 			if ($acl) {
@@ -70,11 +76,13 @@ trait RbacSupport {
 			if (!$rst) {
 				$msg = $annotation->getString('aclmsg') || $this->globalRbacSetting['aclmsg'];
 
-				$this->onDenied($msg);
+				return $this->onDenied($msg);
 			}
 		} else {
-			$this->onDenied($this->globalRbacSetting['aclmsg']);
+			return $this->onDenied($this->globalRbacSetting['aclmsg']);
 		}
+
+		return $view;
 	}
 
 	/**

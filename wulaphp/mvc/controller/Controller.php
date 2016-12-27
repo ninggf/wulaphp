@@ -40,13 +40,18 @@ abstract class Controller {
 	 *
 	 * @param string            $action
 	 * @param \ReflectionMethod $refMethod
+	 *
+	 * @return View
 	 */
 	public function beforeRun($action, $refMethod) {
+		$view = null;
 		if ($this->beforeFeatures) {
 			foreach ($this->beforeFeatures as $feature) {
-				$this->$feature($refMethod);
+				$view = $this->$feature($refMethod, $view);
 			}
 		}
+
+		return $view;
 	}
 
 	/**

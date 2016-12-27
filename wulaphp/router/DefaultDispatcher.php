@@ -5,6 +5,7 @@ use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 use wulaphp\mvc\controller\Controller;
 use wulaphp\mvc\view\SmartyView;
+use wulaphp\mvc\view\View;
 use wulaphp\util\ObjectCaller;
 
 /**
@@ -134,7 +135,13 @@ class DefaultDispatcher implements IURLDispatcher {
 									return null;
 								}
 							}
-							$clz->beforeRun($action, $method);
+							$rtn = $clz->beforeRun($action, $method);
+							//beforeRun可以返回view了
+							if ($rtn instanceof View) {
+								$this->prepareView($rtn, $module, $clz, $action);
+
+								return $rtn;
+							}
 							$args = array();
 							if ($params) {
 								$idx = 0;
@@ -148,23 +155,7 @@ class DefaultDispatcher implements IURLDispatcher {
 							}
 							$view = ObjectCaller::callObjMethod($clz, $action, $args);
 							$view = $clz->afterRun($action, $view);
-							if ($view instanceof SmartyView) {
-								$tpl = $view->getTemplate();
-								if ($tpl) {
-									if ($tpl{0} == '~') {
-										$tpl     = substr($tpl, 1);
-										$tpls    = explode('/', $tpl);
-										$tpls[0] = App::id2dir($tpls[0]);
-										$tpl     = implode('/', $tpls);
-										unset($tpls[0]);
-									} else {
-										$tpl = $module . '/views/' . $tpl;
-									}
-									$view->setTemplate($tpl);
-								} else {
-									$view->setTemplate($module . '/views/' . $clz->ctrName . '/' . $action);
-								}
-							}
+							$this->prepareView($view, $module, $clz, $action);
 
 							return $view;
 						}
@@ -232,6 +223,32 @@ class DefaultDispatcher implements IURLDispatcher {
 		}
 
 		return null;
+	}
+
+	/**
+	 * @param $view
+	 * @param $module
+	 * @param $clz
+	 * @param $action
+	 */
+	private function prepareView(&$view, $module, $clz, $action) {
+		if ($view instanceof SmartyView) {
+			$tpl = $view->getTemplate();
+			if ($tpl) {
+				if ($tpl{0} == '~') {
+					$tpl     = substr($tpl, 1);
+					$tpls    = explode('/', $tpl);
+					$tpls[0] = App::id2dir($tpls[0]);
+					$tpl     = implode('/', $tpls);
+					unset($tpls[0]);
+				} else {
+					$tpl = $module . '/views/' . $tpl;
+				}
+				$view->setTemplate($tpl);
+			} else {
+				$view->setTemplate($module . '/views/' . $clz->ctrName . '/' . $action);
+			}
+		}
 	}
 
 }
