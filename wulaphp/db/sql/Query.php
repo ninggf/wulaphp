@@ -261,13 +261,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		if ($data) {
 			return $data;
 		}
-		//失败了
-		if ($this->error) {
-			return false;
-		}
 
-		//成功
-		return [];
+		return false;
 	}
 
 	/**
