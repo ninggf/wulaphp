@@ -6,6 +6,7 @@ use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\Query;
 use wulaphp\db\sql\UpdateSQL;
+use wulaphp\wulaphp\db\ILock;
 
 /**
  * 数据库连接.
@@ -102,17 +103,32 @@ class DatabaseConnection {
 
 	/**
 	 * 在事务中运行.
+	 * 事务过程函数返回非真值[null,false,'',0,空数组等]或抛出任何异常都将导致事务回滚.
 	 *
-	 * @param \Closure $trans 事务过程函数, 它有一个参数为当前数据库连接实例.
-	 *                        事务过程函数返回非真值[null,false,'',0,空数组等]或抛出任何异常都将导致事务回滚.
+	 * @param callable $trans 事务过程函数,声明如下:
+	 *                        function trans(DatabaseConnection $con,mixed $data);
+	 *                        1. $con 数据库链接
+	 *                        2. $data 锁返回的数据.
+	 * @param ILock    $lock  锁.
 	 *
-	 * @return mixed
+	 * @return mixed|null  事务过程函数的返回值或null
 	 */
-	public function trans(\Closure $trans) {
+	public function trans(callable $trans, ILock $lock = null) {
+		if (is_callable($trans)) {
+			return false;
+		}
 		$rst = $this->start();
 		if ($rst) {
 			try {
-				$rst = $trans($this);
+				$data = false;
+				if ($lock && ($data = $lock->lock()) !== false) {
+					throw new \Exception('Cannot get lock from ' . get_class($lock));
+				}
+				if ($lock) {
+					$rst = call_user_func_array($trans, [$this, $data]);
+				} else {
+					$rst = call_user_func_array($trans, [$this]);
+				}
 				if (empty($rst)) {
 					$this->rollback();
 
@@ -127,30 +143,6 @@ class DatabaseConnection {
 		}
 
 		return null;
-	}
-
-	/**
-	 * 锁定表.
-	 *
-	 * @param string          $table
-	 * @param DatabaseDialect $dialect
-	 */
-	public function lock($table, $dialect = null) {
-		if ($dialect == null) {
-			$dialect = $this->dialect;
-		}
-		$table = $dialect->getTableName($table);
-		$dialect->query("LOCK TABLES `" . $table . "` ");
-	}
-
-	/**
-	 * @param DatabaseDialect $dialect
-	 */
-	public function unlock($dialect = null) {
-		if ($dialect == null) {
-			$dialect = $this->dialect;
-		}
-		$dialect->query("UNLOCK TABLES");
 	}
 
 	/**

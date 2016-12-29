@@ -6,6 +6,8 @@ use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\UpdateSQL;
 use wulaphp\validator\ValidateException;
+use wulaphp\wulaphp\db\ILock;
+use wulaphp\wulaphp\db\TableLocker;
 
 /**
  * 表基类,提供与表相关的简单操作。
@@ -253,5 +255,25 @@ abstract class Table extends View {
 			}
 		}
 		unset($parents, $traits);
+	}
+
+	/**
+	 * 锁定符合条件的行.
+	 *
+	 * @param string|int|array $con 条件中一定要有主键或唯一索引.
+	 *
+	 * @return ILock
+	 */
+	public function lock($con) {
+		if (!$con) {
+			throw_exception('未指定锁定条件');
+		}
+		if ($con && !is_array($con)) {
+			$con = [$this->primaryKeys[0] => $con];
+		}
+
+		$query = $this->select('*')->where($con);
+
+		return new TableLocker($query);
 	}
 }

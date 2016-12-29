@@ -24,10 +24,11 @@ class MySQLDialect extends DatabaseDialect {
 	 * @param array      $order
 	 * @param array      $limit
 	 * @param BindValues $values
+	 * @param bool       $forupdate
 	 *
 	 * @return string
 	 */
-	public function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values) {
+	public function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values, $forupdate) {
 		$sql = array('SELECT', $fields, 'FROM');
 		$this->generateSQL($sql, $from, $joins, $where, $having, $group, $values);
 		if ($order) {
@@ -41,6 +42,9 @@ class MySQLDialect extends DatabaseDialect {
 			$limit1 = $values->addValue('limit', $limit [0]);
 			$limit2 = $values->addValue('limit', $limit [1]);
 			$sql [] = 'LIMIT ' . $limit1 . ',' . $limit2;
+		}
+		if ($forupdate) {
+			$sql[] = 'FOR UPDATE';
 		}
 		$sql = implode(' ', $sql);
 

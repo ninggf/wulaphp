@@ -104,6 +104,32 @@ class App {
 	}
 
 	/**
+	 * 获取系统配置加载器.
+	 *
+	 * @return \wulaphp\conf\ConfigurationLoader
+	 */
+	public static function cfgLoader() {
+		if (!self::$app) {
+			new App ();
+		}
+
+		return self::$app->configLoader;
+	}
+
+	/**
+	 * 获取系统模块加载器.
+	 *
+	 * @return \wulaphp\app\ModuleLoader
+	 */
+	public static function moduleLoader() {
+		if (!self::$app) {
+			new App ();
+		}
+
+		return self::$app->moduleLoader;
+	}
+
+	/**
 	 * 启动App.
 	 *
 	 * @return App

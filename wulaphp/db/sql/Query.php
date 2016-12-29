@@ -22,6 +22,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	private $treePad        = true;
 	private $orm            = null;
 	private $eagerFields    = [];
+	private $forupdate      = false;
 
 	/**
 	 * Query constructor.
@@ -241,6 +242,32 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	public function offsetUnset($offset) {
+	}
+
+	/**
+	 *
+	 * @return array|bool|mixed
+	 */
+	public function forupdate() {
+		$this->checkDialect();
+
+		// 不在事务中锁定失败.
+		if (!$this->dialect->inTransaction()) {
+			return false;
+		}
+		$this->forupdate = true;
+		$data            = $this->get(0);
+		// 成功
+		if ($data) {
+			return $data;
+		}
+		//失败了
+		if ($this->error) {
+			return false;
+		}
+
+		//成功
+		return [];
 	}
 
 	/**
@@ -609,7 +636,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		$group  = $this->sanitize($this->group);
 		$order  = $this->sanitize($this->order);
 
-		return $this->dialect->getSelectSQL($fields, $from, $joins, $this->where, $having, $group, $order, $this->limit, $this->values);
+		return $this->dialect->getSelectSQL($fields, $from, $joins, $this->where, $having, $group, $order, $this->limit, $this->values, $this->forupdate);
 	}
 
 	/**

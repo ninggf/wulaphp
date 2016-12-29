@@ -68,6 +68,18 @@ abstract class DatabaseDialect extends \PDO {
 	}
 
 	/**
+	 * 重置所有链接.
+	 */
+	public static function reset() {
+		if (defined('ARTISAN_TASK_PID')) {
+			$pid = ARTISAN_TASK_PID;
+		} else {
+			$pid = 0;
+		}
+		unset(self::$INSTANCE[ $pid ]);
+	}
+
+	/**
 	 * get the full table name( prepend the prefix to the $table)
 	 *
 	 * @param string $table
@@ -146,10 +158,11 @@ abstract class DatabaseDialect extends \PDO {
 	 * @param array        $order
 	 * @param array        $limit
 	 * @param BindValues   $values
+	 * @param bool         $forupdate
 	 *
 	 * @return string
 	 */
-	public abstract function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values);
+	public abstract function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values, $forupdate);
 
 	/**
 	 * get a select sql for geting the count from database
