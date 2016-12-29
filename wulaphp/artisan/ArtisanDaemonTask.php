@@ -14,7 +14,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 
 	public final function run() {
 		if (!function_exists('pcntl_fork')) {
-			$this->log('miss pcntl');
+			$this->error('miss pcntl extension, install it first!');
 			exit(1);
 		}
 
