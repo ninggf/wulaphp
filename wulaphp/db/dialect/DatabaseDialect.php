@@ -13,12 +13,12 @@ use wulaphp\db\sql\Condition;
  *
  */
 abstract class DatabaseDialect extends \PDO {
-
-	private static $INSTANCE = array();
-
-	private       $tablePrefix;
-	protected     $charset         = 'UTF8';
-	public static $lastErrorMassge = '';
+	protected      $cfGname         = '';
+	protected      $tablePrefix     = '';
+	protected      $charset         = 'UTF8';
+	private static $INSTANCE        = [];
+	private static $cfgOptions      = [];
+	public static  $lastErrorMassge = null;
 
 	public function __construct($options) {
 		list ($dsn, $user, $passwd, $attr) = $this->prepareConstructOption($options);
@@ -47,8 +47,8 @@ abstract class DatabaseDialect extends \PDO {
 			} else {
 				$pid = 0;
 			}
-			$name                  = $options->__toString();
-			self::$lastErrorMassge = false;
+			$name = $options->__toString();
+
 			if (!isset (self::$INSTANCE[ $pid ] [ $name ])) {
 				$driver    = isset ($options ['driver']) && !empty ($options ['driver']) ? $options ['driver'] : 'MySQL';
 				$driverClz = 'wulaphp\db\dialect\\' . $driver . 'Dialect';
@@ -58,6 +58,9 @@ abstract class DatabaseDialect extends \PDO {
 				$dr = new $driverClz ($options);
 				$dr->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 				$dr->onConnected();
+				$dr->cfGname                      = $name;
+				self::$cfgOptions[ $name ]        = $options;
+				self::$lastErrorMassge            = false;
 				self::$INSTANCE [ $pid ][ $name ] = $dr;
 			}
 
@@ -68,15 +71,28 @@ abstract class DatabaseDialect extends \PDO {
 	}
 
 	/**
-	 * 重置所有链接.
+	 * 重置链接.
+	 *
+	 * @param string $name
+	 *
+	 * @return DatabaseDialect
 	 */
-	public static function reset() {
+	public function reset($name = null) {
 		if (defined('ARTISAN_TASK_PID')) {
 			$pid = ARTISAN_TASK_PID;
 		} else {
 			$pid = 0;
 		}
-		unset(self::$INSTANCE[ $pid ]);
+		if (!$name) {
+			$name = $this->cfGname;
+		}
+		if (isset(self::$INSTANCE[ $pid ][ $name ])) {
+			unset(self::$INSTANCE[ $pid ][ $name ]);
+
+			return self::getDialect(self::$cfgOptions[ $name ]);
+		}
+
+		return null;
 	}
 
 	/**
@@ -280,5 +296,4 @@ abstract class DatabaseDialect extends \PDO {
 	 * @return array array ( dsn, user,passwd, attr )
 	 */
 	protected abstract function prepareConstructOption($options);
-
 }

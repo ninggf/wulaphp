@@ -40,6 +40,18 @@ class DatabaseConnection {
 	}
 
 	/**
+	 * 重新链接数据库.
+	 *
+	 * @throws \Exception
+	 */
+	public function reconnect() {
+		$this->dialect = $this->dialect->reset();
+		if (!$dialect instanceof DatabaseDialect) {
+			throw new \Exception('cannot reconnect to the database.');
+		}
+	}
+
+	/**
 	 * start a database transaction
 	 *
 	 * @return boolean
