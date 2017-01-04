@@ -2,6 +2,7 @@
 namespace wulaphp\db\dialect;
 
 use wulaphp\conf\DatabaseConfiguration;
+use wulaphp\db\DialectException;
 use wulaphp\db\sql\BindValues;
 use wulaphp\db\sql\Condition;
 
@@ -12,12 +13,12 @@ use wulaphp\db\sql\Condition;
  *
  */
 abstract class DatabaseDialect extends \PDO {
-
-	private static $INSTANCE = array();
-
-	private       $tablePrefix;
-	protected     $charset         = 'UTF8';
-	public static $lastErrorMassge = '';
+	protected      $cfGname         = '';
+	protected      $tablePrefix     = '';
+	protected      $charset         = 'UTF8';
+	private static $INSTANCE        = [];
+	private static $cfgOptions      = [];
+	public static  $lastErrorMassge = null;
 
 	public function __construct($options) {
 		list ($dsn, $user, $passwd, $attr) = $this->prepareConstructOption($options);
@@ -34,32 +35,64 @@ abstract class DatabaseDialect extends \PDO {
 	 * @param DatabaseConfiguration $options
 	 *
 	 * @return DatabaseDialect
+	 * @throws DialectException
 	 */
 	public final static function getDialect($options = null) {
 		try {
 			if (!$options instanceof DatabaseConfiguration) {
 				$options = new DatabaseConfiguration('', $options);
 			}
-			$name                  = $options->__toString();
-			self::$lastErrorMassge = false;
-			if (!isset (self::$INSTANCE [ $name ])) {
+			if (defined('ARTISAN_TASK_PID')) {
+				$pid = ARTISAN_TASK_PID;
+			} else {
+				$pid = 0;
+			}
+			$name = $options->__toString();
+
+			if (!isset (self::$INSTANCE[ $pid ] [ $name ])) {
 				$driver    = isset ($options ['driver']) && !empty ($options ['driver']) ? $options ['driver'] : 'MySQL';
 				$driverClz = 'wulaphp\db\dialect\\' . $driver . 'Dialect';
 				if (!is_subclass_of($driverClz, 'wulaphp\db\dialect\DatabaseDialect')) {
-					trigger_error('the dialect ' . $driverClz . ' is not found!', E_USER_ERROR);
+					throw new DialectException('the dialect ' . $driverClz . ' is not found!');
 				}
 				$dr = new $driverClz ($options);
 				$dr->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 				$dr->onConnected();
-				self::$INSTANCE [ $name ] = $dr;
+				$dr->cfGname                      = $name;
+				self::$cfgOptions[ $name ]        = $options;
+				self::$lastErrorMassge            = false;
+				self::$INSTANCE [ $pid ][ $name ] = $dr;
 			}
 
-			return self::$INSTANCE [ $name ];
+			return self::$INSTANCE[ $pid ] [ $name ];
 		} catch (\PDOException $e) {
-			trigger_error($e->getMessage(), E_USER_ERROR);
-
-			return null;
+			throw new DialectException($e->getMessage());
 		}
+	}
+
+	/**
+	 * 重置链接.
+	 *
+	 * @param string $name
+	 *
+	 * @return DatabaseDialect
+	 */
+	public function reset($name = null) {
+		if (defined('ARTISAN_TASK_PID')) {
+			$pid = ARTISAN_TASK_PID;
+		} else {
+			$pid = 0;
+		}
+		if (!$name) {
+			$name = $this->cfGname;
+		}
+		if (isset(self::$INSTANCE[ $pid ][ $name ])) {
+			unset(self::$INSTANCE[ $pid ][ $name ]);
+
+			return self::getDialect(self::$cfgOptions[ $name ]);
+		}
+
+		return null;
 	}
 
 	/**
@@ -132,30 +165,31 @@ abstract class DatabaseDialect extends \PDO {
 	/**
 	 * get a select SQL for retreiving data from database.
 	 *
-	 * @param array      $fields
-	 * @param array      $from
-	 * @param array      $joins
-	 * @param Condition  $where
-	 * @param array      $having
-	 * @param array      $group
-	 * @param array      $order
-	 * @param array      $limit
-	 * @param BindValues $values
+	 * @param array|string $fields
+	 * @param array        $from
+	 * @param array        $joins
+	 * @param Condition    $where
+	 * @param array        $having
+	 * @param array        $group
+	 * @param array        $order
+	 * @param array        $limit
+	 * @param BindValues   $values
+	 * @param bool         $forupdate
 	 *
 	 * @return string
 	 */
-	public abstract function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values);
+	public abstract function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values, $forupdate);
 
 	/**
 	 * get a select sql for geting the count from database
 	 *
-	 * @param array      $field
-	 * @param array      $from
-	 * @param array      $joins
-	 * @param Condition  $where
-	 * @param array      $having
-	 * @param array      $group
-	 * @param BindValues $values
+	 * @param array|string $field
+	 * @param array        $from
+	 * @param array        $joins
+	 * @param Condition    $where
+	 * @param array        $having
+	 * @param array        $group
+	 * @param BindValues   $values
 	 *
 	 * @return string
 	 */
@@ -179,22 +213,26 @@ abstract class DatabaseDialect extends \PDO {
 	 * @param array      $data
 	 * @param Condition  $where
 	 * @param BindValues $values
+	 * @param array      $order
+	 * @param array      $limit
 	 *
 	 * @return string
 	 */
-	public abstract function getUpdateSQL($table, $data, $where, $values);
+	public abstract function getUpdateSQL($table, $data, $where, $values, $order, $limit);
 
 	/**
 	 * get the delete SQL
 	 *
 	 * @param string     $from
-	 * @param array      $using
+	 * @param array      $joins
 	 * @param Condition  $where
 	 * @param BindValues $values
+	 * @param array      $order
+	 * @param array      $limit
 	 *
 	 * @return string
 	 */
-	public abstract function getDeleteSQL($from, $using, $where, $values);
+	public abstract function getDeleteSQL($from, $joins, $where, $values, $order, $limit);
 
 	/**
 	 * list the databases.
@@ -236,6 +274,16 @@ abstract class DatabaseDialect extends \PDO {
 	public abstract function getCharset();
 
 	/**
+	 * 取WHERE条件字符串.
+	 *
+	 * @param array      $conditions
+	 * @param BindValues $values
+	 *
+	 * @return string
+	 */
+	public abstract function buildWhereString($conditions, $values);
+
+	/**
 	 * prepare the construct option, the return must be an array, detail listed following:
 	 * 1.
 	 * dsn
@@ -248,5 +296,4 @@ abstract class DatabaseDialect extends \PDO {
 	 * @return array array ( dsn, user,passwd, attr )
 	 */
 	protected abstract function prepareConstructOption($options);
-
 }

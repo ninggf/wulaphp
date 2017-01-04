@@ -6,7 +6,7 @@ use wulaphp\cache\RtCache;
 
 class ExtensionLoader {
 	public function load() {
-		$extensions = $this->scanModules();
+		$extensions = $this->scanExtensions();
 		foreach ($extensions as $file) {
 			@include $file;
 		}
@@ -16,7 +16,7 @@ class ExtensionLoader {
 	 * 扫描模块目录,返回目录名与引导文件数组
 	 * @return array
 	 */
-	public function scanModules() {
+	public function scanExtensions() {
 		$extensions = RtCache::get('loader@extensions');
 		if (!$extensions && is_dir(EXTENSIONS_PATH)) {
 			$it         = new \DirectoryIterator (EXTENSIONS_PATH);
@@ -31,6 +31,7 @@ class ExtensionLoader {
 					if (is_file($boot)) {
 						$extensions[ $dirname ] = $boot;
 					}
+					$this->scanSubDir($dir->getRealPath(), $extensions, $dirname);
 				}
 			}
 			RtCache::add('loader@extensions', $extensions);
@@ -39,5 +40,21 @@ class ExtensionLoader {
 		}
 
 		return $extensions;
+	}
+
+	protected function scanSubDir($subdir, &$extensions, $parent) {
+		$it = new \DirectoryIterator ($subdir);
+		foreach ($it as $dir) {
+			if ($dir->isDot()) {
+				continue;
+			}
+			if ($dir->isDir()) {
+				$dirname = $dir->getFilename();
+				$boot    = $subdir . DS . $dirname . DS . $dirname . '.php';
+				if (is_file($boot)) {
+					$extensions[ $parent . '/' . $dirname ] = $boot;
+				}
+			}
+		}
 	}
 }

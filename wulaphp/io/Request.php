@@ -15,51 +15,46 @@ use ci\XssCleaner;
  *          $Id$
  */
 class Request implements \ArrayAccess {
-
-	private $userData = array();
-
-	private $getData = array();
-
-	private $postData = array();
-
-	protected $use_xss_clean = false;
+	private $userData    = [];
+	private $requestData = [];
+	private $arrayData   = [];
 	/**
 	 * @var XssCleaner
 	 */
-	private static $xss_cleaner;
+	private static $xss_cleaner = null;
+	private static $INSTANCE    = null;
+	private static $santitized  = false;
+	private static $UUID        = false;
 
-	private static $INSTANCE = null;
-
-	private static $UUID = false;
-
-	public static $_GET = array();
-
-	public static $_POST = array();
-
-	private function __construct($xss_clean = true) {
-		$this->use_xss_clean = $xss_clean;
-		if (Request::$xss_cleaner == null) {
-			Request::$xss_cleaner = new XssCleaner();
+	private function __construct() {
+		if (self::$xss_cleaner == null) {
+			self::$xss_cleaner = new XssCleaner();
 		}
-		$this->_sanitize_globals();
+		if (!self::$santitized) {
+			self::$santitized = true;
+			$this->sanitizeGlobals();
+		}
 	}
 
 	/**
 	 * 得到request的实例.
 	 *
-	 * @param mixed $use_xss_clean
-	 *
 	 * @return Request
 	 */
-	public static function getInstance($use_xss_clean = null) {
-		if (self::$INSTANCE == null) {
-			self::$INSTANCE = new self ($use_xss_clean);
-		}
-		if (is_bool($use_xss_clean)) {
-			self::$INSTANCE->set_cleaner_enable($use_xss_clean);
-		}
+	public static function getInstance() {
+		if (defined('ARTISAN_TASK_PID')) {
+			if (!isset(self::$INSTANCE[ ARTISAN_TASK_PID ])) {
+				self::$INSTANCE[ ARTISAN_TASK_PID ] = new self ();
+			}
 
-		return self::$INSTANCE;
+			return self::$INSTANCE[ ARTISAN_TASK_PID ];
+		} else {
+			if (self::$INSTANCE == null) {
+				self::$INSTANCE = new self ();
+			}
+
+			return self::$INSTANCE;
+		}
 	}
 
 	/**
@@ -80,15 +75,6 @@ class Request implements \ArrayAccess {
 	}
 
 	/**
-	 * set enable flag
-	 *
-	 * @param $enable
-	 */
-	public function set_cleaner_enable($enable) {
-		$this->use_xss_clean = $enable;
-	}
-
-	/**
 	 * 获取客户端传过来的值无论是通过GET方式还是POST方式
 	 *
 	 * @param string  $name
@@ -97,15 +83,25 @@ class Request implements \ArrayAccess {
 	 *
 	 * @return mixed
 	 */
-	public function get($name, $default = '', $xss_clean = false) {
-		if (!$this->use_xss_clean) {
-			$ary = isset ($this->userData [ $name ]) ? $this->userData : (isset ($this->postData [ $name ]) ? $this->postData : $this->getData);
-		} else if ($xss_clean) {
-			$ary = isset ($this->userData [ $name ]) ? $this->userData : (isset ($_POST [ $name ]) ? $_POST : $_GET);
+	public function get($name, $default = '', $xss_clean = true) {
+		if ($xss_clean) {
+			$ary = isset ($this->userData [ $name ]) ? $this->userData : (isset ($_REQUEST [ $name ]) ? $_REQUEST : []);
 		} else {
-			$ary = isset ($this->userData [ $name ]) ? $this->userData : (isset ($this->postData [ $name ]) ? $this->postData : $this->getData);
+			$ary = isset ($this->userData [ $name ]) ? $this->userData : (isset ($this->requestData [ $name ]) ? $this->requestData : []);
 		}
-		if (!isset ($ary [ $name ]) || (!is_numeric($ary [ $name ]) && empty ($ary [ $name ]))) {
+
+		if (!$ary && strpos($name, '.') > 0) {
+			$name = explode('.', $name);
+			if (isset($this->arrayData[ $name[0] ])) {
+				$ary = $this->arrayData[ $name[0] ];
+			} else {
+				$ary = $this->arrayData[ $name[0] ] = $this->get($name[0], [], $xss_clean);
+			}
+			$name = $name[1];
+		}
+
+		if (!isset ($ary [ $name ])) {
+
 			return $default;
 		}
 
@@ -141,30 +137,17 @@ class Request implements \ArrayAccess {
 	}
 
 	/**
-	 * 对值进行xss安全处理.
-	 *
-	 * @param mixed $val 要进行xss处理的值
-	 *
-	 * @return string
+	 * 设置uuid
 	 */
-	public static function xss_clean($val) {
-		if (Request::$xss_cleaner == null) {
-			Request::$xss_cleaner = new XssCleaner ();
-		}
-		$val = Request::$xss_cleaner->xss_clean($val);
-
-		return $val;
-	}
-
 	public static function setUUID() {
-		if (isset ($_COOKIE ['_m_Uuid_'])) {
-			self::$UUID = $_COOKIE ['_m_Uuid_'];
+		if (isset ($_COOKIE ['__m_uuid'])) {
+			self::$UUID = $_COOKIE ['__m_uuid'];
 
 			return;
 		}
 		self::$UUID = uniqid();
 		// 2 years = 63072000
-		@setcookie('_m_Uuid_', self::$UUID, time() + 63072000, '/', '', false, true);
+		@setcookie('__m_uuid', self::$UUID, time() + 63072000, '/', '', false, true);
 	}
 
 	public static function getUUID() {
@@ -172,11 +155,11 @@ class Request implements \ArrayAccess {
 	}
 
 	public function offsetExists($offset) {
-		return isset ($_GET [ $offset ]) || isset ($_POST [ $offset ]) || isset ($this->userData [ $offset ]);
+		return isset ($_REQUEST [ $offset ]) || isset ($this->userData [ $offset ]);
 	}
 
 	public function offsetGet($offset) {
-		return $this->get($offset);
+		return $this->get($offset, '', true);
 	}
 
 	public function offsetSet($offset, $value) {
@@ -190,35 +173,33 @@ class Request implements \ArrayAccess {
 	}
 
 	// 处理全局输入
-	private function _sanitize_globals() {
-		Request::$_GET  = $_GET;
-		Request::$_POST = $_POST;
-		$this->getData  = array_merge(array(), $_GET);
-		$this->postData = array_merge(array(), $_POST);
-		$_GET           = $this->_clean_input_data($_GET);
-		$_POST          = $this->_clean_input_data($_POST);
-		$_REQUEST       = $this->_clean_input_data($_REQUEST);
+	private function sanitizeGlobals() {
+		$this->requestData = array_merge([], $_REQUEST);
+		//以下为cleaned数据
+		$_GET     = $this->cleanInputData($_GET);
+		$_POST    = $this->cleanInputData($_POST);
+		$_REQUEST = $this->cleanInputData($_REQUEST);
 		unset ($_COOKIE ['$Version']);
 		unset ($_COOKIE ['$Path']);
 		unset ($_COOKIE ['$Domain']);
-		$_COOKIE = $this->_clean_input_data($_COOKIE);
+		$_COOKIE = $this->cleanInputData($_COOKIE);
 	}
 
-	private function _clean_input_data($str) {
+	/**
+	 * @param $str
+	 *
+	 * @return array|mixed|string
+	 */
+	private function cleanInputData($str) {
 		if (is_array($str)) {
 			$new_array = array();
 			foreach ($str as $key => $val) {
-				$new_array [ $this->_clean_input_keys($key) ] = $this->_clean_input_data($val);
+				$new_array [ $this->cleanInputKeys($key) ] = $this->cleanInputData($val);
 			}
 
 			return $new_array;
 		}
-
-		// Should we filter the input data?
-		if ($this->use_xss_clean === true) {
-			$str = Request::$xss_cleaner->xss_clean($str);
-		}
-
+		$str = self::$xss_cleaner->xss_clean($str);
 		// Standardize newlines
 		if (strpos($str, "\r") !== false) {
 			$str = str_replace(array("\r\n", "\r"), "\n", $str);
@@ -227,9 +208,9 @@ class Request implements \ArrayAccess {
 		return $str;
 	}
 
-	private function _clean_input_keys($str) {
-		if (!preg_match('/^[a-z0-9:_\-\/-\\\\*]+$/i', $str)) {
-			log_error('Disallowed Key Characters:' . $str);
+	private function cleanInputKeys($str) {
+		if (!preg_match('/^[\.a-z0-9:_\-\/-\\\\*]+$/i', $str)) {
+			log_error('Disallowed Key Characters:' . $str, 'input');
 			exit ('Disallowed Key Characters:' . $str);
 		}
 

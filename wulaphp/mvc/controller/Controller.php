@@ -15,6 +15,7 @@ abstract class Controller {
 	public $module;
 	public $clzName;
 	public $ctrName;
+	public $slag;
 	/**
 	 * @var \ReflectionObject
 	 */
@@ -26,7 +27,11 @@ abstract class Controller {
 		$this->clzName       = get_class($this);
 		$this->module        = $module;
 		$this->reflectionObj = new \ReflectionObject($this);
-		$this->ctrName       = strtolower(preg_replace('#(Controller)$#', '', $this->reflectionObj->getShortName()));
+		$name                = preg_replace('#(Controller)$#', '', $this->reflectionObj->getShortName());
+		$this->slag          = preg_replace_callback('/([A-Z])/', function ($ms) {
+			return '-' . strtolower($ms[1]);
+		}, lcfirst($name));
+		$this->ctrName       = strtolower($name);
 		$this->parseTraits();
 	}
 
@@ -35,13 +40,18 @@ abstract class Controller {
 	 *
 	 * @param string            $action
 	 * @param \ReflectionMethod $refMethod
+	 *
+	 * @return View
 	 */
 	public function beforeRun($action, $refMethod) {
+		$view = null;
 		if ($this->beforeFeatures) {
 			foreach ($this->beforeFeatures as $feature) {
-				$this->$feature($refMethod);
+				$view = $this->$feature($refMethod, $view);
 			}
 		}
+
+		return $view;
 	}
 
 	/**

@@ -53,11 +53,15 @@ class Router {
 	 * 当前是否在请求$url页面.
 	 *
 	 * @param string $url
+	 * @param bool   $regexp
 	 *
 	 * @return bool
 	 */
-	public static function is($url) {
+	public static function is($url, $regexp = false) {
 		$r = self::getRouter();
+		if ($regexp) {
+			return preg_match('`^' . $url . '$`', $r->requestURL);
+		}
 
 		return $url == $r->requestURL;
 	}
@@ -117,6 +121,7 @@ class Router {
 	 * @param string $uri
 	 *
 	 * @filter router\parse_url url
+	 * @throws \Exception when no router
 	 */
 	public function route($uri = '') {
 		$response = Response::getInstance();
@@ -133,6 +138,7 @@ class Router {
 		}
 		$this->queryParams = $args;
 		$view              = null;
+		fire('router\beforeDispatch', $this);
 		//预处理，读取缓存的好时机
 		foreach ($this->preDispatchers as $dispatchers) {
 			foreach ($dispatchers as $d) {
@@ -169,12 +175,26 @@ class Router {
 			}
 			if ($view) {
 				$response->output($view);
-			} else if (DEBUG == DEBUG_DEBUG) {
-				trigger_error('no route for ' . $uri, E_USER_ERROR);
+			} else if (DEBUG < DEBUG_ERROR) {
+				throw new \Exception('no route for ' . $uri);
 			} else {
 				Response::respond(404);
 			}
 		}
 		$response->close();
+	}
+
+	public static function removeSlash($string) {
+		return preg_replace_callback('/-([a-z])/', function ($ms) {
+			return strtoupper($ms[1]);
+		}, $string);
+	}
+
+	public static function addSlash($string) {
+		$string = lcfirst($string);
+
+		return preg_replace_callback('#[A-Z]#', function ($r) {
+			return '-' . strtolower($r [0]);
+		}, $string);
 	}
 }

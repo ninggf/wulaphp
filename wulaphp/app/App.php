@@ -5,8 +5,10 @@ use wulaphp\conf\Configuration;
 use wulaphp\conf\ConfigurationLoader;
 use wulaphp\db\DatabaseConnection;
 use wulaphp\db\dialect\DatabaseDialect;
+use wulaphp\db\DialectException;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
+use wulaphp\io\Response;
 use wulaphp\router\Router;
 use wulaphp\util\ObjectCaller;
 
@@ -49,14 +51,18 @@ class App {
 	 * @var App
 	 */
 	private static $app = null;
+	public static  $REQUEST_URI;
 
 	private function __construct() {
+		self::$app = $this;
 		/* 加载配置文件 */
-		$clz = CONFIG_LOADER_CLASS;
+		$clz = trim(CONFIG_LOADER_CLASS);
 		if (class_exists($clz)) {
 			$configLoader = new $clz();
-		} else {
+		} elseif ($clz == 'wulaphp\conf\ConfigurationLoader') {
 			$configLoader = new ConfigurationLoader ();
+		} else {
+			throw new \Exception('cannot find configuration loader: ' . $clz);
 		}
 		if ($configLoader instanceof ConfigurationLoader) {
 			$configLoader->beforeLoad();
@@ -64,11 +70,11 @@ class App {
 			$configLoader->postLoad();
 			$this->configLoader = $configLoader;
 		} else {
-			trigger_error('no ConfigurationLoader found!', E_USER_ERROR);
+			throw new \Exception('no ConfigurationLoader found!');
 		}
 		I18n::addLang(WULA_ROOT . 'lang');
 		// 加载扩展
-		$clz = EXTENSION_LOADER_CLASS;
+		$clz = trim(EXTENSION_LOADER_CLASS);
 		if (class_exists($clz)) {
 			$extensionLoader = new $clz();
 		} else {
@@ -78,21 +84,49 @@ class App {
 			$this->extensionLoader = $extensionLoader;
 			$this->extensionLoader->load();
 		} else {
-			trigger_error('no ExtensionLoader found!', E_USER_ERROR);
+			throw new \Exception('no ExtensionLoader found!');
 		}
 		// 加载模块
-		$clz = MODULE_LOADER_CLASS;
+		$clz = trim(MODULE_LOADER_CLASS);
 		if (class_exists($clz)) {
 			$moduleLoader = new $clz();
-		} else {
+		} elseif ($clz == 'wulaphp\app\ModuleLoader') {
 			$moduleLoader = new ModuleLoader();
+		} else {
+			throw new \Exception('cannot find module loader: ' . $clz);
 		}
 		if ($moduleLoader instanceof ModuleLoader) {
 			$this->moduleLoader = $moduleLoader;
 			$this->moduleLoader->load();
 		} else {
-			trigger_error('no ModuleLoader found!', E_USER_ERROR);
+			throw new \Exception('no ModuleLoader found!');
 		}
+	}
+
+	/**
+	 * 获取系统配置加载器.
+	 *
+	 * @return \wulaphp\conf\ConfigurationLoader
+	 */
+	public static function cfgLoader() {
+		if (!self::$app) {
+			new App ();
+		}
+
+		return self::$app->configLoader;
+	}
+
+	/**
+	 * 获取系统模块加载器.
+	 *
+	 * @return \wulaphp\app\ModuleLoader
+	 */
+	public static function moduleLoader() {
+		if (!self::$app) {
+			new App ();
+		}
+
+		return self::$app->moduleLoader;
 	}
 
 	/**
@@ -102,10 +136,10 @@ class App {
 	 */
 	public static function start() {
 		if (!self::$app) {
-			self::$app = new App ();
+			new App ();
 		}
 		$debug = App::icfg('debug', DEBUG_WARN);
-		if ($debug < 100 || $debug > 5) {
+		if ($debug > 400 || $debug < 0) {
 			$debug = DEBUG_WARN;
 		}
 		define('DEBUG', $debug);
@@ -133,7 +167,7 @@ class App {
 				if (method_exists($module->clzName, 'urlGroup')) {
 					$prefix = ObjectCaller::callClzMethod($module->clzName, 'urlGroup');
 					if ($prefix && $prefix[0]) {
-						self::registerUrlGroup($prefix);
+						self::registerUrlGroup($prefix, $module->getNamespace());
 					}
 				}
 				$module->autoBind();
@@ -148,7 +182,8 @@ class App {
 	 *
 	 * @param string $name 数据库配置名.
 	 *
-	 * @return DatabaseConnection {@link DatabaseConnection}
+	 * @return DatabaseConnection
+	 * @throws DialectException
 	 */
 	public static function db($name = 'default') {
 		static $dbs = [];
@@ -179,7 +214,6 @@ class App {
 			}
 		}
 
-		//trigger_error('cannot connect to the database', E_USER_ERROR);
 		return null;
 	}
 
@@ -313,22 +347,26 @@ class App {
 	/**
 	 * 注册模块.
 	 *
-	 * @param Module $module ;
+	 * @param Module $module
+	 *
+	 * @throws \Exception
 	 */
 	public static function register(Module $module) {
 		$name = $module->getNamespace();
 		if ($name == 'wulaphp') {
-			trigger_error('the name of module cannot be wulaphp!', E_USER_ERROR);
+			throw new \Exception('the namespace of ' . $module->clzName . ' cannot be wulaphp!');
 		}
-		if (!preg_match('/^[a-z]+$/i', $name)) {
-			trigger_error('the name of module must be made of "a-z"');
+		if (!preg_match('/^[a-z][a-z_\d]+(\\\\[a-z][a-z_\d]+)*$/i', $name)) {
+			throw new \Exception('the namespace "' . $name . '" of ' . $module->clzName . ' is invalide.');
 		}
-		$dir = $module->getDirname();
-		if ($dir != $name) {
-			self::$maps ['dir2id'] [ $dir ]  = $name;
-			self::$maps ['id2dir'] [ $name ] = $dir;
+		if (self::$app->moduleLoader->isEnabled($module)) {
+			$dir = $module->getDirname();
+			if ($dir != $name) {
+				self::$maps ['dir2id'] [ $dir ]  = $name;
+				self::$maps ['id2dir'] [ $name ] = $dir;
+			}
+			self::$modules [ $name ] = $module;
 		}
-		self::$modules [ $name ] = $module;
 	}
 
 	/**
@@ -390,10 +428,10 @@ class App {
 	}
 
 	/**
-	 * @param array $prefix
-	 *
+	 * @param array  $prefix
+	 * @param string $namespace
 	 */
-	private static function registerUrlGroup(array $prefix) {
+	private static function registerUrlGroup(array $prefix, $namespace) {
 		if (isset($prefix[0]) && isset($prefix[1])) {
 			$char = $prefix[0];
 			if (!in_array($char, ['~', '!', '@', '#', '%', '^', '&', '*'])) {
@@ -405,7 +443,7 @@ class App {
 			}
 			self::$prefix['char'][]      = $char;
 			self::$prefix['prefix'][]    = $p . '/';
-			self::$prefix['check'][ $p ] = 1;
+			self::$prefix['check'][ $p ] = $namespace;
 		} else {
 			throw new \InvalidArgumentException('prefix is invalid');
 		}
@@ -414,25 +452,49 @@ class App {
 	/**
 	 * @param string $prefix
 	 *
-	 * @return bool
+	 * @return null|string
 	 */
 	public static function checkUrlPrefix($prefix) {
-		return isset(self::$prefix['check'][ $prefix ]);
+		return isset(self::$prefix['check'][ $prefix ]) ? self::$prefix['check'][ $prefix ] : null;
+	}
+
+	/**
+	 * 重定向.
+	 *
+	 * @param string $url
+	 * @param array  $args
+	 */
+	public static function redirect($url, $args = []) {
+		if (strpos($url, '\\') !== false) {
+			$url = self::action($url);
+		} else {
+			$url = self::url($url);
+		}
+		if (!empty($args)) {
+			$url .= '?' . http_build_query($args);
+		}
+		Response::redirect($url);
 	}
 
 	/**
 	 * 生成模块url.
 	 *
 	 * @param string $url
+	 * @param bool   $replace
 	 *
 	 * @return string
 	 */
-	public static function url($url) {
+	public static function url($url, $replace = true) {
 		$url = ltrim($url, '/');
 
 		$urls = explode('/', $url);
-
-		$urls[0] = App::id2dir($urls[0]);
+		if ($replace) {
+			if (preg_match('/^([~!@#%\^&\*])(.+)$/', $urls[0], $ms)) {
+				$urls[0] = $ms[1] . App::id2dir($ms[2]);
+			} else {
+				$urls[0] = App::id2dir($urls[0]);
+			}
+		}
 		if (self::$prefix) {
 			$urls[0] = str_replace(self::$prefix['char'], self::$prefix['prefix'], $urls[0]);
 		}
@@ -447,32 +509,46 @@ class App {
 	 */
 	public static function action($url) {
 		static $prefixes = [];
-		$urls   = explode('::', $url);
-		$clz    = trim($url);
-		$action = '';
-		if (count($urls) == 2) {
-			$clz    = $urls[0];
-			$action = $urls[1] != 'index' ? $urls[1] : '';
-		}
+		$clz = trim($url);
 		if (!$clz) {
 			return '#';
 		}
+
+		$urls = explode('::', $clz);
+
+		$action = '';
+
+		if (count($urls) == 2) {
+			$clz    = trim(trim($urls[0]), '\\');
+			$action = $urls[1] != 'index' ? $urls[1] : '';
+		}
+
 		if (!isset($prefixes[ $clz ])) {
-			if (!class_exists($clz) || !is_subclass_of($clz, 'wulaphp\mvc\controller\Controller')) {
-				return '#';
-			}
 			$clzs = explode('\\', $clz);
-			if (count($clzs) != 3) {
+
+			$ctrClz = array_pop($clzs);
+			array_pop($clzs);
+
+			$id = implode('\\', $clzs);
+
+			$path = App::id2dir($id);
+			if (!is_file(MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php')) {
 				return '#';
+			} else {
+				include_once MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php';
+				if (!class_exists($clz) || !is_subclass_of($clz, 'wulaphp\mvc\controller\Controller')) {
+					return '#';
+				}
 			}
 
-			$id = $clzs[0];
+			$ctr = preg_replace('#Controller$#', '', $ctrClz);
 
-			$ctr = preg_replace('#Controller$#', '', $clzs[2]);
-			$ctr = lcfirst($ctr);
-			if ($id != $ctr) {
-				$id .= '/' . $ctr;
+			$ctr = Router::addSlash($ctr);
+
+			if ('index' != $ctr) {
+				$path .= '/' . $ctr;
 			}
+
 			$prefix = '';
 			if (method_exists($clz, 'urlGroup')) {
 				$tprefix = ObjectCaller::callClzMethod($clz, 'urlGroup');
@@ -481,12 +557,12 @@ class App {
 				}
 			}
 
-			$prefixes[ $clz ] = $prefix . $id;
+			$prefixes[ $clz ] = $prefix . $path;
 		}
-		if ($action) {
-			return self::url($prefixes[ $clz ] . '/' . $action);
+		if ($action && $action != 'index') {
+			return self::url($prefixes[ $clz ] . '/' . Router::addSlash($action), false);
 		} else {
-			return self::url($prefixes[ $clz ]);
+			return self::url($prefixes[ $clz ], false);
 		}
 	}
 
@@ -530,7 +606,11 @@ class App {
 		if (count($pkg) > 1) {
 			$module = $pkg [0];
 			if (!isset(self::$modules[ $module ])) {
-				return null;
+				$module .= '\\' . $pkg[1];
+				array_shift($pkg);
+				if (!isset(self::$modules[ $module ])) {
+					return null;
+				}
 			}
 			if (isset (self::$maps ['id2dir'] [ $module ])) {
 				$pkg [0] = self::$maps ['id2dir'] [ $module ];
@@ -548,7 +628,7 @@ class App {
 	 */
 	public static function run() {
 		if (!isset ($_SERVER ['REQUEST_URI'])) {
-			trigger_error('Your web server did not provide REQUEST_URI, stop route request.', E_USER_ERROR);
+			throw new \Exception('Your web server did not provide REQUEST_URI, stop route request.');
 		}
 		if (!self::$app->router) {
 			self::$app->router = Router::getRouter();

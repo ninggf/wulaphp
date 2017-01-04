@@ -14,7 +14,6 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	private $keyField = null;
 
 	public function __construct($datas, $batch = false) {
-		parent::__construct();
 		$this->datas = $datas;
 		$this->batch = $batch;
 	}
@@ -63,11 +62,12 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 			return false;
 		}
 		$this->checkDialect();
-		$values = new BindValues ();
-		$ids    = array_keys($this->datas);
-		$data   = $this->batch ? $this->datas [ $ids [0] ] : $this->datas;
-		$into   = $this->prepareFrom(array(array($this->intoTable, null)));
-		$sql    = $this->dialect->getInsertSQL($into [0] [0], $data, $values);
+		$values    = new BindValues ();
+		$ids       = array_keys($this->datas);
+		$data      = $this->batch ? $this->datas [ $ids [0] ] : $this->datas;
+		$into      = $this->prepareFrom(array(array($this->intoTable, null)));
+		$sql       = $this->dialect->getInsertSQL($into [0] [0], $data, $values);
+		$this->sql = $sql;
 		if ($sql) {
 			try {
 				$statement = $this->dialect->prepare($sql);
@@ -171,5 +171,9 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 
 	public function getIterator() {
 		return new \ArrayIterator ($this->ids);
+	}
+
+	public function getSqlString() {
+		return $this->sql;
 	}
 }

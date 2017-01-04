@@ -65,6 +65,7 @@ class Annotation {
 		$str = $this->getString($annotation);
 
 		if ($str) {
+			$str = trim($str);
 			$str = pure_comman_string($str);
 
 			return explode(',', $str);
@@ -82,9 +83,24 @@ class Annotation {
 	public function getJsonArray($annotation, $default = []) {
 		$str = $this->getString($annotation);
 		if ($str) {
-			return json_decode($str, true);
+			$str = trim($str);
+			if (preg_match('#^(\[\{)(.*)(\]\})$#', $str, $ms)) {
+				$rst = @json_decode($str, true);
+				if ($rst !== false) {
+					return $rst;
+				}
+			}
 		}
 
 		return $default;
+	}
+
+	/**
+	 * 取全部注解.
+	 *
+	 * @return array
+	 */
+	public function getAll() {
+		return $this->annotations;
 	}
 }

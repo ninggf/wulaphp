@@ -2,23 +2,32 @@
 
 namespace wulaphp\db\sql;
 
-class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorAggregate {
+use wulaphp\db\Orm;
+
+/**
+ * Class Query
+ * @package wulaphp\db\sql
+ * @property Orm $orm
+ */
+class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator {
 	private $fields         = array();
-	private $performed      = false;
 	private $countperformed = false;
 	private $size           = 0;
 	private $count          = 0;
-	private $resultSet      = array();
-	/**
-	 * @var \PDOStatement
-	 */
-	private $statement;
-	private $treeCon = null;
-	private $treeKey = null;
-	private $treePad = true;
+	private $resultSet      = array();//当前结果
+	private $resultSets     = array();//所有结果
+	private $resultIdx      = 0;//当前结果指针，用于遍历
+	private $maxIdx         = 0;//最大指针
+	private $treeKey        = null;
+	private $treePad        = true;
+	private $orm            = null;
+	private $eagerFields    = [];
+	private $forupdate      = false;
 
+	/**
+	 * Query constructor.
+	 */
 	public function __construct() {
-		parent::__construct();
 		$args = func_get_args();
 		if ($args) {
 			foreach ($args as $a) {
@@ -36,13 +45,16 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 	}
 
 	public function __destruct() {
-		$this->fields    = null;
-		$this->resultSet = null;
-		$this->treeCon   = null;
-		$this->treeKey   = null;
+		$this->fields     = null;
+		$this->resultSet  = null;
+		$this->resultSets = null;
+		$this->treeKey    = null;
 		$this->close();
 	}
 
+	/**
+	 * 关闭statement
+	 */
 	public function close() {
 		parent::close();
 		if ($this->statement) {
@@ -80,36 +92,27 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 		return $this;
 	}
 
-	public function treeWhere($con) {
-		if (is_array($con) && !empty ($con)) {
-			$con = new Condition ($con);
-		}
-		if ($con) {
-			if ($this->treeCon) {
-				$this->treeCon [] = $con;
-			} else {
-				$this->treeCon = $con;
-			}
-		}
-
-		return $this;
-	}
-
+	/**
+	 * 设置tree option的主键.
+	 *
+	 * @param string $key 主键字段.
+	 *
+	 * @return $this
+	 */
 	public function treeKey($key) {
 		$this->treeKey = $key;
-		$this->fields  = array();
-		$this->field($key);
 
 		return $this;
 	}
 
 	/**
+	 * 是否添加&nbsp;
 	 *
 	 * @param bool $pad
 	 *
 	 * @return Query
 	 */
-	public function treePad($pad = true) {
+	public function treepad($pad = true) {
 		$this->treePad = $pad;
 
 		return $this;
@@ -118,8 +121,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 	/**
 	 * 生成树型SELECT Options.
 	 *
-	 * @param array   $options
-	 *            结果数组引用.
+	 * @param array   $options 结果数组引用.
 	 * @param string  $keyfield
 	 * @param string  $upfield
 	 * @param string  $varfield
@@ -127,22 +129,18 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 	 * @param integer $from
 	 * @param integer $level
 	 */
-	public function treeOption(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0) {
-		$this->performed = false;
-		$con             = new Condition (array($upfield => $from));
-		if ($this->treeCon) {
-			$con [] = $this->treeCon;
-		}
-		$this->where($con, false);
+	public function tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0) {
 		if ($level == 0) {
-			$this->field($keyfield);
-			$this->field($upfield);
-			$this->field($varfield);
+			$con = new Condition (array($upfield => $from));
+			$this->where($con);
+		} else {
+			//更新查询条件，重新查询
+			$this->updateWhereData(array($upfield => $from));
 		}
 
 		$rows = $this->toArray();
-		if ($rows) {
 
+		if ($rows) {
 			if ($this->treePad) {
 				$pad = str_pad('&nbsp;&nbsp;|--', ($level * 24 + 15), '&nbsp;', STR_PAD_LEFT);
 			} else {
@@ -160,7 +158,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 					} else {
 						$options [ $tkey ] = $var;
 					}
-					$this->treeOption($options, $keyfield, $upfield, $varfield, $stop, $key, $level + 1);
+					$this->tree($options, $keyfield, $upfield, $varfield, $stop, $key, $level + 1);
 				}
 			}
 		}
@@ -178,36 +176,41 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 			$this->field($filed);
 		}
 
-		return $this->count($filed) > 0;
+		return $this->total($filed) > 0;
+	}
+
+	/**
+	 * 符合条件的记录总数.
+	 *
+	 * Specify the $field argument to perform a 'select count($field)'
+	 * operation, if the SQL has a having sub-sql, please note that the $field
+	 * variables must contain the fields.
+	 *
+	 * @param string $field
+	 *
+	 * @return int
+	 */
+	public function total($field = '*') {
+		if (!$this->countperformed || $this->whereData) {
+			$this->performCount($field);
+		}
+
+		return $this->count;
 	}
 
 	/**
 	 * 1.
 	 * The implementation of Countable interface, so, you can count this class
 	 * instance directly to get the size of the result set.<br/>
-	 * 2. Specify the $field argument to perform a 'select count($field)'
-	 * operation, if the SQL has a having sub-sql, please note that the $field
-	 * variables must contain the fields.
 	 *
-	 * @return integer the number of result set or the count total or false on error
-	 *         SQL.
+	 * @return integer the number of result set.
 	 */
 	public function count() {
-		$field = func_get_args();
-		if ($field == null) {
-			if (!$this->performed) {
-				$this->select();
-			}
-
-			return $this->size;
-		} else {
-			if (!$this->countperformed) {
-				call_user_func_array(array($this, 'performCount'), func_get_args());
-			}
-
-			return $this->count;
+		if (!$this->performed) {
+			$this->select();
 		}
 
+		return $this->size;
 	}
 
 	public function offsetExists($offset) {
@@ -222,34 +225,51 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 		if (!$this->performed) {
 			$this->select();
 		}
+
 		if (isset ($this->resultSet [ $offset ])) {
 			return $this->resultSet [ $offset ];
+		} else if ($this->orm) {
+			return $this->orm->getData($this->resultIdx, $offset, $this->resultSets, isset($this->eagerFields[ $offset ]));
 		}
 
 		return null;
 	}
 
 	public function offsetSet($offset, $value) {
+		if ($offset == 'orm') {
+			$this->orm = $value;
+		}
 	}
 
 	public function offsetUnset($offset) {
 	}
 
-	public function getIterator() {
-		if (!$this->performed) {
-			$this->select();
+	/**
+	 *
+	 * @return array|bool|mixed
+	 */
+	public function forupdate() {
+		$this->checkDialect();
+
+		// 不在事务中锁定失败.
+		if (!$this->dialect->inTransaction()) {
+			return false;
+		}
+		$this->forupdate = true;
+		$data            = $this->get(0);
+		// 成功
+		if ($data) {
+			return $data;
 		}
 
-		return new \ArrayIterator ($this->resultSet);
+		return false;
 	}
 
 	/**
 	 * 取一行或一行中的一个字段的值.
 	 *
-	 * @param integer|string $index
-	 *            结果集中的行号或字段名.
-	 * @param string         $field
-	 *            结果集中的字段名.
+	 * @param integer|string $index 结果集中的行号或字段名.
+	 * @param string         $field 结果集中的字段名.
 	 *
 	 * @return mixed
 	 */
@@ -263,8 +283,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 			$this->select();
 		}
 
-		if (isset ($this->resultSet [ $index ])) {
-			$row = $this->resultSet [ $index ];
+		if (isset ($this->resultSets [ $index ])) {
+			$row = $this->resultSets [ $index ];
 			if ($field != null && isset ($row [ $field ])) {
 				return $row [ $field ];
 			}
@@ -274,6 +294,24 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 		}
 
 		return null;
+	}
+
+	/**
+	 * 读取第一条记录.
+	 *
+	 * @param array $default 默认值.
+	 *
+	 * @return array|mixed
+	 */
+	public function first($default = []) {
+		if (!$this->performed) {
+			$this->select();
+		}
+		if (isset ($this->resultSets [0])) {
+			return $this->resultSets[0];
+		}
+
+		return $default;
 	}
 
 	/**
@@ -300,14 +338,14 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 			if ($rows) {
 				foreach ($rows as $row) {
 					if (is_array($row)) {
-						array_unshift($this->resultSet, $row);
+						array_unshift($this->resultSets, $row);
 					}
 				}
 			}
 
-			return $this->resultSet;
+			return $this->resultSets;
 		} else if ($var != null) {
-			foreach ($this->resultSet as $row) {
+			foreach ($this->resultSets as $row) {
 				$value = $row [ $var ];
 				if ($key != null && isset ($row [ $key ])) {
 					$id           = $row [ $key ];
@@ -319,7 +357,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 
 			return $rows;
 		} else if ($key != null) {
-			foreach ($this->resultSet as $row) {
+			foreach ($this->resultSets as $row) {
 				if (!isset ($row [ $key ])) {
 					return $rows;
 				}
@@ -333,11 +371,21 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 		return array();
 	}
 
+	/**
+	 * 从crumbs[0]开始逐级向上查询.
+	 *
+	 * @param array  $crumbs [0=>[$idkey=>idvalue,$upkey=>keyvalue]]
+	 * @param string $idkey
+	 * @param string $upkey
+	 */
 	public function recurse(&$crumbs, $idkey = 'id', $upkey = 'upid') {
-		$this->performed = false;
-		$con             = new Condition (array($idkey => $crumbs [0] [ $upkey ]));
-		$this->where($con, false);
-		$rst = $this->get(0);
+		if (!$this->where) {
+			$con = new Condition (array($idkey => $crumbs [0] [ $upkey ]));
+			$this->where($con, false);
+		} else {
+			$this->updateWhereData(array($idkey => $crumbs [0] [ $upkey ]));
+		}
+		$rst = $this->get();
 		if ($rst) {
 			array_unshift($crumbs, $rst);
 			if (!empty ($rst [ $upkey ])) {
@@ -346,31 +394,132 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 		}
 	}
 
+	/**
+	 * eager loading fields
+	 *
+	 * @param array ...$fields
+	 *
+	 * @return $this
+	 */
+	public function with(...$fields) {
+		foreach ($fields as $f) {
+			$this->eagerFields[ $f ] = $f;
+		}
+
+		return $this;
+	}
+
 	public function __toString() {
 		$sql = $this->getSQL();
 
 		return $sql;
 	}
 
+	public function getSqlString() {
+		return $this->sql;
+	}
+
+	/**
+	 * ORM work here for hasOne relationship.
+	 *
+	 * @param string $field 字段
+	 *
+	 * @return mixed
+	 */
+	public function __get($field) {
+		return $this->offsetGet($field);
+	}
+
+	/**
+	 * ORM work here for hasMany and hasManyThrough.
+	 *
+	 * @param string $name
+	 * @param array  $args
+	 *
+	 * @return $this
+	 */
+	public function __call($name, $args) {
+		if ($this->orm) {
+			$query = $this->orm->getQuery($this->resultIdx, $name, $this->resultSets);
+
+			return $query;
+		}
+
+		return null;
+	}
+
+	public function __set($field, $value) {
+		$this->{$field} = $value;
+	}
+
+	public function current() {
+		return $this;
+	}
+
+	public function next() {
+		$this->resultIdx++;
+		if ($this->resultIdx <= $this->maxIdx) {
+			$this->resultSet = $this->resultSets[ $this->resultIdx ];
+		}
+	}
+
+	public function key() {
+		return $this->resultIdx;
+	}
+
+	public function valid() {
+		return $this->resultIdx <= $this->maxIdx;
+	}
+
+	public function rewind() {
+		if (!$this->performed) {
+			$this->select();
+		}
+		$this->resultIdx = 0;
+		if ($this->size > 0) {
+			$this->resultSet = $this->resultSets[0];
+		} else {
+			$this->resultSet = [];
+		}
+	}
+
 	/**
 	 * perform the select statement.
 	 */
 	private function select() {
+		$this->performed = true;
 		$this->checkDialect();
-		$this->values    = null;
-		$this->resultSet = array();
-		$sql             = $this->getSQL();
-		if ($sql) {
+		$this->resultSet  = array();
+		$this->resultSets = array();
+		$this->resultIdx  = 0;
+		$this->maxIdx     = 0;
+		$this->size       = 0;
+		if (!$this->sql) {
+			$this->sql = $this->getSQL();
+			if (!$this->sql) {
+				$this->error       = 'can not generate the SQL';
+				$this->errorSQL    = '';
+				$this->errorValues = $this->values->__toString();
+				log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
+
+				return;
+			}
+			//重新生成SQL.
+			$this->statement = null;
+		}
+		if (!$this->statement) {
+			$this->prepareStatement();
+		}
+		if ($this->statement) {
 			try {
-				$this->options [ \PDO::ATTR_CURSOR ] = \PDO::CURSOR_SCROLL;
-				$this->statement                     = $this->dialect->prepare($sql, $this->options);
 				if ($this->values) {
 					foreach ($this->values as $value) {
-						list ($name, $val, $type) = $value;
+						list ($name, $val, $type, $field, $rkey) = $value;
+						if ($this->whereData) {
+							$val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
+						}
 						if (!$this->statement->bindValue($name, $val, $type)) {
-							$this->performed   = true;
-							$this->size        = false;
-							$this->errorSQL    = $sql;
+							$this->errorSQL    = $this->sql;
 							$this->errorValues = $this->values->__toString();
 							$this->error       = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name;
 							log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
@@ -382,41 +531,35 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 				$rst = $this->statement->execute();
 				QueryBuilder::addSqlCount();
 				if ($rst) {
-					$this->resultSet = $this->statement->fetchAll(\PDO::FETCH_ASSOC);
-					$this->statement->closeCursor();
-					$this->size = count($this->resultSet);
+					$this->resultSets = $this->statement->fetchAll(\PDO::FETCH_ASSOC);
+					$this->size       = count($this->resultSets);
+					if ($this->size > 0) {
+						$this->maxIdx    = $this->size - 1;
+						$this->resultSet = $this->resultSets[0];
+					}
 				} else {
 					$this->dumpSQL($this->statement);
 				}
 			} catch (\PDOException $e) {
 				$this->exception   = $e;
 				$this->error       = $e->getMessage();
-				$this->size        = false;
-				$this->errorSQL    = $sql;
+				$this->errorSQL    = $this->sql;
 				$this->errorValues = $this->values->__toString();
+				log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
 			}
-		} else {
-			$this->size        = false;
-			$this->error       = 'can not generate the SQL';
-			$this->errorSQL    = '';
-			$this->errorValues = $this->values->__toString();
 		}
-		if ($this->error) {
-			log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
-		}
-		$this->performed = true;
 	}
 
 	/**
 	 * perform the select count($field) statement.
 	 *
+	 * @param string $field
 	 */
-	private function performCount() {
+	private function performCount($field = '*') {
 		$this->checkDialect();
 		$this->count = false;
 		$values      = new BindValues ();
-		$fields      = func_get_args();
-		$fields [0]  = 'COUNT(' . $fields [0] . ')';
+		$fields [0]  = 'COUNT(' . $field . ')';
 		$fields      = $this->prepareFields($fields, $values);
 		$from        = $this->prepareFrom($this->sanitize($this->from));
 		$joins       = $this->prepareJoins($this->sanitize($this->joins));
@@ -429,10 +572,13 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 				$statement                           = $this->dialect->prepare($sql, $this->options);
 				if ($values) {
 					foreach ($values as $value) {
-						list ($name, $val, $type) = $value;
+						list ($name, $val, $type, $field) = $value;
+						if ($this->whereData) {
+							$val = isset($this->whereData[ $field ]) ? $this->whereData[ $field ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
+						}
 						if (!$statement->bindValue($name, $val, $type)) {
 							$this->countperformed = true;
-							$this->count          = false;
+							$this->count          = 0;
 							$this->errorSQL       = $sql;
 							$this->errorValues    = $values->__toString();
 							$this->error          = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name;
@@ -453,12 +599,12 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 				}
 			} catch (\PDOException $e) {
 				$this->error       = $e->getMessage();
-				$this->count       = false;
+				$this->count       = 0;
 				$this->errorSQL    = $sql;
 				$this->errorValues = $values->__toString();
 			}
 		} else {
-			$this->count       = false;
+			$this->count       = 0;
 			$this->errorSQL    = '';
 			$this->errorValues = $values->__toString();
 			$this->error       = 'can not generate the SQL';
@@ -485,6 +631,22 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \IteratorA
 		$group  = $this->sanitize($this->group);
 		$order  = $this->sanitize($this->order);
 
-		return $this->dialect->getSelectSQL($fields, $from, $joins, $this->where, $having, $group, $order, $this->limit, $this->values);
+		return $this->dialect->getSelectSQL($fields, $from, $joins, $this->where, $having, $group, $order, $this->limit, $this->values, $this->forupdate);
+	}
+
+	/**
+	 * 准备PDOStatement
+	 */
+	private function prepareStatement() {
+		$this->options [ \PDO::ATTR_CURSOR ] = \PDO::CURSOR_SCROLL;
+		try {
+			$this->statement = $this->dialect->prepare($this->sql, $this->options);
+		} catch (\PDOException $e) {
+			$this->exception   = $e;
+			$this->error       = $e->getMessage();
+			$this->size        = false;
+			$this->errorSQL    = $this->sql;
+			$this->errorValues = $this->values->__toString();
+		}
 	}
 }

@@ -17,12 +17,10 @@ class Passport {
 	/**
 	 * Passport constructor.
 	 *
-	 * @param int    $uid
-	 * @param string $type
+	 * @param int $uid
 	 */
-	public function __construct($uid = 0, $type = 'default') {
-		$this->uid  = $uid;
-		$this->type = $type;
+	public function __construct($uid = 0) {
+		$this->uid = $uid;
 	}
 
 	/**
@@ -37,6 +35,7 @@ class Passport {
 			if ($passport) {
 				self::$INSTANCES[ $type ] = @unserialize($passport);
 			} else {
+				$defaultPassport->type    = $type;
 				self::$INSTANCES[ $type ] = $defaultPassport;
 			}
 		}
@@ -45,9 +44,9 @@ class Passport {
 	}
 
 	public function __sleep() {
-		//不需要self::$INSTANCES
+		$vars = get_object_vars($this);
 
-		return get_object_vars($this);
+		return array_keys($vars);
 	}
 
 	public function __wakeup() {
@@ -71,17 +70,20 @@ class Passport {
 	/**
 	 * 从SESSION中注销.
 	 */
-	public function logout() {
+	public final function logout() {
+		fire('passport\on' . ucfirst($this->type) . 'PassportLogout', $this);
 		$_SESSION[ self::SESSION_NAME . '_' . $this->type ] = '';
 	}
 
 	/**
 	 * 登录
 	 *
+	 * @param mixed $data 登录验证使用的数据
+	 *
 	 * @return bool
 	 */
-	public function login() {
-		$this->isLogin = $this->doAuth();
+	public final function login($data = null) {
+		$this->isLogin = $this->doAuth($data);
 		if ($this->isLogin) {
 			fire('passport\on' . ucfirst($this->type) . 'PassportLogin', $this);
 			$this->store();
@@ -116,9 +118,11 @@ class Passport {
 	/**
 	 * 登录认证.
 	 *
+	 * @param mixed $data 验证使用的数据
+	 *
 	 * @return bool 认证成功返回true,反之返回false.
 	 */
-	protected function doAuth() {
+	protected function doAuth($data = null) {
 		return false;
 	}
 

@@ -356,32 +356,105 @@ function sess_del($name, $default = '') {
 	return $value;
 }
 
+/**
+ * 取数据.
+ *
+ * @param string $name
+ * @param string $default
+ * @param bool   $xss_clean
+ *
+ * @return mixed
+ */
 function rqst($name, $default = '', $xss_clean = true) {
 	global $__rqst;
-	if (!$__rqst) {
+	if (defined('ARTISAN_TASK_PID')) {
+		$__rqst = \wulaphp\io\Request::getInstance();
+	} else if (!$__rqst) {
 		$__rqst = wulaphp\io\Request::getInstance();
 	}
 
 	return $__rqst->get($name, $default, $xss_clean);
 }
 
+/**
+ * 一次取多个值.
+ *
+ * @param array $names 表单中的字段名.
+ * @param bool  $xss_clean
+ * @param array $map   表单字段与结果字段的映射
+ *
+ * @return array
+ */
+function rqsts($names, $xss_clean = true, $map = []) {
+	global $__rqst;
+	if (defined('ARTISAN_TASK_PID')) {
+		$__rqst = \wulaphp\io\Request::getInstance();
+	} else if (!$__rqst) {
+		$__rqst = wulaphp\io\Request::getInstance();
+	}
+	$rqts = [];
+	foreach ($names as $key => $default) {
+		if (is_numeric($key)) {
+			$fname   = $default;
+			$default = '';
+		} else {
+			$fname = $key;
+		}
+		$rname          = isset($map[ $fname ]) ? $map[ $fname ] : $fname;
+		$rqts[ $rname ] = $__rqst->get($fname, $default, $xss_clean);
+	}
+
+	return $rqts;
+}
+
+/**
+ * @param string $name
+ * @param string $default
+ *
+ * @return mixed
+ */
 function arg($name, $default = '') {
 	global $__rqst;
-	if (!$__rqst) {
+	if (defined('ARTISAN_TASK_PID')) {
+		$__rqst = \wulaphp\io\Request::getInstance();
+	} else if (!$__rqst) {
 		$__rqst = wulaphp\io\Request::getInstance();
 	}
 
 	return $__rqst->get($name, $default, false);
 }
 
+/**
+ * 是否有该请求数据.
+ *
+ * @param string $name
+ *
+ * @return bool
+ */
 function rqset($name) {
-	return isset ($_GET [ $name ]) || isset ($_POST [ $name ]);
+	return isset ($_REQUEST[ $name ]);
 }
 
+/**
+ * 取int型参数。
+ *
+ * @param string $name
+ * @param int    $default
+ *
+ * @return int
+ */
 function irqst($name, $default = 0) {
 	return intval(rqst($name, $default, true));
 }
 
+/**
+ * 取float型参数.
+ *
+ * @param string $name
+ * @param int    $default
+ *
+ * @return float
+ */
 function frqst($name, $default = 0) {
 	return floatval(rqst($name, $default, true));
 }
@@ -995,6 +1068,51 @@ function cleanhtml2simple($text) {
  */
 function whoami($type = 'default') {
 	return \wulaphp\auth\Passport::get($type);
+}
+
+/**
+ * @param Exception $e
+ */
+function wula_exception_handler($e) {
+	global $argv;
+	if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
+		if ($argv) {
+			echo $e->getMessage(), "\n";
+			echo $e->getTraceAsString(), "\n";
+		} else {
+			$stack  = [];
+			$msg    = $e->getMessage();
+			$tracks = $e->getTrace();
+
+			$f = $e->getFile();
+			$l = $e->getLine();
+			array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
+			foreach ($tracks as $i => $t) {
+				$tss     = ['<tr>'];
+				$tss[]   = "<td bgcolor=\"#eeeeec\" align=\"center\">$i</i>";
+				$tss[]   = "<td bgcolor=\"#eeeeec\">{$t['function']}( )</td>";
+				$f       = str_replace(APPROOT, '', $t['file']);
+				$tss[]   = "<td bgcolor=\"#eeeeec\">{$f}<b>:</b>{$t['line']}</td>";
+				$tss []  = '</tr>';
+				$stack[] = implode('', $tss);
+			}
+			$errorFile = file_get_contents(__DIR__ . '/debug.tpl');
+			$errorFile = str_replace(['{$message}', '{$stackInfo}'], [$msg, implode('', $stack)], $errorFile);
+			echo $errorFile;
+			exit(0);
+		}
+	} else {
+		log_error($e->getMessage() . "\n" . $e->getTraceAsString(), 'exceptions');
+		if ($argv) {
+			exit(1);
+		} else {
+			\wulaphp\io\Response::respond(500, $e->getMessage());
+		}
+	}
+}
+
+function throw_exception($message) {
+	throw new Exception($message);
 }
 
 include WULA_ROOT . 'includes/plugin.php';

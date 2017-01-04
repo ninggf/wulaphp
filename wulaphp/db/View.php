@@ -17,15 +17,19 @@ abstract class View {
 	protected $tableName;
 	protected $qualifiedName;
 	protected $primaryKeys = ['id'];
+	protected $errors      = null;
+	protected $lastSQL     = null;
+	protected $lastValues  = null;
+	protected $dumpSQL     = null;
+	protected $alias       = null;
+	private   $ormObj      = null;
+	private   $foreignKey  = null;
+	private   $localKey    = null;
 	/**
 	 * @var \wulaphp\db\dialect\DatabaseDialect
 	 */
-	protected $dialect    = null;
-	protected $errors     = null;
-	protected $lastSQL    = null;
-	protected $lastValues = null;
-	protected $dumpSQL    = null;
-	protected $alias      = null;
+	protected $dialect = null;
+	protected $dbconnection;
 
 	/**
 	 * 创建模型实例.
@@ -41,13 +45,32 @@ abstract class View {
 				return '_' . strtolower($r [0]);
 			}, $table);
 		}
-		$this->table = '{' . $this->table . '}';
+		$this->foreignKey  = $this->table . '_id';
+		$this->localKey    = $this->primaryKeys[0];
+		$this->originTable = $this->table;
+		$this->table       = '{' . $this->table . '}';
 		if (!$db instanceof DatabaseConnection) {
 			$db = App::db($db === null ? 'default' : $db);
 		}
+		$this->dbconnection  = $db;
 		$this->dialect       = $db->getDialect();
 		$this->tableName     = $this->dialect->getTableName($this->table);
 		$this->qualifiedName = $this->table . ' AS ' . $this->alias;
+		$this->ormObj        = new Orm($this, $this->primaryKeys[0]);
+	}
+
+	/**
+	 * 指定此表的别名.
+	 *
+	 * @param string $alias
+	 *
+	 * @return $this
+	 */
+	public function alias($alias) {
+		$this->alias         = $alias;
+		$this->qualifiedName = $this->table . ' AS ' . $this->alias;
+
+		return $this;
 	}
 
 	/**
@@ -56,7 +79,7 @@ abstract class View {
 	 * @param int|array $id
 	 * @param string    $fields 字段,默认为*.
 	 *
-	 * @return array 记录.
+	 * @return Query 记录.
 	 */
 	public function get($id, $fields = '*') {
 		if (is_array($id)) {
@@ -67,10 +90,9 @@ abstract class View {
 		}
 		$sql = $this->select($fields);
 		$sql->where($where)->limit(0, 1);
-		$rst = $sql->get();
-		$this->checkSQL($sql);
+		$sql->orm = $this->ormObj;
 
-		return $rst;
+		return $sql;
 	}
 
 	/**
@@ -81,18 +103,31 @@ abstract class View {
 	 * @param int         $start
 	 * @param int|null    $limit  取多少条数据，默认10条.
 	 *
-	 * @return array 读取后的数组.
+	 * @return Query 读取后的数组.
 	 */
-	public function find($fields, $where, $start = 0, $limit = 10) {
+	public function find($fields = null, $where = null, $start = 0, $limit = 10) {
 		$sql = $this->select($fields);
-		$sql->where($where);
+		if ($where) {
+			$sql->where($where);
+		}
 		if ($limit) {
 			$sql->limit($start, $limit);
 		}
-		$rst = $sql->toArray();
-		$this->checkSQL($sql);
+		$sql->orm = $this->ormObj;
 
-		return $rst;
+		return $sql;
+	}
+
+	/**
+	 * 获取全部数据列表.
+	 *
+	 * @param array|mixed $fields 字段或字段数组.
+	 * @param array       $where  条件.
+	 *
+	 * @return Query
+	 */
+	public function findAll($fields = null, $where = null) {
+		return $this->find($fields, $where, 0, 0);
 	}
 
 	/**
@@ -154,7 +189,15 @@ abstract class View {
 	 * @return Query
 	 */
 	public function select(...$fileds) {
-		$sql = new Query($fileds);
+		if (empty($fileds) || !isset($fileds[0])) {
+			if (isset($this->fields) && $this->fields) {
+				$fileds = self::$queryFields;
+			} else {
+				$fileds = '*';
+			}
+		}
+		$sql      = new Query($fileds);
+		$sql->orm = $this->ormObj;
 		$sql->setDialect($this->dialect)->from($this->qualifiedName);
 
 		return $sql;
@@ -188,13 +231,141 @@ abstract class View {
 	}
 
 	/**
+	 * one-to-one
+	 *
+	 * @param string $table
+	 * @param string $foreign_key
+	 * @param string $local_key
+	 *
+	 * @return array
+	 */
+	protected function hasOne($table, $foreign_key = '', $local_key = '') {
+		if (is_subclass_of($table, 'wulaphp\db\View')) {
+			$tableCls = new $table($this->dbconnection);
+			if (!$foreign_key) {
+				$foreign_key = $this->foreignKey;
+			}
+
+			if (!$local_key) {
+				$local_key = $this->localKey;
+			}
+			$sql = $tableCls->select()->limit(0, 1);
+
+			return [$sql, $foreign_key, $local_key, true, 'hasOne'];
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param string $table
+	 * @param string $foreign_key
+	 * @param string $local_key
+	 *
+	 * @return array
+	 */
+	protected function hasMany($table, $foreign_key = '', $local_key = '') {
+		if (is_subclass_of($table, 'wulaphp\db\View')) {
+			$tableCls = new $table($this->dbconnection);
+			if (!$foreign_key) {
+				$foreign_key = $this->foreignKey;
+			}
+
+			if (!$local_key) {
+				$local_key = $this->localKey;
+			}
+			$sql = $tableCls->select();
+
+			return [$sql, $foreign_key, $local_key, false, 'hasMany'];
+		}
+
+		return null;
+	}
+
+	/**
+	 * many-to-many(只能是主键相关).
+	 *
+	 * @param string $table
+	 * @param string $mtable      中间表名
+	 * @param string $foreign_key 当前表在$mtable中的外键.
+	 * @param string $local_key   $table表在$mtable中的外键.
+	 *
+	 * @return array|null
+	 */
+	protected function belongsToMany($table, $mtable = '', $foreign_key = '', $local_key = '') {
+		if (is_subclass_of($table, 'wulaphp\db\View')) {
+			$tableCls = new $table($this->dbconnection);
+			$tableCls->alias('MTB');
+
+			if (!$foreign_key) {
+				$foreign_key = $this->foreignKey;
+			}
+
+			$foreign_key = 'RTB.' . $foreign_key;
+
+			if (!$local_key) {
+				// role_id
+				$local_key = $tableCls->foreignKey;
+			}
+
+			$local_key = 'RTB.' . $local_key;
+
+			if (!$mtable) {
+				$mtables = [$this->originTable, $tableCls->originTable];
+				sort($mtables);
+				$mtable = implode('_', $mtables);
+			}
+			// user has roles
+			// tableCls = roles
+			// select MTB.* FROM roles left join user_role ON MTB.id = LTB.role_id WHERE LTB.user_id = ?
+			$sql = $tableCls->select('MTB.*')->right('{' . $mtable . '} AS RTB', 'MTB.' . $tableCls->localKey, $local_key);
+
+			return [$sql, $foreign_key, $this->localKey, false, 'belongsToMany'];
+		}
+
+		return null;
+	}
+
+	/**
+	 * one-to-one and one-to-many inverse
+	 *
+	 * @param string $table
+	 * @param string $local_key
+	 * @param string $foreign_key
+	 *
+	 * @return array
+	 */
+	protected function belongsTo($table, $local_key = '', $foreign_key = '') {
+		if (is_subclass_of($table, 'wulaphp\db\View')) {
+			$tableCls = new $table($this->dbconnection);
+			if (!$foreign_key) {
+				$foreign_key = $tableCls->localKey;
+			}
+
+			if (!$local_key) {
+				$local_key = $tableCls->foreignKey;
+			}
+
+			$sql = $tableCls->select();
+
+			return [$sql, $foreign_key, $local_key, true, 'belongsTo'];
+		}
+
+		return null;
+	}
+
+	/**
 	 * 检测SQL执行.
 	 *
 	 * @param QueryBuilder $sql
 	 */
 	protected function checkSQL(QueryBuilder $sql) {
-		$this->errors     = $sql->lastError();
-		$this->lastSQL    = $sql->lastSQL();
+		$this->errors = $sql->lastError();
+		if ($this->errors) {
+			$this->lastSQL = $sql->lastSQL();
+		} else {
+			$this->lastSQL = $sql->getSqlString();
+		}
 		$this->lastValues = $sql->lastValues();
 		$this->dumpSQL    = $sql->dumpSQL();
 	}

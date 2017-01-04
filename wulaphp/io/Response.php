@@ -148,7 +148,8 @@ class Response {
 	/**
 	 * 响应对应的状态码.
 	 *
-	 * @param int $status respond status code.
+	 * @param int          $status respond status code.
+	 * @param string|array $message
 	 */
 	public static function respond($status = 404, $message = '') {
 		status_header($status);
@@ -157,6 +158,9 @@ class Response {
 			$view             = template('404.tpl', $data);
 			echo $view->render();
 		} else if ($message) {
+			if (is_array($message)) {
+				$message = json_encode($message);
+			}
 			echo $message;
 		}
 		exit ();

@@ -6,6 +6,8 @@ use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\UpdateSQL;
 use wulaphp\validator\ValidateException;
+use wulaphp\wulaphp\db\ILock;
+use wulaphp\wulaphp\db\TableLocker;
 
 /**
  * 表基类,提供与表相关的简单操作。
@@ -43,6 +45,7 @@ abstract class Table extends View {
 			if (method_exists($this, 'validateNewData')) {
 				$this->validateNewData($data);
 			}
+			$this->filterFields($data);
 			$sql = new InsertSQL($data);
 			$sql->into($this->table)->setDialect($this->dialect);
 			if ($this->autoIncrement) {
@@ -81,10 +84,12 @@ abstract class Table extends View {
 		}
 		if ($datas) {
 			if (method_exists($this, 'validateNewData')) {
-				foreach ($datas as $data) {
+				foreach ($datas as &$data) {
 					$this->validateNewData($data);
+					$this->filterFields($data);
 				}
 			}
+
 			$sql = new InsertSQL($datas, true);
 			$sql->into($this->table)->setDialect($this->dialect);
 			if ($this->autoIncrement) {
@@ -107,16 +112,22 @@ abstract class Table extends View {
 	}
 
 	/**
-	 * 更新数据.
+	 * 更新数据或获取UpdateSQL实例.
 	 *
-	 * @param array    $data 数据.
-	 * @param array    $con  更新条件.
-	 * @param \Closure $cb   数据处理器.
+	 * @param array|null $data 数据.
+	 * @param array|null $con  更新条件.
+	 * @param \Closure   $cb   数据处理器.
 	 *
-	 * @return bool 成功true，失败false.
+	 * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
 	 * @throws ValidateException
 	 */
-	public function update($data, $con = null, $cb = null) {
+	public function update($data = null, $con = null, $cb = null) {
+		if ($data === null) {
+			$sql = new UpdateSQL($this->qualifiedName);
+			$sql->setDialect($this->dialect);
+
+			return $sql;
+		}
 		if ($con && !is_array($con)) {
 			$con = [$this->primaryKeys[0] => $con];
 		}
@@ -140,6 +151,7 @@ abstract class Table extends View {
 			if (method_exists($this, 'validateUpdateData')) {
 				$this->validateUpdateData($data);
 			}
+			$this->filterFields($data);
 			$sql = new UpdateSQL($this->table);
 			$sql->set($data)->setDialect($this->dialect)->where($con);
 			$rst = $sql->exec();
@@ -152,16 +164,22 @@ abstract class Table extends View {
 	}
 
 	/**
-	 * 删除记录.
+	 * 删除记录或获取DeleteSQL实例.
 	 *
 	 * @param array|int $con 条件或主键.
 	 *
-	 * @return boolean 成功true，失败false.
+	 * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
 	 */
-	public function delete($con) {
+	public function delete($con = null) {
+		if ($con === null) {
+			$sql = new DeleteSQL();
+			$sql->from($this->qualifiedName)->setDialect($this->dialect);
+
+			return $sql;
+		}
 		$rst = false;
 		if (is_int($con)) {
-			$con[ $this->primaryKeys[0] ] = $con;
+			$con = [$this->primaryKeys[0] => $con];
 		}
 		if ($con) {
 			$sql = new DeleteSQL();
@@ -204,11 +222,19 @@ abstract class Table extends View {
 	}
 
 	/**
+	 * 过滤数据.
+	 *
+	 * @param array $data 要过滤的数据.
+	 */
+	protected function filterFields(&$data) {
+	}
+
+	/**
 	 * 初始化Traits.
 	 */
 	private function parseTraits() {
 		$parents = class_parents($this);
-		unset($parents['wulaphp\db\Table']);
+		unset($parents['wulaphp\db\Table'], $parents['wulaphp\db\View']);
 		$traits = class_uses($this);
 		if ($parents) {
 			foreach ($parents as $p) {
@@ -229,5 +255,25 @@ abstract class Table extends View {
 			}
 		}
 		unset($parents, $traits);
+	}
+
+	/**
+	 * 锁定符合条件的行.
+	 *
+	 * @param string|int|array $con 条件中一定要有主键或唯一索引.
+	 *
+	 * @return ILock
+	 */
+	public function lock($con) {
+		if (!$con) {
+			throw_exception('未指定锁定条件');
+		}
+		if ($con && !is_array($con)) {
+			$con = [$this->primaryKeys[0] => $con];
+		}
+
+		$query = $this->select('*')->where($con);
+
+		return new TableLocker($query);
 	}
 }

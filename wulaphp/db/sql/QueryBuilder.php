@@ -10,16 +10,39 @@ use wulaphp\db\DialectException;
  * @package wulaphp\db\sql
  * @method toArray()
  * @method get($index = 0, $field = null)
+ * @method first()
  * @method exist($filed = null)
  * @method field($field, $alias = null)
+ * @method tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0)
+ * @method total($field)
  */
 abstract class QueryBuilder {
 	const LEFT  = 'LEFT';
 	const RIGHT = 'RIGHT';
 	const INNER = '';
 
-	private static $sqlCount = 0;
+	private static $sqlCount    = 0;
+	protected      $sql         = null;
 	protected      $alias;
+	protected      $options     = array();
+	protected      $from        = array();
+	protected      $joins       = array();
+	protected      $where       = null;
+	protected      $having      = array();
+	protected      $limit       = null;
+	protected      $group       = array();
+	protected      $order       = array();
+	protected      $error       = false;
+	protected      $errorSQL    = '';
+	protected      $errorValues = null;
+	protected      $dumpSQL     = null;
+	protected      $exception   = null;
+	protected      $performed   = false;
+	protected      $whereData   = [];
+	/**
+	 * @var \PDOStatement
+	 */
+	protected $statement = null;
 	/**
 	 * @var DatabaseDialect
 	 */
@@ -27,33 +50,7 @@ abstract class QueryBuilder {
 	/**
 	 * @var BindValues
 	 */
-	protected $values;
-
-	protected $options = array();
-
-	protected $from = array();
-
-	protected $joins = array();
-
-	protected $where = null;
-
-	protected $having = array();
-
-	protected $limit = null;
-
-	protected $group = array();
-
-	protected $order = array();
-
-	protected $error = false;
-
-	protected $errorSQL  = '';
-	protected $errorValues;
-	protected $dumpSQL   = null;
-	protected $exception = null;
-
-	public function __construct() {
-	}
+	protected $values = null;
 
 	public function __destruct() {
 		$this->close();
@@ -97,8 +94,8 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * @param        $table
-	 * @param        $on
+	 * @param string $table
+	 * @param string $on
 	 * @param string $type
 	 *
 	 * @return QueryBuilder
@@ -120,7 +117,7 @@ abstract class QueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public function left($table, ...$on) {
-		$this->join($table, $on[0] . '=' . $on[1], self::LEFT);
+		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::LEFT);
 
 		return $this;
 	}
@@ -131,10 +128,10 @@ abstract class QueryBuilder {
 	 * @param string $table
 	 * @param array  ...$on
 	 *
-	 * @return  QueryBuilder;
+	 * @return  QueryBuilder
 	 */
 	public function right($table, ...$on) {
-		$this->join($table, $on[0] . '=' . $on[1], self::RIGHT);
+		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::RIGHT);
 
 		return $this;
 	}
@@ -148,7 +145,7 @@ abstract class QueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public function inner($table, ...$on) {
-		$this->join($table, $on[0] . '=' . $on[1], self::INNER);
+		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::INNER);
 
 		return $this;
 	}
@@ -156,22 +153,38 @@ abstract class QueryBuilder {
 	/**
 	 * 条件.
 	 *
-	 * @param null $con
-	 * @param bool $append
+	 * @param array|Condition $con
+	 * @param bool            $append
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
-	public function where($con = null, $append = true) {
+	public function where($con, $append = true) {
 		if (is_array($con) && !empty ($con)) {
-			$con = new Condition ($con);
+			$con = new Condition ($con, $this->alias);
 		}
 		if ($con) {
 			if ($append && $this->where) {
 				$this->where [] = $con;
 			} else {
-				$this->where = $con;
+				$this->performed = false;
+				$this->sql       = null;
+				$this->where     = $con;
 			}
 		}
+
+		return $this;
+	}
+
+	/**
+	 * 更新条件中的数据.
+	 *
+	 * @param $data
+	 *
+	 * @return QueryBuilder
+	 */
+	public function updateWhereData($data) {
+		$this->performed = false;
+		$this->whereData = array_merge($this->whereData, $data);
 
 		return $this;
 	}
@@ -256,18 +269,26 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * 排序
+	 * 排序,多个排序字段用','分隔.
 	 *
-	 * @param string $field 排序字段，多个字段使用|分隔.
+	 * 当<code>$field</code>为null时，尝试从请求中读取sort[name]做为$field，sort[dir] 做为$order.
+	 *
+	 * @param string $field 排序字段，多个字段使用,分隔.
 	 * @param string $order a or d
 	 *
 	 * @return QueryBuilder
 	 */
-	public function sort($field, $order) {
-		$orders = explode('|', strtolower($order));
-		$fields = explode('|', $field);
-		foreach ($fields as $i => $field) {
-			$this->order [] = array($field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]);
+	public function sort($field = null, $order = 'a') {
+		if ($field === null) {
+			$field = rqst('sort.name');
+			$order = rqst('sort.dir', 'a');
+		}
+		if ($field) {
+			$orders = explode(',', strtolower($order));
+			$fields = explode(',', $field);
+			foreach ($fields as $i => $field) {
+				$this->order [] = array($field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]);
+			}
 		}
 
 		return $this;
@@ -276,14 +297,19 @@ abstract class QueryBuilder {
 	/**
 	 * limit.
 	 *
-	 * @param int $start start position.
-	 * @param int $limit
+	 * @param int      $start start position or limit.
+	 * @param int|null $limit
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
-	public function limit($start, $limit) {
-		$start = intval($start);
-		$limit = intval($limit);
+	public function limit($start, $limit = null) {
+		if ($limit === null) {
+			$limit = intval($start);
+			$start = 0;
+		} else {
+			$start = intval($start);
+			$limit = intval($limit);
+		}
 		if ($start < 0) {
 			$start = 0;
 		}
@@ -291,25 +317,35 @@ abstract class QueryBuilder {
 			$limit = 1;
 		}
 		$this->limit = array($start, $limit);
+		if ($this->statement) {
+			$this->updateWhereData([':limit_0' => $start, ':limit_1' => $limit]);
+		}
 
 		return $this;
 	}
 
 	/**
-	 * page.
+	 * 分页.
+	 * 如果$pageNo等于null，那么直接读取page[page]做为$pageNo和page[size]做为$size.
 	 *
-	 * @param int $pageNo
-	 * @param int $limit
+	 * @see QueryBuilder::limit()
 	 *
-	 * @return \wulaphp\db\sql\QueryBuilder
+	 * @param int|null $pageNo 页数,从1开始.
+	 * @param int      $size   默认每页20条
+	 *
+	 * @return $this
 	 */
-	public function page($pageNo, $limit) {
+	public function page($pageNo = null, $size = 20) {
+		if ($pageNo === null) {
+			$pageNo = irqst('page.page', 1);
+			$size   = irqst('page.size', 20);
+		}
 		$pageNo = intval($pageNo);
-		if ($pageNo < 0) {
-			$pageNo = 0;
+		if ($pageNo <= 0) {
+			$pageNo = 1;
 		}
 
-		return $this->limit($pageNo * $limit, $limit);
+		return $this->limit(($pageNo - 1) * $size, $size);
 	}
 
 	/**
@@ -348,14 +384,25 @@ abstract class QueryBuilder {
 		}
 	}
 
+	/**
+	 * @return \wulaphp\db\sql\BindValues
+	 */
 	public function getBindValues() {
 		return $this->values;
 	}
 
+	/**
+	 * @param BindValues $values
+	 */
 	public function setBindValues($values) {
 		$this->values = $values;
 	}
 
+	/**
+	 * 设置PDO option,只影响PDOStatement。
+	 *
+	 * @param array $options
+	 */
 	public function setPDOOptions($options) {
 		$this->options = $options;
 	}
@@ -386,15 +433,29 @@ abstract class QueryBuilder {
 			@ob_start(PHP_OUTPUT_HANDLER_CLEANABLE);
 			$statement->debugDumpParams();
 			$this->dumpSQL = @ob_get_clean();
+
+			return null;
 		} else {
 			return $this->dumpSQL;
 		}
 	}
 
+	/**
+	 * 上次执行是否成功.
+	 *
+	 * @return bool
+	 */
 	public function success() {
 		return empty ($this->error) ? true : false;
 	}
 
+	/**
+	 * alias of exec.
+	 *
+	 * @param bool $checkNum
+	 *
+	 * @return bool
+	 */
 	public function perform($checkNum = false) {
 		return $this->exec($checkNum);
 	}
@@ -410,7 +471,6 @@ abstract class QueryBuilder {
 	 */
 	public function exec($checkNum = false) {
 		$cnt = $this->count();
-		$this->close();
 		if ($cnt === false) {
 			if ($this->exception instanceof \PDOException) {
 				throw $this->exception;
@@ -546,4 +606,10 @@ abstract class QueryBuilder {
 	 * @return mixed
 	 */
 	public abstract function count();
+
+	/**
+	 *
+	 * @return string
+	 */
+	public abstract function getSqlString();
 }

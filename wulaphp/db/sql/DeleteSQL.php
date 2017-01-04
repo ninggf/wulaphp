@@ -8,24 +8,6 @@ namespace wulaphp\db\sql;
  *
  */
 class DeleteSQL extends QueryBuilder {
-
-	private $using = array();
-
-	/**
-	 * mysql and postgresql support using syntax, others may not support.
-	 *
-	 * @param string $using
-	 *
-	 * @return DeleteSQL
-	 * @deprecated
-	 *
-	 */
-	public function using($using) {
-		$this->using [] = self::parseAs($using);
-
-		return $this;
-	}
-
 	/**
 	 * perform the delete sql, false for deleting failed.
 	 * Just call count() function for short.
@@ -39,10 +21,12 @@ class DeleteSQL extends QueryBuilder {
 			return false;
 		}
 		$this->checkDialect();
-		$values = new BindValues ();
-		$from   = $this->prepareFrom($this->sanitize($this->from));
-		$using  = $this->prepareFrom($this->sanitize($this->using));
-		$sql    = $this->dialect->getDeleteSQL($from [0], $using, $this->where, $values);
+		$values    = new BindValues ();
+		$from      = $this->prepareFrom($this->sanitize($this->from));
+		$order     = $this->sanitize($this->order);
+		$joins     = $this->prepareJoins($this->sanitize($this->joins));
+		$sql       = $this->dialect->getDeleteSQL($from, $joins, $this->where, $values, $order, $this->limit);
+		$this->sql = $sql;
 		if ($sql) {
 			try {
 				$statement = $this->dialect->prepare($sql);
@@ -87,5 +71,9 @@ class DeleteSQL extends QueryBuilder {
 		}
 
 		return false;
+	}
+
+	public function getSqlString() {
+		return $this->sql;
 	}
 }

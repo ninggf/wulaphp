@@ -18,16 +18,13 @@ abstract class Module {
 
 		$this->clzName = get_class($this);
 		$ns            = explode('\\', $this->clzName);
-		if (count($ns) != 2) {
-			trigger_error('Wrong definition of ' . $this->clzName, E_USER_ERROR);
-		}
-		$this->namespace = strtolower($ns[0]);
-
+		array_pop($ns);
+		$this->namespace      = implode('\\', $ns);
 		$this->path           = dirname($ref->getFileName());
 		$this->dirname        = basename($this->path);
 		$vs                   = $this->getVersionList();
 		$this->currentVersion = array_pop(array_keys($vs));
-		unset($ns, $ms);
+		unset($ns);
 	}
 
 	public final function getNamespace() {
@@ -99,9 +96,14 @@ abstract class Module {
 		return true;
 	}
 
+	public function getAuthor() {
+		return 'wula team';
+	}
+
 	public abstract function getName();
 
 	public abstract function getDescription();
 
 	public abstract function getHomePageURL();
+
 }

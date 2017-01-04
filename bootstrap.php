@@ -28,6 +28,7 @@ defined('CONF_DIR') or define('CONF_DIR', 'conf');
 defined('LIBS_DIR') or define('LIBS_DIR', 'includes');
 defined('EXTENSION_DIR') or define('EXTENSION_DIR', 'extensions');
 defined('WWWROOT_DIR') or define('WWWROOT_DIR', '/');
+defined('PUBLIC_DIR') or define('PUBLIC_DIR', 'wwwroot');
 defined('TMP_DIR') or define('TMP_DIR', 'tmp');
 defined('LOGS_DIR') or define('LOGS_DIR', 'logs');
 define('WEB_ROOT', WWWROOT);//alias of WWWROOT
@@ -171,11 +172,15 @@ spl_autoload_register(function ($clz) {
 	// 处理未找到类情况.
 	fire('loader\loadClass', $clz);
 });
+
 /* 加载第三方函数库 */
 require WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
 	require LIBS_PATH . 'common.php';
 }
+// 全局异常处理函数
+set_exception_handler('wula_exception_handler');
+
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
 fire('bootstrapped');

@@ -2,6 +2,7 @@
 
 namespace wulaphp\auth;
 
+use wulaphp\mvc\view\View;
 use wulaphp\util\Annotation;
 
 /**
@@ -11,37 +12,77 @@ use wulaphp\util\Annotation;
  *
  * @package wulaphp\auth
  *
- * @property Passport $passport
+ * @property Passport          $passport
+ * @property \ReflectionObject $reflectionObj
  */
 trait RbacSupport {
+	protected $globalRbacSetting = ['login' => false];
+
+	protected function onInitRbacSupport() {
+		if ($this->reflectionObj instanceof \ReflectionObject) {
+			$ann                               = new Annotation($this->reflectionObj);
+			$this->globalRbacSetting['login']  = $this->globalRbacSetting['login'] || $ann->has('login');
+			$this->globalRbacSetting['roles']  = $ann->getArray('roles');
+			$this->globalRbacSetting['acl']    = $ann->getArray('acl');
+			$this->globalRbacSetting['aclmsg'] = $ann->getString('aclmsg');
+		}
+	}
 
 	/**
 	 * @param \Reflector $method
+	 * @param View       $view
+	 *
+	 * @return mixed
 	 */
-	protected function beforeRunInRbacSupport(\Reflector $method) {
-		if ($this->passport) {
+	protected function beforeRunInRbacSupport(\Reflector $method, $view) {
+		if ($this->passport instanceof Passport) {
 			$annotation = new Annotation($method);
-			$login      = $annotation->has('login');
-			$acl        = $annotation->getArray('acl');
-			$roles      = $annotation->getArray('roles');
-			$login      = $login || $acl || $roles;
-			if ($login && !$this->passport->isLogin) {
-				$this->needLogin();
+
+			//不需要登录
+			$nologin = $annotation->has('nologin');
+			if ($nologin) {
+				return $view;
 			}
-			$rst = false;
+
+			//登录检测
+			$login = $annotation->has('login') || $this->globalRbacSetting['login'];
+
+			if ($annotation->has('acl')) {
+				$acl = $annotation->getArray('acl');
+			} else {
+				$acl = $this->globalRbacSetting['acl'];
+			}
+
+			if ($annotation->has('roles')) {
+				$roles = $annotation->getArray('roles');
+			} else {
+				$roles = $this->globalRbacSetting['roles'];
+			}
+
+			$login = $login || $acl || $roles;
+			if ($login && !$this->passport->isLogin) {
+				return $this->needLogin();
+			}
+			$rst = true;
 			if ($acl) {
 				$res = array_shift($acl);
 				$rst = $this->passport->cando($res, $acl);
-			} elseif ($roles) {
+			}
+			// 同时还要有角色 $roles
+			if ($rst && $roles) {
 				$rst = $this->passport->is($roles);
 			}
+
 			if (!$rst) {
-				$msg = $annotation->getString('aclmsg');
-				$this->onDenied($msg);
+				$msg = $annotation->getString('aclmsg') || $this->globalRbacSetting['aclmsg'];
+
+				return $this->onDenied($msg);
 			}
 		} else {
-			$this->onDenied('');
+			return $this->onDenied($this->globalRbacSetting['aclmsg']);
 		}
+
+		return $view;
 	}
 
 	/**

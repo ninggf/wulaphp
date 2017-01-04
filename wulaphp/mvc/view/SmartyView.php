@@ -54,10 +54,7 @@ class SmartyView extends View {
 			}
 			$this->__smarty->error_reporting = KS_ERROR_REPORT_LEVEL;
 		} else {
-			if ($devMod) {
-				die ('The view template ' . $tpl . ' is not found');
-			}
-			trigger_error('The view template ' . $tpl . ' is not found', E_USER_ERROR);
+			throw new \Exception('The view template ' . $tpl . ' is not found');
 		}
 
 		$this->__smarty->assign($this->data); // 变量
@@ -65,6 +62,13 @@ class SmartyView extends View {
 		$this->__smarty->assign('_js_files', $this->scripts);
 		$this->__smarty->assign('_current_template_file', $this->tpl);
 		@ob_start(PHP_OUTPUT_HANDLER_CLEANABLE);
+		$filter  = new MustacheFilter();
+		$filters = apply_filter('smarty\getFilters', ['pre' => array($filter, 'pre'), 'post' => array($filter, 'post')]);
+		if ($filters) {
+			foreach ($filters as $type => $cb) {
+				$this->__smarty->registerFilter($type, $cb);
+			}
+		}
 		$this->__smarty->display($this->tpl . '.tpl');
 		$content = @ob_get_clean();
 

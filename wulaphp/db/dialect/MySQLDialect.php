@@ -24,16 +24,17 @@ class MySQLDialect extends DatabaseDialect {
 	 * @param array      $order
 	 * @param array      $limit
 	 * @param BindValues $values
+	 * @param bool       $forupdate
 	 *
 	 * @return string
 	 */
-	public function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values) {
+	public function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values, $forupdate) {
 		$sql = array('SELECT', $fields, 'FROM');
 		$this->generateSQL($sql, $from, $joins, $where, $having, $group, $values);
 		if ($order) {
 			$_orders = array();
 			foreach ($order as $o) {
-				$_orders [] = $o [0] . ' ' . $o [1];
+				$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
 			}
 			$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
 		}
@@ -41,6 +42,9 @@ class MySQLDialect extends DatabaseDialect {
 			$limit1 = $values->addValue('limit', $limit [0]);
 			$limit2 = $values->addValue('limit', $limit [1]);
 			$sql [] = 'LIMIT ' . $limit1 . ',' . $limit2;
+		}
+		if ($forupdate) {
+			$sql[] = 'FOR UPDATE';
 		}
 		$sql = implode(' ', $sql);
 
@@ -79,7 +83,8 @@ class MySQLDialect extends DatabaseDialect {
 		foreach ($data as $field => $value) {
 			$fields [] = Condition::cleanField($field);
 			if ($value instanceof ImmutableValue) { // a immutable value
-				$_values [] = $this->sanitize($value->__toString($this));
+				$value->setDialect($this);
+				$_values [] = $this->sanitize($value->__toString());
 			} else if ($value instanceof Query) { // a sub-select SQL as a value
 				$value->setBindValues($values);
 				$value->setDialect($this);
@@ -95,26 +100,41 @@ class MySQLDialect extends DatabaseDialect {
 
 	/**
 	 * @param array      $from
-	 * @param array      $using
+	 * @param array      $joins
 	 * @param Condition  $where
 	 * @param BindValues $values
+	 * @param array      $order
+	 * @param array      $limit
 	 *
 	 * @return string
 	 */
-	public function getDeleteSQL($from, $using, $where, $values) {
-		$sql [] = 'DELETE FROM ' . $from [0];
-		if ($using) {
-			$using = $from + $using;
-			$us    = array();
-			foreach ($using as $u) {
-				$us [] = $u [0];
+	public function getDeleteSQL($from, $joins, $where, $values, $order, $limit) {
+		$len = count($joins);
+		if ($len == 0) {
+			$sql [] = 'DELETE FROM ' . $from [0][0];
+		} else {
+			$sql [] = 'DELETE ' . $from[0][1] . ' FROM ' . implode(' AS ', $from [0]);
+			foreach ($joins as $join) {
+				$sql [] = $join [2] . ' ' . $join [0] . ' AS ' . $join [3] . ' ON (' . $join [1] . ')';
 			}
-			$sql [] = 'USING';
-			$sql [] = implode(',', $us);
 		}
+
 		if ($where && count($where) > 0) {
 			$sql [] = 'WHERE';
 			$sql [] = $where->getWhereCondition($this, $values);
+		}
+		if ($len == 0) {
+			if ($order) {
+				$_orders = array();
+				foreach ($order as $o) {
+					$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
+				}
+				$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
+			}
+			if ($limit) {
+				$limit2 = $values->addValue('limit', $limit [1]);
+				$sql [] = 'LIMIT ' . $limit2;
+			}
 		}
 
 		return implode(' ', $sql);
@@ -125,11 +145,23 @@ class MySQLDialect extends DatabaseDialect {
 	 * @param array      $data
 	 * @param Condition  $where
 	 * @param BindValues $values
+	 * @param array      $order
+	 * @param array      $limit
 	 *
 	 * @return string
 	 */
-	public function getUpdateSQL($table, $data, $where, $values) {
-		$sql    = array('UPDATE', $table, 'SET');
+	public function getUpdateSQL($table, $data, $where, $values, $order, $limit) {
+		$len = count($table);
+		if ($len == 1) {
+			$sql = array('UPDATE', implode(' AS ', $table[0]), 'SET');
+		} else {
+			$tables = [];
+			foreach ($table as $t) {
+				$tables[] = implode(' AS ', $t);
+			}
+			$sql = array('UPDATE', implode(' , ', $tables), 'SET');
+		}
+
 		$fields = array();
 		foreach ($data as $field => $value) {
 			$field = Condition::cleanField($field);
@@ -138,15 +170,31 @@ class MySQLDialect extends DatabaseDialect {
 				$value->setDialect($this);
 				$fields [] = $this->sanitize($field) . ' =  (' . $value->__toString() . ')';
 			} else if ($value instanceof ImmutableValue) {
-				$fields [] = $this->sanitize($field) . ' =  ' . $this->sanitize($value->__toString($this));
+				$value->setDialect($this);
+				$fields [] = $this->sanitize($field) . ' =  ' . $this->sanitize($value->__toString());
 			} else {
 				$fields [] = $this->sanitize($field) . ' = ' . $values->addValue($field, $value);
 			}
 		}
+
 		$sql [] = implode(' , ', $fields);
 		if ($where && count($where) > 0) {
 			$sql [] = 'WHERE';
 			$sql [] = $where->getWhereCondition($this, $values);
+		}
+
+		if ($len == 1) {
+			if ($order) {
+				$_orders = array();
+				foreach ($order as $o) {
+					$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
+				}
+				$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
+			}
+			if ($limit) {
+				$limit2 = $values->addValue('limit', $limit [1]);
+				$sql [] = 'LIMIT ' . $limit2;
+			}
 		}
 
 		return implode(' ', $sql);
@@ -261,6 +309,124 @@ class MySQLDialect extends DatabaseDialect {
 		}
 	}
 
+	/**
+	 * @param array                      $conditions
+	 * @param \wulaphp\db\sql\BindValues $values
+	 *
+	 * @return string
+	 */
+	public function buildWhereString($conditions, $values) {
+		$cons    = array();
+		$dialect = $this;
+		foreach ($conditions as $con) {
+			list ($filed, $value) = $con;
+			if (strpos($filed, '||') === 0) {
+				$cons [] = 'OR';
+				$filed   = substr($filed, 2);
+			} else {
+				$cons [] = 'AND';
+			}
+			$filed = trim($filed);
+			if ($filed == '@' || $filed == '!@') { // exist or not exist
+				$vls   = is_array($value) ? $value : array($value);
+				$consx = array();
+				foreach ($vls as $value) {
+					if ($value instanceof Query) {
+						$value->setBindValues($values);
+						$value->setDialect($dialect);
+						$consx [] = str_replace(array('!', '@'), array('NOT ', 'EXISTS'), $filed) . ' (' . $value->__toString() . ')';
+					}
+				}
+				if (empty ($consx)) {
+					array_shift($cons);
+				} else {
+					$cons [] = implode(' AND ', $consx);
+				}
+			} else if (empty ($filed) || is_numeric($filed)) { // the value must be a Condition instance.
+				if ($value instanceof Condition) {
+					$cons [] = '(' . $value->getWhereCondition($dialect, $values) . ')';
+				} else if (is_array($value)) {
+					$value   = new Condition ($value);
+					$cons [] = '(' . $value->getWhereCondition($dialect, $values) . ')';
+				} else {
+					array_shift($cons);
+				}
+			} else { // others
+				$ops = preg_split('#\s+#', $filed);
+				if (count($ops) == 1) {
+					$filed = $ops [0];
+					$op    = '=';
+				} else {
+					$op    = array_pop($ops);
+					$filed = implode(' ', $ops);
+				}
+				$op    = strtoupper($op);
+				$filed = Condition::cleanField($filed);
+				if ($op == '$') { // null or not null
+					if (is_null($value)) {
+						$cons [] = $filed . ' IS NULL';
+					} else {
+						$cons [] = $filed . ' IS NOT NULL';
+					}
+				} else if ($op == 'BETWEEN' || $op == '#' || $op == '!#' || $op == '!BETWEEN') { // between
+					$op      = str_replace(['!', '#'], ['NOT ', 'BETWEEN'], $op);
+					$val1    = $values->addValue($filed, $value [0]);
+					$val2    = $values->addValue($filed, $value [1]);
+					$cons [] = $filed . ' ' . $op . ' ' . $val1 . ' AND ' . $val2;
+				} else if ($op == 'IN' || $op == '!IN' || $op == '@' || $op == '!@') { // in
+					$op = str_replace(['!', '@'], ['NOT ', 'IN'], $op);
+					if ($value instanceof Query) { // sub-select as 'IN' or 'NOT IN' values.
+						$value->setBindValues($values);
+						$value->setDialect($dialect);
+						$cons [] = $filed . ' ' . $op . ' (' . $value->__toString() . ')';
+					} else if (is_array($value)) {
+						$vs = array();
+						foreach ($value as $v) {
+							$vs [] = $values->addValue($filed, $v);
+						}
+						$cons [] = $filed . ' ' . $op . ' (' . implode(',', $vs) . ')';
+					} else if ($value instanceof ImmutableValue) {
+						$value->setDialect($dialect);
+						$cons [] = $filed . ' ' . $op . ' (' . $dialect->sanitize($value->__toString()) . ')';
+					} else {
+						array_shift($cons);
+					}
+				} else if ($op == 'LIKE' || $op == '!LIKE' || $op == '%' || $op == '!%') { // like
+					$op      = str_replace(['!', '%'], ['NOT ', 'LIKE'], $op);
+					$cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
+				} else if ($op == 'MATCH' || $op == ' *') {
+					$cons [] = "MATCH({$filed}) AGAINST (" . $values->addValue($filed, $value) . ')';
+				} else if ($op == '~' || $op == '!~') {
+					$op      = str_replace(array('!', '~'), array('NOT ', 'REGEXP'), $op);
+					$cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
+				} else {
+					if ($value instanceof ImmutableValue) {
+						$value->setDialect($dialect);
+						$val = $dialect->sanitize($value->__toString());
+					} else if ($value instanceof Query) {
+						$value->setBindValues($values);
+						$value->setDialect($dialect);
+						$val = '(' . $value->__toString() . ')';
+					} else {
+						$val = $values->addValue($filed, $value);
+					}
+					$cons [] = $filed . ' ' . $op . ' ' . $val;
+				}
+			}
+		}
+		if ($cons) {
+			array_shift($cons);
+
+			return implode(' ', $cons);
+		}
+
+		return '';
+	}
+
+	/**
+	 * 编码
+	 * @return string
+	 */
 	public function getCharset() {
 		return $this->charset;
 	}
