@@ -56,10 +56,10 @@ class App {
 	private function __construct() {
 		self::$app = $this;
 		/* 加载配置文件 */
-		$clz = CONFIG_LOADER_CLASS;
+		$clz = trim(CONFIG_LOADER_CLASS);
 		if (class_exists($clz)) {
 			$configLoader = new $clz();
-		} elseif ($clz == 'wulaphp\app\ConfigurationLoader') {
+		} elseif ($clz == 'wulaphp\conf\ConfigurationLoader') {
 			$configLoader = new ConfigurationLoader ();
 		} else {
 			throw new \Exception('cannot find configuration loader: ' . $clz);
@@ -74,7 +74,7 @@ class App {
 		}
 		I18n::addLang(WULA_ROOT . 'lang');
 		// 加载扩展
-		$clz = EXTENSION_LOADER_CLASS;
+		$clz = trim(EXTENSION_LOADER_CLASS);
 		if (class_exists($clz)) {
 			$extensionLoader = new $clz();
 		} else {
@@ -87,7 +87,7 @@ class App {
 			throw new \Exception('no ExtensionLoader found!');
 		}
 		// 加载模块
-		$clz = MODULE_LOADER_CLASS;
+		$clz = trim(MODULE_LOADER_CLASS);
 		if (class_exists($clz)) {
 			$moduleLoader = new $clz();
 		} elseif ($clz == 'wulaphp\app\ModuleLoader') {
