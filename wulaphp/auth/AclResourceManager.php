@@ -49,7 +49,8 @@ class AclResourceManager {
 	public static function getInstance($type = 'default') {
 		static $aclm = [];
 		if (!isset($aclm)) {
-			$manager       = apply_filter('rbac\init' . ucfirst($type) . 'Acl', new AclResourceManager());
+			$manager = new AclResourceManager();
+			file('rbac\init' . ucfirst($type) . 'Acl', $manager);
 			$aclm[ $type ] = $manager;
 		}
 
