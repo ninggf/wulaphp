@@ -1,5 +1,9 @@
 <?php
 namespace wulaphp\auth;
+
+use wulaphp\wulaphp\auth\AclExtraChecker;
+use wulaphp\wulaphp\auth\IAclExtraChecker;
+
 /**
  * Class Passport
  * @package wulaphp\auth
@@ -101,6 +105,34 @@ class Passport {
 	 * @return bool
 	 */
 	public function cando($res, $extra = null) {
+		$resid = explode(':', $res);
+		$op    = $resid[0];
+		if (!isset($resid[1])) {
+			return false;
+		}
+		$rid = str_replace('/', '\\', $resid[1]);
+		$rst = $this->checkAcl($op, $resid[1], $extra);
+		if ($rst) {
+			//额外权限检测
+			$aclExtraChecker = apply_filter('rbac\getExtraChecker\\' . $rid, null);
+			if ($aclExtraChecker instanceof AclExtraChecker) {
+				$rst = $aclExtraChecker->check($this, $op, $extra);
+			}
+		}
+
+		return $rst;
+	}
+
+	/**
+	 * 权限校验.
+	 *
+	 * @param string $op
+	 * @param string $res
+	 * @param array  $extra
+	 *
+	 * @return bool
+	 */
+	protected function checkAcl($op, $res, $extra) {
 		return true;
 	}
 

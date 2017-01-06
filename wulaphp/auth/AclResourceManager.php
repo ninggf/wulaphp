@@ -49,7 +49,7 @@ class AclResourceManager {
 	public static function getInstance($type = 'default') {
 		static $aclm = [];
 		if (!isset($aclm)) {
-			$manager       = apply_filter('passport\init' . ucfirst($type) . 'Acl', new AclResourceManager());
+			$manager       = apply_filter('rbac\init' . ucfirst($type) . 'Acl', new AclResourceManager());
 			$aclm[ $type ] = $manager;
 		}
 

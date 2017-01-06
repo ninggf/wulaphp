@@ -26,11 +26,11 @@ class AdminController extends Controller {
 		$this->globalRbacSetting['login'] = true;
 	}
 
-	protected function needLogin() {
-		fire('mvc\admin\needLogin');
+	protected function needLogin($view) {
+		return apply_filter('mvc\admin\needLogin', $view);
 	}
 
-	protected function onDenied($message) {
-		fire('mvc\admin\onDenied', $message);
+	protected function onDenied($message, $view) {
+		return apply_filter('mvc\admin\onDenied', $view, $message);
 	}
 }

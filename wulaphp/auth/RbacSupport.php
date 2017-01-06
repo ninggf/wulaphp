@@ -61,7 +61,7 @@ trait RbacSupport {
 
 			$login = $login || $acl || $roles;
 			if ($login && !$this->passport->isLogin) {
-				return $this->needLogin();
+				return $this->needLogin($view);
 			}
 			$rst = true;
 			if ($acl) {
@@ -76,10 +76,10 @@ trait RbacSupport {
 			if (!$rst) {
 				$msg = $annotation->getString('aclmsg') || $this->globalRbacSetting['aclmsg'];
 
-				return $this->onDenied($msg);
+				return $this->onDenied($msg, $view);
 			}
 		} else {
-			return $this->onDenied($this->globalRbacSetting['aclmsg']);
+			return $this->onDenied($this->globalRbacSetting['aclmsg'], $view);
 		}
 
 		return $view;
@@ -88,14 +88,17 @@ trait RbacSupport {
 	/**
 	 * 未登录时.
 	 *
+	 * @param mixed $view
+	 *
 	 * @return string
 	 */
-	protected abstract function needLogin();
+	protected abstract function needLogin($view);
 
 	/**
 	 * 用户无权限时.
 	 *
+	 * @param mixed  $view
 	 * @param string $message
 	 */
-	protected abstract function onDenied($message);
+	protected abstract function onDenied($message, $view);
 }
