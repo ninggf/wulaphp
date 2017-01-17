@@ -18,6 +18,24 @@ use wulaphp\validator\ValidateException;
  * @method validateNewData(array $data)
  */
 abstract class Params {
+	private $__vars = [];
+
+	public function __construct() {
+		$obj  = new ReflectionObject($this);
+		$vars = $obj->getProperties(ReflectionProperty::IS_PUBLIC);
+		foreach ($vars as $var) {
+			$name = $var->getName();
+			if ($paramsFields === false) {
+				$ann             = new Annotation($var);
+				$fields[ $name ] = ['annotation' => $ann];
+			}
+		}
+		if ($fields && method_exists($this, 'onInitValidator')) {
+			$this->onInitValidator($fields);
+		}
+		$this->__vars = $fields;
+	}
+
 	/**
 	 * 获取参数列表.
 	 * 所有未明确指定值或指定值为null的参数将不会出现的结果数组里。
@@ -28,29 +46,17 @@ abstract class Params {
 	 * @return array 参数数组
 	 */
 	public function getParams(&$errors = null) {
-		static $paramsFields = false;
-		$obj    = new \ReflectionObject($this);
-		$vars   = $obj->getProperties(\ReflectionProperty::IS_PUBLIC);
 		$ary    = [];
-		$fields = $paramsFields ? $paramsFields : [];
-		foreach ($vars as $var) {
-			$name = $var->getName();
-			if ($paramsFields === false) {
-				$ann             = new Annotation($var);
-				$fields[ $name ] = ['annotation' => $ann];
-			}
-			$value = $var->getValue($this);
+		$fields = $this->__vars;
+		foreach ($fields as $field => $v) {
+			$value = $this->{$field};
 			if (is_null($value)) {
 				continue;
 			}
-			$ary[ $name ] = $value;
-		}
-		if ($paramsFields === false) {
-			$paramsFields = $fields;
+			$ary[ $field ] = $value;
 		}
 		unset($obj, $vars, $var);
 		if ($fields && method_exists($this, 'onInitValidator')) {
-			$this->onInitValidator($fields);
 			try {
 				$this->validateNewData($ary);
 			} catch (ValidateException $e) {
