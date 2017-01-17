@@ -154,6 +154,10 @@ function smarty_modifiercompiler_assets($params, $compiler) {
 	return "wulaphp\\app\\App::assets({$params[0]})";
 }
 
+function smarty_modifiercompiler_vendor($params, $compiler) {
+	return "wulaphp\\app\\App::vendor({$params[0]})";
+}
+
 function smarty_modifiercompiler_timeread($params, $compiler) {
 	return "readable_date({$params[0]})";
 }

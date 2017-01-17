@@ -582,7 +582,7 @@ class App {
 	}
 
 	/**
-	 * 全站资源URL.
+	 * 全站assets资源URL.
 	 *
 	 * @param string $res
 	 *
@@ -591,7 +591,20 @@ class App {
 	public static function assets($res) {
 		$url = ltrim($res, '/');
 
-		return WWWROOT_DIR . $url;
+		return WWWROOT_DIR . ASSETS_DIR . '/' . $url;
+	}
+
+	/**
+	 * 第三方js，css图片等资源.
+	 *
+	 * @param $res
+	 *
+	 * @return string
+	 */
+	public static function vendor($res) {
+		$url = ltrim($res, '/');
+
+		return WWWROOT_DIR . VENDOR_DIR . '/' . $url;
 	}
 
 	/**

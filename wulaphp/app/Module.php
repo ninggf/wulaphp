@@ -10,7 +10,6 @@ abstract class Module {
 	protected $namespace;
 	protected $path;
 	protected $dirname;
-	protected $currentVersion;
 	protected $bound = false;
 
 	public function __construct() {
@@ -39,15 +38,7 @@ abstract class Module {
 		return $this->dirname;
 	}
 
-	public function getCurrentVersion() {
-		return $this->currentVersion;
-	}
-
-	public function getInstalledVersion() {
-		return $this->currentVersion;
-	}
-
-	public function autoBind() {
+	public final function autoBind() {
 		if ($this->bound) {
 			return;
 		}
@@ -72,38 +63,33 @@ abstract class Module {
 					if ($argc > 0) {
 						$priority = isset($filter[1]) ? intval($filter[1]) : 10;
 						bind($filter[0], [$this->clzName, $name], $priority, $argc);
+					} else {
+						throw_exception('the method ' . $name . ' of ' . $this->clzName . ' must at least have one parameter.');
 					}
 				}
 			}
 		}
 	}
 
-	public function getVersionList() {
-		$v ['1.0.0'] = 0;
-
-		return $v;
-	}
-
-	public function getDependences() {
-		return null;
-	}
-
-	public function install() {
-		return true;
-	}
-
-	public function upgrade() {
-		return true;
-	}
-
+	/**
+	 * @return string
+	 */
 	public function getAuthor() {
-		return 'wula team';
+		return 'wulacms team';
 	}
 
+	/**
+	 * @return string
+	 */
 	public abstract function getName();
 
+	/**
+	 * @return string
+	 */
 	public abstract function getDescription();
 
+	/**
+	 * @return string
+	 */
 	public abstract function getHomePageURL();
-
 }
