@@ -7,7 +7,7 @@ use wulaphp\artisan\ArtisanCommand;
 
 class CreateModuleCommand extends ArtisanCommand {
 	public function cmd() {
-		return 'create-module';
+		return 'create:module';
 	}
 
 	public function desc() {

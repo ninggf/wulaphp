@@ -78,6 +78,11 @@ class DefaultDispatcher implements IURLDispatcher {
 			}
 		}
 		if ($namespace) {
+			$mm = App::getModuleById($namespace);
+			if (!$mm->enabled) {
+				//模块不可用.
+				return null;
+			}
 			$app = RtCache::get($url);
 			if (!$app) {
 				$app = $this->findApp($module, $action, $pms, $namespace);

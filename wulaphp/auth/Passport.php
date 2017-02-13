@@ -47,6 +47,16 @@ class Passport {
 		return self::$INSTANCES[ $type ];
 	}
 
+	/**
+	 * @param string $password
+	 * @param string $salt
+	 *
+	 * @return string
+	 */
+	public static function passwd($password, $salt) {
+		return md5(substr($salt, 0, 16) . $password . substr($salt, 16));
+	}
+
 	public function __sleep() {
 		$vars = get_object_vars($this);
 

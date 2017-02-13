@@ -359,14 +359,13 @@ class App {
 		if (!preg_match('/^[a-z][a-z_\d]+(\\\\[a-z][a-z_\d]+)*$/i', $name)) {
 			throw new \Exception('the namespace "' . $name . '" of ' . $module->clzName . ' is invalide.');
 		}
-		if (self::$app->moduleLoader->isEnabled($module)) {
-			$dir = $module->getDirname();
-			if ($dir != $name) {
-				self::$maps ['dir2id'] [ $dir ]  = $name;
-				self::$maps ['id2dir'] [ $name ] = $dir;
-			}
-			self::$modules [ $name ] = $module;
+		$dir = $module->getDirname();
+		if ($dir != $name) {
+			self::$maps ['dir2id'] [ $dir ]  = $name;
+			self::$maps ['id2dir'] [ $name ] = $dir;
 		}
+		self::$modules [ $name ] = $module;
+		$module->enabled         = self::$app->moduleLoader->isEnabled($module);
 	}
 
 	/**
@@ -379,7 +378,7 @@ class App {
 	/**
 	 * 获取模块信息.
 	 *
-	 * @param string $module
+	 * @param string $module dir.
 	 *
 	 * @return Module
 	 */
@@ -393,12 +392,23 @@ class App {
 	}
 
 	/**
+	 * @param string $id
+	 *
+	 * @return Module
+	 */
+	public static function getModuleById($id) {
+		$dir = self::id2dir($id);
+
+		return self::getModule($dir);
+	}
+
+	/**
 	 * 根据目录名查找模块id(namespace)
 	 *
 	 * @param string $dir
 	 * @param bool   $check 如果为true,模块未加载或不存在时返回null.
 	 *
-	 * @return null
+	 * @return string 未找到时返回null.
 	 */
 	public static function dir2id($dir, $check = false) {
 		if (isset (self::$maps ['dir2id'] [ $dir ])) {

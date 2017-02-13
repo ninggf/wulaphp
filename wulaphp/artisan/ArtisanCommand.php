@@ -18,7 +18,7 @@ abstract class ArtisanCommand {
 		$lopts = $this->getLongOpts();
 		echo wordwrap($this->desc(), 72, "\n  ") . "\n\n";
 		echo $color->str("USAGE:\n", 'green');
-		echo "  #php artisan " . $this->cmd() . (($opts || $lopts) ? ' [options] ':' ') . $color->str($this->argDesc(), 'blue') . "\n\n";
+		echo "  #php artisan " . $this->cmd() . (($opts || $lopts) ? ' [options] ' : ' ') . $color->str($this->argDesc(), 'blue') . "\n\n";
 
 		foreach ($opts as $opt => $msg) {
 			$opss = explode(':', $opt);
@@ -109,8 +109,9 @@ abstract class ArtisanCommand {
 		return $default;
 	}
 
-	protected function log($message) {
-		echo $message, "\n";
+	protected function log($message = '', $nl = true) {
+		echo $message;
+		if ($nl) echo "\n";
 		flush();
 	}
 

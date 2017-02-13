@@ -10,7 +10,7 @@ class CreateTableCommand extends ArtisanCommand {
 	private $maps = ['tinyint' => 'int', 'smallint' => 'int', 'int' => 'int', 'mediumint' => 'int'];
 
 	public function cmd() {
-		return 'create-table';
+		return 'create:table';
 	}
 
 	public function desc() {

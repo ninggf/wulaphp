@@ -7,10 +7,12 @@ use wulaphp\util\Annotation;
 abstract class Module {
 	public    $clzName;
 	public    $reflection;
+	public    $enabled = false;
 	protected $namespace;
 	protected $path;
 	protected $dirname;
-	protected $bound = false;
+	protected $bound   = false;
+	protected $currentVersion;
 
 	public function __construct() {
 		$this->reflection = $ref = new \ReflectionObject($this);
@@ -36,6 +38,35 @@ abstract class Module {
 
 	public final function getDirname() {
 		return $this->dirname;
+	}
+
+	/**
+	 * 当前版本.
+	 *
+	 * @return string
+	 */
+	public final function getCurrentVersion() {
+		return $this->currentVersion;
+	}
+
+	/**
+	 * 已经安装版本.
+	 *
+	 * @return string
+	 */
+	public function getInstalledVersion() {
+		return $this->currentVersion;
+	}
+
+	/**
+	 * 版本列表.
+	 *
+	 * @return array
+	 */
+	protected function getVersionList() {
+		$v ['1.0.0'] = 0;
+
+		return $v;
 	}
 
 	public final function autoBind() {
