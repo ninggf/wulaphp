@@ -48,13 +48,30 @@ class Passport {
 	}
 
 	/**
+	 * 获取密码加密HASH.
+	 *
+	 * @see password_hash
+	 *
 	 * @param string $password
-	 * @param string $salt
 	 *
 	 * @return string
 	 */
-	public static function passwd($password, $salt) {
-		return md5(substr($salt, 0, 16) . $password . substr($salt, 16));
+	public static function passwd($password) {
+		return password_hash($password, PASSWORD_DEFAULT);
+	}
+
+	/**
+	 * 校验密码是否合法.
+	 *
+	 * @see password_verify
+	 *
+	 * @param string $password
+	 * @param string $hash
+	 *
+	 * @return bool
+	 */
+	public static function verify($password, $hash) {
+		return password_verify($password, $hash);
 	}
 
 	public function __sleep() {
