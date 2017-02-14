@@ -225,7 +225,9 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		if (!$this->performed) {
 			$this->select();
 		}
-
+		if (!$this->resultSet) {
+			return null;
+		}
 		if (isset ($this->resultSet [ $offset ])) {
 			return $this->resultSet [ $offset ];
 		} else if ($this->orm) {
@@ -431,21 +433,27 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	/**
-	 * ORM work here for hasMany and hasManyThrough.
+	 * ORM work here for hasMany and belongsToMany.
 	 *
 	 * @param string $name
 	 * @param array  $args
 	 *
-	 * @return $this
+	 * @return mixed
 	 */
 	public function __call($name, $args) {
+		if (!$this->performed) {
+			$this->select();
+		}
+		if (empty($this->resultSet)) {
+			return [];
+		}
 		if ($this->orm) {
 			$query = $this->orm->getQuery($this->resultIdx, $name, $this->resultSets);
 
 			return $query;
 		}
 
-		return null;
+		return [];
 	}
 
 	public function __set($field, $value) {

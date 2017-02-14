@@ -318,7 +318,7 @@ abstract class View {
 			// user has roles
 			// tableCls = roles
 			// select MTB.* FROM roles left join user_role ON MTB.id = LTB.role_id WHERE LTB.user_id = ?
-			$sql = $tableCls->select('MTB.*')->right('{' . $mtable . '} AS RTB', 'MTB.' . $tableCls->localKey, $local_key);
+			$sql = $tableCls->select('MTB.*')->inner('{' . $mtable . '} AS RTB', 'MTB.' . $tableCls->localKey, $local_key);
 
 			return [$sql, $foreign_key, $this->localKey, false, 'belongsToMany'];
 		}
