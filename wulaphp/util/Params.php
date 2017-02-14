@@ -21,14 +21,13 @@ abstract class Params {
 	private $__vars = [];
 
 	public function __construct() {
-		$obj  = new ReflectionObject($this);
-		$vars = $obj->getProperties(ReflectionProperty::IS_PUBLIC);
+		$fields = [];
+		$obj    = new \ReflectionObject($this);
+		$vars   = $obj->getProperties(\ReflectionProperty::IS_PUBLIC);
 		foreach ($vars as $var) {
-			$name = $var->getName();
-			if ($paramsFields === false) {
-				$ann             = new Annotation($var);
-				$fields[ $name ] = ['annotation' => $ann];
-			}
+			$name            = $var->getName();
+			$ann             = new Annotation($var);
+			$fields[ $name ] = ['annotation' => $ann];
 		}
 		if ($fields && method_exists($this, 'onInitValidator')) {
 			$this->onInitValidator($fields);
