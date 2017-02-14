@@ -2,7 +2,6 @@
 namespace wulaphp\auth;
 
 use wulaphp\wulaphp\auth\AclExtraChecker;
-use wulaphp\wulaphp\auth\IAclExtraChecker;
 
 /**
  * Class Passport
@@ -16,6 +15,7 @@ class Passport {
 	public         $nickname  = '';
 	public         $isLogin   = false;
 	public         $data      = [];
+	public         $error     = null;//错误信息.
 	private static $INSTANCES = [];
 
 	/**
