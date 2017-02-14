@@ -14,6 +14,7 @@
 
 namespace wulaphp\mvc\controller;
 
+use wulaphp\app\Module;
 use wulaphp\auth\PassportSupport;
 use wulaphp\auth\RbacSupport;
 
@@ -21,7 +22,7 @@ class AdminController extends Controller {
 	use SessionSupport, PassportSupport, RbacSupport;
 	protected $passportType = 'admin';
 
-	public function __construct(\wulaphp\app\Module $module) {
+	public function __construct(Module $module) {
 		parent::__construct($module);
 		$this->globalRbacSetting['login'] = true;
 	}
