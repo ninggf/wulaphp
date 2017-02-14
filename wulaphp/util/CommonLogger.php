@@ -55,20 +55,24 @@ class CommonLogger implements LoggerInterface {
 		$file = $this->file;
 
 		$ln  = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
-		$msg = date("Y-m-d H:i:s") . " [$ln] {$message}\n\t{$trace_info[0]['file']} at line {$trace_info[0]['line']}\n";
+		$msg = date("Y-m-d H:i:s") . " [$ln] {$message}\n";
+		$msg .= $this->getLine($trace_info[0], 0);
 		if (isset ($trace_info [1]) && $trace_info [1]) {
-			$msg .= "\t\t{$trace_info[1]['file']} at line {$trace_info[1]['line']}\n";
+			$msg .= $this->getLine($trace_info[1], 1);
 			if (isset ($trace_info [2]) && $trace_info [2]) {
-				$msg .= "\t\t\t{$trace_info[2]['file']} at line {$trace_info[2]['line']}\n";
+				$msg .= $this->getLine($trace_info[2], 2);
 			}
 			if (isset ($trace_info [3]) && $trace_info [3]) {
-				$msg .= "\t\t\t\t{$trace_info[3]['file']} at line {$trace_info[3]['line']}\n";
+				$msg .= $this->getLine($trace_info[3], 3);
 			}
 			if (isset ($trace_info [4]) && $trace_info [4]) {
-				$msg .= "\t\t\t\t{$trace_info[4]['file']} at line {$trace_info[4]['line']}\n";
+				$msg .= $this->getLine($trace_info[4], 4);
 			}
 			if (isset ($trace_info [5]) && $trace_info [5]) {
-				$msg .= "\t\t\t\t{$trace_info[5]['file']} at line {$trace_info[5]['line']}\n";
+				$msg .= $this->getLine($trace_info[5], 5);
+			}
+			if (isset ($trace_info [6]) && $trace_info [6]) {
+				$msg .= $this->getLine($trace_info[6], 6);
 			}
 		}
 		if (isset ($_SERVER ['REQUEST_URI'])) {
@@ -76,5 +80,11 @@ class CommonLogger implements LoggerInterface {
 		}
 		$dest_file = $file ? $file . '.log' : 'wula.log';
 		@error_log($msg, 3, LOGS_PATH . $dest_file);
+	}
+
+	private function getLine($info, $i) {
+		$cls = $info['class'] ? "{$info['class']}->" : '';
+
+		return " #{$i} {$info['file']}({$info['line']}): {$cls}{$info['function']}()\n";
 	}
 }

@@ -545,7 +545,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 				$this->error       = $e->getMessage();
 				$this->errorSQL    = $this->sql;
 				$this->errorValues = $this->values->__toString();
-				log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
+				log_message($e->getMessage(), $e->getTrace(), DEBUG_ERROR, 'sql');
 			}
 		}
 	}
@@ -602,6 +602,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 				$this->count       = 0;
 				$this->errorSQL    = $sql;
 				$this->errorValues = $values->__toString();
+				$logged            = true;
+				log_message($e->getMessage(), $e->getTrace(), DEBUG_ERROR, 'sql');
 			}
 		} else {
 			$this->count       = 0;
@@ -609,7 +611,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			$this->errorValues = $values->__toString();
 			$this->error       = 'can not generate the SQL';
 		}
-		if ($this->error) {
+		if ($this->error && !isset($logged)) {
 			log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
 		}
 		$this->countperformed = true;

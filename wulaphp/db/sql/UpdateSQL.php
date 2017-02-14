@@ -118,6 +118,9 @@ class UpdateSQL extends QueryBuilder {
 				$this->error       = $e->getMessage();
 				$this->errorSQL    = $sql;
 				$this->errorValues = $values->__toString();
+				log_message($e->getMessage(), $e->getTrace(), DEBUG_ERROR, 'sql');
+
+				return false;
 			}
 		} else {
 			$this->error       = 'Can not generate the delete SQL';

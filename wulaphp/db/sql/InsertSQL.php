@@ -125,6 +125,9 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 				$this->error       = $e->getMessage();
 				$this->errorSQL    = $sql;
 				$this->errorValues = $values->__toString();
+				log_message($e->getMessage(), $e->getTrace(), DEBUG_ERROR, 'sql');
+
+				return false;
 			}
 		} else {
 			$this->error       = 'Can not generate the insert SQL';
