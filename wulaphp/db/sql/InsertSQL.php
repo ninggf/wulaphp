@@ -70,52 +70,52 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 		$this->sql = $sql;
 		if ($sql) {
 			try {
-				$statement = $this->dialect->prepare($sql);
-				if ($this->batch) {
-					foreach ($this->datas as $idx => $data) {
-						foreach ($values as $value) {
-							list ($name, $val, $type, $key) = $value;
-							if (!$statement->bindValue($name, $data [ $key ], $type)) {
-								$this->errorSQL    = $sql;
-								$this->errorValues = $values->__toString();
-								$this->error       = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name;
-								log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
-
-								return false;
+				if ($this->batch && count($this->datas) > 1) {
+					unset($ids[0]);
+					$sqlValues = [];
+					foreach ($ids as $idx) {
+						$d       = $this->datas[ $idx ];
+						$vstring = [];
+						foreach ($d as $ff => $vv) {
+							if ($vv instanceof ImmutableValue) { // a immutable value
+								$vv->setDialect($this->dialect);
+								$vstring [] = $this->sanitize($vv->__toString());
+							} else if ($vv instanceof Query) { // a sub-select SQL as a value
+								$vv->setBindValues($values);
+								$vv->setDialect($this->dialect);
+								$vstring [] = '(' . $vv->__toString() . ')';
+							} else {
+								$vstring [] = $values->addValue($ff, $vv);
 							}
 						}
-						$rst = $statement->execute();
-						QueryBuilder::addSqlCount();
-						if ($rst) {
-							$this->ids [ $idx ] = $this->dialect->lastInsertId($this->keyField);
-						} else {
-							$this->dumpSQL($statement);
-							break;
-						}
+						$sqlValues[] = '(' . implode(',', $vstring) . ')';
 					}
+					$this->sql = $sql = $sql . ',' . implode(',', $sqlValues);
+				}
 
-					return count($this->ids);
-				} else {
-					foreach ($values as $value) {
-						list ($name, $val, $type) = $value;
-						if (!$statement->bindValue($name, $val, $type)) {
-							$this->errorSQL    = $sql;
-							$this->errorValues = $values->__toString();
-							$this->error       = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name;
-							log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
+				$statement = $this->dialect->prepare($sql);
 
-							return false;
-						}
-					}
-					$rst = $statement->execute();
-					if ($rst) {
-						$this->ids [] = $this->dialect->lastInsertId($this->keyField);
+				foreach ($values as $value) {
+					list ($name, $val, $type) = $value;
+					if (!$statement->bindValue($name, $val, $type)) {
+						$this->errorSQL    = $sql;
+						$this->errorValues = $values->__toString();
+						$this->error       = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name;
+						log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
 
-						return 1;
-					} else {
-						$this->dumpSQL($statement);
+						return false;
 					}
 				}
+
+				$rst = $statement->execute();
+				if ($rst) {
+					$this->ids [] = $this->dialect->lastInsertId($this->keyField);
+
+					return 1;
+				} else {
+					$this->dumpSQL($statement);
+				}
+
 				if ($statement) {
 					$statement->closeCursor();
 					$statement = null;
