@@ -75,7 +75,7 @@ class Response {
 	 * 禁用浏览器缓存.
 	 */
 	public static function nocache() {
-		$headers = array('Expires' => 'Wed, 11 Jan 1984 05:00:00 GMT', 'Last-Modified' => gmdate('D, d M Y H:i:s') . ' GMT', 'Cache-Control' => 'no-cache, must-revalidate, max-age=0', 'Pragma' => 'no-cache');
+		$headers = array('Expires' => 'Wed, 11 Jan 1984 05:00:00 GMT', 'Last-Modified' => gmdate('D, d M Y H:i:s') . ' GMT', 'Cache-Control' => 'no-cache, must-revalidate', 'Pragma' => 'no-cache');
 		foreach ($headers as $header => $val) {
 			@header($header . ': ' . $val);
 		}
@@ -86,10 +86,10 @@ class Response {
 	 * @param int  $expire
 	 * @param null $etag
 	 */
-	function out_cache_header($last_modify = null, $expire = 7200, $etag = null) {
+	function out_cache_header($last_modify = null, $expire = 3600, $etag = null) {
 		$last_modify = $last_modify == null ? time() : $last_modify;
-		@header('Pragma: cache', true);
-		@header('Cache-Control: max-age=' . $expire, true);
+		@header('Pragma: cache');
+		@header('Cache-Control: public, must-revalidate,  max-age=' . $expire, true);
 		@header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $last_modify) . ' GMT', true);
 		@header('Expires: ' . gmdate('D, d M Y H:i:s', $last_modify + $expire) . ' GMT', true);
 		if ($etag) {
@@ -98,7 +98,8 @@ class Response {
 	}
 
 	public static function cache($expire = 3600) {
-		$headers = array('Expires' => gmdate('D, d M Y H:i:s', time() + $expire) . ' GMT', 'Last-Modified' => gmdate('D, d M Y H:i:s') . ' GMT', 'Cache-Control' => 'cache, must-revalidate, max-age=60', 'Pragma' => 'cache');
+		$headers = array('Expires' => gmdate('D, d M Y H:i:s', time() + $expire) . ' GMT', 'Last-Modified' => gmdate('D, d M Y H:i:s') . ' GMT', 'Cache-Control' => 'public, must-revalidate, max-age=' . $expire, 'Pragma' => 'cache');
+
 		foreach ($headers as $header => $val) {
 			@header($header . ': ' . $val);
 		}
@@ -262,4 +263,5 @@ class Response {
 		}
 	}
 }
+
 // END OF FILE response.php

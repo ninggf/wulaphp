@@ -25,9 +25,7 @@ class Session {
 		$session_expire = $this->expire;
 		$http_only      = true;
 		@ini_set('session.use_cookies', 1);
-		@session_cache_limiter('private');
 		@session_set_cookie_params($session_expire, '/', '', false, $http_only);
-		@session_cache_expire(ceil($session_expire / 60));
 
 		$session_name = get_session_name();
 		if (empty($session_id)) {
@@ -36,6 +34,7 @@ class Session {
 				$session_id = $_REQUEST [ $session_name ];
 			}
 		}
+
 		@session_name($session_name);
 		if (!empty ($session_id)) {
 			$this->session_id = $session_id;
