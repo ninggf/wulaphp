@@ -98,14 +98,14 @@ abstract class View {
 	/**
 	 * 获取列表.
 	 *
-	 * @param array|mixed $fields 字段或字段数组.
 	 * @param array       $where  条件.
-	 * @param int         $start
+	 * @param array|mixed $fields 字段或字段数组.
 	 * @param int|null    $limit  取多少条数据，默认10条.
+	 * @param int         $start
 	 *
 	 * @return Query 读取后的数组.
 	 */
-	public function find($fields = null, $where = null, $start = 0, $limit = 10) {
+	public function find($where = null, $fields = null, $limit = 10, $start = 0) {
 		$sql = $this->select($fields);
 		if ($where) {
 			$sql->where($where);
@@ -121,13 +121,13 @@ abstract class View {
 	/**
 	 * 获取全部数据列表.
 	 *
-	 * @param array|mixed $fields 字段或字段数组.
 	 * @param array       $where  条件.
+	 * @param array|mixed $fields 字段或字段数组.
 	 *
 	 * @return Query
 	 */
-	public function findAll($fields = null, $where = null) {
-		return $this->find($fields, $where, 0, 0);
+	public function findAll($where = null, $fields = null) {
+		return $this->find($where, $fields, 0);
 	}
 
 	/**
