@@ -3,7 +3,7 @@
 namespace wulaphp\util;
 
 class Annotation {
-	const IGNORE = ['param' => 1, 'return' => 1, 'global' => 1, 'see' => 1, 'use' => 1, 'internal' => 1, 'link' => 1, 'deprecated' => 1, 'inheritdoc' => 1, 'package' => 1, 'method'];
+	const IGNORE = ['param' => 1, 'return' => 1, 'global' => 1, 'see' => 1, 'use' => 1, 'internal' => 1, 'link' => 1, 'deprecated' => 1, 'inheritdoc' => 1, 'package' => 1, 'method' => 1, 'author' => 1, 'property' => 1, 'version' => 1, 'throws' => 1];
 	protected $docComment;
 	protected $annotations = [];
 
@@ -84,7 +84,7 @@ class Annotation {
 		$str = $this->getString($annotation);
 		if ($str) {
 			$str = trim($str);
-			if (preg_match('#^(\[\{)(.*)(\]\})$#', $str, $ms)) {
+			if (preg_match('#^[\[\{](.*)[\]\}]$#', $str)) {
 				$rst = @json_decode($str, true);
 				if ($rst !== false) {
 					return $rst;
