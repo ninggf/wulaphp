@@ -476,7 +476,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	public function valid() {
-		return $this->resultIdx <= $this->maxIdx;
+		return $this->resultIdx <= $this->maxIdx && $this->size > 0;
 	}
 
 	public function rewind() {
