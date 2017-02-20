@@ -15,6 +15,7 @@ use wulaphp\db\DialectException;
  * @method field($field, $alias = null)
  * @method tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0)
  * @method total($field)
+ * @method recurse(&$crumbs, $idkey = 'id', $upkey = 'upid')
  */
 abstract class QueryBuilder {
 	const LEFT  = 'LEFT';

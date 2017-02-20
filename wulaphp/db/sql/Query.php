@@ -203,14 +203,16 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 * The implementation of Countable interface, so, you can count this class
 	 * instance directly to get the size of the result set.<br/>
 	 *
+	 * @param string $id
+	 *
 	 * @return integer the number of result set.
 	 */
-	public function count() {
-		if (!$this->performed) {
-			$this->select();
+	public function count($id = '*') {
+		if (!$this->countperformed) {
+			$this->performCount($id);
 		}
 
-		return $this->size;
+		return $this->count;
 	}
 
 	public function offsetExists($offset) {
@@ -529,7 +531,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 						if (!$this->statement->bindValue($name, $val, $type)) {
 							$this->errorSQL    = $this->sql;
 							$this->errorValues = $this->values->__toString();
-							$this->error       = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name;
+							$this->error       = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name . '(' . $field . ')';
 							log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
 
 							return;

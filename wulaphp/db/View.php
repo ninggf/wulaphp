@@ -239,7 +239,7 @@ abstract class View {
 	 *
 	 * @return array
 	 */
-	protected function hasOne($table, $foreign_key = '', $local_key = '') {
+	protected final function hasOne($table, $foreign_key = '', $local_key = '') {
 		if (is_subclass_of($table, 'wulaphp\db\View')) {
 			$tableCls = new $table($this->dbconnection);
 			if (!$foreign_key) {
@@ -264,7 +264,7 @@ abstract class View {
 	 *
 	 * @return array
 	 */
-	protected function hasMany($table, $foreign_key = '', $local_key = '') {
+	protected final function hasMany($table, $foreign_key = '', $local_key = '') {
 		if (is_subclass_of($table, 'wulaphp\db\View')) {
 			$tableCls = new $table($this->dbconnection);
 			if (!$foreign_key) {
@@ -292,7 +292,7 @@ abstract class View {
 	 *
 	 * @return array|null
 	 */
-	protected function belongsToMany($table, $mtable = '', $foreign_key = '', $local_key = '') {
+	protected final function belongsToMany($table, $mtable = '', $foreign_key = '', $local_key = '') {
 		if (is_subclass_of($table, 'wulaphp\db\View')) {
 			$tableCls = new $table($this->dbconnection);
 			$tableCls->alias('MTB');
@@ -335,7 +335,7 @@ abstract class View {
 	 *
 	 * @return array
 	 */
-	protected function belongsTo($table, $local_key = '', $foreign_key = '') {
+	protected final function belongsTo($table, $local_key = '', $foreign_key = '') {
 		if (is_subclass_of($table, 'wulaphp\db\View')) {
 			$tableCls = new $table($this->dbconnection);
 			if (!$foreign_key) {
@@ -359,7 +359,7 @@ abstract class View {
 	 *
 	 * @param QueryBuilder $sql
 	 */
-	protected function checkSQL(QueryBuilder $sql) {
+	protected final function checkSQL(QueryBuilder $sql) {
 		$this->errors = $sql->lastError();
 		if ($this->errors) {
 			$this->lastSQL = $sql->lastSQL();
@@ -377,7 +377,7 @@ abstract class View {
 	 *
 	 * @return array 条件.
 	 */
-	protected function getWhere($data) {
+	protected final function getWhere($data) {
 		$con = [];
 		foreach ($this->primaryKeys as $f) {
 			if (isset ($data [ $f ])) {
