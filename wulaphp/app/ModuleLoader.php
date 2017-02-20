@@ -68,6 +68,12 @@ class ModuleLoader {
 	 * @return bool
 	 */
 	public function isEnabled(Module $module) {
-		return true;
+		if ($module) {
+			$module->installed = true;
+
+			return true;
+		}
+
+		return false;
 	}
 }

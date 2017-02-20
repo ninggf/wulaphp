@@ -177,6 +177,10 @@ class App {
 		return self::$app;
 	}
 
+	public static function modules() {
+		return self::$modules;
+	}
+
 	/**
 	 * 获取数据库连接实例.
 	 *

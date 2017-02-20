@@ -7,11 +7,14 @@ use wulaphp\util\Annotation;
 abstract class Module {
 	public    $clzName;
 	public    $reflection;
-	public    $enabled = false;
+	public    $enabled          = false;
+	public    $installed        = false;
+	public    $upgradable       = false;
+	public    $installedVersion = '0.0.0';
 	protected $namespace;
 	protected $path;
 	protected $dirname;
-	protected $bound   = false;
+	protected $bound            = false;
 	protected $currentVersion;
 
 	public function __construct() {
@@ -46,15 +49,6 @@ abstract class Module {
 	 * @return string
 	 */
 	public final function getCurrentVersion() {
-		return $this->currentVersion;
-	}
-
-	/**
-	 * 已经安装版本.
-	 *
-	 * @return string
-	 */
-	public function getInstalledVersion() {
 		return $this->currentVersion;
 	}
 
