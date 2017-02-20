@@ -3,6 +3,8 @@ namespace wulaphp\artisan;
 
 abstract class ArtisanCommand {
 	protected $color;
+	protected $argv;
+	protected $arvc;
 
 	public function __construct() {
 		$this->color = new Colors();
@@ -63,21 +65,33 @@ abstract class ArtisanCommand {
 		$opts = $this->getLongOpts();
 		foreach ($opts as $opt => $msg) {
 			$opss                  = explode(':', $opt);
-			$l                     = count($opss);
+			$l                     = 10 + count($opss);
 			$op[ '--' . $opss[0] ] = $l;
 		}
 		$options = [];
 		foreach ($op as $o => $r) {
 			$key = trim($o, '-');
 			for ($i = 2; $i < $argc; $i++) {
-				if ($argv[ $i ] == $o) {
-					if ($r == 1) {
+				if (strpos($argv[ $i ], $o) === 0) {
+					$ov         = $argv[ $i ];
+					$argv[ $i ] = null;
+					if ($r == 1 || $r == 11) {
 						$options[ $key ] = true;
 						break;
+					}
+					$v = str_replace($o, '', $ov);
+					if ($v) {
+						if ($r < 10) {
+							$options[ $key ] = $v;
+							break;
+						} else if ($r == 11) {
+							$this->help('unkown option: ' . $this->color->str(trim($ov, '-'), 'red'));
+						}
 					}
 					for ($j = $i + 1; $j < $argc; $j++) {
 						$v = $argv[ $j ];
 						if ($v == '=') {
+							$argv[ $j ] = null;
 							continue;
 						} elseif (strpos('-', $v) === 0) {
 							break;
@@ -89,18 +103,38 @@ abstract class ArtisanCommand {
 					}
 				}
 			}
-			if ($r == 2 && !isset($options[ $key ])) {
+
+			if (($r == 2 || $r == 12) && !isset($options[ $key ])) {
 				$this->help('Missing option: ' . $this->color->str($o, 'red'));
 			}
 		}
+		$this->argv[0] = $argv[0];
+		$this->argv[1] = $argv[1];
+		for ($i = 2; $i < $argc; $i++) {
+			if ($argv[ $i ] && preg_match('#^(-([^-]*).*|--(.*))$#', $argv[ $i ], $ms)) {
+				if ($ms[2]) {
+					$this->help('unkown option: ' . $this->color->str($ms[2], 'red'));
+				} else {
+					$argv[ $i ] = null;
+				}
+			}
+			if (!is_null($argv[ $i ])) {
+				$this->argv[] = $argv[ $i ];
+			}
+		}
+		$this->arvc = count($this->argv);
 
 		return $options;
 	}
 
 	protected function opt($index = -1, $default = '') {
-		global $argv, $argc;
+		$argv = $this->argv;
+		$argc = $this->arvc;
 		if ($index < 0) {
 			$index = $argc + $index;
+		}
+		if ($index < 2) {
+			return $default;
 		}
 		if ($argc > 2 && isset($argv[ $index ])) {
 			return $argv[ $index ];
