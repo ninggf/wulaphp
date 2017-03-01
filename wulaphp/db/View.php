@@ -23,8 +23,8 @@ abstract class View {
 	protected $dumpSQL     = null;
 	protected $alias       = null;
 	private   $ormObj      = null;
-	private   $foreignKey  = null;
-	private   $localKey    = null;
+	private   $foreignKey  = null;//被其它表引用时的字段名
+	private   $localKey    = null;//本表主键字段
 	/**
 	 * @var \wulaphp\db\dialect\DatabaseDialect
 	 */
@@ -38,15 +38,15 @@ abstract class View {
 	 */
 	public function __construct($db = null) {
 		$tb          = explode("\\", get_class($this));
-		$this->alias = preg_replace('#(View|Table)$#', '', array_pop($tb));
+		$this->alias = preg_replace('#(View|Table|Model)$#', '', array_pop($tb));
 		if (!$this->table) {
 			$table       = lcfirst($this->alias);
 			$this->table = preg_replace_callback('#[A-Z]#', function ($r) {
 				return '_' . strtolower($r [0]);
 			}, $table);
 		}
-		$this->foreignKey  = $this->table . '_id';
-		$this->localKey    = $this->primaryKeys[0];
+		$this->foreignKey  = $this->table . '_id';//被其它表引用时的字段名
+		$this->localKey    = $this->primaryKeys[0];//本表主键字段
 		$this->originTable = $this->table;
 		$this->table       = '{' . $this->table . '}';
 		if (!$db instanceof DatabaseConnection) {
@@ -231,11 +231,11 @@ abstract class View {
 	}
 
 	/**
-	 * one-to-one
+	 * one-to-one.
 	 *
 	 * @param string $table
-	 * @param string $foreign_key
-	 * @param string $local_key
+	 * @param string $foreign_key $table中的引用字段.
+	 * @param string $local_key   本表主键.
 	 *
 	 * @return array
 	 */
@@ -258,9 +258,11 @@ abstract class View {
 	}
 
 	/**
+	 * one-to-many.
+	 *
 	 * @param string $table
-	 * @param string $foreign_key
-	 * @param string $local_key
+	 * @param string $foreign_key $table中的引用字段.
+	 * @param string $local_key   本表主键.
 	 *
 	 * @return array
 	 */
@@ -285,10 +287,10 @@ abstract class View {
 	/**
 	 * many-to-many(只能是主键相关).
 	 *
-	 * @param string $table
-	 * @param string $mtable      中间表名
-	 * @param string $foreign_key 当前表在$mtable中的外键.
-	 * @param string $local_key   $table表在$mtable中的外键.
+	 * @param string       $table
+	 * @param string       $mtable      中间表名
+	 * @param string|array $foreign_key 当前表在$mtable中的外键（本表主键）.
+	 * @param string|array $local_key   $table表在$mtable中的外键($table的主键).
 	 *
 	 * @return array|null
 	 */
@@ -300,14 +302,24 @@ abstract class View {
 			if (!$foreign_key) {
 				$foreign_key = $this->foreignKey;
 			}
-
+			if (is_array($foreign_key)) {
+				$myPkf       = $foreign_key[1];
+				$foreign_key = $foreign_key[0];
+			} else {
+				$myPkf = $this->localKey;
+			}
 			$foreign_key = 'RTB.' . $foreign_key;
 
 			if (!$local_key) {
 				// role_id
 				$local_key = $tableCls->foreignKey;
 			}
-
+			if (is_array($local_key)) {
+				$itPkf     = $local_key[1];
+				$local_key = $local_key[0];
+			} else {
+				$itPkf = $tableCls->localKey;
+			}
 			$local_key = 'RTB.' . $local_key;
 
 			if (!$mtable) {
@@ -318,9 +330,9 @@ abstract class View {
 			// user has roles
 			// tableCls = roles
 			// select MTB.* FROM roles left join user_role ON MTB.id = LTB.role_id WHERE LTB.user_id = ?
-			$sql = $tableCls->select('MTB.*')->inner('{' . $mtable . '} AS RTB', 'MTB.' . $tableCls->localKey, $local_key);
+			$sql = $tableCls->select('MTB.*')->inner('{' . $mtable . '} AS RTB', 'MTB.' . $itPkf, $local_key);
 
-			return [$sql, $foreign_key, $this->localKey, false, 'belongsToMany'];
+			return [$sql, $foreign_key, $myPkf, false, 'belongsToMany'];
 		}
 
 		return null;
@@ -329,9 +341,10 @@ abstract class View {
 	/**
 	 * one-to-one and one-to-many inverse
 	 *
+	 *
 	 * @param string $table
-	 * @param string $local_key
-	 * @param string $foreign_key
+	 * @param string $local_key   本表与$table的引用外键.
+	 * @param string $foreign_key $table的主键或唯一键.
 	 *
 	 * @return array
 	 */
