@@ -1080,6 +1080,7 @@ function wula_exception_handler($e) {
 			echo $e->getMessage(), "\n";
 			echo $e->getTraceAsString(), "\n";
 		} else {
+			status_header(500);
 			$stack  = [];
 			$msg    = $e->getMessage();
 			$tracks = $e->getTrace();
