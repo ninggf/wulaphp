@@ -17,9 +17,10 @@ class Router {
 	private $preDispatchers  = array();
 	private $postDispatchers = array();
 
-	private $urlParsedInfo;
-	private $requestURL;
-	private $queryParams;
+	private $urlParsedInfo = null;//解析的URL数据.
+	private $requestURL    = null;//解析后的URL
+	private $queryParams   = [];//URL的请求参数
+
 	/**
 	 * @var Router
 	 */
@@ -47,6 +48,25 @@ class Router {
 		}
 
 		return self::$INSTANCE;
+	}
+
+	/**
+	 * 获取本次请求的URI.
+	 *
+	 * @return string|null
+	 */
+	public static function getURI() {
+		if (isset($_SERVER ['REQUEST_URI'])) {
+			if (WWWROOT_DIR != '/') {
+				$uri = substr($_SERVER ['REQUEST_URI'], strlen(WWWROOT_DIR) - 1);
+			} else {
+				$uri = $_SERVER ['REQUEST_URI'];
+			}
+
+			return $uri;
+		}
+
+		return null;
 	}
 
 	/**
@@ -128,16 +148,19 @@ class Router {
 		if ($uri == '/' || !$uri) {
 			$uri = '/index.html';
 		}
+		//解析url
 		$url              = apply_filter('router\parse_url', trim(parse_url($uri, PHP_URL_PATH), '/'));
 		$this->requestURL = $url;
-		$query            = parse_url($uri, PHP_URL_QUERY);
-		$args             = array();
+		//从原生的URL中解析出参数
+		$query = parse_url($uri, PHP_URL_QUERY);
+		$args  = array();
 		if ($query) {
 			parse_str($query, $args);
 			$this->xssCleaner->xss_clean($args);
 		}
 		$this->queryParams = $args;
 		$view              = null;
+		//在分发之前
 		fire('router\beforeDispatch', $this);
 		//预处理，读取缓存的好时机
 		foreach ($this->preDispatchers as $dispatchers) {

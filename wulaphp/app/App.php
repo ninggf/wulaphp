@@ -21,7 +21,7 @@ use wulaphp\util\ObjectCaller;
  */
 class App {
 
-	private $configs = array();
+	private $configs = array();//配置组
 	/**
 	 * @var Router
 	 */
@@ -43,15 +43,14 @@ class App {
 	 * @var array
 	 */
 	private static $maps           = ['dir2id' => [], 'id2dir' => []];
-	private static $modules        = [];
-	private static $extensions     = [];
-	private static $enabledModules = [];
-	private static $prefix         = [];
+	private static $modules        = [];//模块
+	private static $extensions     = [];//扩展
+	private static $enabledModules = [];//启用的模块
+	private static $prefix         = [];//URL前缀
 	/**
 	 * @var App
 	 */
 	private static $app = null;
-	public static  $REQUEST_URI;
 
 	private function __construct() {
 		self::$app = $this;
@@ -67,11 +66,13 @@ class App {
 		if ($configLoader instanceof ConfigurationLoader) {
 			$configLoader->beforeLoad();
 			$this->configs ['default'] = $configLoader->loadConfig();
+			$this->configLoader        = $configLoader;
 			$configLoader->postLoad();
-			$this->configLoader = $configLoader;
 		} else {
 			throw new \Exception('no ConfigurationLoader found!');
 		}
+		fire('wula\configLoaded');//配置加载完成
+
 		I18n::addLang(WULA_ROOT . 'lang');
 		// 加载扩展
 		$clz = trim(EXTENSION_LOADER_CLASS);
@@ -86,6 +87,7 @@ class App {
 		} else {
 			throw new \Exception('no ExtensionLoader found!');
 		}
+		fire('wula\extensionLoaded');//扩展加载完成
 		// 加载模块
 		$clz = trim(MODULE_LOADER_CLASS);
 		if (class_exists($clz)) {
@@ -101,6 +103,7 @@ class App {
 		} else {
 			throw new \Exception('no ModuleLoader found!');
 		}
+		fire('wula\moduleLoaded');//模块加载完成
 	}
 
 	/**
@@ -660,12 +663,7 @@ class App {
 		if (!self::$app->router) {
 			self::$app->router = Router::getRouter();
 		}
-
-		if (WWWROOT_DIR != '/') {
-			$uri = substr($_SERVER ['REQUEST_URI'], strlen(WWWROOT_DIR) - 1);
-		} else {
-			$uri = $_SERVER ['REQUEST_URI'];
-		}
+		$uri = Router::getURI();
 		self::$app->router->route($uri);
 	}
 }
