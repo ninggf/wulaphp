@@ -1,4 +1,6 @@
 <?php
+// 全局模板变量.
+$global_tpl_vars = [];
 /**
  * merge arguments.
  *
@@ -95,6 +97,16 @@ function smarty_modifiercompiler_here($params, $compiler) {
 	$url = !empty ($tpl) ? trailingslashit($tpl) : '';
 
 	return "WWWROOT_DIR.'{$url}'." . $params [0] . '';
+}
+
+function smarty_modifiercompiler_cfg($params, $compiler) {
+	if (isset($params[1])) {
+		$default = $params[1];
+	} else {
+		$default = "''";
+	}
+
+	return '\wulaphp\app\App::cfg(' . $params [0] . ',' . $default . ')';
 }
 
 function smarty_modifiercompiler_clean($params, $compiler) {
@@ -215,8 +227,6 @@ function smarty_modifiercompiler_status($status, $compiler) {
 
 function smarty_modifiercompiler_random($ary, $compiler) {
 	if (count($ary) < 1) {
-		//trigger_error('error usage of random', E_USER_WARNING);
-
 		return "''";
 	}
 	$output = "is_array({$ary[0]})?{$ary[0]}[array_rand({$ary[0]})]:''";
