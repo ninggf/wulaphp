@@ -14,6 +14,7 @@ use wulaphp\cache\RtCache;
  * @package   wulaphp
  * @version   1.1.0
  */
+define('WULA_STARTTIME', microtime(true));
 defined('APPROOT') or die ('please define APPROOT');
 defined('WWWROOT') or die ('please define WWWROOT');
 defined('APPID') or die('please give your application a ID with "define(\'APPID\',\'appid\')" in file "' . APPROOT . 'bootstrap.php"');
@@ -182,7 +183,9 @@ if (is_file(LIBS_PATH . 'common.php')) {
 }
 // 全局异常处理函数
 set_exception_handler('wula_exception_handler');
-
+// 脚本终止调用函数
+register_shutdown_function('wula_shutdown_function');
+// 启动WULA
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
-fire('bootstrapped');
+fire('wula\bootstrapped');

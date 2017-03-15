@@ -1030,7 +1030,7 @@ function inner_str($str, $str1, $str2, $include_str1 = true) {
  * @filter  get_session_name session_name
  */
 function get_session_name() {
-	return apply_filter('get_session_name', '_sid_' . APPID);
+	return apply_filter('get_session_name', APPID . '_sid');
 }
 
 /**
@@ -1071,9 +1071,11 @@ function whoami($type = 'default') {
 }
 
 /**
+ * 不要调用它.
+ *
  * @param Exception $e
  */
-function wula_exception_handler($e) {
+function wula_exception_handler(Exception $e) {
 	global $argv;
 	if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
 		if ($argv) {
@@ -1112,6 +1114,21 @@ function wula_exception_handler($e) {
 	}
 }
 
+/**
+ * 不要调用它.
+ */
+function wula_shutdown_function() {
+	define('WULA_STOPTIME', microtime(true));
+	file('wula\stop');
+}
+
+/**
+ * 抛出一个异常以终止程序运行.
+ *
+ * @param string $message
+ *
+ * @throws \Exception
+ */
 function throw_exception($message) {
 	throw new Exception($message);
 }
