@@ -224,7 +224,7 @@ class Response {
 				return $content;
 			} else {
 				$content = apply_filter('before_output_content', $content);
-				echo $content;
+				echo str_replace('<!-- benchmark -->', (microtime(true) - WULA_STARTTIME), $content);
 			}
 		} else {
 			Response::respond(404);

@@ -25,11 +25,6 @@ class InitCommand extends ArtisanCommand {
 		}
 		$this->log("\tchmod ( 'logs', 0777 )");
 		chmod('logs', 0777);
-		$appid = rand(1, 10000);
-		$this->log("\tgenerated appid: " . $appid, false);
-		$content = file_get_contents('bootstrap.php');
-		$content = str_replace("'app1'", "'app" . $appid . "'", $content);
-		file_put_contents('bootstrap.php', $content);
 		$this->log(' [' . $this->color->str('done', 'green') . ']');
 
 		return 0;

@@ -1030,7 +1030,7 @@ function inner_str($str, $str1, $str2, $include_str1 = true) {
  * @filter  get_session_name session_name
  */
 function get_session_name() {
-	return apply_filter('get_session_name', APPID . '_sid');
+	return apply_filter('get_session_name', 'phpsid');
 }
 
 /**

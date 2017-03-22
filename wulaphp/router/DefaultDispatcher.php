@@ -151,7 +151,7 @@ class DefaultDispatcher implements IURLDispatcher {
 
 							$params = $method->getParameters();
 							if (count($params) < count($pms)) {
-								if (DEBUG == DEBUG_DEBUG) {
+								if (APP_MODE != 'pro') {
 									throw new \Exception('the count of parameters of "' . $controllerClz . '::' . $action . '" does not match, except ' . count($params) . ' arg(s) but ' . count($pms) . ' given.');
 								} else {
 									return null;

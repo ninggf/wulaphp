@@ -17,7 +17,6 @@ use wulaphp\cache\RtCache;
 define('WULA_STARTTIME', microtime(true));
 defined('APPROOT') or die ('please define APPROOT');
 defined('WWWROOT') or die ('please define WWWROOT');
-defined('APPID') or die('please give your application a ID with "define(\'APPID\',\'appid\')" in file "' . APPROOT . 'bootstrap.php"');
 define('WULA_VERSION', '1.1.0');
 define('WULA_RELEASE', 'beta');
 /* 常用目录定义 */
@@ -61,7 +60,6 @@ if (!defined('APP_MODE')) {
 		define('APP_MODE', 'dev');
 	}
 }
-
 // 过滤输入
 if (@ini_get('register_globals')) {
 	die ('please close "register_globals" in php.ini file.');

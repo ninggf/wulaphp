@@ -65,7 +65,7 @@ class Cache implements \ArrayAccess {
 	 *
 	 * @param string $key    缓存唯一键值
 	 * @param mixed  $value  要缓存的数据
-	 * @param int    $expire 缓存时间
+	 * @param int    $expire 缓存时间,单位秒.
 	 */
 	public function add($key, $value, $expire = 0) {
 	}

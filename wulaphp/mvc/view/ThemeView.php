@@ -38,7 +38,7 @@ class ThemeView extends View {
 	 */
 	public function render() {
 		$tpl    = THEME_PATH . $this->tpl;
-		$devMod = APP_MODE == 'dev';
+		$devMod = APP_MODE != 'pro';
 		if (is_file($tpl)) {
 			$this->__smarty = new \Smarty ();
 			$tpl            = str_replace(DS, '/', $this->tpl);
@@ -55,7 +55,7 @@ class ThemeView extends View {
 				$this->__smarty->compile_check   = true;
 				$this->__smarty->caching         = false;
 				$this->__smarty->debugging_ctrl  = 'URL';
-				$this->__smarty->smarty_debug_id = '_debug_' . APPID;
+				$this->__smarty->smarty_debug_id = '_debug_wula';
 			} else {
 				$this->__smarty->compile_check = false;
 			}

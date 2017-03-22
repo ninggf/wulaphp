@@ -2,34 +2,22 @@
 namespace wulaphp\cache {
 
 	/* 运行时缓存 */
-	use wulaphp\conf\ConfigurationLoader;
 
 	class RtCache {
 		/**
 		 * @var Cache
 		 */
 		private static $CACHE;
-
 		private static $PRE;
 
+		/**
+		 * @return \wulaphp\cache\Cache
+		 */
 		public static function init() {
-			RtCache::$PRE = APPID . '@';
-
 			if (RtCache::$CACHE == null) {
-				if (APP_MODE == 'dev') {
+				RtCache::$PRE = defined('APPID') && APPID ? APPID : WWWROOT;
+				if (APP_MODE != 'pro') {
 					RtCache::$CACHE = new Cache ();
-
-					return;
-				}
-				$loader  = new ConfigurationLoader();
-				$cluster = $loader->loadConfig('cluster');
-				if ($cluster->getb('enabled')) {
-					$cache = RedisCache::getInstance($cluster);
-					if ($cache instanceof Cache) {
-						RtCache::$CACHE = $cache;
-					} else {
-						RtCache::$CACHE = new Cache ();
-					}
 				} else if (function_exists('apc_store')) {
 					RtCache::$CACHE = new ApcCacher ();
 				} else if (function_exists('xcache_get')) {
@@ -38,41 +26,26 @@ namespace wulaphp\cache {
 					RtCache::$CACHE = new Cache ();
 				}
 			}
-		}
 
-		/**
-		 * 本机缓存,apc或xcache.
-		 * @return Cache
-		 */
-		public static function getLocalCache() {
-			if (function_exists('apc_store')) {
-				return new ApcCacher ();
-			} else if (function_exists('xcache_get')) {
-				return new XCacheCacher ();
-			} else {
-				return new Cache ();
-			}
+			return RtCache::$CACHE;
 		}
 
 		public static function add($key, $data) {
-			$key   = RtCache::$PRE . $key;
-			$cache = RtCache::$CACHE;
+			$key = md5(RtCache::$PRE . $key);
 
-			return $cache->add($key, $data);
+			return RtCache::$CACHE->add($key, $data);
 		}
 
 		public static function get($key) {
-			$key   = RtCache::$PRE . $key;
-			$cache = RtCache::$CACHE;
+			$key = md5(RtCache::$PRE . $key);
 
-			return $cache->get($key);
+			return RtCache::$CACHE->get($key);
 		}
 
 		public static function delete($key) {
-			$key   = RtCache::$PRE . $key;
-			$cache = RtCache::$CACHE;
+			$key = md5(RtCache::$PRE . $key);
 
-			return $cache->delete($key);
+			return RtCache::$CACHE->delete($key);
 		}
 
 		public static function clear() {
@@ -80,10 +53,9 @@ namespace wulaphp\cache {
 		}
 
 		public static function exists($key) {
-			$key   = RtCache::$PRE . $key;
-			$cache = RtCache::$CACHE;
+			$key = md5(RtCache::$PRE . $key);
 
-			return $cache->has_key($key);
+			return RtCache::$CACHE->has_key($key);
 		}
 
 		public static function getInfo() {
@@ -100,8 +72,6 @@ namespace wulaphp\cache {
 }
 namespace {
 
-	use wulaphp\cache\RtCache;
-
 	/**
 	 * 从.env中取配置.
 	 *
@@ -112,12 +82,8 @@ namespace {
 	 */
 	function env($key, $default = '') {
 		static $envs = null;
-		if (APP_MODE != 'dev' && $envs === null) {
-			$cache = RtCache::getLocalCache();
-			$envs  = $cache->get(APPID . '@envs');
-			if (!$envs) {
-				$envs = null;
-			}
+		if (APP_MODE == 'pro') {
+			return $default;
 		}
 		if ($envs === null && is_file(APPROOT . '.env')) {
 			$envs = @parse_ini_file(APPROOT . '.env');
@@ -126,10 +92,6 @@ namespace {
 			}
 			if (isset($envs['debug'])) {
 				$envs['debug'] = intval($envs['debug']);
-			}
-			if (APP_MODE != 'dev') {
-				$cache = RtCache::getLocalCache();
-				$cache->add(APPID . '@envs', $envs);
 			}
 		}
 		if (isset($envs[ $key ])) {
