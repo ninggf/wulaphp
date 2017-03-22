@@ -1119,7 +1119,7 @@ function wula_exception_handler(Exception $e) {
  */
 function wula_shutdown_function() {
 	define('WULA_STOPTIME', microtime(true));
-	file('wula\stop');
+	fire('wula\stop');
 }
 
 /**
