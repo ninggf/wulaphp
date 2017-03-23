@@ -15,6 +15,7 @@ class SmartyView extends View {
 	 * @var \Smarty
 	 */
 	private $__smarty;
+	private $__mustache = false;
 
 	public function __construct($data = array(), $tpl = '', $headers = array('Content-Type' => 'text/html')) {
 		if (!isset ($headers ['Content-Type'])) {
@@ -62,16 +63,36 @@ class SmartyView extends View {
 		$this->__smarty->assign('_js_files', $this->scripts);
 		$this->__smarty->assign('_current_template_file', $this->tpl);
 		@ob_start(PHP_OUTPUT_HANDLER_CLEANABLE);
-		$filter  = new MustacheFilter();
-		$filters = apply_filter('smarty\getFilters', ['pre' => array($filter, 'pre'), 'post' => array($filter, 'post')]);
+
+		if ($this->__mustache) {
+			$filter  = new MustacheFilter();
+			$filters = apply_filter('smarty\getFilters', ['pre' => [[$filter, 'pre']], 'post' => [[$filter, 'post']]]);
+		} else {
+			$filters = apply_filter('smarty\getFilters', ['pre' => [], 'post' => []]);
+		}
+
 		if ($filters) {
-			foreach ($filters as $type => $cb) {
-				$this->__smarty->registerFilter($type, $cb);
+			foreach ($filters as $type => $cbs) {
+				foreach ($cbs as $cb) {
+					$this->__smarty->registerFilter($type, $cb);
+				}
 			}
 		}
+
 		$this->__smarty->display($this->tpl . '.tpl');
 		$content = @ob_get_clean();
 
 		return $content;
+	}
+
+	/**
+	 * 启用mustache.
+	 *
+	 * @return $this
+	 */
+	public function mustache() {
+		$this->__mustache = true;
+
+		return $this;
 	}
 }

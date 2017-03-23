@@ -259,9 +259,24 @@ function smarty_modifiercompiler_render($ary, $compiler) {
 function view($data = array(), $tpl = '', $headers = array('Content-Type' => 'text/html')) {
 	if (is_string($data)) {
 		return new \wulaphp\mvc\view\SmartyView($tpl, $data, $headers);
+	} else if (is_array($data) && is_array($tpl)) {
+		return new \wulaphp\mvc\view\SmartyView('', $data, $tpl);
 	}
 
 	return new \wulaphp\mvc\view\SmartyView($data, $tpl, $headers);
+}
+
+/**
+ * the views in mdoules that use mustache syntax.
+ *
+ * @param array  $data
+ * @param string $tpl
+ * @param array  $headers
+ *
+ * @return \wulaphp\mvc\view\SmartyView
+ */
+function mustache($data = array(), $tpl = '', $headers = array('Content-Type' => 'text/html')) {
+	return view($data, $tpl, $headers)->mustache();
 }
 
 /**
