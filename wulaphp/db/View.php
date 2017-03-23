@@ -11,6 +11,7 @@ use wulaphp\db\sql\QueryBuilder;
  *
  * @package wulaphp\mvc\model
  * @author  Leo Ning <windywany@gmail.com>
+ * @static  $queryFields
  */
 abstract class View {
 	public    $table       = null;
@@ -23,18 +24,24 @@ abstract class View {
 	protected $dumpSQL     = null;
 	protected $alias       = null;
 	private   $ormObj      = null;
-	private   $foreignKey  = null;//被其它表引用时的字段名
-	private   $localKey    = null;//本表主键字段
+	protected $foreignKey  = null;//本表主键在其它表中的引用字段
+	protected $primaryKey  = null;//本表主键字段
 	/**
 	 * @var \wulaphp\db\dialect\DatabaseDialect
 	 */
 	protected $dialect = null;
 	protected $dbconnection;
+	/**
+	 * all query fields.
+	 *
+	 * @var string
+	 */
+	protected static $queryFields;
 
 	/**
 	 * 创建模型实例.
 	 *
-	 * @param string|array|DatabaseConnection $db 数据库实例.
+	 * @param string|array|DatabaseConnection|View $db 数据库实例.
 	 */
 	public function __construct($db = null) {
 		$tb          = explode("\\", get_class($this));
@@ -46,14 +53,18 @@ abstract class View {
 			}, $table);
 		}
 		$this->foreignKey  = $this->table . '_id';//被其它表引用时的字段名
-		$this->localKey    = $this->primaryKeys[0];//本表主键字段
+		$this->primaryKey  = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];//本表主键字段
 		$this->originTable = $this->table;
 		$this->table       = '{' . $this->table . '}';
-		if (!$db instanceof DatabaseConnection) {
-			$db = App::db($db === null ? 'default' : $db);
+
+		if ($db instanceof View) {
+			$this->dbconnection = $db->dbconnection;
+		} else if (!$db instanceof DatabaseConnection) {
+			$this->dbconnection = App::db($db === null ? 'default' : $db);
+		} else {
+			$this->dbconnection = $db;
 		}
-		$this->dbconnection  = $db;
-		$this->dialect       = $db->getDialect();
+		$this->dialect       = $this->dbconnection->getDialect();
 		$this->tableName     = $this->dialect->getTableName($this->table);
 		$this->qualifiedName = $this->table . ' AS ' . $this->alias;
 		$this->ormObj        = new Orm($this, $this->primaryKeys[0]);
@@ -85,7 +96,7 @@ abstract class View {
 		if (is_array($id)) {
 			$where = $id;
 		} else {
-			$idf   = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];
+			$idf   = $this->primaryKey;
 			$where = [$idf => $id];
 		}
 		$sql = $this->select($fields);
@@ -163,7 +174,7 @@ abstract class View {
 		if ($id) {
 			return $sql->count($id);
 		} else if (count($this->primaryKeys) == 1) {
-			return $sql->count($this->primaryKeys [0]);
+			return $sql->count($this->primaryKey);
 		} else {
 			return $sql->count('*');
 		}
@@ -233,138 +244,138 @@ abstract class View {
 	/**
 	 * one-to-one.
 	 *
-	 * @param string $table
-	 * @param string $foreign_key $table中的引用字段.
-	 * @param string $local_key   本表主键.
+	 * @param View|string $tableCls
+	 * @param string      $foreign_key 值字段在$tableCls中的引用.
+	 * @param string      $value_key   值字段，默认为本表主键.
 	 *
 	 * @return array
 	 */
-	protected final function hasOne($table, $foreign_key = '', $local_key = '') {
-		if (is_subclass_of($table, 'wulaphp\db\View')) {
-			$tableCls = new $table($this->dbconnection);
-			if (!$foreign_key) {
-				$foreign_key = $this->foreignKey;
-			}
-
-			if (!$local_key) {
-				$local_key = $this->localKey;
-			}
-			$sql = $tableCls->select()->limit(0, 1);
-
-			return [$sql, $foreign_key, $local_key, true, 'hasOne'];
+	protected final function hasOne($tableCls, $foreign_key = '', $value_key = '') {
+		if (!$tableCls instanceof View) {
+			$tableCls = new SimpleTable($tableCls, $this->dbconnection);
 		}
 
-		return null;
+		if (!$foreign_key) {
+			$foreign_key = $this->foreignKey;
+		}
+
+		if (!$value_key) {
+			$value_key = $this->primaryKey;
+		}
+
+		$sql = $tableCls->select();
+
+		return [$sql, $foreign_key, $value_key, true, 'hasOne'];
 	}
 
 	/**
 	 * one-to-many.
 	 *
-	 * @param string $table
-	 * @param string $foreign_key $table中的引用字段.
-	 * @param string $local_key   本表主键.
+	 * @param View|string $tableCls
+	 * @param string      $foreign_key 值字段在$tableCls中的引用.
+	 * @param string      $value_key   值字段，默认为本表主键.
 	 *
 	 * @return array
 	 */
-	protected final function hasMany($table, $foreign_key = '', $local_key = '') {
-		if (is_subclass_of($table, 'wulaphp\db\View')) {
-			$tableCls = new $table($this->dbconnection);
-			if (!$foreign_key) {
-				$foreign_key = $this->foreignKey;
-			}
-
-			if (!$local_key) {
-				$local_key = $this->localKey;
-			}
-			$sql = $tableCls->select();
-
-			return [$sql, $foreign_key, $local_key, false, 'hasMany'];
+	protected final function hasMany($tableCls, $foreign_key = '', $value_key = '') {
+		if (!$tableCls instanceof View) {
+			$tableCls = new SimpleTable($tableCls, $this->dbconnection);
+		}
+		if (!$foreign_key) {
+			$foreign_key = $this->foreignKey;
 		}
 
-		return null;
+		if (!$value_key) {
+			$value_key = $this->primaryKey;
+		}
+
+		$sql = $tableCls->select();
+
+		return [$sql, $foreign_key, $value_key, false, 'hasMany'];
 	}
 
 	/**
 	 * many-to-many(只能是主键相关).
 	 *
-	 * @param string       $table
-	 * @param string       $mtable      中间表名
-	 * @param string|array $foreign_key 当前表在$mtable中的外键（本表主键）.
-	 * @param string|array $local_key   $table表在$mtable中的外键($table的主键).
+	 * @param View|string  $tableCls
+	 * @param string       $mtable     中间表名
+	 * @param string|array $value_keys 当前表在$mtable中的外键（本表主键）.
+	 * @param string|array $table_keys $tableCls在$mtable中的外键($table的主键).
 	 *
 	 * @return array|null
 	 */
-	protected final function belongsToMany($table, $mtable = '', $foreign_key = '', $local_key = '') {
-		if (is_subclass_of($table, 'wulaphp\db\View')) {
-			$tableCls = new $table($this->dbconnection);
-			$tableCls->alias('MTB');
-
-			if (!$foreign_key) {
-				$foreign_key = $this->foreignKey;
-			}
-			if (is_array($foreign_key)) {
-				$myPkf       = $foreign_key[1];
-				$foreign_key = $foreign_key[0];
-			} else {
-				$myPkf = $this->localKey;
-			}
-			$foreign_key = 'RTB.' . $foreign_key;
-
-			if (!$local_key) {
-				// role_id
-				$local_key = $tableCls->foreignKey;
-			}
-			if (is_array($local_key)) {
-				$itPkf     = $local_key[1];
-				$local_key = $local_key[0];
-			} else {
-				$itPkf = $tableCls->localKey;
-			}
-			$local_key = 'RTB.' . $local_key;
-
-			if (!$mtable) {
-				$mtables = [$this->originTable, $tableCls->originTable];
-				sort($mtables);
-				$mtable = implode('_', $mtables);
-			}
-			// user has roles
-			// tableCls = roles
-			// select MTB.* FROM roles left join user_role ON MTB.id = LTB.role_id WHERE LTB.user_id = ?
-			$sql = $tableCls->select('MTB.*')->inner('{' . $mtable . '} AS RTB', 'MTB.' . $itPkf, $local_key);
-
-			return [$sql, $foreign_key, $myPkf, false, 'belongsToMany'];
+	protected final function belongsToMany($tableCls, $mtable = '', $value_keys = '', $table_keys = '') {
+		if (!$tableCls instanceof View) {
+			$tableCls = new SimpleTable($tableCls, $this->dbconnection);
 		}
 
-		return null;
+		$tableCls->alias('MTB');
+
+		if (!$value_keys) {
+			$value_keys = $this->foreignKey;
+		}
+
+		if (is_array($value_keys)) {
+			$myPkf      = $value_keys[1];
+			$value_keys = $value_keys[0];
+		} else {
+			$myPkf = $this->primaryKey;
+		}
+		// where RTB.$value_keys = MY.$myPkf
+		$value_keys = 'RTB.' . $value_keys;
+
+		if (!$table_keys) {
+			$table_keys = $tableCls->foreignKey;
+		}
+		if (is_array($table_keys)) {
+			$itPkf      = $table_keys[1];
+			$table_keys = $table_keys[0];
+		} else {
+			$itPkf = $tableCls->primaryKey;
+		}
+		// JOIN ON RTB.$table_keys = MTB.$itPkf
+		$table_keys = 'RTB.' . $table_keys;
+
+		if (!$mtable) {
+			$mtables = [$this->originTable, $tableCls->originTable];
+			sort($mtables);
+			$mtable = implode('_', $mtables);
+		}
+		// user has roles
+		// tableCls = roles AS MTB
+		// select MTB.* FROM roles left join user_role ON MTB.id = LTB.role_id WHERE LTB.user_id = ?
+		$sql = $tableCls->select('MTB.*')->inner('{' . $mtable . '} AS RTB', 'MTB.' . $itPkf, $table_keys);
+
+		return [$sql, $value_keys, $myPkf, false, 'belongsToMany'];
+
 	}
 
 	/**
 	 * one-to-one and one-to-many inverse
 	 *
 	 *
-	 * @param string $table
-	 * @param string $local_key   本表与$table的引用外键.
-	 * @param string $foreign_key $table的主键或唯一键.
+	 * @param View|string $tableCls
+	 * @param string      $value_key   值字段(本表通过此字段属于$tableCls),默认为$tableCls_id.
+	 * @param string      $foreign_key $tableCls的主键或唯一键.
 	 *
 	 * @return array
 	 */
-	protected final function belongsTo($table, $local_key = '', $foreign_key = '') {
-		if (is_subclass_of($table, 'wulaphp\db\View')) {
-			$tableCls = new $table($this->dbconnection);
-			if (!$foreign_key) {
-				$foreign_key = $tableCls->localKey;
-			}
-
-			if (!$local_key) {
-				$local_key = $tableCls->foreignKey;
-			}
-
-			$sql = $tableCls->select();
-
-			return [$sql, $foreign_key, $local_key, true, 'belongsTo'];
+	protected final function belongsTo($tableCls, $value_key = '', $foreign_key = '') {
+		if (!$tableCls instanceof View) {
+			$tableCls = new SimpleTable($tableCls, $this->dbconnection);
 		}
 
-		return null;
+		if (!$foreign_key) {
+			$foreign_key = $tableCls->primaryKey;
+		}
+
+		if (!$value_key) {
+			$value_key = $tableCls->foreignKey;
+		}
+
+		$sql = $tableCls->select();
+
+		return [$sql, $foreign_key, $value_key, false, 'belongsTo'];
 	}
 
 	/**

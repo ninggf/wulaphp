@@ -21,6 +21,6 @@ class SimpleTable extends Table {
 			throw new \InvalidArgumentException('$table is empty');
 		}
 		parent::__construct($db);
-		$this->alias(ucfirst($table));
+		$this->alias(str_replace('_', '', ucwords($table, '_')));
 	}
 }

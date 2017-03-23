@@ -224,13 +224,17 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	public function offsetGet($offset) {
+		if (isset ($this->resultSet [ $offset ])) {
+			return $this->resultSet [ $offset ];
+		}
+
 		if (!$this->performed) {
 			$this->select();
 		}
+
 		if (!$this->resultSet) {
 			return null;
-		}
-		if (isset ($this->resultSet [ $offset ])) {
+		} else if (isset ($this->resultSet [ $offset ])) {
 			return $this->resultSet [ $offset ];
 		} else if ($this->orm) {
 			return $this->orm->getData($this->resultIdx, $offset, $this->resultSets, isset($this->eagerFields[ $offset ]));
@@ -249,12 +253,12 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	/**
+	 * 查询并锁定.
 	 *
-	 * @return array|bool|mixed
+	 * @return array|bool 成功返回查询到的数据,失败返回false.
 	 */
 	public function forupdate() {
 		$this->checkDialect();
-
 		// 不在事务中锁定失败.
 		if (!$this->dialect->inTransaction()) {
 			return false;
@@ -272,17 +276,24 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	/**
 	 * 取一行或一行中的一个字段的值.
 	 *
-	 * @param integer|string $index 结果集中的行号或字段名.
-	 * @param string         $field 结果集中的字段名.
+	 * @param integer|string|array $index 结果集中的行号或字段名或条件.
+	 * @param string               $field 结果集中的字段名.
 	 *
-	 * @return mixed
+	 * @return Query|array|null|mixed
+	 *  $index是数据时返回Query实例;$index是字符时返回null或字符;$index是数字，$field为null时返回array，$field不为null时返回null或字符.
 	 */
 	public function get($index = 0, $field = null) {
+		if (is_array($index)) {
+			return $this->where($index);
+		}
+
 		if (is_string($index)) {
 			$field = $index;
 			$this->field($field);
 			$index = 0;
+			$this->limit(0, 1);
 		}
+
 		if (!$this->performed) {
 			$this->select();
 		}
@@ -362,9 +373,6 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			return $rows;
 		} else if ($key != null) {
 			foreach ($this->resultSets as $row) {
-				if (!isset ($row [ $key ])) {
-					return $rows;
-				}
 				$id           = $row [ $key ];
 				$rows [ $id ] = $row;
 			}
@@ -499,8 +507,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	private function select() {
 		$this->performed = true;
 		$this->checkDialect();
-		$this->resultSet  = array();
-		$this->resultSets = array();
+		$this->resultSet  = [];
+		$this->resultSets = [];
 		$this->resultIdx  = 0;
 		$this->maxIdx     = 0;
 		$this->size       = 0;

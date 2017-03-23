@@ -16,7 +16,7 @@ abstract class FormTable extends Table {
 	 * @var array
 	 */
 	protected static $_fields_ = false;
-	protected static $queryFields;
+
 	protected        $fields   = [];
 
 	public function __construct($db = null) {
@@ -86,6 +86,9 @@ abstract class FormTable extends Table {
 		self::$_fields_ = [];
 		$refobj         = new \ReflectionObject($this);
 		$fields         = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
+		if (empty($fields)) {
+			trigger_error('no field defined in ' . get_class($this), E_USER_ERROR);
+		}
 		foreach ($fields as $field) {
 			$fname = $field->getName();
 			if (preg_match('/^field_(.+)$/', $fname, $ms)) {

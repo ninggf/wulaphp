@@ -50,48 +50,39 @@ class Orm {
 		$con                               = null;
 		if (isset($this->queries[ $field ])) {
 			$con = $this->queries[ $field ];
-		} elseif (method_exists($this->view, $field)) {
+		} else if (method_exists($this->view, $field)) {
+			//构建查询
 			$con = $this->view->{$field}();
-			list($query, $fk, $lk) = $con;
-			if ($eager && !isset($this->ids[ $lk ])) {
-				$this->prepareIds($result, $lk);
-				$datas = $query->where([$fk . ' IN' => $this->ids[ $lk ]])->toArray();
-				if (isset($datas[0][ $fk ])) {
-					foreach ($datas as $data) {
-						$idv                                = $data[ $fk ];
-						$this->eagerDatas[ $field ][ $idv ] = $data;
-					}
-				}
+			list($query, $fk, $lk, $one, $type) = $con;
+			// 预加载数据，只有belongsTo类型的关系才能预加载.
+			if ($eager && $type == 'belongsTo' && !isset($this->ids[ $field ])) {
+				$this->prepareIds($result, $lk, $field);
+				$datas                      = $query->where([$fk . ' IN' => $this->ids[ $field ]])->toArray(null, $fk);
+				$this->eagerDatas[ $field ] = $datas;
 				$query->close();
 			} else {
 				$query->where([$fk => $result[ $index ][ $lk ]]);
 			}
 			$this->queries[ $field ] = $con;
 		} else {
-			$this->results[ $index ][ $field ] = '';
-
-			return '';
+			return [];
 		}
 
 		if ($con) {
 			list($query, $fk, $lk, $one, $type) = $con;
 			if (isset($result[ $index ][ $lk ])) {
 				$idv = $result[ $index ][ $lk ];
-				if ($eager) {
-					if (isset($this->eagerDatas[ $field ][ $idv ])) {
-						$this->results[ $index ][ $field ] = &$this->eagerDatas[ $field ][ $idv ];
-					}
-				} elseif ($type == 'belongsTo' && isset($this->eagerDatas[ $field ][ $idv ])) {
+				if (isset($this->eagerDatas[ $field ][ $idv ])) {
 					$this->results[ $index ][ $field ] = &$this->eagerDatas[ $field ][ $idv ];
 				} else {
 					$query->updateWhereData([$fk => $idv]);
 					if ($one) {
-						$data = $query->get();
+						$data = $query->get(0);
 					} else {
 						$data = $query->toArray();
 					}
 					$this->results[ $index ][ $field ] = $data == null ? [] : $data;
-					if ($type == 'belongsTo') {
+					if (strpos($type, 'belongs') === 0) {
 						$this->eagerDatas[ $field ][ $idv ] = &$this->results[ $index ][ $field ];
 					}
 				}
@@ -134,14 +125,14 @@ class Orm {
 		return null;
 	}
 
-	private function prepareIds(&$results, $key) {
+	private function prepareIds(&$results, $key, $field) {
 		if (!isset($results[0][ $key ])) {
-			$this->ids[ $key ][] = 0;
+			$this->ids[ $field ][] = 0;
 
 			return;
 		}
 		foreach ($results as $r) {
-			$this->ids[ $key ][ $r[ $key ] ] = $r[ $key ];
+			$this->ids[ $field ][ $r[ $key ] ] = $r[ $key ];
 		}
 	}
 }
