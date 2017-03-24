@@ -26,16 +26,10 @@ abstract class View {
 	private   $ormObj      = null;
 	protected $foreignKey  = null;//本表主键在其它表中的引用字段
 	protected $primaryKey  = null;//本表主键字段
-	/**
-	 * @var \wulaphp\db\dialect\DatabaseDialect
-	 */
+	/** @var \wulaphp\db\dialect\DatabaseDialect 数据库链接（PDO） */
 	protected $dialect = null;
 	protected $dbconnection;
-	/**
-	 * all query fields.
-	 *
-	 * @var string
-	 */
+	/** @var string 查询字段 */
 	protected static $queryFields;
 
 	/**

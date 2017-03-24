@@ -24,6 +24,7 @@ class Orm {
 
 	public function __destruct() {
 		if ($this->queries) {
+			/**@var Query $a [0] */
 			foreach ($this->queries as $a) {
 				$a[0]->close();
 			}
@@ -53,7 +54,8 @@ class Orm {
 		} else if (method_exists($this->view, $field)) {
 			//构建查询
 			$con = $this->view->{$field}();
-			list($query, $fk, $lk, $one, $type) = $con;
+			/**@var Query $query */
+			list($query, $fk, $lk, , $type) = $con;
 			// 预加载数据，只有belongsTo类型的关系才能预加载.
 			if ($eager && $type == 'belongsTo' && !isset($this->ids[ $field ])) {
 				$this->prepareIds($result, $lk, $field);
@@ -69,6 +71,7 @@ class Orm {
 		}
 
 		if ($con) {
+			/**@var Query $query */
 			list($query, $fk, $lk, $one, $type) = $con;
 			if (isset($result[ $index ][ $lk ])) {
 				$idv = $result[ $index ][ $lk ];
@@ -107,12 +110,14 @@ class Orm {
 			$con = $this->queries[ $field ];
 		} elseif (method_exists($this->view, $field)) {
 			$con = $this->view->{$field}();
+			/**@var Query $query */
 			list($query, $fk, $lk) = $con;
 			$query->where([$fk => $result[ $index ][ $lk ]]);
 			$this->queries[ $field ] = $con;
 		}
 
 		if ($con) {
+			/**@var Query $query */
 			list($query, $fk, $lk) = $con;
 			if (isset($result[ $index ][ $lk ])) {
 				$idv = $result[ $index ][ $lk ];

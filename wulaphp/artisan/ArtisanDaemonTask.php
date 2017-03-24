@@ -2,7 +2,13 @@
 declare(ticks = 5);
 
 namespace wulaphp\artisan;
-
+/**
+ * 每个{@uses ArtisanDaemonTask}的子类都要声明<code>declare(ticks = 5);</code>
+ *
+ * @author  leo <windywany@gmail.com>
+ * @package wulaphp\artisan
+ * @since   1.0
+ */
 abstract class ArtisanDaemonTask extends ArtisanCommand {
 	protected $workerCount = 1;
 	protected $taskId      = 0;

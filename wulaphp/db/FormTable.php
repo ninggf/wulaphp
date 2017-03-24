@@ -17,7 +17,7 @@ abstract class FormTable extends Table {
 	 */
 	protected static $_fields_ = false;
 
-	protected        $fields   = [];
+	protected $fields = [];
 
 	public function __construct($db = null) {
 		if (self::$_fields_ === false) {
@@ -89,17 +89,18 @@ abstract class FormTable extends Table {
 		if (empty($fields)) {
 			trigger_error('no field defined in ' . get_class($this), E_USER_ERROR);
 		}
+		$sfields = [];
 		foreach ($fields as $field) {
 			$fname = $field->getName();
 			if (preg_match('/^field_(.+)$/', $fname, $ms)) {
 				$ann                      = new Annotation($field);
 				$fieldName                = $ann->getString('name', $ms[1]);
 				self::$_fields_[ $ms[1] ] = ['annotation' => $ann, 'property' => $fname, 'var' => $ann->getString('var', 'string'), 'skip' => $ann->has('skip'), 'name' => $fieldName, 'default' => $this->{$fname}];
-				self::$queryFields[]      = "`{$fieldName}`";
+				$sfields[]                = "`{$fieldName}`";
 			}
 		}
-		if (self::$queryFields) {
-			self::$queryFields = implode(',', self::$queryFields);
+		if ($sfields) {
+			self::$queryFields = implode(',', $sfields);
 		}
 	}
 }

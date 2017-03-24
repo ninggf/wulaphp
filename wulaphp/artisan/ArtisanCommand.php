@@ -1,6 +1,12 @@
 <?php
 namespace wulaphp\artisan;
-
+/**
+ * 命令.
+ *
+ * @author  leo <windywany@gmail.com>
+ * @package wulaphp\artisan
+ * @since   1.0
+ */
 abstract class ArtisanCommand {
 	protected $color;
 	protected $argv;

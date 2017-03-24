@@ -14,7 +14,7 @@ class ArtisanHelpCommand extends ArtisanCommand {
 		}
 		echo "  #php artisan <command> [options] [args]\n\n";
 		echo "  command list:\n";
-
+		/** @var ArtisanCommand $cmd 命令实例 */
 		foreach ($commands as $name => $cmd) {
 			echo wordwrap("     " . $color->str(str_pad($name, 20, ' ', STR_PAD_RIGHT), 'green') . $cmd->desc(), 100, "\n" . str_pad('', 25, ' ', STR_PAD_RIGHT)) . "\n";
 		}
@@ -28,9 +28,10 @@ class ArtisanHelpCommand extends ArtisanCommand {
 
 	protected function execute($options) {
 		global $argv, $commands;
-
+		/** @var ArtisanCommand $cmd 命令实例 */
 		if (isset($argv[2]) && isset($commands[ $argv[2] ])) {
-			$commands[ $argv[2] ]->help();
+			$cmd = $commands[ $argv[2] ];
+			$cmd->help();
 		} else {
 			$this->help();
 		}
