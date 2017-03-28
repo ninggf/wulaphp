@@ -12,7 +12,7 @@ class ModuleLoader {
 		$_wula_namespace_classpath['tmpmodules'] = MODULES_PATH;
 		$modules                                 = $this->scanModules();
 		foreach ($modules as $file) {
-			@include $file;
+			include $file;
 		}
 		unset($_wula_namespace_classpath['tmpmodules']);
 	}

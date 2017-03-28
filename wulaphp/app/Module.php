@@ -27,7 +27,8 @@ abstract class Module {
 		$this->path           = dirname($ref->getFileName());
 		$this->dirname        = basename($this->path);
 		$vs                   = $this->getVersionList();
-		$this->currentVersion = array_pop(array_keys($vs));
+		$keys                 = array_keys($vs);
+		$this->currentVersion = array_pop($keys);
 		unset($ns);
 	}
 
