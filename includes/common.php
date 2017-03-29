@@ -1073,9 +1073,9 @@ function whoami($type = 'default') {
 /**
  * 不要调用它.
  *
- * @param Exception $e
+ * @param Throwable $e
  */
-function wula_exception_handler(Exception $e) {
+function wula_exception_handler($e) {
 	global $argv;
 	if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
 		if ($argv) {
