@@ -198,6 +198,11 @@ class Router {
 			}
 			if ($view) {
 				$response->output($view);
+			} else if (strpos($_SERVER['SERVER_SOFTWARE'], 'PHP') === 0 && class_exists('\Mimey\MimeTypes') && is_file(WWWROOT . $url)) {
+				$ofile = WWWROOT . $url;
+				$mime  = new \Mimey\MimeTypes();
+				@header('Content-Type: ' . $mime->getMimeType(pathinfo($ofile, PATHINFO_EXTENSION)));
+				echo file_get_contents($ofile);
 			} else if (DEBUG < DEBUG_ERROR) {
 				throw new \Exception('no route for ' . $uri);
 			} else {

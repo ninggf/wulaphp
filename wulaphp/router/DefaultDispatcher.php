@@ -28,7 +28,7 @@ class DefaultDispatcher implements IURLDispatcher {
 	 */
 	public function dispatch($url, $router, $parsedInfo) {
 		$controllers = explode('/', $url);
-		$pms         = array();
+		$pms         = [];
 		$len         = count($controllers);
 		$module      = '';
 		$prefix      = null;
@@ -39,6 +39,10 @@ class DefaultDispatcher implements IURLDispatcher {
 			$module = $controllers [0];
 			if ($module == 'index.html') {
 				$module = 'home';//首页分发给Home模块的默认控制器:IndexController.
+			} else if (App::checkUrlPrefix($module)) {
+				$prefix    = $module;
+				$namespace = App::checkUrlPrefix($prefix);
+				$module    = App::id2dir($namespace);
 			}
 		} else if ($len == 2) {
 			$module = $controllers [0];
@@ -72,6 +76,9 @@ class DefaultDispatcher implements IURLDispatcher {
 				$action    = 'index';
 			} elseif ($prefix) {
 				// uri = prefix/action，需要查找module且重置$action
+				if ($action != 'index') {
+					array_unshift($pms, $action);
+				}
 				$action    = $module;
 				$namespace = App::checkUrlPrefix($prefix);
 				$module    = App::id2dir($namespace);
@@ -96,7 +103,7 @@ class DefaultDispatcher implements IURLDispatcher {
 				}
 			}
 			if ($app) {
-				list ($controllerClz, $action, $pms, $_controllerFile, $controllerSlag, $actionSlag) = $app;
+				list ($controllerClz, $action, $pms, , $controllerSlag, $actionSlag) = $app;
 				if (in_array($action, ['beforerun', 'afterrun', 'geturlprefix'])) {
 					RtCache::delete($url);
 
