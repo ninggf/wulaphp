@@ -17,8 +17,8 @@ use wulaphp\cache\RtCache;
 define('WULA_STARTTIME', microtime(true));
 defined('APPROOT') or die ('please define APPROOT');
 defined('WWWROOT') or die ('please define WWWROOT');
-define('WULA_VERSION', '1.1.0');
-define('WULA_RELEASE', 'beta');
+define('WULA_VERSION', '1.3.0');
+define('WULA_RELEASE', 'rc');
 /* 常用目录定义 */
 define('DS', DIRECTORY_SEPARATOR);
 define('WULA_ROOT', __DIR__ . DS);
