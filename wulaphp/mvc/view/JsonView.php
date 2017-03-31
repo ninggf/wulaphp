@@ -8,7 +8,7 @@ class JsonView extends View {
 	 * @param array|string $data
 	 * @param array        $headers
 	 */
-	public function __construct($data, $headers = array()) {
+	public function __construct($data, $headers = []) {
 		parent::__construct($data, '', $headers);
 	}
 

@@ -53,7 +53,7 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function success($message, $style = null) {
-		return new JsonView(['code' => self::SUCCESS, 'message' => $message, 'style' => $style]);
+		return new JsonView(['code' => self::SUCCESS, 'message' => $message, 'style' => $style], ['ajax' => '1']);
 	}
 
 	/**
@@ -65,7 +65,7 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function error($message, $style = null) {
-		return new JsonView(['code' => self::ERROR, 'message' => $message, 'style' => $style]);
+		return new JsonView(['code' => self::ERROR, 'message' => $message, 'style' => $style], ['ajax' => '1']);
 	}
 
 	/**
@@ -77,7 +77,7 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function warn($message, $style = null) {
-		return new JsonView(['code' => self::WARNING, 'message' => $message, 'style' => $style]);
+		return new JsonView(['code' => self::WARNING, 'message' => $message, 'style' => $style], ['ajax' => '1']);
 	}
 
 	/**
@@ -89,7 +89,7 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function info($message, $style = null) {
-		return new JsonView(['code' => self::INFO, 'message' => $message, 'style' => $style]);
+		return new JsonView(['code' => self::INFO, 'message' => $message, 'style' => $style], ['ajax' => '1']);
 	}
 
 	/**
@@ -103,7 +103,7 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function callback($func, $args = [], $message = '', $style = null) {
-		return new JsonView(['code' => self::SUCCESS, 'message' => $message, 'style' => $style, 'target' => $func, 'args' => $args, 'action' => self::ACT_CALLBACK]);
+		return new JsonView(['code' => self::SUCCESS, 'message' => $message, 'style' => $style, 'target' => $func, 'args' => $args, 'action' => self::ACT_CALLBACK], ['ajax' => '1']);
 	}
 
 	/**
@@ -120,7 +120,7 @@ class Ajax {
 	public static function dialog($content, $title, $width = 0, $height = 0, $ajax = false) {
 		$args = ['title' => $title, 'width' => $width, 'height' => $height, 'ajax' => $ajax, 'content' => $content];
 
-		return new JsonView(['code' => self::SUCCESS, 'args' => $args, 'action' => self::ACT_DIALOG]);
+		return new JsonView(['code' => self::SUCCESS, 'args' => $args, 'action' => self::ACT_DIALOG], ['ajax' => '1']);
 	}
 
 	/**
@@ -137,7 +137,7 @@ class Ajax {
 	public static function update($target, $content, $message = '', $append = false, $style = null) {
 		$args = ['content' => $content, 'append' => $append];
 
-		return new JsonView(['code' => self::SUCCESS, 'target' => $target, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_UPDATE]);
+		return new JsonView(['code' => self::SUCCESS, 'target' => $target, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_UPDATE], ['ajax' => '1']);
 	}
 
 	/**
@@ -151,7 +151,7 @@ class Ajax {
 	 */
 	public static function reload($target, $message = '', $style = null) {
 
-		return new JsonView(['code' => self::SUCCESS, 'target' => $target, 'message' => $message, 'style' => $style, 'action' => self::ACT_RELOAD]);
+		return new JsonView(['code' => self::SUCCESS, 'target' => $target, 'message' => $message, 'style' => $style, 'action' => self::ACT_RELOAD], ['ajax' => '1']);
 	}
 
 	/**
@@ -165,7 +165,7 @@ class Ajax {
 	 */
 	public static function click($target, $message = '', $style = null) {
 
-		return new JsonView(['code' => self::SUCCESS, 'target' => $target, 'message' => $message, 'style' => $style, 'action' => self::ACT_CLICK]);
+		return new JsonView(['code' => self::SUCCESS, 'target' => $target, 'message' => $message, 'style' => $style, 'action' => self::ACT_CLICK], ['ajax' => '1']);
 	}
 
 	/**
@@ -179,7 +179,7 @@ class Ajax {
 	 */
 	public static function redirect($url, $message = '', $style = null) {
 
-		return new JsonView(['code' => self::SUCCESS, 'target' => $url, 'message' => $message, 'style' => $style, 'action' => self::ACT_REDIRECT]);
+		return new JsonView(['code' => self::SUCCESS, 'target' => $url, 'message' => $message, 'style' => $style, 'action' => self::ACT_REDIRECT], ['ajax' => '1']);
 	}
 
 	/**
@@ -195,7 +195,7 @@ class Ajax {
 	public static function validate($target, $errors, $message = '', $style = null) {
 		$args = ['errors' => $errors];
 
-		return new JsonView(['code' => self::WARNING, 'target' => $target, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_VALIDATE]);
+		return new JsonView(['code' => self::WARNING, 'target' => $target, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_VALIDATE], ['ajax' => '1']);
 	}
 
 	/**
@@ -208,6 +208,6 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function script($script, $message = '', $style = null) {
-		return new JsonView(['code' => self::SUCCESS, 'target' => $script, 'message' => $message, 'style' => $style, 'action' => self::ACT_SCRIPT]);
+		return new JsonView(['code' => self::SUCCESS, 'target' => $script, 'message' => $message, 'style' => $style, 'action' => self::ACT_SCRIPT], ['ajax' => '1']);
 	}
 }
