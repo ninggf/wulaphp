@@ -31,9 +31,9 @@ use wulaphp\mvc\view\JsonView;
  */
 class Ajax {
 	const           SUCCESS      = 200;
-	const           ERROR        = 300;
+	const           ERROR        = 500;
 	const           WARNING      = 400;
-	const           INFO         = 500;
+	const           INFO         = 300;
 	const           STYLE_NOTICE = 'notice';
 	const           ACT_CALLBACK = 'callback';//回调js函数.
 	const           ACT_DIALOG   = 'dialog';//弹出对话框
