@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\app;
 
 use wulaphp\conf\Configuration;
@@ -655,6 +656,8 @@ class App {
 
 	/**
 	 * 启动APP.
+	 * @throws \Exception
+	 * @return mixed
 	 */
 	public static function run() {
 		if (!isset ($_SERVER ['REQUEST_URI'])) {
@@ -664,6 +667,7 @@ class App {
 			self::$app->router = Router::getRouter();
 		}
 		$uri = Router::getURI();
-		self::$app->router->route($uri);
+
+		return self::$app->router->route($uri);
 	}
 }

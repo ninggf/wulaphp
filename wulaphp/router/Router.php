@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\router;
 
 use ci\XssCleaner;
@@ -142,6 +143,7 @@ class Router {
 	 *
 	 * @filter router\parse_url url
 	 * @throws \Exception when no router
+	 * @return mixed when run in cli-server return false for assets.
 	 */
 	public function route($uri = '') {
 		$response = Response::getInstance();
@@ -198,11 +200,8 @@ class Router {
 			}
 			if ($view) {
 				$response->output($view);
-			} else if (strpos($_SERVER['SERVER_SOFTWARE'], 'PHP') === 0 && class_exists('\Mimey\MimeTypes') && is_file(WWWROOT . $url)) {
-				$ofile = WWWROOT . $url;
-				$mime  = new \Mimey\MimeTypes();
-				@header('Content-Type: ' . $mime->getMimeType(pathinfo($ofile, PATHINFO_EXTENSION)));
-				echo file_get_contents($ofile);
+			} else if (php_sapi_name() == 'cli-server' && is_file(WWWROOT . $url)) {
+				return false;
 			} else if (DEBUG < DEBUG_ERROR) {
 				throw new \Exception('no route for ' . $uri);
 			} else {

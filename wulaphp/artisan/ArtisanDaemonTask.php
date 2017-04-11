@@ -50,7 +50,10 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			$this->doStartLoop($options);
 
 			$this->tearDown($options);
-			closelog();
+			@closelog();
+			@fclose($STDIN);
+			@fclose($STDOUT);
+			@fclose($STDERR);
 			exit(0);
 		}
 
