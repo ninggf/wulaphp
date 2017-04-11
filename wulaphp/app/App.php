@@ -521,6 +521,18 @@ class App {
 	}
 
 	/**
+	 * 生成模块url的Hash方式.
+	 *
+	 * @param string $url
+	 * @param bool   $replace
+	 *
+	 * @return string
+	 */
+	public static function hash($url, $replace = true){
+		return "#".self::url($url, $replace);
+	}
+
+	/**
 	 * @param string $url 控制器全类名::方法名
 	 *
 	 * @return string
