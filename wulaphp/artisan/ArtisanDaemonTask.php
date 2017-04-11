@@ -1,5 +1,5 @@
 <?php
-declare(ticks = 5);
+declare(ticks=5);
 
 namespace wulaphp\artisan;
 /**
@@ -26,7 +26,10 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 
 		$cmd     = $this->cmd();
 		$options = $this->getOptions();
-		$pid     = pcntl_fork();
+		if (!$this->argValid($options)) {
+			exit(1);
+		}
+		$pid = pcntl_fork();
 		if ($pid > 0) {
 			exit(0);
 		} elseif (0 === $pid) {
@@ -43,9 +46,9 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			fclose(STDOUT);
 			fclose(STDERR);
 
-			$STDIN  = fopen('/dev/null', 'r');
-			$STDOUT = fopen(LOGS_PATH . $cmd . '-' . $mypid . '.out', 'wb');
-			$STDERR = fopen(LOGS_PATH . $cmd . '-' . $mypid . '.err', 'wb');
+			$STDIN  = @fopen('/dev/null', 'r');
+			$STDOUT = @fopen(LOGS_PATH . $cmd . '-' . $mypid . '.log', 'wb');
+			$STDERR = @fopen(LOGS_PATH . $cmd . '-' . $mypid . '.log', 'ab');
 
 			$this->doStartLoop($options);
 
@@ -131,6 +134,10 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 		} else {
 			$this->shutdown = true;
 		}
+	}
+
+	protected function argValid($options) {
+		return true;
 	}
 
 	protected function setMaxMemory($size) {

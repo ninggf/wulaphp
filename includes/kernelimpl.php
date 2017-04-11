@@ -19,3 +19,9 @@ bind('get_memcached_cache', function ($cache, $cfg) {
 
 	return $cache;
 }, 100, 2);
+
+bind('artisan\getCommands', function ($cmds) {
+	$cmds['cron'] = new \wulaphp\command\CrontabCommand();
+
+	return $cmds;
+});
