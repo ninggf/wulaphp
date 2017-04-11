@@ -25,7 +25,7 @@ class CrontabCommand extends ArtisanDaemonTask {
 	}
 
 	protected function getOpts() {
-		return ['i::interval' => 'the interval in seconds', 'f' => 'run in fixed interval.'];
+		return ['i::interval' => 'the interval in seconds, default is 1 second.', 'f' => 'run in fixed interval.'];
 	}
 
 	protected function argDesc() {
