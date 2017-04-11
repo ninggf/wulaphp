@@ -26,11 +26,6 @@ class DevServerCommand extends ArtisanCommand {
 	}
 
 	protected function execute($options) {
-		if (!class_exists('Mimey\MimeTypes')) {
-			$this->error('please run composer update to install require-dev dependences.');
-
-			return 1;
-		}
 		$addr = $options['l'] ? $options['l'] : '127.0.0.1';
 		$port = $options['p'] ? $options['p'] : '8080';
 
