@@ -134,8 +134,9 @@ class Response {
 				$location .= '?' . $args;
 			}
 		}
-		if (isset ($_SERVER ["HTTP_X_AJAX_TYPE"])) {
-			@header('X-AJAX-REDIRECT:' . $location);
+		if (Request::isAjaxRequest()) {
+			status_header(401);
+			@header('X-AJAX-REDIRECT: ' . $location);
 		} else {
 			if ($is_IIS) {
 				@header("Refresh: 0;url=$location");
