@@ -185,17 +185,16 @@ class Ajax {
 	/**
 	 * 表单验证出错.
 	 *
-	 * @param string       $target  表单.
 	 * @param array        $errors  错误信息.
 	 * @param string|array $message 提示信息.
 	 * @param string       $style
 	 *
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
-	public static function validate($target, $errors, $message = '', $style = null) {
+	public static function validate( $errors, $message = '', $style = null) {
 		$args = ['errors' => $errors];
 
-		return new JsonView(['code' => self::WARNING, 'target' => $target, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_VALIDATE], ['ajax' => '1']);
+		return new JsonView(['code' => self::ERROR,  'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_VALIDATE], ['ajax' => '1']);
 	}
 
 	/**
