@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\io;
 
 use wulaphp\app\App;
@@ -98,7 +99,9 @@ class Response {
 	}
 
 	public static function cache($expire = 3600) {
-		$headers = array('Expires' => gmdate('D, d M Y H:i:s', time() + $expire) . ' GMT', 'Last-Modified' => gmdate('D, d M Y H:i:s') . ' GMT', 'Cache-Control' => 'public, must-revalidate, max-age=' . $expire, 'Pragma' => 'cache');
+		$time    = time();
+		$date    = gmdate('D, d M Y H:i:s', $time) . ' GMT';
+		$headers = ['Age' => $expire, 'Date' => $date, 'Expires' => gmdate('D, d M Y H:i:s', $time + $expire) . ' GMT', 'Last-Modified' => $date, 'Cache-Control' => 'public, must-revalidate, max-age=' . $expire, 'Pragma' => 'cache'];
 
 		foreach ($headers as $header => $val) {
 			@header($header . ': ' . $val);
