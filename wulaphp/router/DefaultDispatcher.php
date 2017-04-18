@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\router;
 
 use wulaphp\app\App;
@@ -155,7 +156,7 @@ class DefaultDispatcher implements IURLDispatcher {
 							if (!$method->isPublic() || $methodSlag != $actionSlag) {
 								return null;
 							}
-
+							/* @var \ReflectionParameter[] $params */
 							$params = $method->getParameters();
 							if (count($params) < count($pms)) {
 								if (APP_MODE != 'pro') {
@@ -178,7 +179,9 @@ class DefaultDispatcher implements IURLDispatcher {
 									$name    = $p->getName();
 									$def     = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
 									$value   = rqst($name, $def, true);
-									$args [] = urldecode($value);
+									$args [] = is_array($value) ? array_map(function ($v) {
+										return is_array($v) ? $v : urldecode($v);
+									}, $value) : urldecode($value);
 									$idx++;
 								}
 							}
