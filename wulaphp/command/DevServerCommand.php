@@ -30,8 +30,25 @@ class DevServerCommand extends ArtisanCommand {
 		$port = $options['p'] ? $options['p'] : '8080';
 
 		$cmd = PHP_BINARY . ' -S ' . $addr . ':' . $port . ' -t ' . PUBLIC_DIR . ' ' . PUBLIC_DIR . '/index.php';
-		passthru($cmd, $rtn);
 
-		return $rtn;
+		$descriptorspec = [0 => ['pipe', 'r'],  // 标准输入，子进程从此管道中读取数据
+		                   1 => ['pipe', 'w'],  // 标准输出，子进程向此管道中写入数据
+		                   2 => ['pipe', 'w'] // 标准错误，写入到一个文件
+		];
+
+		$process = proc_open($cmd, $descriptorspec, $pipes, getcwd());
+
+		if ($pipes) {
+			if ($process) {
+				$date = date('Y-m-d H:i:s');
+				echo "Development Server started at $date
+Listening on http://$addr:$port 
+Press Ctrl-C to quit.\n";
+				flush();
+				proc_close($process);
+			}
+		}
+
+		return 0;
 	}
 }
