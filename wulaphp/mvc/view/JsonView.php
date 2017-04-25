@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\mvc\view;
 
 class JsonView extends View {
@@ -7,9 +8,10 @@ class JsonView extends View {
 	 *
 	 * @param array|string $data
 	 * @param array        $headers
+	 * @param int          $status
 	 */
-	public function __construct($data, $headers = []) {
-		parent::__construct($data, '', $headers);
+	public function __construct($data, $headers = [], $status = 200) {
+		parent::__construct($data, '', $headers, $status);
 	}
 
 	/**

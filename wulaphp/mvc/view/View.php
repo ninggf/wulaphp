@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\mvc\view;
 
 /**
@@ -12,27 +13,24 @@ namespace wulaphp\mvc\view;
  * @package view
  */
 abstract class View implements \ArrayAccess, Renderable {
-	protected $tpl = '';
-
+	protected $tpl          = '';
 	protected $data;
-
-	protected $headers = array();
-
-	protected $sytles = array();
-
-	protected $scripts = array('head' => array(), 'foot' => array());
-
+	protected $headers      = [];
+	protected $sytles       = [];
+	protected $scripts      = ['head' => [], 'foot' => []];
 	protected $cache_expire = 0;
+	protected $status       = 200;
 
 	/**
 	 *
 	 * @param string|array $data
 	 * @param string       $tpl
 	 * @param array        $headers
+	 * @param int          $status
 	 *
 	 * @throws \Exception
 	 */
-	public function __construct($data = array(), $tpl = '', $headers = array()) {
+	public function __construct($data = array(), $tpl = '', $headers = array(), $status = 200) {
 		if (empty ($data)) {
 			$this->tpl  = str_replace('/', DS, $tpl);
 			$this->data = array();
@@ -49,6 +47,7 @@ abstract class View implements \ArrayAccess, Renderable {
 		if (is_array($headers)) {
 			$this->headers = $headers;
 		}
+		$this->status = $status;
 	}
 
 	public function offsetExists($offset) {
@@ -152,6 +151,9 @@ abstract class View implements \ArrayAccess, Renderable {
 	 * set http response header
 	 */
 	public function echoHeader() {
+		if ($this->status != 200) {
+			status_header($this->status);
+		}
 		if (!empty ($this->headers) && is_array($this->headers)) {
 			foreach ($this->headers as $name => $value) {
 				@header("$name: $value", true);

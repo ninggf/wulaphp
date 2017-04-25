@@ -143,7 +143,7 @@ class Ajax {
 	/**
 	 * 重新加载.
 	 *
-	 * @param string       $target  css selector
+	 * @param string       $target  css selector,此元素（集合）的data('loadObject')需要返回一个拥有reload方法的对象.
 	 * @param string|array $message message
 	 * @param string       $style
 	 *
@@ -191,10 +191,10 @@ class Ajax {
 	 *
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
-	public static function validate( $errors, $message = '', $style = null) {
+	public static function validate($errors, $message = '', $style = null) {
 		$args = ['errors' => $errors];
 
-		return new JsonView(['code' => self::ERROR,  'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_VALIDATE], ['ajax' => '1']);
+		return new JsonView(['code' => self::ERROR, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_VALIDATE], ['ajax' => '1'], 422);
 	}
 
 	/**
