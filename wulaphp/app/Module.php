@@ -11,6 +11,7 @@ abstract class Module {
 	public    $installed        = false;
 	public    $upgradable       = false;
 	public    $installedVersion = '0.0.0';
+	public    $group            = '';
 	protected $namespace;
 	protected $path;
 	protected $dirname;
@@ -22,6 +23,8 @@ abstract class Module {
 
 		$this->clzName = get_class($this);
 		$ns            = explode('\\', $this->clzName);
+		$ann           = new Annotation($this->reflection);
+		$this->group   = $ann->getString('group');
 		array_pop($ns);
 		$this->namespace      = implode('\\', $ns);
 		$this->path           = dirname($ref->getFileName());
@@ -95,6 +98,19 @@ abstract class Module {
 				}
 			}
 		}
+	}
+
+	public function info() {
+		$info = get_object_vars($this);
+		unset($info['reflection'], $info['path'], $info['clzName'], $info['dirname'], $info['namespace;'], $info['bound']);
+		$info['name']   = $this->getName();
+		$info['author'] = $this->getAuthor();
+		$info['desc']   = $this->getDescription();
+		$info['home']   = $this->getHomePageURL();
+		$info['ver']    = $info['currentVersion'];
+		unset($info['currentVersion']);
+
+		return $info;
 	}
 
 	/**

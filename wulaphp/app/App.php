@@ -181,8 +181,44 @@ class App {
 		return self::$app;
 	}
 
-	public static function modules() {
-		return self::$modules;
+	/**
+	 * @param string $status
+	 *
+	 * @return \wulaphp\app\Module[]
+	 */
+	public static function modules($status = 'installed') {
+		switch ($status) {
+			case 'uninstalled':
+				$modules = array_filter(self::$modules, function (Module $m) {
+					return !$m->installed;
+				});
+				break;
+			case 'installed':
+				$modules = array_filter(self::$modules, function (Module $m) {
+					return $m->installed;
+				});
+				break;
+			case 'enabled':
+				$modules = array_filter(self::$modules, function (Module $m) {
+					return $m->enabled;
+				});
+				break;
+			case 'disabled':
+				$modules = array_filter(self::$modules, function (Module $m) {
+					return !$m->enabled && $m->installed;
+				});
+				break;
+			case 'upgradable':
+				$modules = array_filter(self::$modules, function (Module $m) {
+					return $m->upgradable && $m->installed;
+				});
+				break;
+			default:
+				$modules = self::$modules;
+				break;
+		}
+
+		return $modules;
 	}
 
 	/**
@@ -528,8 +564,8 @@ class App {
 	 *
 	 * @return string
 	 */
-	public static function hash($url, $replace = true){
-		return "#".self::url($url, $replace);
+	public static function hash($url, $replace = true) {
+		return "#" . self::url($url, $replace);
 	}
 
 	/**
