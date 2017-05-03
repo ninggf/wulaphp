@@ -104,14 +104,19 @@ mb_regex_encoding('UTF-8');
 @ini_set('session.bug_compat_warn', 0);
 @ini_set('session.bug_compat_42', 0);
 /* 类自动加载与注册类自动加载函数. */
+/** @global string[] $_wula_classpath none-namespace classpath. */
 global $_wula_classpath;
-$_wula_classpath = array();
+/** @global  string[] $_wula_namespace_classpath psr-4 classpath. */
 global $_wula_namespace_classpath;
-$_wula_namespace_classpath    = array();
+
 $_wula_namespace_classpath [] = WULA_ROOT;
-// 扩展目录
+// 扩展目录.
 if (is_dir(EXTENSIONS_PATH)) {
 	$_wula_namespace_classpath [] = EXTENSIONS_PATH;
+}
+// 前端vendor目录.
+if (is_dir(WEB_ROOT . VENDOR_DIR)) {
+	$_wula_namespace_classpath [] = WEB_ROOT . VENDOR_DIR . DS;
 }
 // 系统内置基于第三方扩展.
 $_wula_namespace_classpath [] = WULA_ROOT . 'vendors' . DS;
@@ -133,21 +138,21 @@ include WULA_ROOT . 'wulaphp/cache/RtCache.php';
 include WULA_ROOT . 'wulaphp/util/ObjectCaller.php';
 /* 注册类自定义加载函数 */
 spl_autoload_register(function ($clz) {
+	global $_wula_classpath, $_wula_namespace_classpath;
 	$key      = $clz . '.class';
 	$clz_file = RtCache::get($key);
 	if (is_file($clz_file)) {
-		include $clz_file;
+		include @$clz_file;
 
 		return;
 	}
 	if (strpos($clz, '\\') > 0) {
-		global $_wula_namespace_classpath;
 		$clzf = str_replace('\\', DS, $clz);
 		foreach ($_wula_namespace_classpath as $cp) {
 			$clz_file = $cp . $clzf . '.php';
 			if (is_file($clz_file)) {
 				RtCache::add($key, $clz_file);
-				include $clz_file;
+				include @$clz_file;
 
 				return;
 			}
@@ -156,18 +161,18 @@ spl_autoload_register(function ($clz) {
 		$clz_file = App::loadClass($clz);
 		if ($clz_file && is_file($clz_file)) {
 			RtCache::add($key, $clz_file);
-			include $clz_file;
+			include @$clz_file;
 
 			return;
 		}
 	}
-	global $_wula_classpath;
 	foreach ($_wula_classpath as $path) {
 		$clz_file = $path . DS . $clz . '.php';
 		if (is_file($clz_file)) {
 			RtCache::add($key, $clz_file);
-			include $clz_file;
-			break;
+			include @$clz_file;
+
+			return;
 		}
 	}
 	// 处理未找到类情况.
