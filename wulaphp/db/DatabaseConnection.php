@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\db;
 
 use wulaphp\db\dialect\DatabaseDialect;
@@ -22,8 +23,6 @@ class DatabaseConnection {
 
 	public $error = null;
 
-	private $inTrans = false;
-
 	public function __construct($dialect) {
 		if (!$dialect instanceof DatabaseDialect) {
 			throw new \Exception('the dialect is not instance of DatabaseDialect');
@@ -46,7 +45,7 @@ class DatabaseConnection {
 	 */
 	public function reconnect() {
 		$this->dialect = $this->dialect->reset();
-		if (!$dialect instanceof DatabaseDialect) {
+		if (!$this->dialect instanceof DatabaseDialect) {
 			throw new \Exception('cannot reconnect to the database.');
 		}
 	}
@@ -57,19 +56,19 @@ class DatabaseConnection {
 	 * @return boolean
 	 */
 	public function start() {
-		if ($this->inTrans) {
-			return true;
-		}
-		$dialect = $this->dialect;
-		try {
-			$rst = $dialect->beginTransaction();
-			if ($rst) {
-				$this->inTrans = true;
-
+		if ($this->dialect) {
+			$dialect = $this->dialect;
+			if ($dialect->inTransaction()) {
 				return true;
 			}
-		} catch (\Exception $e) {
-			$this->error = $e->getMessage();
+			try {
+				$rst = $dialect->beginTransaction();
+				if ($rst) {
+					return true;
+				}
+			} catch (\Exception $e) {
+				$this->error = $e->getMessage();
+			}
 		}
 
 		return false;
@@ -80,15 +79,15 @@ class DatabaseConnection {
 	 * @return bool
 	 */
 	public function commit() {
-		if (!$this->inTrans) {
-			return false;
-		}
-		$dialect       = $this->dialect;
-		$this->inTrans = false;
-		try {
-			return $dialect->commit();
-		} catch (\PDOException $e) {
-			$this->error = $e->getMessage();
+		if ($this->dialect) {
+			$dialect = $this->dialect;
+			if ($dialect->inTransaction()) {
+				try {
+					return $dialect->commit();
+				} catch (\PDOException $e) {
+					$this->error = $e->getMessage();
+				}
+			}
 		}
 
 		return false;
@@ -99,15 +98,15 @@ class DatabaseConnection {
 	 * @return bool
 	 */
 	public function rollback() {
-		if (!$this->inTrans) {
-			return false;
-		}
-		$this->inTrans = false;
-		$dialect       = $this->dialect;
-		try {
-			return $dialect->rollBack();
-		} catch (\PDOException $e) {
-			$this->error = $e->getMessage();
+		if ($this->dialect) {
+			$dialect = $this->dialect;
+			if ($dialect->inTransaction()) {
+				try {
+					return $dialect->rollBack();
+				} catch (\PDOException $e) {
+					$this->error = $e->getMessage();
+				}
+			}
 		}
 
 		return false;
@@ -170,6 +169,10 @@ class DatabaseConnection {
 			return false;
 		}
 		try {
+			// 表前缀处理
+			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
+				return $dialect->getTableName($r[0]);
+			}, $sql);
 			$sql = str_replace('{encoding}', $this->dialect->getCharset(), $sql);
 			$dialect->exec($sql);
 		} catch (\Exception $e) {
@@ -212,25 +215,29 @@ class DatabaseConnection {
 			return null;
 		}
 		try {
-			$params    = [];
-			$sql       = preg_replace_callback('#%(s|d)#', function ($r) use (&$params) {
-				$params[] = $r[0];
-
-				return '?';
+			$params = 0;
+			// 表前缀处理
+			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
+				return $dialect->getTableName($r[0]);
 			}, $sql);
-			$statement = $dialect->prepare($sql);
-			if ($params) {
-				foreach ($params as $i => $v) {
-					$statement->bindValue($i + 1, $args[ $i ], $v == '%d' ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+			// 参数处理
+			$sql = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+				if ($r[0] == '%f') {
+					$v = floatval($args[ $params ]);
+				} else if ($r[0] == '%d') {
+					$v = intval($args[ $params ]);
+				} else {
+					$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
 				}
-			}
-			$rst = $statement->execute();
+				$params++;
 
-			if ($rst) {
-				$result = $statement->rowCount();
+				return $v;
+			}, $sql);
 
-				return $result;
-			}
+			$rst = $dialect->exec($sql);
+
+			return $rst === false ? null : $rst;
+
 		} catch (\Exception $e) {
 			$this->error = $e->getMessage();
 		}
@@ -253,23 +260,30 @@ class DatabaseConnection {
 			return null;
 		}
 		try {
-			$options [ \PDO::ATTR_CURSOR ] = \PDO::CURSOR_SCROLL;
-			$params                        = [];
-			$sql                           = preg_replace_callback('#%(s|d)#', function ($r) use (&$params) {
-				$params[] = $r[0];
-
-				return '?';
+			$params = 0;
+			// 表前缀处理
+			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
+				return $dialect->getTableName($r[0]);
 			}, $sql);
-			$statement                     = $dialect->prepare($sql, $options);
-			if ($params) {
-				foreach ($params as $i => $v) {
-					$statement->bindValue($i + 1, $args[ $i ], $v == '%d' ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+			// 参数处理
+			$sql = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+				if ($r[0] == '%f') {
+					$v = floatval($args[ $params ]);
+				} else if ($r[0] == '%d') {
+					$v = intval($args[ $params ]);
+				} else {
+					$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
 				}
-			}
-			$rst = $statement->execute();
+				$params++;
+
+				return $v;
+			}, $sql);
+
+			$rst = $this->dialect->query($sql);
 
 			if ($rst) {
-				$result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+				$result = $rst->fetchAll(\PDO::FETCH_ASSOC);
+				$rst->closeCursor();
 
 				return $result;
 			}
