@@ -61,8 +61,8 @@ abstract class Module {
 	 *
 	 * @return array
 	 */
-	protected function getVersionList() {
-		$v ['1.0.0'] = 0;
+	public function getVersionList() {
+		$v ['1.0.0'] = '第一个版本';
 
 		return $v;
 	}

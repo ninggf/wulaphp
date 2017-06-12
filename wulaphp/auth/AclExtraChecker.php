@@ -13,14 +13,17 @@ namespace wulaphp\wulaphp\auth;
 use wulaphp\auth\Passport;
 
 abstract class AclExtraChecker {
+	/**
+	 * @var \wulaphp\wulaphp\auth\AclExtraChecker
+	 */
 	private $next;
 
 	/**
 	 * 添加下一个检验器.
 	 *
-	 * @param \wulaphp\wulaphp\auth\IAclExtraChecker $checker
+	 * @param \wulaphp\wulaphp\auth\AclExtraChecker $checker
 	 */
-	public final function next(IAclExtraChecker $checker) {
+	public final function next(AclExtraChecker $checker) {
 		$this->next = $checker;
 	}
 
@@ -45,9 +48,9 @@ abstract class AclExtraChecker {
 	/**
 	 * 校验.
 	 *
-	 * @param Passport $passport
-	 * @param string   $op
-	 * @param array    $extra
+	 * @param Passport $passport 通行证
+	 * @param string   $op       操作
+	 * @param array    $extra    额外数据
 	 *
 	 * @return mixed
 	 */

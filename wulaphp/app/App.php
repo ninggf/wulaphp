@@ -47,7 +47,7 @@ class App {
 	private static $modules        = [];//模块
 	private static $extensions     = [];//扩展
 	private static $enabledModules = [];//启用的模块
-	private static $prefix         = [];//URL前缀
+	public static  $prefix         = [];//URL前缀
 	/**
 	 * @var App
 	 */
@@ -467,13 +467,16 @@ class App {
 	}
 
 	/**
-	 * 根据模块ID（namespace）查找模块所在目录.
+	 * 根据模块ID（namespace）查找模块所在目录.当$id为null时，返回映射字典.
 	 *
 	 * @param string $id 模块id
 	 *
-	 * @return string
+	 * @return string|string[]
 	 */
 	public static function id2dir($id) {
+		if ($id === null) {
+			return self::$maps ['id2dir'];
+		}
 		if (isset (self::$maps ['id2dir'] [ $id ])) {
 			return self::$maps ['id2dir'] [ $id ];
 		} else {
