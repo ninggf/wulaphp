@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\db\sql;
 
 /**
@@ -18,8 +19,10 @@ class BindValues implements \IteratorAggregate {
 		$field  = Condition::safeField($field);
 		$index  = isset ($this->names [ $field ]) ? $this->names [ $field ] : 0;
 		$key    = ':' . $field . '_' . $index;
-		if (is_numeric($value)) {
+		if (is_string($value)) {//for bigint
 			$type = \PDO::PARAM_STR;
+		} else if (is_numeric($value)) {// for int float
+			$type = \PDO::PARAM_INT;
 		} else if (is_bool($value)) {
 			$type  = \PDO::PARAM_INT;
 			$value = intval($value);
