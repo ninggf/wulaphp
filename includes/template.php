@@ -52,7 +52,7 @@ function smarty_parse_args($args) {
  * @return string
  */
 function smarty_argstr($args) {
-	$a = array();
+	$a = [];
 	foreach ($args as $k => $v) {
 		$v1 = trim($v);
 		if (empty ($v1) && $v1 != '0' && $v1 != 0) {
@@ -65,7 +65,24 @@ function smarty_argstr($args) {
 		}
 	}
 
-	return 'array(' . implode(',', $a) . ')';
+	return '[' . implode(',', $a) . ']';
+}
+
+function smarty_vargs($args) {
+	$a = [];
+	foreach ($args as $k => $v) {
+		$v1 = trim($v);
+		if (empty ($v1) && $v1 != '0' && $v1 != 0) {
+			$a[] = '';
+		}
+		if ($v == false) {
+			$a [] = 'false';
+		} else {
+			$a [] = "$v";
+		}
+	}
+
+	return implode(',', $a);
 }
 
 /**

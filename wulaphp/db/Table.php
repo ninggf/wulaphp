@@ -6,8 +6,7 @@ use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\UpdateSQL;
 use wulaphp\validator\ValidateException;
-use wulaphp\wulaphp\db\ILock;
-use wulaphp\wulaphp\db\TableLocker;
+
 
 /**
  * 表基类,提供与表相关的简单操作。
@@ -37,7 +36,7 @@ abstract class Table extends View {
 	 * @return bool|int 成功返回true或主键值,失败返回false.
 	 * @throws ValidateException
 	 */
-	public function insert($data, $cb = null) {
+	protected function insert($data, $cb = null) {
 		if ($cb && $cb instanceof \Closure) {
 			$data = $cb ($data, $this);
 		}
@@ -78,7 +77,7 @@ abstract class Table extends View {
 	 *
 	 * @return bool|array 如果配置了自增键将返回自增键值的数组.
 	 */
-	public function inserts($datas, \Closure $cb = null) {
+	protected function inserts($datas, \Closure $cb = null) {
 		if ($cb && $cb instanceof \Closure) {
 			$datas = $cb ($datas, $this);
 		}
@@ -121,7 +120,7 @@ abstract class Table extends View {
 	 * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
 	 * @throws ValidateException
 	 */
-	public function update($data = null, $con = null, $cb = null) {
+	protected function update($data = null, $con = null, $cb = null) {
 		if ($data === null) {
 			$sql = new UpdateSQL($this->qualifiedName);
 			$sql->setDialect($this->dialect);
@@ -170,7 +169,7 @@ abstract class Table extends View {
 	 *
 	 * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
 	 */
-	public function delete($con = null) {
+	protected function delete($con = null) {
 		if ($con === null) {
 			$sql = new DeleteSQL();
 			$sql->from($this->qualifiedName)->setDialect($this->dialect);
@@ -204,7 +203,7 @@ abstract class Table extends View {
 	 *
 	 * @return boolean 成功true，失败false.
 	 */
-	public function recycle($con, $uid = 0, $cb = null) {
+	protected function recycle($con, $uid = 0, $cb = null) {
 		if (!$con) {
 			return false;
 		}
@@ -255,25 +254,5 @@ abstract class Table extends View {
 			}
 		}
 		unset($parents, $traits);
-	}
-
-	/**
-	 * 锁定符合条件的行.
-	 *
-	 * @param string|int|array $con 条件中一定要有主键或唯一索引.
-	 *
-	 * @return ILock
-	 */
-	public function lock($con) {
-		if (!$con) {
-			throw_exception('未指定锁定条件');
-		}
-		if ($con && !is_array($con)) {
-			$con = [$this->primaryKeys[0] => $con];
-		}
-
-		$query = $this->select('*')->where($con);
-
-		return new TableLocker($query);
 	}
 }

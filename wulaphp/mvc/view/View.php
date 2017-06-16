@@ -41,7 +41,7 @@ abstract class View implements \ArrayAccess, Renderable {
 			$this->tpl  = str_replace('/', DS, $data);
 			$this->data = array();
 		} else {
-			throw new \Exception('please give me a template file to render');
+			throw new \Exception(__('Please give me a template file to render'));
 		}
 
 		if (is_array($headers)) {

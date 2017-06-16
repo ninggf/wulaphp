@@ -203,7 +203,7 @@ class Router {
 			} else if (php_sapi_name() == 'cli-server' && is_file(WWWROOT . $url)) {
 				return false;
 			} else if (DEBUG < DEBUG_ERROR) {
-				throw new \Exception('no route for ' . $uri);
+				throw new \Exception(__('No route for %s'), $uri);
 			} else {
 				Response::respond(404);
 			}

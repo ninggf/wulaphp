@@ -2,6 +2,9 @@
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
+if (version_compare('5.6.0', phpversion(), '>')) {
+	die (sprintf('Your php version is %s,but wulaphp required  PHP 5.6.0 or higher', phpversion()));
+}
 /**
  * Project:     Wulaphp: another mvc framework of php based on php 5.6.0+ .
  * File:        bootstrap.php
@@ -64,9 +67,7 @@ if (!defined('APP_MODE')) {
 if (@ini_get('register_globals')) {
 	die ('please close "register_globals" in php.ini file.');
 }
-if (version_compare('5.6.0', phpversion(), '>')) {
-	die (sprintf('Your php version is %s,but wulaphp required  PHP 5.6.0 or higher', phpversion()));
-}
+
 // 运行时间
 if (defined('MAX_RUNTIME_LIMIT')) {
 	set_time_limit(intval(MAX_RUNTIME_LIMIT));

@@ -12,7 +12,7 @@ class RedisClient {
 	 */
 	public static function getRedis($cnf, $database = 0, $prefix = '') {
 		if (!extension_loaded('redis')) {
-			throw new \Exception('redis extension is not installed');
+			throw new \Exception(__('The redis extension is not installed'));
 		}
 		if (is_string($cnf)) {
 			$cnf = array($cnf, 6379);

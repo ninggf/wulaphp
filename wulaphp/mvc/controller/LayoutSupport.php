@@ -36,12 +36,14 @@ trait LayoutSupport {
 
 			return $view;
 		}
-		throw new \Exception(get_class($this) . ' is not instance of wulaphp\mvc\controller');
+		$msg = __('%s is not instance of wulaphp\mvc\Controller', get_class($this));
+		throw new \Exception($msg);
 	}
 
 	protected function onInitLayoutSupport() {
 		if (!isset($this->layout)) {
-			throw new \BadMethodCallException('the layout property of ' . get_class($this) . ' is not found!');
+			$msg = __('The layout property of %s is not found', get_class($this));
+			throw new \BadMethodCallException($msg);
 		}
 	}
 

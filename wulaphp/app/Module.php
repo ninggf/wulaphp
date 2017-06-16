@@ -2,8 +2,14 @@
 
 namespace wulaphp\app;
 
+use wulaphp\i18n\I18n;
 use wulaphp\util\Annotation;
 
+/**
+ * 模块基类.
+ *
+ * @package wulaphp\app
+ */
 abstract class Module {
 	public    $clzName;
 	public    $reflection;
@@ -35,14 +41,23 @@ abstract class Module {
 		unset($ns);
 	}
 
+	/**
+	 * @return string 命名空间.
+	 */
 	public final function getNamespace() {
 		return $this->namespace;
 	}
 
+	/**
+	 * @return string 路径
+	 */
 	public final function getPath() {
 		return $this->path;
 	}
 
+	/**
+	 * @return string 目录名
+	 */
 	public final function getDirname() {
 		return $this->dirname;
 	}
@@ -67,12 +82,20 @@ abstract class Module {
 		return $v;
 	}
 
+	/**
+	 * 注册事件处理器.
+	 */
 	public final function autoBind() {
 		if ($this->bound) {
 			return;
 		}
 		$this->bound = true;
-		$ms          = $this->reflection->getMethods(\ReflectionMethod::IS_STATIC);
+		//加载语言
+		I18n::addLang($this->path . DS . 'lang');
+		// 批量绑定
+		$this->bind();
+		// 根据注解进行绑定
+		$ms = $this->reflection->getMethods(\ReflectionMethod::IS_STATIC);
 		foreach ($ms as $m) {
 			if (!$m->isPublic()) {
 				continue;
@@ -100,6 +123,11 @@ abstract class Module {
 		}
 	}
 
+	/**
+	 * 模块信息.
+	 *
+	 * @return array
+	 */
 	public function info() {
 		$info = get_object_vars($this);
 		unset($info['reflection'], $info['path'], $info['clzName'], $info['dirname'], $info['namespace;'], $info['bound']);
@@ -118,6 +146,13 @@ abstract class Module {
 	 */
 	public function getAuthor() {
 		return 'wulacms team';
+	}
+
+	/**
+	 * 批量事件处理器注册.
+	 */
+	protected function bind() {
+
 	}
 
 	/**

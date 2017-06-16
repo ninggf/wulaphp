@@ -7,6 +7,7 @@ namespace wulaphp\db;
  * @package wulaphp\db
  * @author  Leo Ning <windywany@gmail.com>
  * @since   1.0.0
+ * @method static SimpleTable user()
  */
 class SimpleTable extends Table {
 	/**
@@ -22,5 +23,15 @@ class SimpleTable extends Table {
 		}
 		parent::__construct($db);
 		$this->alias(str_replace('_', '', ucwords($table, '_')));
+	}
+
+	/**
+	 * @param string $name
+	 * @param array  $arguments
+	 *
+	 * @return \wulaphp\db\SimpleTable
+	 */
+	public static function __callStatic($name, $arguments) {
+		return new SimpleTable($name, $arguments ? $arguments[0] : null);
 	}
 }

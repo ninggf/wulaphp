@@ -74,7 +74,11 @@ class App {
 		}
 		fire('wula\configLoaded');//配置加载完成
 
+		if (!defined('LANGUAGE') && isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+			define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
+		}
 		I18n::addLang(WULA_ROOT . 'lang');
+
 		// 加载扩展
 		$clz = trim(EXTENSION_LOADER_CLASS);
 		if (class_exists($clz)) {
@@ -86,7 +90,7 @@ class App {
 			$this->extensionLoader = $extensionLoader;
 			$this->extensionLoader->load();
 		} else {
-			throw new \Exception('no ExtensionLoader found!');
+			throw new \Exception('No ExtensionLoader found!');
 		}
 		fire('wula\extensionLoaded');//扩展加载完成
 		// 加载模块
@@ -96,13 +100,13 @@ class App {
 		} elseif ($clz == 'wulaphp\app\ModuleLoader') {
 			$moduleLoader = new ModuleLoader();
 		} else {
-			throw new \Exception('cannot find module loader: ' . $clz);
+			throw new \Exception('Cannot find module loader: ' . $clz);
 		}
 		if ($moduleLoader instanceof ModuleLoader) {
 			$this->moduleLoader = $moduleLoader;
 			$this->moduleLoader->load();
 		} else {
-			throw new \Exception('no ModuleLoader found!');
+			throw new \Exception('No ModuleLoader found!');
 		}
 		fire('wula\moduleLoaded');//模块加载完成
 	}
@@ -398,10 +402,12 @@ class App {
 	public static function register(Module $module) {
 		$name = $module->getNamespace();
 		if ($name == 'wulaphp') {
-			throw new \Exception('the namespace of ' . $module->clzName . ' cannot be wulaphp!');
+			$msg = __('the namespace of %s cannot be wulaphp', $module->clzName);
+			throw new \Exception($msg);
 		}
 		if (!preg_match('/^[a-z][a-z_\d]+(\\\\[a-z][a-z_\d]+)*$/i', $name)) {
-			throw new \Exception('the namespace "' . $name . '" of ' . $module->clzName . ' is invalide.');
+			$msg = __('The namespace "%s" of %s is invalid', $name, $module->clzName);
+			throw new \Exception($msg);
 		}
 		$dir = $module->getDirname();
 		if ($dir != $name) {

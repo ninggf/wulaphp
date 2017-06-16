@@ -1100,7 +1100,8 @@ function wula_exception_handler($e) {
 				$stack[] = implode('', $tss);
 			}
 			$errorFile = file_get_contents(__DIR__ . '/debug.tpl');
-			$errorFile = str_replace(['{$message}', '{$stackInfo}'], [$msg, implode('', $stack)], $errorFile);
+			$errorFile = str_replace(['{$message}', '{$stackInfo}','{$title}','{$tip}','{$cs}','{$f}','{$l}','{$uri}'],
+				[$msg, implode('', $stack),__('Oops'),__('Fatal error'),__('Call Stack'),__('Function'),__('Location'),\wulaphp\router\Router::getURI()], $errorFile);
 			echo $errorFile;
 			exit(0);
 		}

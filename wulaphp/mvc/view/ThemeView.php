@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\mvc\view;
 
 /**
@@ -62,7 +63,7 @@ class ThemeView extends View {
 			}
 			$this->__smarty->error_reporting = KS_ERROR_REPORT_LEVEL;
 		} else {
-			throw new \Exception('The view template ' . $tpl . ' is not found');
+			throw new \Exception(__('The template %s is not found', $tpl));
 		}
 		$this->__smarty->assign($this->data);
 		$this->__smarty->assign('_css_files', $this->sytles);

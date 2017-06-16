@@ -5,6 +5,9 @@ namespace wulaphp\db;
 use wulaphp\app\App;
 use wulaphp\db\sql\Query;
 use wulaphp\db\sql\QueryBuilder;
+use wulaphp\util\ObjectCaller;
+use wulaphp\wulaphp\db\ILock;
+use wulaphp\wulaphp\db\TableLocker;
 
 /**
  * View 提供查询等与修改无关的操作.
@@ -12,20 +15,29 @@ use wulaphp\db\sql\QueryBuilder;
  * @package wulaphp\mvc\model
  * @author  Leo Ning <windywany@gmail.com>
  * @static  $queryFields
+ * @method static Query sget($id, $fields = '*')  for get
+ * @method static Query sfind($where = null, $fields = null, $limit = 10, $start = 0)
+ * @method static Query sfindAll($where = null, $fields = null)
+ * @method static array smap($where, $valueField, $keyField = null, $rows = [])
+ * @method static int scount($con, $id = null)
+ * @method static bool sexist($con, $id = null)
+ * @method static Query sselect(...$fileds)
+ * @method static ILock slock($con)
  */
 abstract class View {
-	public    $table       = null;
-	protected $tableName;
-	protected $qualifiedName;
-	protected $primaryKeys = ['id'];
-	protected $errors      = null;
-	protected $lastSQL     = null;
-	protected $lastValues  = null;
-	protected $dumpSQL     = null;
-	protected $alias       = null;
-	private   $ormObj      = null;
-	protected $foreignKey  = null;//本表主键在其它表中的引用字段
-	protected $primaryKey  = null;//本表主键字段
+	private static $tableClzs   = [];
+	public         $table       = null;
+	protected      $tableName;
+	protected      $qualifiedName;
+	protected      $primaryKeys = ['id'];
+	protected      $errors      = null;
+	protected      $lastSQL     = null;
+	protected      $lastValues  = null;
+	protected      $dumpSQL     = null;
+	protected      $alias       = null;
+	private        $ormObj      = null;
+	protected      $foreignKey  = null;//本表主键在其它表中的引用字段
+	protected      $primaryKey  = null;//本表主键字段
 	/** @var \wulaphp\db\dialect\DatabaseDialect 数据库链接（PDO） */
 	protected $dialect = null;
 	protected $dbconnection;
@@ -62,6 +74,21 @@ abstract class View {
 		$this->tableName     = $this->dialect->getTableName($this->table);
 		$this->qualifiedName = $this->table . ' AS ' . $this->alias;
 		$this->ormObj        = new Orm($this, $this->primaryKeys[0]);
+	}
+
+	/**
+	 * @param string $name function with s
+	 * @param        $arguments
+	 *
+	 * @return mixed
+	 */
+	public static function __callStatic($name, $arguments) {
+		$clz = static::class;
+		if (!isset(self::$tableClzs[ $clz ])) {
+			self::$tableClzs[ $clz ] = new $clz();
+		}
+
+		return ObjectCaller::callObjMethod(self::$tableClzs[ $clz ], substr($name, 1), $arguments);
 	}
 
 	/**
@@ -108,7 +135,7 @@ abstract class View {
 	 * @param int|null    $limit  取多少条数据，默认10条.
 	 * @param int         $start
 	 *
-	 * @return Query 读取后的数组.
+	 * @return Query 列表查询.
 	 */
 	public function find($where = null, $fields = null, $limit = 10, $start = 0) {
 		$sql = $this->select($fields);
@@ -206,6 +233,27 @@ abstract class View {
 		$sql->setDialect($this->dialect)->from($this->qualifiedName);
 
 		return $sql;
+	}
+
+	/**
+	 * 锁定符合条件的行.
+	 *
+	 * @param string|int|array $con 条件中一定要有主键或唯一索引.
+	 *
+	 * @return ILock
+	 */
+	public function lock($con) {
+		if (!$con) {
+			throw_exception(__('no lock condition'));
+		}
+
+		if ($con && !is_array($con)) {
+			$con = [$this->primaryKeys[0] => $con];
+		}
+
+		$query = $this->select('*')->where($con);
+
+		return new TableLocker($query);
 	}
 
 	/**
