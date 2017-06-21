@@ -17,6 +17,9 @@ namespace wulaphp\i18n {
 		public static function addLang($dir) {
 			$lang = defined('LANGUAGE') ? LANGUAGE : 'en';
 			$lf   = $dir . DS . $lang . '.php';
+			if (!is_file($lf) && strpos($lang, '-', 1)) {
+				$lf = $dir . DS . substr($lang, 0, 2) . '.php';
+			}
 			if (is_file($lf)) {
 				$language = @include $lf;
 				if (is_array($language)) {
@@ -36,10 +39,10 @@ namespace wulaphp\i18n {
 		 */
 		public static function translate1($text, $args, $domain = '') {
 			if (isset(self::$languages[ $domain ][ $text ])) {
-				return vsprintf(self::$languages[ $domain ][ $text ], $args);
+				return @vsprintf(self::$languages[ $domain ][ $text ], $args);
 			}
 
-			return vsprintf($text, $args);
+			return @vsprintf($text, $args);
 		}
 
 		/**
@@ -52,10 +55,10 @@ namespace wulaphp\i18n {
 		 */
 		public static function translate($text, $args) {
 			if (isset(self::$languages[ $text ])) {
-				return vsprintf(self::$languages[ $text ], $args);
+				return @vsprintf(self::$languages[ $text ], $args);
 			}
 
-			return vsprintf($text, $args);
+			return @vsprintf($text, $args);
 		}
 	}
 }
@@ -92,7 +95,31 @@ namespace {
 		return I18n::translate1($str, $args, $domain);
 	}
 
-	function smarty_modifiercompiler_t($params, $compiler) {
+	function _i18n($file, $ext = '.js') {
+		if (!$file) {
+			return '';
+		}
+		$lang = defined('LANGUAGE') ? LANGUAGE : 'en';
+		$rf   = substr($file, strlen(WWWROOT_DIR));
+		$ext  = strtolower($ext);
+		if (!is_file(WWWROOT . $rf . DS . $lang . $ext) && strpos($lang, '-', 1)) {
+			$lang = substr($lang, 0, 2);
+		}
+		if (is_file(WWWROOT . $rf . DS . $lang . $ext)) {
+			if ($ext == '.js') {
+				return "<script src=\"{$file}/{$lang}{$ext}\"></script>";
+			} else if ($ext == '.css') {
+				return "<link rel=\"stylesheet\" href=\"{$file}/{$lang}{$ext}\"/>";
+			} else {
+				return "{$file}/{$lang}{$ext}";
+			}
+		}
+
+		return '';
+	}
+
+	// 翻译
+	function smarty_modifiercompiler_t($params) {
 		$str  = array_shift($params);
 		$args = smarty_vargs($params);
 		if ($args) {
@@ -102,7 +129,8 @@ namespace {
 		}
 	}
 
-	function smarty_modifiercompiler_tf($params, $compiler) {
+	//带域翻译
+	function smarty_modifiercompiler_tf($params) {
 		$str  = array_shift($params);
 		$args = smarty_vargs($params);
 		if ($args) {
@@ -110,5 +138,12 @@ namespace {
 		} else {
 			return "_t($str)";
 		}
+	}
+
+	// 加载语言相关资源使用
+	function smarty_modifiercompiler_i18n($params) {
+		$ext = isset($params[1]) ? $params[1] : "'.js'";
+
+		return "_i18n({$params[0]},$ext)";
 	}
 }

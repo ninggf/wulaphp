@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 从数组取值，如果数组中无指定key，则返回默认值.
  *
@@ -122,7 +123,7 @@ function get_status_header_desc($code) {
 	$code = abs(intval($code));
 
 	if (!isset ($output_header_to_desc)) {
-		$output_header_to_desc = array(100 => 'Continue', 101 => 'Switching Protocols', 102 => 'Processing', 200 => 'OK', 201 => 'Created', 202 => 'Accepted', 203 => 'Non-Authoritative Information', 204 => 'No Content', 205 => 'Reset Content', 206 => 'Partial Content', 207 => 'Multi-Status', 226 => 'IM Used', 300 => 'Multiple Choices', 301 => 'Moved Permanently', 302 => 'Found', 303 => 'See Other', 304 => 'Not Modified', 305 => 'Use Proxy', 306 => 'Reserved', 307 => 'Temporary Redirect', 400 => 'Bad Request', 401 => 'Unauthorized', 402 => 'Payment Required', 403 => 'Forbidden', 404 => 'Not Found', 405 => 'Method Not Allowed', 406 => 'Not Acceptable', 407 => 'Proxy Authentication Required', 408 => 'Request Timeout', 409 => 'Conflict', 410 => 'Gone', 411 => 'Length Required', 412 => 'Precondition Failed', 413 => 'Request Entity Too Large', 414 => 'Request-URI Too Long', 415 => 'Unsupported Media Type', 416 => 'Requested Range Not Satisfiable', 417 => 'Expectation Failed', 422 => 'Unprocessable Entity', 423 => 'Locked', 424 => 'Failed Dependency', 426 => 'Upgrade Required', 500 => 'Internal Server Error', 501 => 'Not Implemented', 502 => 'Bad Gateway', 503 => 'Service Unavailable', 504 => 'Gateway Timeout', 505 => 'HTTP Version Not Supported', 506 => 'Variant Also Negotiates', 507 => 'Insufficient Storage', 510 => 'Not Extended');
+		$output_header_to_desc = array(100 => 'Continue', 101 => 'Switching Protocols', 102 => 'Processing', 200 => 'OK', 201 => 'Created', 202 => 'Accepted', 203 => 'Non-Authoritative Information', 204 => 'No Content', 205 => 'Reset Content', 206 => 'Partial Content', 207 => 'Multi-Status', 226 => 'IM Used', 300 => 'Multiple Choices', 301 => 'Moved Permanently', 302 => 'Found', 303 => 'See Other', 304 => 'Not Modified', 305 => 'Use Proxy', 306 => 'Reserved', 307 => 'Temporary Redirect', 400 => 'Bad Request', 401 => 'Unauthorized', 402 => 'Payment Required', 403 => 'Forbidden', 404 => 'Page Not Found', 405 => 'Method Not Allowed', 406 => 'Not Acceptable', 407 => 'Proxy Authentication Required', 408 => 'Request Timeout', 409 => 'Conflict', 410 => 'Gone', 411 => 'Length Required', 412 => 'Precondition Failed', 413 => 'Request Entity Too Large', 414 => 'Request-URI Too Long', 415 => 'Unsupported Media Type', 416 => 'Requested Range Not Satisfiable', 417 => 'Expectation Failed', 422 => 'Unprocessable Entity', 423 => 'Locked', 424 => 'Failed Dependency', 426 => 'Upgrade Required', 500 => 'Internal Server Error', 501 => 'Not Implemented', 502 => 'Bad Gateway', 503 => 'Service Unavailable', 504 => 'Gateway Timeout', 505 => 'HTTP Version Not Supported', 506 => 'Variant Also Negotiates', 507 => 'Insufficient Storage', 510 => 'Not Extended');
 	}
 	if (isset ($output_header_to_desc [ $code ])) {
 		return $output_header_to_desc [ $code ];
@@ -139,6 +140,13 @@ function untrailingslashit($string) {
 	return rtrim($string, '/\\');
 }
 
+/**
+ * 去除文件名中不合法的字符.
+ *
+ * @param string $filename
+ *
+ * @return string
+ */
 function sanitize_file_name($filename) {
 	$special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}", chr(0));
 	$filename      = str_replace($special_chars, '', $filename);
@@ -168,6 +176,15 @@ function sanitize_file_name($filename) {
 	return $filename;
 }
 
+/**
+ * 获取唯一文件名.
+ *
+ * @param string        $dir
+ * @param string        $filename
+ * @param callable|null $unique_filename_callback
+ *
+ * @return string
+ */
 function unique_filename($dir, $filename, $unique_filename_callback = null) {
 	$filename = sanitize_file_name($filename);
 	$info     = pathinfo($filename);
@@ -637,27 +654,30 @@ function url_append_args($url, $args) {
 }
 
 /**
- * 生成html标签属性.
+ * 将array的key/value通过$sep连接成一个字符串.
  *
- * @param array $properties
+ * @param array  $ary
+ * @param string $sep   连接符
+ * @param bool   $quote 连接时值是否用双引号包裹.
  *
  * @return string
  */
-function html_tag_properties($properties) {
-	if (empty ($properties)) {
+function ary_kv_concat(array $ary, $sep = '=', $quote = true) {
+	if (empty ($ary)) {
 		return '';
 	}
+	$quote   = $quote ? '"' : '';
 	$tmp_ary = array();
-	foreach ($properties as $name => $val) {
+	foreach ($ary as $name => $val) {
 		$name       = trim($name);
-		$tmp_ary [] = $name . '="' . $val . '"';
+		$tmp_ary [] = $name . $sep . "{$quote}{$val}{$quote}";
 	}
 
 	return ' ' . implode(' ', $tmp_ary) . ' ';
 }
 
 /**
- * 合并二个数组，并将对应值相加.
+ * 合并二个数组，并将对应值通过$sep进行连结(concat).
  *
  * @param array  $ary1 被加数组.
  * @param array  $ary2 数组.
@@ -665,11 +685,11 @@ function html_tag_properties($properties) {
  *
  * @return array 合并后的数组.
  */
-function merge_add($ary1, $ary2, $sep = ' ') {
+function ary_concat(array $ary1, array $ary2, $sep = ' ') {
 	foreach ($ary2 as $key => $val) {
 		if (isset ($ary1 [ $key ])) {
 			if (is_array($ary1 [ $key ]) && is_array($val)) {
-				$ary1 [ $key ] = merge_add($ary1 [ $key ], $val);
+				$ary1 [ $key ] = ary_concat($ary1 [ $key ], $val);
 			} else if (is_array($ary1 [ $key ]) && !is_array($val)) {
 				$ary1 [ $key ] [] = $val;
 			} else if (!is_array($ary1 [ $key ]) && is_array($val)) {
@@ -800,7 +820,7 @@ function authcode($string, $operation = 'DECODE', $key = '', $expiry = 0) {
 		$tmp        = $box [ $a ];
 		$box [ $a ] = $box [ $j ];
 		$box [ $j ] = $tmp;
-		$result .= chr(ord($string [ $i ]) ^ ($box [ ($box [ $a ] + $box [ $j ]) % 256 ]));
+		$result     .= chr(ord($string [ $i ]) ^ ($box [ ($box [ $a ] + $box [ $j ]) % 256 ]));
 	}
 
 	if ($operation == 'DECODE') {
@@ -1074,6 +1094,8 @@ function whoami($type = 'default') {
  * 不要调用它.
  *
  * @param Throwable $e
+ *
+ * @deprecated
  */
 function wula_exception_handler($e) {
 	global $argv;
@@ -1100,8 +1122,7 @@ function wula_exception_handler($e) {
 				$stack[] = implode('', $tss);
 			}
 			$errorFile = file_get_contents(__DIR__ . '/debug.tpl');
-			$errorFile = str_replace(['{$message}', '{$stackInfo}','{$title}','{$tip}','{$cs}','{$f}','{$l}','{$uri}'],
-				[$msg, implode('', $stack),__('Oops'),__('Fatal error'),__('Call Stack'),__('Function'),__('Location'),\wulaphp\router\Router::getURI()], $errorFile);
+			$errorFile = str_replace(['{$message}', '{$stackInfo}', '{$title}', '{$tip}', '{$cs}', '{$f}', '{$l}', '{$uri}'], [$msg, implode('', $stack), __('Oops'), __('Fatal error'), __('Call Stack'), __('Function'), __('Location'), \wulaphp\router\Router::getURI()], $errorFile);
 			echo $errorFile;
 			exit(0);
 		}
@@ -1117,6 +1138,7 @@ function wula_exception_handler($e) {
 
 /**
  * 不要调用它.
+ * @deprecated
  */
 function wula_shutdown_function() {
 	define('WULA_STOPTIME', microtime(true));

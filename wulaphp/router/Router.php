@@ -6,17 +6,16 @@ use ci\XssCleaner;
 use wulaphp\io\Response;
 
 /**
- * 路由器.
+ * 路由器.负载解析URL并将URL分发给相应的处理器.
  *
- * @author leo
- *
+ * @author  leo
+ * @sine    1.0.0
  */
 class Router {
-
 	private $xssCleaner;
-	private $dispatchers     = array();
-	private $preDispatchers  = array();
-	private $postDispatchers = array();
+	private $dispatchers     = [];//分发器列表
+	private $preDispatchers  = [];//前置分发器列表
+	private $postDispatchers = [];//后置分发器列表
 
 	private $urlParsedInfo = null;//解析的URL数据.
 	private $requestURL    = null;//解析后的URL
@@ -25,7 +24,7 @@ class Router {
 	/**
 	 * @var Router
 	 */
-	private static $INSTANCE;
+	private static $INSTANCE;//路由器唯一实例.
 
 	/**
 	 * Router constructor.
@@ -203,20 +202,36 @@ class Router {
 			} else if (php_sapi_name() == 'cli-server' && is_file(WWWROOT . $url)) {
 				return false;
 			} else if (DEBUG < DEBUG_ERROR) {
-				throw new \Exception(__('No route for %s'), $uri);
+				throw new \Exception(__('No route for %s', $uri));
 			} else {
 				Response::respond(404);
 			}
 		}
 		$response->close();
+
+		return false;
 	}
 
+	/**
+	 * 将abc-def-hig转换为abcDefHig.
+	 *
+	 * @param string $string
+	 *
+	 * @return string 转换后的字符.
+	 */
 	public static function removeSlash($string) {
 		return preg_replace_callback('/-([a-z])/', function ($ms) {
 			return strtoupper($ms[1]);
 		}, $string);
 	}
 
+	/**
+	 * 将AbcDefHig转换为abc-def-hig.
+	 *
+	 * @param string $string 要转换的字符.
+	 *
+	 * @return mixed 转换后的字符.
+	 */
 	public static function addSlash($string) {
 		$string = lcfirst($string);
 

@@ -100,7 +100,7 @@ class App {
 		} elseif ($clz == 'wulaphp\app\ModuleLoader') {
 			$moduleLoader = new ModuleLoader();
 		} else {
-			throw new \Exception('Cannot find module loader: ' . $clz);
+			throw new \Exception('cannot find module loader: ' . $clz);
 		}
 		if ($moduleLoader instanceof ModuleLoader) {
 			$this->moduleLoader = $moduleLoader;
@@ -406,7 +406,7 @@ class App {
 			throw new \Exception($msg);
 		}
 		if (!preg_match('/^[a-z][a-z_\d]+(\\\\[a-z][a-z_\d]+)*$/i', $name)) {
-			$msg = __('The namespace "%s" of %s is invalid', $name, $module->clzName);
+			$msg = __('The namespace "%s" of %s is invalid',$name,$module->clzName );
 			throw new \Exception($msg);
 		}
 		$dir = $module->getDirname();
