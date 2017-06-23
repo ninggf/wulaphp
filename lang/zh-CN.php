@@ -92,7 +92,7 @@ return [
 	'Home'=>'主页',
 	'About'=>'关于',
 	'Features'=>'特性',
-	'wulacms'=>'由乌拉CMS v%s提供动力',
+	'wulacms'=>'由乌拉CMS v%s 提供动力',
 	'no lock condition'=>'未指定锁定条件',
 	'Call Stack'=>'调用堆栈',
 	'Fatal error'=>'致命错误',

@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\auth;
 
 use wulaphp\wulaphp\auth\AclExtraChecker;
@@ -9,6 +10,7 @@ use wulaphp\wulaphp\auth\AclExtraChecker;
  */
 class Passport {
 	const SESSION_NAME = 'wula_passport';
+	/**@var int $uid */
 	public         $uid       = 0;
 	public         $type      = 'default';
 	public         $username  = '';
@@ -191,5 +193,9 @@ class Passport {
 	 */
 	protected function restore() {
 
+	}
+
+	public function __toString() {
+		return $this->nickname;
 	}
 }
