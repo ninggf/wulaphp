@@ -31,14 +31,13 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 		}
 		$pid = pcntl_fork();
 		if ($pid > 0) {
+			//主程序退出
 			exit(0);
 		} elseif (0 === $pid) {
 			umask(0);
-			$mypid = posix_getpid();
-			openlog('daemon-' . $cmd, LOG_PID | LOG_PERROR, LOG_USER);
 			$sid = posix_setsid();
 			if ($sid < 0) {
-				syslog(LOG_ERR, 'Could not detach session id.');
+				$this->error('[' . $cmd . '] Could not detach session id.');
 				exit(1);
 			}
 			$this->setUp($options);
@@ -47,16 +46,14 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			fclose(STDERR);
 
 			$STDIN  = @fopen('/dev/null', 'r');
-			$STDOUT = @fopen(LOGS_PATH . $cmd . '-' . $mypid . '.log', 'wb');
-			$STDERR = @fopen(LOGS_PATH . $cmd . '-' . $mypid . '.log', 'ab');
+			$logf   = LOGS_PATH . $cmd . '.log';
+			$STDERR = $STDOUT = @fopen($logf, is_file($logf) ? 'ab' : 'wb');
 
 			$this->doStartLoop($options);
-
 			$this->tearDown($options);
-			@closelog();
+
 			@fclose($STDIN);
 			@fclose($STDOUT);
-			@fclose($STDERR);
 			exit(0);
 		}
 
@@ -72,15 +69,15 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			if (0 === $pid) {
 				define('ARTISAN_TASK_PID', posix_getpid());
 				$this->isParent = false;
+				$this->pid      = '[' . ARTISAN_TASK_PID . '] ';
 				$this->taskId   = $i;
 				$this->initSignal();
-				$exitCode = $this->execute($options);
-				usleep(1000000);
-				syslog(LOG_NOTICE, 'exit with code: ' . $exitCode);
+				$this->execute($options);
+				usleep(5000);
 				exit(0);
 			} else {
-				$i++;
 				$this->workers[ $pid ] = $pid;
+				$i++;
 			}
 		}
 

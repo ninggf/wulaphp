@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\artisan;
 /**
  * 命令.
@@ -8,6 +9,7 @@ namespace wulaphp\artisan;
  * @since   1.0
  */
 abstract class ArtisanCommand {
+	protected $pid = '';
 	protected $color;
 	protected $argv;
 	protected $arvc;
@@ -59,7 +61,7 @@ abstract class ArtisanCommand {
 		return [];
 	}
 
-	protected function getOptions() {
+	protected final function getOptions() {
 		global $argv, $argc;
 		$op   = [];
 		$opts = $this->getOpts();
@@ -133,7 +135,7 @@ abstract class ArtisanCommand {
 		return $options;
 	}
 
-	protected function opt($index = -1, $default = '') {
+	protected final function opt($index = -1, $default = '') {
 		$argv = $this->argv;
 		$argc = $this->arvc;
 		if ($index < 0) {
@@ -149,23 +151,24 @@ abstract class ArtisanCommand {
 		return $default;
 	}
 
-	protected function log($message = '', $nl = true) {
-		echo $message;
-		if ($nl) echo "\n";
+	protected final function log($message = '', $nl = true) {
+		$msg = ($nl ? $this->pid : '') . $message . ($nl ? "\n" : '');
+		echo $msg;
 		flush();
 	}
 
-	protected function error($message) {
+	protected final function error($message) {
 		$color = $this->color;
-		echo $color->str("ERROR:\n", 'red');
-		echo $message, "\n";
+		$msg   = $this->pid . $color->str("ERROR:\n", 'red') . $message . "\n";
+		echo $msg;
+
 		flush();
 	}
 
-	protected function success($message) {
+	protected final function success($message) {
 		$color = $this->color;
-		echo $color->str("SUCCESS:\n", 'green');
-		echo $message, "\n";
+		$msg   = $this->pid . $color->str("SUCCESS:\n", 'green') . $message . "\n";
+		echo $msg;
 		flush();
 	}
 
@@ -185,4 +188,3 @@ abstract class ArtisanCommand {
 
 	protected abstract function execute($options);
 }
-
