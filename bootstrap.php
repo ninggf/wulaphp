@@ -57,7 +57,7 @@ define('DEBUG_INFO', 200);
 define('DEBUG_DEBUG', 100);
 // 开发模式
 if (!defined('APP_MODE')) {
-	if (isset($_SERVER['APPMODE'])) {
+	if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {
 		define('APP_MODE', $_SERVER['APPMODE']);
 	} else {
 		define('APP_MODE', 'dev');
