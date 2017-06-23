@@ -91,7 +91,9 @@ abstract class Module {
 		}
 		$this->bound = true;
 		//加载语言
-		I18n::addLang($this->path . DS . 'lang');
+		if (is_dir($this->path . DS . 'lang')) {
+			I18n::addLang($this->path . DS . 'lang');
+		}
 		// 批量绑定
 		$this->bind();
 		// 根据注解进行绑定
