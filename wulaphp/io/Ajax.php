@@ -35,9 +35,9 @@ class Ajax {
 	const           WARNING      = 400;
 	const           INFO         = 300;
 	const           STYLE_NOTICE = 'notice';
-	const           ACT_CALLBACK = 'callback';//回调js函数.
-	const           ACT_DIALOG   = 'dialog';//弹出对话框
+	const           STYLE_ALERT  = 'alert';
 	const           ACT_UPDATE   = 'update';//更新元素
+	const           ACT_DIALOG   = 'dialog';//弹出对话框
 	const           ACT_RELOAD   = 'reload';//重新加载
 	const           ACT_CLICK    = 'click';//点击元素
 	const           ACT_REDIRECT = 'redirect';//重定向
@@ -93,17 +93,20 @@ class Ajax {
 	}
 
 	/**
-	 * 调用js函数.
+	 * 更新元素内容.
 	 *
-	 * @param string       $func    要调用的js函数
-	 * @param array        $args    参数
-	 * @param string|array $message 提示信息
+	 * @param string       $target  css selector
+	 * @param string       $content html
+	 * @param string|array $message 提示信息.
+	 * @param bool         $append  是否是追加内容.
 	 * @param string       $style
 	 *
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
-	public static function callback($func, $args = [], $message = '', $style = null) {
-		return new JsonView(['code' => self::SUCCESS, 'message' => $message, 'style' => $style, 'target' => $func, 'args' => $args, 'action' => self::ACT_CALLBACK], ['ajax' => '1']);
+	public static function update($target, $content, $message = '', $append = false, $style = null) {
+		$args = ['content' => $content, 'append' => $append];
+
+		return new JsonView(['code' => self::SUCCESS, 'target' => $target, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_UPDATE], ['ajax' => '1']);
 	}
 
 	/**
@@ -121,23 +124,6 @@ class Ajax {
 		$args = ['title' => $title, 'width' => $width, 'height' => $height, 'ajax' => $ajax, 'content' => $content];
 
 		return new JsonView(['code' => self::SUCCESS, 'args' => $args, 'action' => self::ACT_DIALOG], ['ajax' => '1']);
-	}
-
-	/**
-	 * 更新元素内容.
-	 *
-	 * @param string       $target  css selector
-	 * @param string       $content html
-	 * @param string|array $message 提示信息.
-	 * @param bool         $append  是否是追加内容.
-	 * @param string       $style
-	 *
-	 * @return \wulaphp\mvc\view\JsonView
-	 */
-	public static function update($target, $content, $message = '', $append = false, $style = null) {
-		$args = ['content' => $content, 'append' => $append];
-
-		return new JsonView(['code' => self::SUCCESS, 'target' => $target, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_UPDATE], ['ajax' => '1']);
 	}
 
 	/**
