@@ -107,7 +107,7 @@ namespace {
 		}
 		if (is_file(WWWROOT . $rf . DS . $lang . $ext)) {
 			if ($ext == '.js') {
-				return "<script src=\"{$file}/{$lang}{$ext}\"></script>";
+				return "<script type=\"text/javascript\" src=\"{$file}/{$lang}{$ext}\"></script>";
 			} else if ($ext == '.css') {
 				return "<link rel=\"stylesheet\" href=\"{$file}/{$lang}{$ext}\"/>";
 			} else {

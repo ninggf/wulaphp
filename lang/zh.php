@@ -13,6 +13,7 @@ return [
 	'Close'=>'关闭',
 	'User'=>'用户',
 	'Username'=>'用户名',
+	'Account'=>'账户',
 	'Phone'=>'手机',
 	'Mail'=>'邮箱',
 	'Email'=>'邮件',
