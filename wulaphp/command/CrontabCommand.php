@@ -11,9 +11,9 @@ declare(ticks=5);
 
 namespace wulaphp\command;
 
-use wulaphp\artisan\ArtisanDaemonTask;
+use wulaphp\artisan\ArtisanMonitoredTask;
 
-class CrontabCommand extends ArtisanDaemonTask {
+class CrontabCommand extends ArtisanMonitoredTask {
 	private $clz = '';
 
 	public function cmd() {
@@ -35,7 +35,7 @@ class CrontabCommand extends ArtisanDaemonTask {
 	protected function argValid($options) {
 		$this->clz = $this->opt();
 		if (!$this->clz) {
-			$this->error('please give a crontab job.');
+			$this->error('Please give me a crontab job.');
 
 			return false;
 		}
@@ -48,27 +48,30 @@ class CrontabCommand extends ArtisanDaemonTask {
 		return true;
 	}
 
+	protected function setUp(&$options) {
+		$this->workerCount = 1;
+	}
+
 	protected function execute($options) {
 		$interval = isset($options['i']) ? abs(floatval($options['i']) * 1000000) : 1000000;
 		$interval = $interval ? $interval : 1000000;
-		$cmd      = PHP_BINARY . ' "' . APPROOT . 'crontab' . DS . 'cron.php" ' . "'$this->clz'";
 		$rtn      = 0;
-		$fixed    = isset($options['f']);//是否是以固定间隔执行.
+		/**@var \wulaphp\util\ICrontabJob $clz */
+		$clz   = new $this->clz();
+		$fixed = isset($options['f']);//是否是以固定间隔执行.
+		gc_enable();
 		while (!$this->shutdown) {
-			$s = microtime(true);
-			@system($cmd, $rtn);
-			$e = microtime(true);
-			if ($rtn !== 0) {
-				break;
-			} else {
-				$intv = $interval;
-				if ($fixed) {
-					$intv = $interval - ($e - $s) * 1000000;
-				}
-				while ($intv > 0) {
-					usleep(5000);
-					$intv -= 5000;
-				}
+			$s   = microtime(true);
+			$rtn = $clz->run();
+			gc_collect_cycles();
+			$e    = microtime(true);
+			$intv = $interval;
+			if ($fixed) {
+				$intv = $interval - ($e - $s) * 1000000;
+			}
+			while ($intv > 0) {
+				usleep(5000);
+				$intv -= 5000;
 			}
 		}
 
