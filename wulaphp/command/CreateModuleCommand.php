@@ -62,7 +62,7 @@ class CreateModuleCommand extends ArtisanCommand {
 			mkdir($modulePath . 'views' . DS . 'index');
 			mkdir($modulePath . 'classes');
 			mkdir($modulePath . 'models');
-			mkdir($modulePath . 'test');
+			mkdir($modulePath . 'tests');
 			$ns     = explode('\\', $namespace);
 			$module = ucfirst($ns[0]);
 			// 创建引导文件
