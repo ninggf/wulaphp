@@ -657,12 +657,13 @@ function url_append_args($url, $args) {
  * 将array的key/value通过$sep连接成一个字符串.
  *
  * @param array  $ary
- * @param string $sep   连接符
- * @param bool   $quote 连接时值是否用双引号包裹.
+ * @param string $concat 连接符
+ * @param bool   $quote  连接时值是否用双引号包裹.
+ * @param string $sep    组连接符
  *
  * @return string
  */
-function ary_kv_concat(array $ary, $sep = '=', $quote = true) {
+function ary_kv_concat(array $ary, $concat = '=', $quote = true, $sep = ' ') {
 	if (empty ($ary)) {
 		return '';
 	}
@@ -670,10 +671,10 @@ function ary_kv_concat(array $ary, $sep = '=', $quote = true) {
 	$tmp_ary = array();
 	foreach ($ary as $name => $val) {
 		$name       = trim($name);
-		$tmp_ary [] = $name . $sep . "{$quote}{$val}{$quote}";
+		$tmp_ary [] = $name . $concat . "{$quote}{$val}{$quote}";
 	}
 
-	return ' ' . implode(' ', $tmp_ary) . ' ';
+	return implode($sep, $tmp_ary);
 }
 
 /**

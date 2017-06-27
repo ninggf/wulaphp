@@ -62,6 +62,7 @@ class CreateModuleCommand extends ArtisanCommand {
 			mkdir($modulePath . 'views' . DS . 'index');
 			mkdir($modulePath . 'classes');
 			mkdir($modulePath . 'models');
+			mkdir($modulePath . 'test');
 			$ns     = explode('\\', $namespace);
 			$module = ucfirst($ns[0]);
 			// 创建引导文件
@@ -77,12 +78,22 @@ class CreateModuleCommand extends ArtisanCommand {
 			//视图
 			$bootstrap = file_get_contents(__DIR__ . '/tpl/index.tpl');
 			file_put_contents($modulePath . 'views/index/index.tpl', $bootstrap);
+			// composer.json
 			if (isset($options['c'])) {
 				$bootstrap = file_get_contents(__DIR__ . '/tpl/composer.json');
 				$bootstrap = str_replace(['{$name}', '{$type}'], ['wula/' . $dir, 'module'], $bootstrap);
 				file_put_contents($modulePath . 'composer.json', $bootstrap);
 			}
-			$this->success('module ' . $dir . ' created successfully.');
+
+			// 测试
+			$phpunit = file_get_contents(__DIR__ . '/tpl/phpunit.xml');
+			$phpunit = str_replace('{$module}', $namespace, $phpunit);
+			file_put_contents($modulePath . 'phpunit.xml', $phpunit);
+
+			// 添加.gitattributes
+			file_put_contents($modulePath . '.gitattributes', "test/ export-ignore\nphpunit.xml export-ignore\n");
+			file_put_contents($modulePath . 'schema.sql.php', '');
+			$this->success('The module ' . $this->color->str($dir, 'blue') . ' is created successfully.');
 			break;
 		}
 

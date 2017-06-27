@@ -160,12 +160,13 @@ class Ajax {
 	 * @param string       $url
 	 * @param string|array $message
 	 * @param string       $style
+	 * @param bool         $hash
 	 *
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
-	public static function redirect($url, $message = '', $style = null) {
+	public static function redirect($url, $message = '', $style = null, $hash = false) {
 
-		return new JsonView(['code' => self::SUCCESS, 'target' => $url, 'message' => $message, 'style' => $style, 'action' => self::ACT_REDIRECT], ['ajax' => '1']);
+		return new JsonView(['code' => self::SUCCESS, 'target' => $url, 'hash' => $hash, 'message' => $message, 'style' => $style, 'action' => self::ACT_REDIRECT], ['ajax' => '1']);
 	}
 
 	/**
