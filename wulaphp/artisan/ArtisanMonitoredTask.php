@@ -119,11 +119,15 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			foreach ($pids as $pid) {
 				$pid = trim($pid);
 				if ($pid) {
-
+					$text[] = "  |-- " . $pid . ' is ' . $this->color->str('Running', 'green');
 				}
 			}
+			if ($text) {
+				echo $this->color->str($cmd, 'blue'), " process:\n";
+				echo implode("\n", $text), "\n";
+			}
 		} else {
-			echo "$cmd is not Run\n";
+			echo "$cmd is not run\n";
 		}
 	}
 
