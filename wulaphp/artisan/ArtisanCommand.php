@@ -152,7 +152,7 @@ abstract class ArtisanCommand {
 	}
 
 	protected final function log($message = '', $nl = true) {
-		$msg = ($nl ? $this->pid : '') . $message . ($nl ? "\n" : '');
+		$msg = ($nl ? '[' . date('Y-m-d H:i:s') . '] ' . $this->pid : '') . $message . ($nl ? "\n" : '');
 		echo $msg;
 		flush();
 	}

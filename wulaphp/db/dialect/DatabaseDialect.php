@@ -1,6 +1,8 @@
 <?php
+
 namespace wulaphp\db\dialect;
 
+use PHPUnit\Runner\Exception;
 use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\DialectException;
 use wulaphp\db\sql\BindValues;
@@ -55,6 +57,7 @@ abstract class DatabaseDialect extends \PDO {
 				if (!is_subclass_of($driverClz, 'wulaphp\db\dialect\DatabaseDialect')) {
 					throw new DialectException('the dialect ' . $driverClz . ' is not found!');
 				}
+				/**@var \wulaphp\db\dialect\DatabaseDialect $dr */
 				$dr = new $driverClz ($options);
 				$dr->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 				$dr->onConnected();
@@ -87,12 +90,18 @@ abstract class DatabaseDialect extends \PDO {
 			$name = $this->cfGname;
 		}
 		if (isset(self::$INSTANCE[ $pid ][ $name ])) {
-			unset(self::$INSTANCE[ $pid ][ $name ]);
+			/**@var \wulaphp\db\dialect\DatabaseDialect $dr */
+			$dr = self::$INSTANCE[ $pid ][ $name ];
+			try {
+				$dr->listDatabases();
 
-			return self::getDialect(self::$cfgOptions[ $name ]);
+				return $dr;
+			} catch (Exception $e) {
+				unset(self::$INSTANCE[ $pid ][ $name ]);
+			}
 		}
 
-		return null;
+		return self::getDialect(self::$cfgOptions[ $name ]);
 	}
 
 	/**

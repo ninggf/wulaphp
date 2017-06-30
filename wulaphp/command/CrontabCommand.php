@@ -12,6 +12,7 @@ declare(ticks=5);
 namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanMonitoredTask;
+use wulaphp\util\DeamonCrontab;
 
 class CrontabCommand extends ArtisanMonitoredTask {
 	private $clz = '';
@@ -57,7 +58,10 @@ class CrontabCommand extends ArtisanMonitoredTask {
 		$interval = $interval ? $interval : 1000000;
 		$rtn      = 0;
 		/**@var \wulaphp\util\ICrontabJob $clz */
-		$clz   = new $this->clz();
+		$clz = new $this->clz();
+		if ($clz instanceof DeamonCrontab) {
+			$clz->fork = false;//不能在fork了.
+		}
 		$fixed = isset($options['f']);//是否是以固定间隔执行.
 		gc_enable();
 		while (!$this->shutdown) {
@@ -76,5 +80,9 @@ class CrontabCommand extends ArtisanMonitoredTask {
 		}
 
 		return $rtn;
+	}
+
+	protected function loop($options) {
+		// NOTHING TO DO.
 	}
 }

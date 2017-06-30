@@ -16,8 +16,14 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	protected $shutdown    = false;
 	private   $isParent    = true;
 	private   $workers     = [];
+	public    $returnPid   = false;
+
+	protected function argDesc() {
+		return '<start|stop|restart>';
+	}
 
 	public final function run() {
+
 		if (!function_exists('pcntl_fork')) {
 			$this->error('miss pcntl extension, install it first!');
 			exit(1);
@@ -27,10 +33,37 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		if (!$this->argValid($options)) {
 			exit(1);
 		}
+
+		$op = $this->opt();
+		switch ($op) {
+			case 'start':
+				$this->start($options, $cmd);
+				break;
+			case 'stop':
+				$this->stop($cmd);
+				break;
+			case 'restart':
+				$this->stop($cmd);
+				$this->start($options, $cmd);
+				break;
+			default:
+				$this->status($cmd);
+		}
+
+		return 0;
+	}
+
+	private function start($options, $cmd) {
 		$pid = pcntl_fork();
 
 		if ($pid > 0) {
 			//主程序退出
+			$pidfile = TMP_PATH . '.' . $cmd . '.pid';
+			$opids   = @file_get_contents($pidfile);
+			if ($opids) {
+				$pid = $opids . ',' . $pid;
+			}
+			@file_put_contents($pidfile, $pid);
 			exit(0);
 		} elseif (0 === $pid) {
 			umask(0);
@@ -55,8 +88,43 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			@fclose($STDOUT);
 			exit(0);
 		}
+	}
 
-		return 0;
+	private function stop($cmd) {
+		$pidfile = TMP_PATH . '.' . $cmd . '.pid';
+		$opids   = @file_get_contents($pidfile);
+		if ($opids) {
+			@unlink($pidfile);
+			$pids = explode(',', $opids);
+			foreach ($pids as $pid) {
+				$pid = trim($pid);
+				if ($pid) {
+					if (@posix_kill($pid, SIGTERM)) {
+						@pcntl_signal_dispatch();
+						@pcntl_waitpid($pid, $status);
+					} else {
+						$this->error('Cannot stop it, please kill it manually.');
+					}
+				}
+			}
+		}
+	}
+
+	private function status($cmd) {
+		$pidfile = TMP_PATH . '.' . $cmd . '.pid';
+		$opids   = @file_get_contents($pidfile);
+		if ($opids) {
+			$pids = explode(',', $opids);
+			$text = [];
+			foreach ($pids as $pid) {
+				$pid = trim($pid);
+				if ($pid) {
+
+				}
+			}
+		} else {
+			echo "$cmd is not Run\n";
+		}
 	}
 
 	public final function signal($signal) {
@@ -130,6 +198,13 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		}
 	}
 
+	private function rtn($pid = 0) {
+		if ($this->returnPid) {
+			return $pid;
+		}
+		exit(0);
+	}
+
 	/**
 	 * @param $options
 	 */
@@ -139,7 +214,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		}
 		$pid = pcntl_fork();
 		if (0 === $pid) {
-			define('ARTISAN_TASK_PID', posix_getpid());
+			@define('ARTISAN_TASK_PID', posix_getpid());
 			$this->isParent = false;
 			$this->pid      = '[' . ARTISAN_TASK_PID . '] ';
 			$this->initSignal();
@@ -150,4 +225,13 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			$this->workers[ $pid ] = $pid;
 		}
 	}
+
+	protected function execute($options) {
+		while (!$this->shutdown) {
+			$this->loop($options);
+			usleep(10);
+		}
+	}
+
+	protected abstract function loop($options);
 }

@@ -140,4 +140,13 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 	protected function setMaxMemory($size) {
 		@ini_set('memory_limit', $size);
 	}
+
+	protected function execute($options) {
+		while (!$this->shutdown) {
+			$this->loop($options);
+			usleep(10);
+		}
+	}
+
+	protected abstract function loop($options);
 }

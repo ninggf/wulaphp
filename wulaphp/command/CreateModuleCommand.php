@@ -91,7 +91,7 @@ class CreateModuleCommand extends ArtisanCommand {
 			file_put_contents($modulePath . 'phpunit.xml', $phpunit);
 
 			// 添加.gitattributes
-			file_put_contents($modulePath . '.gitattributes', "test/ export-ignore\nphpunit.xml export-ignore\n");
+			file_put_contents($modulePath . '.gitattributes', "tests/ export-ignore\nphpunit.xml export-ignore\n");
 			file_put_contents($modulePath . 'schema.sql.php', '');
 			$this->success('The module ' . $this->color->str($dir, 'blue') . ' is created successfully.');
 			break;

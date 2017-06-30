@@ -95,6 +95,14 @@ namespace {
 		return I18n::translate1($str, $args, $domain);
 	}
 
+	function _tr($text, ...$args) {
+		$text   = explode('@', $text);
+		$str    = $text[0];
+		$domain = isset($text[1]) ? '@' . $text[1] : '';
+
+		return I18n::translate1($str, $args, $domain);
+	}
+
 	function _i18n($file, $ext = '.js') {
 		if (!$file) {
 			return '';
