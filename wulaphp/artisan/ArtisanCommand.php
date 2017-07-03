@@ -140,10 +140,13 @@ abstract class ArtisanCommand {
 		$argc = $this->arvc;
 		if ($index < 0) {
 			$index = $argc + $index;
+			if ($index < 2) {
+				return $default;
+			}
+		} else {
+			$index += 2;
 		}
-		if ($index < 2) {
-			return $default;
-		}
+
 		if ($argc > 2 && isset($argv[ $index ])) {
 			return $argv[ $index ];
 		}
