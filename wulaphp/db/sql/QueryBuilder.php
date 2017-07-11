@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\db\sql;
 
 use wulaphp\db\dialect\DatabaseDialect;

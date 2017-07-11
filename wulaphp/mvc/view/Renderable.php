@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\mvc\view;
 
 interface Renderable {
@@ -8,5 +9,5 @@ interface Renderable {
 	 *
 	 * @return string html fragment.
 	 */
-	function render();
+	public function render();
 }

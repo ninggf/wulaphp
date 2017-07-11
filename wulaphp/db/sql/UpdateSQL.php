@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\db\sql;
 
 /**
@@ -63,13 +64,12 @@ class UpdateSQL extends QueryBuilder {
 					foreach ($this->data as $data) {
 						list($da, $where) = $data;
 						foreach ($values as $value) {
-							list ($name, $val, $type, $key, $rkey) = $value;
+							list ($name, $val, $type, , $rkey) = $value;
 							$rval = isset($where[ $rkey ]) ? $where[ $rkey ] : (isset($da[ $rkey ]) ? $da[ $rkey ] : $val);
 							if (!$statement->bindValue($name, $rval, $type)) {
 								$this->errorSQL    = $sql;
 								$this->errorValues = $values->__toString();
 								$this->error       = 'can not bind the value ' . $rval . '[' . $type . '] to the argument:' . $name;
-								log_warn($this->error . ' [' . $this->errorSQL . ']', 'sql');
 
 								return false;
 							}
@@ -92,7 +92,6 @@ class UpdateSQL extends QueryBuilder {
 							$this->errorSQL    = $sql;
 							$this->errorValues = $values->__toString();
 							$this->error       = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name;
-							log_warn($this->error . ' [' . $this->errorSQL . ']', 'sql');
 
 							return false;
 						}
@@ -118,7 +117,6 @@ class UpdateSQL extends QueryBuilder {
 				$this->error       = $e->getMessage();
 				$this->errorSQL    = $sql;
 				$this->errorValues = $values->__toString();
-				log_message($e->getMessage(), $e->getTrace(), DEBUG_ERROR, 'sql');
 
 				return false;
 			}
@@ -127,9 +125,6 @@ class UpdateSQL extends QueryBuilder {
 			$this->errorSQL    = '';
 			$this->errorValues = $values->__toString();
 		}
-		if ($this->error) {
-			log_warn($this->error . ' [' . $this->errorSQL . ']', 'sql');
-		}
 
 		return false;
 	}
@@ -137,5 +132,4 @@ class UpdateSQL extends QueryBuilder {
 	public function getSqlString() {
 		return $this->sql;
 	}
-
 }

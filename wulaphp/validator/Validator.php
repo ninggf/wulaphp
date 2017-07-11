@@ -10,13 +10,37 @@ use wulaphp\db\sql\ImmutableValue;
  *
  * @author  Leo Ning <windywany@gmail.com>
  * @since   1.0.0
- * @property array $fields
+ * @property array $_fields
  */
 trait Validator {
-	private   $rules          = [];
-	private   $rulesIdx       = [];
-	private   $ruleKeys       = [];
-	protected $preDefinedRule = ['required' => true, 'equalTo' => true, 'notEqualTo' => true, 'notEqual' => true, 'num' => true, 'number' => true, 'digits' => true, 'min' => true, 'max' => true, 'gt' => true, 'lt' => true, 'range' => true, 'minlength' => true, 'maxlength' => true, 'rangelength' => true, 'callback' => true, 'pattern' => true, 'regexp' => true, 'email' => true, 'url' => true, 'ip' => true, 'date' => true, 'datetime' => true];
+	private $rules          = [];
+	private $rulesIdx       = [];
+	private $ruleKeys       = [];
+	private $preDefinedRule = [
+		'required'    => true,
+		'equalTo'     => true,
+		'notEqualTo'  => true,
+		'notEqual'    => true,
+		'num'         => true,
+		'number'      => true,
+		'digits'      => true,
+		'min'         => true,
+		'max'         => true,
+		'gt'          => true,
+		'lt'          => true,
+		'range'       => true,
+		'minlength'   => true,
+		'maxlength'   => true,
+		'rangelength' => true,
+		'callback'    => true,
+		'pattern'     => true,
+		'regexp'      => true,
+		'email'       => true,
+		'url'         => true,
+		'ip'          => true,
+		'date'        => true,
+		'datetime'    => true
+	];
 
 	/**
 	 * 初始化验证器.
@@ -25,8 +49,8 @@ trait Validator {
 	 */
 	protected function onInitValidator($fields = []) {
 		if (empty($fields)) {
-			if (isset($this->fields) && $this->fields) {
-				$fields = $this->fields;
+			if (isset($this->_fields) && $this->_fields) {
+				$fields = $this->_fields;
 			}
 		}
 		if ($fields) {
@@ -37,6 +61,7 @@ trait Validator {
 				$anns = $ann->getAll();
 				foreach ($anns as $an => $va) {
 					if (isset($this->preDefinedRule[ $an ])) {
+						// 用=> 分隔参数与提示消息.
 						$r   = $va ? explode(' => ', $va) : [];
 						$len = count($r);
 						if ($len == 0) {
@@ -87,17 +112,19 @@ trait Validator {
 	 * 验证数据.
 	 *
 	 * @param array $data  待验证的数据.
-	 * @param array $rules 验证规则.
+	 * @param array $rules 验证规则.如果为空则使用之前的规则.
 	 *
 	 * @return bool
 	 * @throws ValidateException
 	 */
-	public function validate(array $data, array $rules) {
-		$this->rules    = [];
-		$this->rulesIdx = [];
-		$this->ruleKeys = [];
-		foreach ($rules as $field => $rule) {
-			$this->addRule($field, $rule);
+	public function validate(array $data, array $rules = null) {
+		if ($rules) {
+			$this->rules    = [];
+			$this->rulesIdx = [];
+			$this->ruleKeys = [];
+			foreach ($rules as $field => $rule) {
+				$this->addRule($field, $rule);
+			}
 		}
 
 		return $this->validateNewData($data);
@@ -241,7 +268,7 @@ trait Validator {
 	 */
 	private function parseRule($rule) {
 		$parsed = [false];
-		if (preg_match('#^([a-z]+)\s*\(([^\)]*)\)\s*$#i', $rule, $ms)) {
+		if (preg_match('#^([a-z]+)\s*\((.+)\)\s*$#i', $rule, $ms)) {
 			$method = trim($ms[1]);
 			$ops    = trim($ms[2]);
 		} else {

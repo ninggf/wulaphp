@@ -33,7 +33,7 @@ class Response {
 				$this->before_out = @ob_get_contents();
 				@ob_end_clean();
 			}
-			@ob_start(array($this, 'ob_out_handler'));
+			@ob_start([$this, 'ob_out_handler']);
 			if (defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib')) {
 				$gzip = @ini_get('zlib.output_compression');
 				if (!$gzip) {
@@ -76,7 +76,12 @@ class Response {
 	 * 禁用浏览器缓存.
 	 */
 	public static function nocache() {
-		$headers = array('Expires' => 'Wed, 11 Jan 1984 05:00:00 GMT', 'Last-Modified' => gmdate('D, d M Y H:i:s') . ' GMT', 'Cache-Control' => 'no-cache, must-revalidate', 'Pragma' => 'no-cache');
+		$headers = [
+			'Expires'       => 'Wed, 11 Jan 1984 05:00:00 GMT',
+			'Last-Modified' => gmdate('D, d M Y H:i:s') . ' GMT',
+			'Cache-Control' => 'no-cache, must-revalidate',
+			'Pragma'        => 'no-cache'
+		];
 		foreach ($headers as $header => $val) {
 			@header($header . ': ' . $val);
 		}
@@ -101,7 +106,14 @@ class Response {
 	public static function cache($expire = 3600) {
 		$time    = time();
 		$date    = gmdate('D, d M Y H:i:s', $time) . ' GMT';
-		$headers = ['Age' => $expire, 'Date' => $date, 'Expires' => gmdate('D, d M Y H:i:s', $time + $expire) . ' GMT', 'Last-Modified' => $date, 'Cache-Control' => 'public, must-revalidate, max-age=' . $expire, 'Pragma' => 'cache'];
+		$headers = [
+			'Age'           => $expire,
+			'Date'          => $date,
+			'Expires'       => gmdate('D, d M Y H:i:s', $time + $expire) . ' GMT',
+			'Last-Modified' => $date,
+			'Cache-Control' => 'public, must-revalidate, max-age=' . $expire,
+			'Pragma'        => 'cache'
+		];
 
 		foreach ($headers as $header => $val) {
 			@header($header . ': ' . $val);
@@ -121,7 +133,7 @@ class Response {
 			return;
 		}
 		if (!empty ($args) && is_array($args)) {
-			$_args = array();
+			$_args = [];
 			foreach ($args as $n => $v) {
 				$_args [ $n ] = $n . '=' . urlencode($v);
 			}
@@ -136,7 +148,6 @@ class Response {
 		}
 		if (Request::isAjaxRequest()) {
 			status_header(401);
-			@header('X-AJAX-REDIRECT: ' . $location);
 		} else {
 			if ($is_IIS) {
 				@header("Refresh: 0;url=$location");
@@ -183,7 +194,12 @@ class Response {
 	 */
 	public static function cookie($name, $value = null, $expire = null, $path = null, $domain = null, $security = null) {
 		$settings       = App::cfg();
-		$cookie_setting = array_merge2(array('expire' => 0, 'path' => '/', 'domain' => '', 'security' => false), $settings->get('cookie', array()));
+		$cookie_setting = array_merge2([
+			'expire'   => 0,
+			'path'     => '/',
+			'domain'   => '',
+			'security' => false
+		], $settings->get('cookie', []));
 		if ($expire == null) {
 			$expire = intval($cookie_setting ['expire']);
 		}

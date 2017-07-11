@@ -172,28 +172,16 @@ class Ajax {
 	/**
 	 * 表单验证出错.
 	 *
+	 * @param string       $form    表单ID
 	 * @param array        $errors  错误信息.
 	 * @param string|array $message 提示信息.
 	 * @param string       $style
 	 *
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
-	public static function validate($errors, $message = '', $style = null) {
-		$args = ['errors' => $errors];
+	public static function validate($form, $errors, $message = '', $style = null) {
+		$args = $errors;
 
-		return new JsonView(['code' => self::ERROR, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_VALIDATE], ['ajax' => '1'], 422);
-	}
-
-	/**
-	 * 直接运行$script.
-	 *
-	 * @param string       $script
-	 * @param string|array $message
-	 * @param string       $style
-	 *
-	 * @return \wulaphp\mvc\view\JsonView
-	 */
-	public static function script($script, $message = '', $style = null) {
-		return new JsonView(['code' => self::SUCCESS, 'target' => $script, 'message' => $message, 'style' => $style, 'action' => self::ACT_SCRIPT], ['ajax' => '1']);
+		return new JsonView(['code' => self::ERROR, 'target' => $form, 'message' => $message, 'style' => $style, 'args' => $args, 'action' => self::ACT_VALIDATE], ['ajax' => '1'], 422);
 	}
 }

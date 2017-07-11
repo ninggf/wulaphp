@@ -10,7 +10,7 @@ $global_tpl_vars = [];
  * @return array the merged arguments array
  */
 function merge_args($args, $default) {
-	$_args = array();
+	$_args = [];
 	foreach ($args as $key => $val) {
 		if (is_numeric($val) || is_bool($val) || !empty ($val)) {
 			$_args [ $key ] = $val;
@@ -176,15 +176,30 @@ function smarty_modifiercompiler_action($params, $compiler) {
 }
 
 function smarty_modifiercompiler_res($params, $compiler) {
-	return "wulaphp\\app\\App::res({$params[0]})";
+	$min = "''";
+	if (isset($params[1])) {
+		$min = $params[1];
+	}
+
+	return "wulaphp\\app\\App::res({$params[0]},$min)";
 }
 
 function smarty_modifiercompiler_assets($params, $compiler) {
-	return "wulaphp\\app\\App::assets({$params[0]})";
+	$min = "''";
+	if (isset($params[1])) {
+		$min = $params[1];
+	}
+
+	return "wulaphp\\app\\App::assets({$params[0]},$min)";
 }
 
 function smarty_modifiercompiler_vendor($params, $compiler) {
-	return "wulaphp\\app\\App::vendor({$params[0]})";
+	$min = "''";
+	if (isset($params[1])) {
+		$min = $params[1];
+	}
+
+	return "wulaphp\\app\\App::vendor({$params[0]},$min)";
 }
 
 function smarty_modifiercompiler_timeread($params, $compiler) {
@@ -258,10 +273,8 @@ function smarty_modifiercompiler_render($ary, $compiler) {
 		return "''";
 	}
 	$render = $ary [0];
-	array_shift($ary);
-	$args = empty ($ary) ? '' : smarty_argstr($ary);
 
-	return "{$render} instanceof \\wulaphp\\mvc\view\\Renderable?{$render}->render($args):{$render}";
+	return "{$render} instanceof \\wulaphp\\mvc\\view\\Renderable?{$render}->render():{$render}";
 }
 
 /**
@@ -273,7 +286,7 @@ function smarty_modifiercompiler_render($ary, $compiler) {
  *
  * @return \wulaphp\mvc\view\SmartyView
  */
-function view($data = array(), $tpl = '', $headers = array('Content-Type' => 'text/html')) {
+function view($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
 	if (is_string($data)) {
 		return new \wulaphp\mvc\view\SmartyView($tpl, $data, $headers);
 	} else if (is_array($data) && is_array($tpl)) {
@@ -292,7 +305,7 @@ function view($data = array(), $tpl = '', $headers = array('Content-Type' => 'te
  *
  * @return \wulaphp\mvc\view\SmartyView
  */
-function mustache($data = array(), $tpl = '', $headers = array('Content-Type' => 'text/html')) {
+function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
 	return view($data, $tpl, $headers)->mustache();
 }
 
@@ -305,10 +318,10 @@ function mustache($data = array(), $tpl = '', $headers = array('Content-Type' =>
  * @filter get_custome_tplfile [$tpl,$theme], $data
  * @return \wulaphp\mvc\view\ThemeView
  */
-function template($tpl, $data = array(), $headers = array('Content-Type' => 'text/html')) {
+function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) {
 	static $called_funcs = [];
 	$theme   = apply_filter('get_theme', 'default');
-	$tplname = str_replace(array('/', '.'), '_', basename($tpl, '.tpl'));
+	$tplname = str_replace(['/', '.'], '_', basename($tpl, '.tpl'));
 	list($_tpl, $theme) = apply_filter('get_custome_tplfile', [$tpl, $theme], $data);
 	$_tpl = $theme . DS . $_tpl;
 	if (is_file(THEME_PATH . $_tpl)) {

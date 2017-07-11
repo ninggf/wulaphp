@@ -173,7 +173,6 @@ class DatabaseConnection {
 			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
 				return $dialect->getTableName($r[0]);
 			}, $sql);
-			$sql = str_replace('{encoding}', $this->dialect->getCharset(), $sql);
 			$dialect->exec($sql);
 		} catch (\Exception $e) {
 			$this->error = $e->getMessage();

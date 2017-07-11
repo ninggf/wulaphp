@@ -22,7 +22,7 @@ use wulaphp\util\ObjectCaller;
  */
 class App {
 
-	private $configs = array();//配置组
+	private $configs = [];//配置组
 	/**
 	 * @var Router
 	 */
@@ -59,7 +59,7 @@ class App {
 		$clz = trim(CONFIG_LOADER_CLASS);
 		if (class_exists($clz)) {
 			$configLoader = new $clz();
-		} elseif ($clz == 'wulaphp\conf\ConfigurationLoader') {
+		} else if ($clz == 'wulaphp\conf\ConfigurationLoader') {
 			$configLoader = new ConfigurationLoader ();
 		} else {
 			throw new \Exception('cannot find configuration loader: ' . $clz);
@@ -97,7 +97,7 @@ class App {
 		$clz = trim(MODULE_LOADER_CLASS);
 		if (class_exists($clz)) {
 			$moduleLoader = new $clz();
-		} elseif ($clz == 'wulaphp\app\ModuleLoader') {
+		} else if ($clz == 'wulaphp\app\ModuleLoader') {
 			$moduleLoader = new ModuleLoader();
 		} else {
 			throw new \Exception('cannot find module loader: ' . $clz);
@@ -406,7 +406,7 @@ class App {
 			throw new \Exception($msg);
 		}
 		if (!preg_match('/^[a-z][a-z_\d]+(\\\\[a-z][a-z_\d]+)*$/i', $name)) {
-			$msg = __('The namespace "%s" of %s is invalid',$name,$module->clzName );
+			$msg = __('The namespace "%s" of %s is invalid', $name, $module->clzName);
 			throw new \Exception($msg);
 		}
 		$dir = $module->getDirname();
@@ -645,26 +645,41 @@ class App {
 	 * 模块资源url.
 	 *
 	 * @param string $res
+	 * @param string $min
 	 *
 	 * @return string
 	 */
-	public static function res($res) {
+	public static function res($res, $min = '') {
 		$url     = ltrim($res, '/');
 		$urls    = explode('/', $url);
 		$urls[0] = App::id2dir($urls[0]);
+		$url     = implode('/', $urls);
+		if ($min) {
+			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
+			if (is_file(WWWROOT . $url1)) {
+				$url = $url1;
+			}
+		}
 
-		return WWWROOT_DIR . MODULE_DIR . '/' . implode('/', $urls);
+		return WWWROOT_DIR . MODULE_DIR . '/' . $url;
 	}
 
 	/**
 	 * 全站assets资源URL.
 	 *
 	 * @param string $res
+	 * @param string $min
 	 *
 	 * @return string
 	 */
-	public static function assets($res) {
+	public static function assets($res, $min = '') {
 		$url = ltrim($res, '/');
+		if ($min) {
+			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
+			if (is_file(WWWROOT . $url1)) {
+				$url = $url1;
+			}
+		}
 
 		return WWWROOT_DIR . ASSETS_DIR . '/' . $url;
 	}
@@ -672,12 +687,19 @@ class App {
 	/**
 	 * 第三方js，css图片等资源.
 	 *
-	 * @param $res
+	 * @param string $res
+	 * @param string $min
 	 *
 	 * @return string
 	 */
-	public static function vendor($res) {
+	public static function vendor($res, $min = '') {
 		$url = ltrim($res, '/');
+		if ($min) {
+			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
+			if (is_file(WWWROOT . $url1)) {
+				$url = $url1;
+			}
+		}
 
 		return WWWROOT_DIR . VENDOR_DIR . '/' . $url;
 	}

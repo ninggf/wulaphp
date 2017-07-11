@@ -7,7 +7,6 @@ use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\UpdateSQL;
 use wulaphp\validator\ValidateException;
 
-
 /**
  * 表基类,提供与表相关的简单操作。
  *

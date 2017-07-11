@@ -155,9 +155,41 @@ abstract class ArtisanCommand {
 	}
 
 	protected final function log($message = '', $nl = true) {
-		$msg = ($nl ? '[' . date('Y-m-d H:i:s') . '] ' . $this->pid : '') . $message . ($nl ? "\n" : '');
+		$msg = $message . ($nl ? "\n" : '');
 		echo $msg;
 		flush();
+	}
+
+	protected final function logd($message = '', $nl = true) {
+		if (DEBUG < DEBUG_INFO) {
+			$msg = ($nl ? '[' . date('Y-m-d H:i:s') . '] ' . $this->pid.' [DEBUG] ' : '') . $message . ($nl ? "\n" : '');
+			echo $msg;
+			flush();
+		}
+	}
+
+	protected final function loge($message = '', $nl = true) {
+		if (DEBUG < DEBUG_OFF) {
+			$msg = ($nl ? '[' . date('Y-m-d H:i:s') . '] ' . $this->pid . ' [ERROR] ' : '') . $message . ($nl ? "\n" : '');
+			echo $msg;
+			flush();
+		}
+	}
+
+	protected final function logw($message = '', $nl = true) {
+		if (DEBUG < DEBUG_ERROR) {
+			$msg = ($nl ? '[' . date('Y-m-d H:i:s') . '] ' . $this->pid . ' [WARN] ' : '') . $message . ($nl ? "\n" : '');
+			echo $msg;
+			flush();
+		}
+	}
+
+	protected final function logi($message = '', $nl = true) {
+		if (DEBUG < DEBUG_WARN) {
+			$msg = ($nl ? '[' . date('Y-m-d H:i:s') . '] ' . $this->pid . ' [INFO] ' : '') . $message . ($nl ? "\n" : '');
+			echo $msg;
+			flush();
+		}
 	}
 
 	protected final function error($message) {

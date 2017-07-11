@@ -19,7 +19,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	public    $returnPid   = false;
 
 	protected function argDesc() {
-		return '<start|stop|restart>';
+		return '<start|stop|restart|status>';
 	}
 
 	public final function run() {
@@ -46,8 +46,11 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 				$this->stop($cmd);
 				$this->start($options, $cmd);
 				break;
-			default:
+			case 'status':
 				$this->status($cmd);
+				break;
+			default:
+				$this->help();
 		}
 
 		return 0;
@@ -79,7 +82,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			@fclose(STDERR);
 
 			$STDIN  = @fopen('/dev/null', 'r');
-			$logf   = LOGS_PATH . $cmd . '.log';
+			$logf   = LOGS_PATH . str_replace(':', '.', $cmd) . '.log';
 			$STDERR = $STDOUT = @fopen($logf, is_file($logf) ? 'ab' : 'wb');
 
 			$this->doStartLoop($options);
@@ -202,13 +205,6 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		}
 	}
 
-	private function rtn($pid = 0) {
-		if ($this->returnPid) {
-			return $pid;
-		}
-		exit(0);
-	}
-
 	/**
 	 * @param $options
 	 */
@@ -222,12 +218,17 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			$this->isParent = false;
 			$this->pid      = '[' . ARTISAN_TASK_PID . '] ';
 			$this->initSignal();
+			$this->init($options);
 			$this->execute($options);
 			usleep(5000);
 			exit(0);
 		} else {
 			$this->workers[ $pid ] = $pid;
 		}
+	}
+
+	protected function init($options) {
+
 	}
 
 	protected function execute($options) {

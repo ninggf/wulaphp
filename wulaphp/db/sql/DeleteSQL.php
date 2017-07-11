@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\db\sql;
 
 /**
@@ -36,7 +37,6 @@ class DeleteSQL extends QueryBuilder {
 						$this->errorSQL    = $sql;
 						$this->errorValues = $values->__toString();
 						$this->error       = 'can not bind the value ' . $val . '[' . $type . '] to the argument:' . $name;
-						log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
 
 						return false;
 					}
@@ -60,7 +60,6 @@ class DeleteSQL extends QueryBuilder {
 				$this->error       = $e->getMessage();
 				$this->errorSQL    = $sql;
 				$this->errorValues = $values->__toString();
-				log_message($e->getMessage(), $e->getTrace(), DEBUG_ERROR, 'sql');
 
 				return false;
 			}
@@ -68,9 +67,6 @@ class DeleteSQL extends QueryBuilder {
 			$this->error       = 'Can not generate the delete SQL';
 			$this->errorSQL    = '';
 			$this->errorValues = $values->__toString();
-		}
-		if ($this->error) {
-			log_error($this->error . ' [' . $this->errorSQL . ']', 'sql');
 		}
 
 		return false;

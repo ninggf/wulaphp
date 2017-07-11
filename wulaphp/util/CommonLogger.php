@@ -56,28 +56,32 @@ class CommonLogger implements LoggerInterface {
 
 		$ln  = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
 		$msg = date("Y-m-d H:i:s") . " [$ln] {$message}\n";
-		$msg .= $this->getLine($trace_info[0], 0);
-		if (isset ($trace_info [1]) && $trace_info [1]) {
-			$msg .= $this->getLine($trace_info[1], 1);
-			if (isset ($trace_info [2]) && $trace_info [2]) {
-				$msg .= $this->getLine($trace_info[2], 2);
-			}
-			if (isset ($trace_info [3]) && $trace_info [3]) {
-				$msg .= $this->getLine($trace_info[3], 3);
-			}
-			if (isset ($trace_info [4]) && $trace_info [4]) {
-				$msg .= $this->getLine($trace_info[4], 4);
-			}
-			if (isset ($trace_info [5]) && $trace_info [5]) {
-				$msg .= $this->getLine($trace_info[5], 5);
-			}
-			if (isset ($trace_info [6]) && $trace_info [6]) {
-				$msg .= $this->getLine($trace_info[6], 6);
+		if ($level > DEBUG_WARN) {//只有error的才记录trace info.
+			$msg .= $this->getLine($trace_info[0], 0);
+			if (isset ($trace_info [1]) && $trace_info [1]) {
+				$msg .= $this->getLine($trace_info[1], 1);
+				if (isset ($trace_info [2]) && $trace_info [2]) {
+					$msg .= $this->getLine($trace_info[2], 2);
+				}
+				if (isset ($trace_info [3]) && $trace_info [3]) {
+					$msg .= $this->getLine($trace_info[3], 3);
+				}
+				if (isset ($trace_info [4]) && $trace_info [4]) {
+					$msg .= $this->getLine($trace_info[4], 4);
+				}
+				if (isset ($trace_info [5]) && $trace_info [5]) {
+					$msg .= $this->getLine($trace_info[5], 5);
+				}
+				if (isset ($trace_info [6]) && $trace_info [6]) {
+					$msg .= $this->getLine($trace_info[6], 6);
+				}
 			}
 		}
+
 		if (isset ($_SERVER ['REQUEST_URI'])) {
 			$msg .= "\turi: " . $_SERVER ['REQUEST_URI'] . "\n";
 		}
+
 		$dest_file = $file ? $file . '.log' : 'wula.log';
 		@error_log($msg, 3, LOGS_PATH . $dest_file);
 	}

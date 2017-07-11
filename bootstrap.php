@@ -50,7 +50,7 @@ defined('EXTENSION_LOADER_CLASS') or define('EXTENSION_LOADER_CLASS', 'wulaphp\a
 defined('CONFIG_LOADER_CLASS') or define('CONFIG_LOADER_CLASS', 'wulaphp\conf\ConfigurationLoader ');
 
 // 日志级别.
-define('DEBUG_OFF', 0);
+define('DEBUG_OFF', 1000);
 define('DEBUG_ERROR', 400);
 define('DEBUG_WARN', 300);
 define('DEBUG_INFO', 200);

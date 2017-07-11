@@ -10,7 +10,7 @@
 
 namespace wulaphp\util;
 
-abstract class DeamonCrontab implements ICrontabJob {
+abstract class DaemonCrontab implements ICrontabJob {
 	protected $singleton = false;
 	protected $timeout   = 120;
 	public    $fork      = true;

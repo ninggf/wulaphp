@@ -197,7 +197,7 @@ class Router {
 					}
 				}
 			}
-			if ($view) {
+			if ($view || is_array($view)) {
 				$response->output($view);
 			} else if (php_sapi_name() == 'cli-server' && is_file(WWWROOT . $url)) {
 				return false;

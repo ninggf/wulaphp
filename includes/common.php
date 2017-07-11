@@ -157,6 +157,10 @@ function log_error($message, $file = '') {
  * @filter logger\getLogger $logger $level $file
  */
 function log_message($message, $trace_info, $level, $file = 'wula') {
+	//记录关闭.
+	if (DEBUG == DEBUG_OFF) {
+		return;
+	}
 	static $loggers = [];
 	if (!isset($loggers[ $level ][ $file ])) {
 		//获取日志器.
@@ -199,7 +203,6 @@ function get_session_name() {
 function imv($val, $alias = null) {
 	return new \wulaphp\db\sql\ImmutableValue ($val, $alias);
 }
-
 
 /**
  * 取当前用户的通行证.
@@ -266,8 +269,6 @@ function wula_shutdown_function() {
 	define('WULA_STOPTIME', microtime(true));
 	fire('wula\stop');
 }
-
-
 
 include WULA_ROOT . 'includes/plugin.php';
 include WULA_ROOT . 'includes/kernelimpl.php';

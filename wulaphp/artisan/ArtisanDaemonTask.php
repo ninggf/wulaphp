@@ -46,7 +46,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			fclose(STDERR);
 
 			$STDIN  = @fopen('/dev/null', 'r');
-			$logf   = LOGS_PATH . $cmd . '.log';
+			$logf   = LOGS_PATH . str_replace(':', '.', $cmd) . '.log';
 			$STDERR = $STDOUT = @fopen($logf, is_file($logf) ? 'ab' : 'wb');
 
 			$this->doStartLoop($options);
@@ -72,6 +72,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 				$this->pid      = '[' . ARTISAN_TASK_PID . '] ';
 				$this->taskId   = $i;
 				$this->initSignal();
+				$this->init($options);
 				$this->execute($options);
 				usleep(5000);
 				exit(0);
@@ -95,6 +96,10 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 				usleep(1000);
 			}
 		} while (count($this->workers) >= $parallel);
+	}
+
+	protected function init($options) {
+
 	}
 
 	// 准备任务

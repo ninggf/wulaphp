@@ -2,7 +2,6 @@
 
 namespace wulaphp\db\dialect;
 
-use PHPUnit\Runner\Exception;
 use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\DialectException;
 use wulaphp\db\sql\BindValues;
@@ -96,7 +95,7 @@ abstract class DatabaseDialect extends \PDO {
 				$dr->listDatabases();
 
 				return $dr;
-			} catch (Exception $e) {
+			} catch (\Exception $e) {
 				unset(self::$INSTANCE[ $pid ][ $name ]);
 			}
 		}
