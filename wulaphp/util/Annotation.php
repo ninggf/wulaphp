@@ -44,8 +44,17 @@ class Annotation {
 						if (isset($ignore[ $ann ])) {
 							continue;
 						}
-						$value                     = isset($ms[3]) ? $ms[3] : '';
-						$this->annotations[ $ann ] = $value;
+						$value = isset($ms[3]) ? $ms[3] : '';
+						if (isset($this->annotations[ $ann ])) {
+							if (is_array($this->annotations[ $ann ])) {
+								$this->annotations[ $ann ][] = $value;
+							} else {
+								$tmp                       = $this->annotations[ $ann ];
+								$this->annotations[ $ann ] = [$tmp, $value];
+							}
+						} else {
+							$this->annotations[ $ann ] = $value;
+						}
 					}
 				}
 			}
@@ -79,7 +88,9 @@ class Annotation {
 	 */
 	public function getArray($annotation, $default = []) {
 		$str = $this->getString($annotation);
-
+		if (is_array($str)) {
+			return $str;
+		}
 		if ($str) {
 			$str = trim($str);
 			$str = pure_comman_string($str);

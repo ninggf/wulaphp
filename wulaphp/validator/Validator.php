@@ -531,7 +531,8 @@ trait Validator {
 			return true;
 		}
 		$value    = $data[ $field ];
-		$callback = $exp ? $exp : false;
+		$callback = $exp ? trim($exp) : false;
+		$callback = $callback ? preg_replace('/(.+?)(\s*\(.*\))?$/', '\1', $callback) : false;
 		if ($callback && method_exists($this, $callback)) {
 			return $this->$callback($value, $data, $message);
 		}

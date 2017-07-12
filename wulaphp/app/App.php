@@ -10,6 +10,7 @@ use wulaphp\db\DialectException;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
 use wulaphp\io\Response;
+use wulaphp\mvc\controller\Controller;
 use wulaphp\router\Router;
 use wulaphp\util\ObjectCaller;
 
@@ -584,6 +585,7 @@ class App {
 	 */
 	public static function action($url) {
 		static $prefixes = [];
+
 		$clz = trim($url);
 		if (!$clz) {
 			return '#';
@@ -610,7 +612,7 @@ class App {
 			if (!is_file(MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php')) {
 				return '#';
 			} else {
-				include_once MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php';
+				@include_once MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php';
 				if (!class_exists($clz) || !is_subclass_of($clz, 'wulaphp\mvc\controller\Controller')) {
 					return '#';
 				}

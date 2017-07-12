@@ -19,7 +19,7 @@ abstract class Table extends View {
 	/**
 	 * Table constructor.
 	 *
-	 * @param string|array|DatabaseConnection $db
+	 * @param string|array|DatabaseConnection|View $db
 	 */
 	public function __construct($db = null) {
 		parent::__construct($db);

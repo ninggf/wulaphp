@@ -32,7 +32,7 @@ abstract class FormTable extends Table {
 	/**
 	 * FormTable constructor.
 	 *
-	 * @param null $db
+	 * @param string|array|DatabaseConnection|\wulaphp\db\View $db
 	 */
 	public function __construct($db = null) {
 		if (self::$_fields_ === false) {
