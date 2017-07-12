@@ -42,7 +42,8 @@ trait JQueryValidator {
 		if ($this->rules) {
 			foreach ($this->rules as $name => $rs) {
 				foreach ($rs as $r) {
-					@list($rule, $exp, $msg) = $r;
+					@list($rule, $exp, $msg, $m) = $r;
+					$key = $name . ($m ? '[]' : '');
 					if ($rule == 'callback') {
 						if (!$url) {
 							continue;
@@ -52,13 +53,15 @@ trait JQueryValidator {
 							'url' => $url . '/' . $name,
 							'rqs' => explode(',', trim(preg_replace('/.+?(\((.*)\))?$/', '\2', $exp)))
 						];
+					} else if ($rule == 'rangelength') {
+						$exp = explode(',', $exp);
 					}
 					if ($exp) {
-						$rules[ $name ][ $rule ] = $exp;
+						$rules[ $key ][ $rule ] = $exp;
 					} else {
-						$rules[ $name ][ $rule ] = true;
+						$rules[ $key ][ $rule ] = true;
 					}
-					$msgs[ $name ][ $rule ] = $msg;
+					$msgs[ $key ][ $rule ] = $msg;
 				}
 			}
 		}

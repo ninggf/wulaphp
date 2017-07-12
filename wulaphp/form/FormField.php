@@ -10,6 +10,8 @@
 
 namespace wulaphp\form;
 
+use wulaphp\form\providor\FieldDataProvidor;
+
 /**
  * Class FormField
  * @package wulaphp\form
@@ -98,7 +100,22 @@ abstract class FormField implements \ArrayAccess {
 	 *
 	 * @return string
 	 */
-	public abstract function render($opts = []);
+	public function render($opts = []) {
+		if ($this->options['render'] && is_callable([$this->form, $this->options['render']])) {
+			return call_user_func_array([$this->form, $this->options['render']], [$this, $opts]);
+		} else {
+			$html = $this->renderWidget($opts);
+			if ($this->options['wrapper'] && is_callable([$this->form, $this->options['wrapper']])) {
+				$html = call_user_func_array([$this->form, $this->options['wrapper']], [$html, $this, $opts]);
+			}
+
+			return $html;
+		}
+	}
+
+	public function getOptions() {
+		return $this->options;
+	}
 
 	/**
 	 * 取数据提供器.
@@ -107,8 +124,18 @@ abstract class FormField implements \ArrayAccess {
 	 *
 	 * @return \wulaphp\form\providor\FieldDataProvidor
 	 */
-	public function getDataProvidor($option = null) {
-		return null;
+	public function getDataProvidor() {
+		$option = $this->options;
+		if (!isset($option['dataSource'])) {
+			return FieldDataProvidor::emptyDatasource();
+		}
+
+		$dsp = $option['dataSource'];
+		if (!class_exists($dsp) || !is_subclass_of($dsp, FieldDataProvidor::class)) {
+			return FieldDataProvidor::emptyDatasource();
+		}
+
+		return new $dsp($this->form, $this, $this->options['dsCfg']);
 	}
 
 	public function offsetExists($offset) {
@@ -126,4 +153,13 @@ abstract class FormField implements \ArrayAccess {
 	public function offsetUnset($offset) {
 		unset($this->options[ $offset ]);
 	}
+
+	/**
+	 * 绘制.
+	 *
+	 * @param array $opts
+	 *
+	 * @return string
+	 */
+	protected abstract function renderWidget($opts);
 }

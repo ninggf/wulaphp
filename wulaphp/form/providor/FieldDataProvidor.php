@@ -55,6 +55,15 @@ class FieldDataProvidor {
 	 * @return mixed
 	 */
 	public function getData($search = false) {
-		return '';
+		return [];
+	}
+
+	public static function emptyDatasource() {
+		static $dsp = false;
+		if ($dsp === false) {
+			$dsp = new FieldDataProvidor(null, null, null);
+		}
+
+		return $dsp;
 	}
 }

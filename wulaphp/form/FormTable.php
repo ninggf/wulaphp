@@ -229,6 +229,8 @@ abstract class FormTable extends Table {
 					'type'       => $ann->getString('type', 'string'),
 					'option'     => $ann->getJsonArray('option', []),
 					'label'      => $ann->getString('label'),
+					'render'     => $ann->getString('render'),
+					'wrapper'    => $ann->getString('wrapper'),
 					'layout'     => $ann->getString('layout')
 				];
 				//映射
@@ -253,7 +255,7 @@ abstract class FormTable extends Table {
 		$this->_widgets = [];
 		foreach ($this->_fields as $key => $field) {
 			$cls = $field['var'];
-			if ($cls && class_exists($cls)) {
+			if ($cls && class_exists($cls) && is_subclass_of($cls, FormField::class)) {
 				if ($field['option']) {
 					$field = array_merge($field, $field['option']);
 					unset($field['option']);
