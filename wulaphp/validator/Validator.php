@@ -62,12 +62,12 @@ trait Validator {
 				foreach ($anns as $an => $va) {
 					if (isset($this->preDefinedRule[ $an ])) {
 						// 用=> 分隔参数与提示消息.
-						$r   = $va ? explode(' => ', $va) : [];
+						$r   = $va ? preg_split('/\s*=>\s*/u', $va) : [];
 						$len = count($r);
 						if ($len == 0) {
 							$rule[ $an ] = null;
 						} else {
-							if (preg_match('/^\(.+?\)$/', $r[0])) {
+							if (preg_match('/^\(.+\)$/', trim($r[0]))) {
 								if (isset($r[1])) {
 									$rule[ $an . $r[0] ] = $r[1];
 								} else {
@@ -178,14 +178,17 @@ trait Validator {
 	 */
 	public function addRule($field, array $rules) {
 		foreach ($rules as $rule => $m) {
-			if (is_int($rule)) {
-				$rule = $m;
-				list($r, $ops) = $this->parseRule($rule);
-				$m = '';
+			if (is_array($m)) {
+				@list($r, $ops, $m) = $m;
 			} else {
-				list($r, $ops) = $this->parseRule($rule);
+				if (is_int($rule)) {
+					$rule = $m;
+					list($r, $ops) = $this->parseRule($rule);
+					$m = '';
+				} else {
+					list($r, $ops) = $this->parseRule($rule);
+				}
 			}
-
 			if ($r) {
 				$this->rulesIdx[ $field ]       += 1;
 				$idx                            = $this->rulesIdx[ $field ];
