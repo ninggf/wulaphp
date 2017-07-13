@@ -25,14 +25,15 @@ abstract class FormTable extends Table {
 	 * 本表单的字段实例.
 	 * @var array
 	 */
-	protected $_fields       = [];
-	protected $_widgets      = false;
-	protected $_inflatedData = [];
+	protected $_fields    = [];
+	protected $_widgets   = null;
+	protected $_tableData = [];//数据库表数据
+	protected $_formData  = [];//表单数据
 
 	/**
 	 * FormTable constructor.
 	 *
-	 * @param string|array|DatabaseConnection|\wulaphp\db\View $db
+	 * @param string|array|\wulaphp\db\DatabaseConnection|\wulaphp\db\View $db
 	 */
 	public function __construct($db = null) {
 		if (self::$_fields_ === false) {
@@ -50,8 +51,12 @@ abstract class FormTable extends Table {
 	 *
 	 * @return array 填充后的数组.
 	 */
-	public function inflate($excepts = '', $useDefault = false) {
-		$data = [];
+	public final function inflate($excepts = '', $useDefault = false) {
+		if ($this->_tableData) {
+			return $this->_tableData;
+		}
+		$data     = [];
+		$formData = [];
 		if ($excepts === true) {
 			$useDefault = true;
 		} else {
@@ -62,19 +67,25 @@ abstract class FormTable extends Table {
 				continue;
 			}
 			if (rqset($key)) {
-				$value              = rqst($key);
-				$data[ $v['name'] ] = $value;
-				$this->{$key}       = $value;
+				$value            = rqst($key);
+				$formData[ $key ] = $data[ $v['name'] ] = $value;
+				$this->{$key}     = $value;
 			} else if ($useDefault && isset($v['default'])) {
-				$data[ $v['name'] ] = $v['default'];
+				$formData[ $key ] = $data[ $v['name'] ] = $v['default'];
 			}
 		}
 
 		$this->filterFields($data);
-		//以属性名保存的数组
-		$this->_inflatedData = $data;
+		$this->_tableData = $data;
+		$this->_formData  = $formData;
 
 		return $data;
+	}
+
+	public final function formData($excepts = '', $useDefault = false) {
+		$this->inflate($excepts, $useDefault);
+
+		return $this->_formData;
 	}
 
 	/**
@@ -85,18 +96,19 @@ abstract class FormTable extends Table {
 	 * @return array
 	 */
 	public final function inflateFromDB($where) {
-		$data = $this->loadFromDb($where);
-		$rtn  = [];
+		$data     = $this->loadFromDb($where);
+		$rtn      = [];
+		$formData = [];
 		if ($data) {
 			foreach (self::$_maps_ as $key => $v) {
 				if (isset($data[ $key ])) {
-					$rtn[ $key ]  = $this->unpack($v, $data[ $key ], self::$_fields_[ $v ]);
-					$this->{$key} = $rtn[ $key ];
+					$formData[ $v ] = $rtn[ $key ] = $this->unpack($v, $data[ $key ], self::$_fields_[ $v ]);
+					$this->{$key}   = $rtn[ $key ];
 				}
 			}
 		}
-		//以属性名保存的数组
-		$this->_inflatedData = $rtn;
+		$this->_tableData = $rtn;
+		$this->_formData  = $formData;
 
 		return $rtn;
 	}
@@ -118,11 +130,15 @@ abstract class FormTable extends Table {
 	/**
 	 * 过滤数据.
 	 *
-	 * @param array $data 要过滤的数据.
+	 * @param array $data    要过滤的数据.
+	 * @param bool  $formKey key是否是表单字段名.
 	 */
-	protected function filterFields(&$data) {
+	protected function filterFields(&$data, $formKey = false) {
 		$keys = array_keys($data);
 		foreach ($keys as $key) {
+			if ($formKey) {
+				$key = self::$_fields_[ $key ]['name'];
+			}
 			if (!isset(self::$_skips_[ $key ]) || self::$_skips_[ $key ]) {
 				unset($data[ $key ]);
 			}
@@ -195,7 +211,7 @@ abstract class FormTable extends Table {
 	/**
 	 * 解析字段.可解析以下注解:
 	 * 1. type 数据类型, int,float,number,string,bool,array,json,date,datetime等.
-	 * 2. skip 不更新到数据表
+	 * 2. skip 不更新到数据表字段
 	 * 3. name 字段名,如果不指定则与属性同名.
 	 * 4. 验证注解，见Validator.
 	 * 5. 第三方插件支持的注解.
@@ -227,11 +243,7 @@ abstract class FormTable extends Table {
 					'name'       => $fieldName,
 					'default'    => $this->{$fname},
 					'type'       => $ann->getString('type', 'string'),
-					'option'     => $ann->getJsonArray('option', []),
-					'label'      => $ann->getString('label'),
-					'render'     => $ann->getString('render'),
-					'wrapper'    => $ann->getString('wrapper'),
-					'layout'     => $ann->getString('layout')
+					'typef'      => $ann->getString('typef')
 				];
 				//映射
 				self::$_maps_[ $fieldName ] = $fname;
@@ -246,25 +258,21 @@ abstract class FormTable extends Table {
 	/**
 	 * 创建组件.
 	 *
-	 * @return array 组件列表.
+	 * @return array|null 组件列表.
 	 */
-	public function createWidgets() {
-		if ($this->_widgets !== false) {
+	public final function createWidgets() {
+		if ($this->_widgets !== null) {
 			return $this->_widgets;
 		}
 		$this->_widgets = [];
 		foreach ($this->_fields as $key => $field) {
 			$cls = $field['var'];
-			if ($cls && class_exists($cls) && is_subclass_of($cls, FormField::class)) {
-				if ($field['option']) {
-					$field = array_merge($field, $field['option']);
-					unset($field['option']);
-				}
+			if ($cls && is_subclass_of($cls, FormField::class)) {
 				/**@var \wulaphp\form\FormField $clz */
 				$clz       = new $cls($key, $this, $field);
 				$fieldName = $field['name'];
-				if (isset($this->_inflatedData[ $fieldName ])) {
-					$clz->setValue($this->_inflatedData[ $fieldName ]);
+				if (isset($this->_tableData[ $fieldName ])) {
+					$clz->setValue($this->_tableData[ $fieldName ]);
 				} else {
 					$clz->setValue($field['default']);
 				}

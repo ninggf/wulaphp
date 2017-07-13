@@ -125,9 +125,11 @@ return [
 		'step'             => '请输入%s的倍数',
 		'digits'           => '只能输入数字',
 		'num'              => '请输入有效的数字',
-		'notEqual'         => '你输入的值不等于 %s',
 		'notEqualTo'       => '你输入的值不能等于 %s',
 		'equalTo'          => '你的输入不相同',
+		'rangeWords'       => '请输入%s到%s个单词',
+		'minWords'         => '请至少输入%s个单词',
+		'maxWords'         => '最多输入%s个单词',
 		'notsupportmethod' => '%s使用了系统不支持的验证方法:%s'
 	]
 ];

@@ -11,6 +11,8 @@ use wulaphp\db\sql\ImmutableValue;
  * @author  Leo Ning <windywany@gmail.com>
  * @since   1.0.0
  * @property array $_fields
+ * @property array $_formData
+ * @method array inflate()
  */
 trait Validator {
 	private $rules          = [];
@@ -20,7 +22,6 @@ trait Validator {
 		'required'    => true,
 		'equalTo'     => true,
 		'notEqualTo'  => true,
-		'notEqual'    => true,
 		'num'         => true,
 		'number'      => true,
 		'digits'      => true,
@@ -35,9 +36,13 @@ trait Validator {
 		'email'       => true,
 		'url'         => true,
 		'ip'          => true,
+		'ipv6'        => true,
 		'date'        => true,
 		'datetime'    => true,
-		'step'        => true
+		'step'        => true,
+		'rangeWords'  => true,
+		'minWords'    => true,
+		'maxWords'    => true
 	];
 
 	/**
@@ -45,7 +50,7 @@ trait Validator {
 	 *
 	 * @param array $fields 要验证的字段.
 	 */
-	protected function onInitValidator($fields = []) {
+	protected final function onInitValidator($fields = []) {
 		if (empty($fields)) {
 			if (isset($this->_fields) && $this->_fields) {
 				$fields = $this->_fields;
@@ -59,8 +64,8 @@ trait Validator {
 				$anns     = $ann->getAll();
 				$multiple = $def['type'] == 'array';
 				foreach ($anns as $an => $va) {
-					if (isset($this->preDefinedRule[ $an ])) {
-						// 用=> 分隔参数与提示消息.
+					if (isset($this->preDefinedRule[ $an ]) && !is_array($va)) {
+						// 用=>分隔参数与提示消息.$r[0]参数,$r[1]为提示信息
 						$r   = $va ? preg_split('/\s*=>\s*/u', $va) : [];
 						$len = count($r);
 						if ($len == 0) {
@@ -92,7 +97,7 @@ trait Validator {
 	 *
 	 * @return array
 	 */
-	public function getValidateRules(...$fileds) {
+	public final function getValidateRules(...$fileds) {
 		if ($fileds) {
 			$rules = [];
 			foreach ($fileds as $f) {
@@ -116,7 +121,13 @@ trait Validator {
 	 * @return bool
 	 * @throws ValidateException
 	 */
-	public function validate(array $data, array $rules = null) {
+	public final function validate(array $data = null, array $rules = null) {
+		if ($data === null && isset($this->_formData)) {
+			$data = $this->_formData;
+		}
+		if (empty($data)) {
+			throw new ValidateException(['error' => 'data is empty']);
+		}
 		if ($rules) {
 			$this->rules    = [];
 			$this->rulesIdx = [];
@@ -137,7 +148,10 @@ trait Validator {
 	 * @return bool
 	 * @throws ValidateException
 	 */
-	protected function validateNewData(array $data) {
+	protected final function validateNewData(array $data = null) {
+		if ($data === null && isset($this->_formData)) {
+			$data = $this->_formData;
+		}
 		if ($this->rules) {
 			return $this->validateData($this->rules, $data);
 		}
@@ -153,7 +167,10 @@ trait Validator {
 	 * @return bool
 	 * @throws ValidateException
 	 */
-	protected function validateUpdateData(array $data) {
+	protected final function validateUpdateData(array $data = null) {
+		if ($data === null && isset($this->_formData)) {
+			$data = $this->_formData;
+		}
 		if ($this->rules) {
 			$newRules = [];
 			foreach ($data as $key => $v) {
@@ -176,7 +193,7 @@ trait Validator {
 	 * @param array   $rules
 	 * @param boolean $multiple
 	 */
-	public function addRule($field, array $rules, $multiple = false) {
+	public final function addRule($field, array $rules, $multiple = false) {
 		foreach ($rules as $rule => $m) {
 			if (is_array($m)) {
 				@list($r, $ops, $m, $multiple) = $m;
@@ -204,7 +221,7 @@ trait Validator {
 	 * @param string      $field
 	 * @param string|null $rule
 	 */
-	public function removeRule($field, $rule = null) {
+	public final function removeRule($field, $rule = null) {
 		if ($rule == null) {
 			unset($this->rules[ $field ]);
 		} else {
@@ -298,8 +315,8 @@ trait Validator {
 					$ne = trim($ne);
 					//所有条件都成立时才需要检测.
 					$rst = $rst && !$this->isEmpty($ne, $data);
-					if ($rst) {
-						continue;
+					if (!$rst) {
+						break;
 					}
 				}
 				$needCheck = $needCheck || $rst;
@@ -308,12 +325,13 @@ trait Validator {
 				}
 			}
 		}
+
 		if (!$needCheck) {
 			return true;
 		}
 
 		if (!isset($data[ $field ])) {
-			return empty ($message) ? _t('required@validator', $field) : sprintf($message, $field);
+			return empty ($message) ? _t('required@validator') : $message;
 		}
 
 		$value = $data[ $field ];
@@ -324,7 +342,7 @@ trait Validator {
 		if (!$this->isEmpty($field, $data)) {
 			return true;
 		} else {
-			return empty ($message) ? _t('required@validator', $field) : sprintf($message, $field);
+			return empty ($message) ? _t('required@validator') : $message;
 		}
 	}
 
@@ -341,7 +359,7 @@ trait Validator {
 		if ($rst) {
 			return true;
 		} else {
-			return empty ($message) ? _t('equalTo@validator') : sprintf($message, $value);
+			return empty ($message) ? _t('equalTo@validator') : $message;
 		}
 	}
 
@@ -360,21 +378,7 @@ trait Validator {
 		if ($rst) {
 			return true;
 		} else {
-			return empty ($message) ? _t('notEqualTo@validator', $v1) : sprintf($message, $v1);
-		}
-	}
-
-	// 和一个常量不相等
-	protected function v_notEqual($field, $exp, $data, $message) {
-		if ($this->isEmpty($field, $data)) {
-			return true;
-		}
-		$value = $data[ $field ];
-		$rst   = $value != $exp;
-		if ($rst) {
-			return true;
-		} else {
-			return empty ($message) ? _t('notEqual@validator', $exp) : sprintf($message, $exp);
+			return empty ($message) ? _t('notEqualTo@validator') : $message;
 		}
 	}
 
@@ -387,7 +391,7 @@ trait Validator {
 		if (is_numeric($value)) {
 			return true;
 		} else {
-			return empty ($message) ? _t('num@validator', $value) : vsprintf($message, [$value]);
+			return empty ($message) ? _t('num@validator') : $message;
 		}
 	}
 
@@ -404,7 +408,7 @@ trait Validator {
 		if (preg_match('/^(0|[1-9]\d*)$/', $value)) {
 			return true;
 		} else {
-			return empty ($message) ? _t('digits@validator', $value) : vsprintf($message, [$value]);
+			return empty ($message) ? _t('digits@validator') : $message;
 		}
 	}
 
@@ -418,7 +422,7 @@ trait Validator {
 		if ($value >= floatval($exp)) {
 			return true;
 		} else {
-			return empty ($message) ? _t('min@validator', $exp) : vsprintf($message, [$exp]);
+			return empty ($message) ? _t('min@validator', $exp) : sprintf($message, $exp);
 		}
 	}
 
@@ -432,7 +436,7 @@ trait Validator {
 		if ($value <= floatval($exp)) {
 			return true;
 		} else {
-			return empty ($message) ? _t('max@validator', $exp) : vsprintf($message, [$exp]);
+			return empty ($message) ? _t('max@validator', $exp) : sprintf($message, $exp);
 		}
 	}
 
@@ -469,7 +473,7 @@ trait Validator {
 		if ($value >= intval($exp)) {
 			return true;
 		} else {
-			return empty ($message) ? _t('minlength@validator', $exp) : vsprintf($message, [$exp]);
+			return empty ($message) ? _t('minlength@validator', $exp) : sprintf($message, $exp);
 		}
 	}
 
@@ -487,7 +491,7 @@ trait Validator {
 		if ($value <= intval($exp)) {
 			return true;
 		} else {
-			return empty ($message) ? _t('maxlength@validator', $exp) : vsprintf($message, [$exp]);
+			return empty ($message) ? _t('maxlength@validator', $exp) : sprintf($message, $exp);
 		}
 	}
 
@@ -526,7 +530,7 @@ trait Validator {
 			return $this->$callback($value, $data, $message);
 		}
 
-		return empty($message) ? _t('callback@validator', $callback) : $message;
+		return empty($message) ? _t('callback@validator') : $message;
 	}
 
 	// 正则表达式
@@ -541,7 +545,7 @@ trait Validator {
 		if (@preg_match($exp, $value)) {
 			return true;
 		} else {
-			return empty ($message) ? _t('pattern@validator', $value) : sprintf($message, [$value]);
+			return empty ($message) ? _t('pattern@validator') : $message;
 		}
 	}
 
@@ -557,7 +561,7 @@ trait Validator {
 			$rst = preg_match('/^[_a-z0-9\-]+(\.[_a-z0-9\-]+)*@[a-z0-9][a-z0-9\-]+(\.[a-z0-9-]*)*$/i', $value);
 		}
 
-		return $rst ? true : (empty ($message) ? _t('email@validator', $value) : sprintf($message, [$value]));
+		return $rst ? true : (empty ($message) ? _t('email@validator') : $message);
 	}
 
 	// url
@@ -572,7 +576,7 @@ trait Validator {
 			$rst = preg_match('/^[a-z]+://[^\s]$/i', $value);
 		}
 
-		return $rst ? true : (empty ($message) ? _t('URL@validator', $value) : sprintf($message, [$value]));
+		return $rst ? true : (empty ($message) ? _t('URL@validator', $value) : $message);
 	}
 
 	protected function v_ip($field, $exp, $data, $message) {
@@ -586,7 +590,21 @@ trait Validator {
 			$rst = ip2long($value) === false ? false : true;
 		}
 
-		return $rst ? true : (empty ($message) ? _t('IP@validator', $value) : sprintf($message, [$value]));
+		return $rst ? true : (empty ($message) ? _t('IP@validator') : $message);
+	}
+
+	protected function v_ipv6($field, $exp, $data, $message) {
+		if ($this->isEmpty($field, $data)) {
+			return true;
+		}
+		$value = $data[ $field ];
+		if (function_exists('filter_var')) {
+			$rst = filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6);
+		} else {
+			$rst = preg_match('/^((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))$/i', $value);
+		}
+
+		return $rst ? true : (empty ($message) ? _t('IP@validator') : $message);
 	}
 
 	protected function v_date($field, $exp, $data, $message) {
@@ -600,7 +618,7 @@ trait Validator {
 			return true;
 		}
 
-		return empty ($message) ? _t('date@validator', $value) : sprintf($message, $value);
+		return empty ($message) ? _t('date@validator') : $message;
 	}
 
 	protected function v_datetime($field, $exp, $data, $message) {
@@ -618,7 +636,7 @@ trait Validator {
 			}
 		}
 
-		return empty ($message) ? _t('datetime@validator', $value) : sprintf($message, $value);
+		return empty ($message) ? _t('datetime@validator') : $message;
 	}
 
 	protected function v_step($field, $exp, $data, $message) {
@@ -636,6 +654,51 @@ trait Validator {
 		}
 
 		return true;
+	}
+
+	protected function v_minWords($field, $exp, $data, $message) {
+		if ($this->isEmpty($field, $data)) {
+			return true;
+		}
+		$value = $data[ $field ];
+		$exp   = intval($exp);
+		$words = preg_split('/\b\w+\b/u', $value);
+		if (count($words) >= $exp) {
+			return true;
+		}
+
+		return (empty ($message) ? _t('minWords@validator', $exp) : sprintf($message, $exp));
+	}
+
+	protected function v_maxWords($field, $exp, $data, $message) {
+		if ($this->isEmpty($field, $data)) {
+			return true;
+		}
+		$value = $data[ $field ];
+		$exp   = intval($exp);
+		$words = preg_split('/\b\w+\b/u', $value);
+		if (count($words) <= $exp) {
+			return true;
+		}
+
+		return (empty ($message) ? _t('maxWords@validator', $exp) : sprintf($message, $exp));
+	}
+
+	protected function v_rangeWords($field, $exp, $data, $message) {
+		if ($this->isEmpty($field, $data)) {
+			return true;
+		}
+		$value = $data[ $field ];
+		$exp   = explode(',', $exp);
+		@list($e1, $e2) = $exp;
+		$exp[1] = $e2;
+		$words  = preg_split('/\b\w+\b/u', $value);
+		$len    = count($words);
+		if ($len >= $e1 && $len <= $e2) {
+			return true;
+		}
+
+		return (empty ($message) ? _t('maxWords@validator', $exp) : sprintf($message, $e1, $e2));
 	}
 
 	/**

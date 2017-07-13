@@ -7,6 +7,7 @@
 
 namespace wulaphp\validator;
 
+use wulaphp\form\FormTable;
 use wulaphp\util\Annotation;
 
 /**
@@ -28,10 +29,10 @@ trait JQueryValidatorController {
 			$ann        = new Annotation($this->reflectionObj);
 			$accepts    = $ann->getArray('accept');
 			$_arg0_form = ltrim(str_replace('.', '\\', $_arg0_form), '\\');
-			if (class_exists($_arg0_form) && in_array($_arg0_form, $accepts)) {
+			if ($_arg0_form && in_array($_arg0_form, $accepts) && is_subclass_of($_arg0_form, FormTable::class)) {
 				/**@var \wulaphp\form\FormTable $form */
 				$form = new $_arg0_form();
-				$data = $form->inflate();
+				$data = $form->formData();
 				try {
 					$form->validate($data, $form->getValidateRules($_arg1_filed));
 

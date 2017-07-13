@@ -26,7 +26,7 @@ use wulaphp\wulaphp\db\TableLocker;
  */
 abstract class View {
 	private static $tableClzs   = [];
-	public         $table       = null;
+	public         $table       = null;//表名
 	protected      $tableName;
 	protected      $qualifiedName;
 	protected      $primaryKeys = ['id'];
@@ -53,7 +53,10 @@ abstract class View {
 		$tb          = explode("\\", get_class($this));
 		$this->alias = preg_replace('#(View|Table|Model)$#', '', array_pop($tb));
 		if (!$this->table) {
-			$table       = lcfirst($this->alias);
+			$table = $this->myTableName();
+			if (!$table) {
+				$table = lcfirst($this->alias);
+			}
 			$this->table = preg_replace_callback('#[A-Z]#', function ($r) {
 				return '_' . strtolower($r [0]);
 			}, $table);
@@ -281,6 +284,13 @@ abstract class View {
 	 */
 	public function lastSQLValues() {
 		return $this->lastValues;
+	}
+
+	/**
+	 * @return string 表名
+	 */
+	protected function myTableName() {
+		return null;
 	}
 
 	/**

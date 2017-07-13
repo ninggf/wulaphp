@@ -39,6 +39,16 @@ abstract class FormField implements \ArrayAccess {
 		$this->name    = $name;
 		$this->form    = $form;
 		$this->options = $options;
+		/**@var \wulaphp\util\Annotation */
+		$ann = $options['annotation'];
+		if ($ann) {
+			$opts             = $ann->getJsonArray('option', []);
+			$opts ['label']   = $ann->getString('label');
+			$opts ['render']  = $ann->getString('render');
+			$opts ['wrapper'] = $ann->getString('wrapper');
+			$opts ['layout']  = $ann->getString('layout');
+			$this->options    = array_merge($this->options, $opts);
+		}
 	}
 
 	public function setValue($value) {
