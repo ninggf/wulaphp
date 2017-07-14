@@ -19,30 +19,31 @@ trait Validator {
 	private $rulesIdx       = [];
 	private $ruleKeys       = [];
 	private $preDefinedRule = [
-		'required'    => true,
-		'equalTo'     => true,
-		'notEqualTo'  => true,
-		'num'         => true,
-		'number'      => true,
-		'digits'      => true,
-		'min'         => true,
-		'max'         => true,
-		'range'       => true,
-		'minlength'   => true,
-		'maxlength'   => true,
-		'rangelength' => true,
-		'callback'    => true,
-		'pattern'     => true,
-		'email'       => true,
-		'url'         => true,
-		'ip'          => true,
-		'ipv6'        => true,
-		'date'        => true,
-		'datetime'    => true,
-		'step'        => true,
-		'rangeWords'  => true,
-		'minWords'    => true,
-		'maxWords'    => true
+		'required'          => true,
+		'equalTo'           => true,
+		'notEqualTo'        => true,
+		'num'               => true,
+		'number'            => true,
+		'digits'            => true,
+		'min'               => true,
+		'max'               => true,
+		'range'             => true,
+		'minlength'         => true,
+		'maxlength'         => true,
+		'rangelength'       => true,
+		'callback'          => true,
+		'pattern'           => true,
+		'email'             => true,
+		'url'               => true,
+		'ip'                => true,
+		'ipv6'              => true,
+		'date'              => true,
+		'datetime'          => true,
+		'step'              => true,
+		'rangeWords'        => true,
+		'minWords'          => true,
+		'maxWords'          => true,
+		'require_from_group' => true
 	];
 
 	/**
@@ -288,7 +289,7 @@ trait Validator {
 	 */
 	private function parseRule($rule) {
 		$parsed = [false];
-		if (preg_match('#^([a-z]+)\s*\((.+)\)\s*$#i', $rule, $ms)) {
+		if (preg_match('#^([a-z][a-z\d_]+)\s*\((.+)\)\s*$#i', $rule, $ms)) {
 			$method = trim($ms[1]);
 			$ops    = trim($ms[2]);
 		} else {
@@ -699,6 +700,10 @@ trait Validator {
 		}
 
 		return (empty ($message) ? _t('maxWords@validator', $exp) : sprintf($message, $e1, $e2));
+	}
+
+	protected function v_require_from_group($field, $exp, $data, $message) {
+		return true;
 	}
 
 	/**

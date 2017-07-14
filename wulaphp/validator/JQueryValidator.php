@@ -53,8 +53,17 @@ trait JQueryValidator {
 							'url' => $url . '/' . $name,
 							'rqs' => explode(',', trim(preg_replace('/.+?(\((.*)\))?$/', '\2', $exp)))
 						];
-					} else if ($rule == 'rangelength' || $rule == 'range' || $rule == 'rangeWords') {
-						$exp = explode(',', $exp);
+					} else {
+						switch ($rule) {
+							case 'rangelength':
+							case 'range':
+							case 'rangeWords':
+							case 'require_from_group':
+								$exp = explode(',', $exp);
+								break;
+							default:
+								break;
+						}
 					}
 					if ($exp) {
 						$rules[ $key ][ $rule ] = $exp;

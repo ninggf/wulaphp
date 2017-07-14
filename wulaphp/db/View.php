@@ -14,7 +14,6 @@ use wulaphp\wulaphp\db\TableLocker;
  *
  * @package wulaphp\mvc\model
  * @author  Leo Ning <windywany@gmail.com>
- * @static  $queryFields
  * @method static Query sget($id, $fields = '*')  for get
  * @method static Query sfind($where = null, $fields = null, $limit = 10, $start = 0)
  * @method static Query sfindAll($where = null, $fields = null)
@@ -42,7 +41,7 @@ abstract class View {
 	protected $dialect = null;
 	protected $dbconnection;
 	/** @var string 查询字段 */
-	protected static $queryFields;
+	protected $defaultQueryFields;
 
 	/**
 	 * 创建模型实例.
@@ -226,7 +225,7 @@ abstract class View {
 	public function select(...$fileds) {
 		if (empty($fileds) || !isset($fileds[0])) {
 			if (isset($this->fields) && $this->fields) {
-				$fileds = self::$queryFields;
+				$fileds = $this->defaultQueryFields;
 			} else {
 				$fileds = '*';
 			}

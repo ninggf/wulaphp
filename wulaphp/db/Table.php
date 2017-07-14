@@ -12,6 +12,8 @@ use wulaphp\validator\ValidateException;
  *
  * @package wulaphp\db
  * @author  Leo Ning <windywany@gmail.com>
+ * @property $_formData
+ * @property $_tableData
  */
 abstract class Table extends View {
 	protected $autoIncrement = true;
@@ -41,7 +43,11 @@ abstract class Table extends View {
 		}
 		if ($data) {
 			if (method_exists($this, 'validateNewData')) {
-				$this->validateNewData($data);
+				if (isset($this->_formData)) {
+					$this->validateNewData($this->_formData);
+				} else {
+					$this->validateNewData($data);
+				}
 			}
 			$this->filterFields($data);
 			$sql = new InsertSQL($data);
@@ -147,7 +153,11 @@ abstract class Table extends View {
 		}
 		if ($data) {
 			if (method_exists($this, 'validateUpdateData')) {
-				$this->validateUpdateData($data);
+				if (isset($this->_formData)) {
+					$this->validateUpdateData($this->_formData);
+				} else {
+					$this->validateUpdateData($data);
+				}
 			}
 			$this->filterFields($data);
 			$sql = new UpdateSQL($this->table);
@@ -225,6 +235,16 @@ abstract class Table extends View {
 	 * @param array $data 要过滤的数据.
 	 */
 	protected function filterFields(&$data) {
+	}
+
+	protected function popValue(&$data, $field) {
+		$rtn = null;
+		if (isset($data[ $field ])) {
+			$rtn = $data[ $field ];
+			unset($data[ $field ]);
+		}
+
+		return $rtn;
 	}
 
 	/**

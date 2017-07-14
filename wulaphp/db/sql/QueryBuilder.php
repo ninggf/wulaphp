@@ -275,8 +275,8 @@ abstract class QueryBuilder {
 	 *
 	 * 当<code>$field</code>为null时，尝试从请求中读取sort[name]做为$field，sort[dir] 做为$order.
 	 *
-	 * @param string $field 排序字段，多个字段使用,分隔.
-	 * @param string $order a or d
+	 * @param string|array $field 排序字段，多个字段使用,分隔.
+	 * @param string       $order a or d
 	 *
 	 * @return QueryBuilder
 	 */
@@ -285,12 +285,15 @@ abstract class QueryBuilder {
 			$field = rqst('sort.name');
 			$order = rqst('sort.dir', 'a');
 		}
-		if ($field) {
+
+		if (is_string($field)) {
 			$orders = explode(',', strtolower($order));
 			$fields = explode(',', $field);
 			foreach ($fields as $i => $field) {
 				$this->order [] = array($field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]);
 			}
+		} else if (is_array($field)) {
+			$this->sort($field[0], isset($field[1]) ? $field[1] : 'a');
 		}
 
 		return $this;

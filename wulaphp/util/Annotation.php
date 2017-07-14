@@ -18,10 +18,12 @@ class Annotation {
 		'author'     => 1,
 		'property'   => 1,
 		'version'    => 1,
+		'since'      => 1,
 		'throws'     => 1
 	];
-	protected $docComment;
+	protected $docComment  = '';
 	protected $annotations = [];
+	private   $anns        = [];
 
 	/**
 	 * Annotation constructor.
@@ -37,14 +39,20 @@ class Annotation {
 			$ignore           = self::IGNORE;
 			if ($this->docComment) {
 				$this->docComment = explode("\n", $this->docComment);
-				foreach ($this->docComment as $i => $doc) {
+				$len              = count($this->docComment) - 1;
+				$i                = 1;
+				while ($i < $len) {
+					$doc = $this->docComment[ $i ];
 					$doc = substr(trim($doc), 1);
-					if ($doc && preg_match('#^@([a-z][a-z\d_]*)(\s+(.*))?#', trim($doc), $ms)) {
+					if ($doc && preg_match('#^@([a-z][a-z\d_]*)(\s+(.*))?#i', trim($doc), $ms)) {
 						$ann = $ms[1];
 						if (isset($ignore[ $ann ])) {
+							$i++;
 							continue;
 						}
+
 						$value = isset($ms[3]) ? $ms[3] : '';
+						$value = $this->text($i, $value, $len);
 						if (isset($this->annotations[ $ann ])) {
 							if (is_array($this->annotations[ $ann ])) {
 								$this->annotations[ $ann ][] = $value;
@@ -56,7 +64,10 @@ class Annotation {
 							$this->annotations[ $ann ] = $value;
 						}
 					}
+					$i++;
 				}
+				$i                = 0;
+				$this->docComment = $this->text($i, '', $len, $sep = "\n");
 			}
 		}
 	}
@@ -68,6 +79,13 @@ class Annotation {
 	 */
 	public function has($annotation) {
 		return isset($this->annotations[ $annotation ]);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getDoc() {
+		return $this->docComment;
 	}
 
 	/**
@@ -113,9 +131,13 @@ class Annotation {
 			$str = trim($str);
 			if (preg_match('#^[\[\{](.*)[\}\]]$#', $str)) {
 				$rst = json_decode($str, true);
-				if ($rst !== false) {
+				if ($rst) {
 					return $rst;
+				} else {
+					log_warn($str . ' ' . json_last_error_msg());
 				}
+			} else {
+				log_warn($str . ' Syntax error');
 			}
 		}
 
@@ -129,5 +151,23 @@ class Annotation {
 	 */
 	public function getAll() {
 		return $this->annotations;
+	}
+
+	private function text(&$i, $text, $len, $sep = '') {
+		$j = $i + 1;
+
+		while ($j < $len) {
+			$val = trim(substr(trim($this->docComment[ $j ]), 1));
+			if ($val{0} == '@') {
+				$j--;//归位
+				break;
+			} else if ($val) {
+				$text .= $sep . $val;
+			}
+			$j++;
+		}
+		$i = $j;
+
+		return trim($text);
 	}
 }

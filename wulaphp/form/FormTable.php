@@ -13,14 +13,8 @@ use wulaphp\validator\Validator;
  */
 abstract class FormTable extends Table {
 	use Validator;
-	/**
-	 * 通过public定义的字段.
-	 *
-	 * @var array
-	 */
-	protected static $_fields_ = false;
-	protected static $_skips_  = [];
-	protected static $_maps_   = [];
+	protected $_skips_ = [];
+	protected $_maps_  = [];
 	/**
 	 * 本表单的字段实例.
 	 * @var array
@@ -36,10 +30,7 @@ abstract class FormTable extends Table {
 	 * @param string|array|\wulaphp\db\DatabaseConnection|\wulaphp\db\View $db
 	 */
 	public function __construct($db = null) {
-		if (self::$_fields_ === false) {
-			$this->parseFields();
-		}
-		$this->_fields = self::$_fields_;
+		$this->parseFields();
 		parent::__construct($db);
 	}
 
@@ -62,16 +53,19 @@ abstract class FormTable extends Table {
 		} else {
 			$excepts = $excepts ? explode(',', $excepts) : [];
 		}
-		foreach (self::$_fields_ as $key => $v) {
+		foreach ($this->_fields as $key => $v) {
 			if (in_array($key, $excepts)) {
 				continue;
 			}
 			if (rqset($key)) {
-				$value            = rqst($key);
-				$formData[ $key ] = $data[ $v['name'] ] = $value;
-				$this->{$key}     = $value;
+				$value              = rqst($key);
+				$data[ $v['name'] ] = $this->pack($key, $value, $v);
+				$formData[ $key ]   = $value;
+				$this->{$key}       = $value;
 			} else if ($useDefault && isset($v['default'])) {
 				$formData[ $key ] = $data[ $v['name'] ] = $v['default'];
+			} else if ($v['type'] == 'bool') {
+				$formData[ $key ] = $data[ $v['name'] ] = 0;
 			}
 		}
 
@@ -82,27 +76,38 @@ abstract class FormTable extends Table {
 		return $data;
 	}
 
+	/**
+	 * 根据定义的字段从请求中填充字段值并返回表单数据.
+	 *
+	 * @param string $excepts
+	 * @param bool   $useDefault
+	 *
+	 * @return array
+	 */
 	public final function formData($excepts = '', $useDefault = false) {
 		$this->inflate($excepts, $useDefault);
 
 		return $this->_formData;
 	}
 
+	public final function tableData() {
+		return $this->_tableData;
+	}
+
 	/**
-	 * 从数据库填充数据.
+	 * 通过数据填充.
 	 *
-	 * @param array $where 条件.
+	 * @param array $data
 	 *
 	 * @return array
 	 */
-	public final function inflateFromDB($where) {
-		$data     = $this->loadFromDb($where);
+	public final function inflateByData($data) {
 		$rtn      = [];
 		$formData = [];
 		if ($data) {
-			foreach (self::$_maps_ as $key => $v) {
+			foreach ($this->_maps_ as $key => $v) {
 				if (isset($data[ $key ])) {
-					$formData[ $v ] = $rtn[ $key ] = $this->unpack($v, $data[ $key ], self::$_fields_[ $v ]);
+					$formData[ $v ] = $rtn[ $key ] = $this->unpack($v, $data[ $key ], $this->_fields[ $v ]);
 					$this->{$key}   = $rtn[ $key ];
 				}
 			}
@@ -114,6 +119,22 @@ abstract class FormTable extends Table {
 	}
 
 	/**
+	 * 从数据库填充数据.
+	 *
+	 * @param array $where 条件.
+	 *
+	 * @return array
+	 */
+	public final function inflateFromDB($where) {
+		$data = $this->loadFromDb($where);
+		if (!$data) {//加载失败时将条件做为数据填充
+			$data = $where;
+		}
+
+		return $this->inflateByData($data);
+	}
+
+	/**
 	 * 从数据库加载数据.
 	 * @see  \wulaphp\form\FormTable::inflateFromDB()
 	 *
@@ -122,7 +143,7 @@ abstract class FormTable extends Table {
 	 * @return array
 	 */
 	protected function loadFromDb($where) {
-		$data = $this->select(self::$queryFields)->where($where)->get(0);
+		$data = $this->select($this->defaultQueryFields)->where($where)->get(0);
 
 		return $data;
 	}
@@ -137,9 +158,9 @@ abstract class FormTable extends Table {
 		$keys = array_keys($data);
 		foreach ($keys as $key) {
 			if ($formKey) {
-				$key = self::$_fields_[ $key ]['name'];
+				$key = $this->_fields[ $key ]['name'];
 			}
-			if (!isset(self::$_skips_[ $key ]) || self::$_skips_[ $key ]) {
+			if (isset($this->_skips_[ $key ]) && $this->_skips_[ $key ]) {
 				unset($data[ $key ]);
 			}
 		}
@@ -192,6 +213,8 @@ abstract class FormTable extends Table {
 				return @serialize($value);
 			case 'json':
 				return @json_encode($value);
+			case 'bool':
+				return in_array(strtolower($value), ['on', 'yes', '1', 'enabled']) ? 1 : 0;
 			case 'datetime':
 			case 'date':
 				return strtotime($value);
@@ -219,9 +242,9 @@ abstract class FormTable extends Table {
 	 * 7. typef 当type值为number时用来定义number_format参数.
 	 */
 	private function parseFields() {
-		self::$_fields_ = [];
-		$refobj         = new \ReflectionObject($this);
-		$fields         = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
+		$this->_fields = [];
+		$refobj        = new \ReflectionObject($this);
+		$fields        = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
 		if (empty($fields)) {
 			trigger_error('no field defined in ' . get_class($this), E_USER_ERROR);
 		}
@@ -235,9 +258,9 @@ abstract class FormTable extends Table {
 				//字段名
 				$fieldName = $ann->getString('name', $fname);
 				//忽略值
-				self::$_skips_[ $fieldName ] = $ann->has('skip');
+				$this->_skips_[ $fieldName ] = $ann->has('skip');
 				//字段配置
-				self::$_fields_[ $fname ] = [
+				$this->_fields[ $fname ] = [
 					'annotation' => $ann,
 					'var'        => $ann->getString('var', ''),
 					'name'       => $fieldName,
@@ -246,12 +269,12 @@ abstract class FormTable extends Table {
 					'typef'      => $ann->getString('typef')
 				];
 				//映射
-				self::$_maps_[ $fieldName ] = $fname;
+				$this->_maps_[ $fieldName ] = $fname;
 				$sfields[]                  = "`{$fieldName}`";
 			}
 		}
 		if ($sfields) {
-			self::$queryFields = implode(',', $sfields);
+			$this->defaultQueryFields = implode(',', $sfields);
 		}
 	}
 

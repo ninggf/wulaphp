@@ -43,7 +43,7 @@ abstract class FormField implements \ArrayAccess {
 		$ann = $options['annotation'];
 		if ($ann) {
 			$opts             = $ann->getJsonArray('option', []);
-			$opts ['label']   = $ann->getString('label');
+			$opts ['label']   = $ann->getString('label', $ann->getDoc());
 			$opts ['render']  = $ann->getString('render');
 			$opts ['wrapper'] = $ann->getString('wrapper');
 			$opts ['layout']  = $ann->getString('layout');
@@ -141,11 +141,11 @@ abstract class FormField implements \ArrayAccess {
 		}
 
 		$dsp = $option['dataSource'];
-		if (!class_exists($dsp) || !is_subclass_of($dsp, FieldDataProvidor::class)) {
+		if (!is_subclass_of($dsp, FieldDataProvidor::class)) {
 			return FieldDataProvidor::emptyDatasource();
 		}
 
-		return new $dsp($this->form, $this, $this->options['dsCfg']);
+		return new $dsp($this->form, $this, isset($this->options['dsCfg']) ? $this->options['dsCfg'] : []);
 	}
 
 	public function offsetExists($offset) {

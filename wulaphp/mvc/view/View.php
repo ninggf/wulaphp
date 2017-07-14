@@ -66,12 +66,20 @@ abstract class View implements \ArrayAccess, Renderable {
 		unset ($this->data [ $offset ]);
 	}
 
+	/**
+	 * @param array $data
+	 * @param null  $value
+	 *
+	 * @return \wulaphp\mvc\view\View
+	 */
 	public function assign($data, $value = null) {
 		if (is_array($data)) {
 			$this->data = array_merge_recursive($this->data, $data);
 		} else if ($data) {
 			$this->data [ $data ] = $value;
 		}
+
+		return $this;
 	}
 
 	public function getTemplate() {
