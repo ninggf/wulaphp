@@ -119,6 +119,18 @@ class Annotation {
 		return $default;
 	}
 
+	public function getBool($name, $default = false) {
+		if (!$this->has($name)) {
+			return $default;
+		}
+		$va = $this->getString($name);
+		if (in_array($va, ['yes', '1', 'on', 'true'])) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/**
 	 * @param string $annotation
 	 * @param array  $default

@@ -21,6 +21,7 @@ abstract class FormTable extends Table {
 	 */
 	protected $_fields    = [];
 	protected $_widgets   = null;
+	protected $_excludes  = [];//不绘制的字段
 	protected $_tableData = [];//数据库表数据
 	protected $_formData  = [];//表单数据
 
@@ -58,7 +59,7 @@ abstract class FormTable extends Table {
 				continue;
 			}
 			if (rqset($key)) {
-				$value              = rqst($key);
+				$value              = rqst($key, '', $v['xssClean']);
 				$data[ $v['name'] ] = $this->pack($key, $value, $v);
 				$formData[ $key ]   = $value;
 				$this->{$key}       = $value;
@@ -244,7 +245,10 @@ abstract class FormTable extends Table {
 	private function parseFields() {
 		$this->_fields = [];
 		$refobj        = new \ReflectionObject($this);
-		$fields        = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
+		$dann          = new Annotation($refobj);
+		$xssClean      = $dann->getBool('xssclean', true);
+		unset($dann);
+		$fields = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
 		if (empty($fields)) {
 			trigger_error('no field defined in ' . get_class($this), E_USER_ERROR);
 		}
@@ -266,7 +270,8 @@ abstract class FormTable extends Table {
 					'name'       => $fieldName,
 					'default'    => $this->{$fname},
 					'type'       => $ann->getString('type', 'string'),
-					'typef'      => $ann->getString('typef')
+					'typef'      => $ann->getString('typef'),
+					'xssClean'   => $ann->getBool('xssclean', $xssClean)
 				];
 				//映射
 				$this->_maps_[ $fieldName ] = $fname;
@@ -275,6 +280,12 @@ abstract class FormTable extends Table {
 		}
 		if ($sfields) {
 			$this->defaultQueryFields = implode(',', $sfields);
+		}
+	}
+
+	public function excludeFields(...$fields) {
+		foreach ($fields as $field) {
+			$this->_excludes[ $field ] = 1;
 		}
 	}
 
@@ -289,6 +300,9 @@ abstract class FormTable extends Table {
 		}
 		$this->_widgets = [];
 		foreach ($this->_fields as $key => $field) {
+			if (isset($this->_excludes[ $key ])) {
+				continue;
+			}
 			$cls = $field['var'];
 			if ($cls && is_subclass_of($cls, FormField::class)) {
 				/**@var \wulaphp\form\FormField $clz */
