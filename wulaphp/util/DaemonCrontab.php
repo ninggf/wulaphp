@@ -23,9 +23,12 @@ abstract class DaemonCrontab implements ICrontabJob {
 		if ($this->singleton) {
 			$lock = TMP_PATH . '.cron_' . md5(get_class($this)) . '.lock';
 			if (is_file($lock)) {
+				if ($this->timeout == 0) {//永不超时
+					return;
+				}
 				$time = intval(file_get_contents($lock));
 				if ($time + $this->timeout > time()) {
-					log_warn(get_class($this) . ' job is running', 'crontab');
+					log_debug(get_class($this) . ' job is running', 'crontab');
 
 					return;
 				}
