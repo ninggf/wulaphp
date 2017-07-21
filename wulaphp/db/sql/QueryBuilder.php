@@ -26,14 +26,14 @@ abstract class QueryBuilder {
 	private static $sqlCount    = 0;
 	protected      $sql         = null;
 	protected      $alias;
-	protected      $options     = array();
-	protected      $from        = array();
-	protected      $joins       = array();
+	protected      $options     = [];
+	protected      $from        = [];
+	protected      $joins       = [];
 	protected      $where       = null;
-	protected      $having      = array();
+	protected      $having      = [];
 	protected      $limit       = null;
-	protected      $group       = array();
-	protected      $order       = array();
+	protected      $group       = [];
+	protected      $order       = [];
 	protected      $error       = false;
 	protected      $errorSQL    = '';
 	protected      $errorValues = null;
@@ -104,7 +104,7 @@ abstract class QueryBuilder {
 	 */
 	public function join($table, $on, $type = QueryBuilder::LEFT) {
 		$table          = self::parseAs($table);
-		$join           = array($table [0], $on, $type . ' JOIN ', $table [1]);
+		$join           = [$table [0], $on, $type . ' JOIN ', $table [1]];
 		$this->joins [] = $join;
 
 		return $this;
@@ -241,7 +241,7 @@ abstract class QueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public function asc($field) {
-		$this->order [] = array($field, 'ASC');
+		$this->order [] = [$field, 'a'];
 
 		return $this;
 	}
@@ -252,7 +252,7 @@ abstract class QueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public function desc($field) {
-		$this->order [] = array($field, 'DESC');
+		$this->order [] = [$field, 'd'];
 
 		return $this;
 	}
@@ -265,7 +265,7 @@ abstract class QueryBuilder {
 	 * @return QueryBuilder
 	 */
 	public function rand($rand = 'RAND') {
-		$this->order [] = array(imv($rand), '()');
+		$this->order [] = [imv($rand), '()'];
 
 		return $this;
 	}
@@ -290,7 +290,7 @@ abstract class QueryBuilder {
 			$orders = explode(',', strtolower($order));
 			$fields = explode(',', $field);
 			foreach ($fields as $i => $field) {
-				$this->order [] = array($field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]);
+				$this->order [] = [$field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]];
 			}
 		} else if (is_array($field)) {
 			$this->sort($field[0], isset($field[1]) ? $field[1] : 'a');
@@ -321,7 +321,7 @@ abstract class QueryBuilder {
 		if (!$limit) {
 			$limit = 1;
 		}
-		$this->limit = array($start, $limit);
+		$this->limit = [$start, $limit];
 		if ($this->statement) {
 			$this->updateWhereData([':limit_0' => $start, ':limit_1' => $limit]);
 		}
@@ -342,8 +342,8 @@ abstract class QueryBuilder {
 	 */
 	public function page($pageNo = null, $size = 20) {
 		if ($pageNo === null) {
-			$pageNo = irqst('page.page', 1);
-			$size   = irqst('page.size', 20);
+			$pageNo = irqst('pager.page', 1);
+			$size   = irqst('pager.limit', 20);
 		}
 		$pageNo = intval($pageNo);
 		if ($pageNo <= 0) {
@@ -512,7 +512,7 @@ abstract class QueryBuilder {
 		if (is_string($var)) {
 			return $this->dialect->sanitize($var);
 		} else if (is_array($var)) {
-			array_walk_recursive($var, array($this, 'sanitizeAry'));
+			array_walk_recursive($var, [$this, 'sanitizeAry']);
 
 			return $var;
 		} else {
@@ -546,16 +546,16 @@ abstract class QueryBuilder {
 			$alias = trim(array_pop($table));
 		}
 
-		return array(trim($name), $alias);
+		return [trim($name), $alias];
 	}
 
 	protected function prepareFrom($froms) {
-		$_froms = array();
+		$_froms = [];
 		if ($froms) {
 			foreach ($froms as $from) {
 				$table     = $this->dialect->getTableName($from [0]);
 				$alias     = empty ($from [1]) ? $table : $from [1];
-				$_froms [] = array($table, $alias);
+				$_froms [] = [$table, $alias];
 			}
 		}
 
@@ -563,12 +563,12 @@ abstract class QueryBuilder {
 	}
 
 	protected function prepareJoins($joins) {
-		$_joins = array();
+		$_joins = [];
 		if ($joins) {
 			foreach ($joins as $join) {
 				$table     = $this->dialect->getTableName($join [0]);
 				$alias     = empty ($join [3]) ? $table : $join [3];
-				$_joins [] = array($table, $join [1], $join [2], $alias);
+				$_joins [] = [$table, $join [1], $join [2], $alias];
 			}
 		}
 
@@ -584,7 +584,7 @@ abstract class QueryBuilder {
 	 * @return string
 	 */
 	protected function prepareFields($fields, $values) {
-		$_fields = array();
+		$_fields = [];
 		foreach ($fields as $field) {
 			if ($field instanceof Query) { // sub-select SQL as field
 				$field->setDialect($this->dialect);
@@ -593,7 +593,7 @@ abstract class QueryBuilder {
 				if ($as) {
 					$_fields [] = '(' . $field . ') AS ' . $this->sanitize('`' . $as . '`');
 				}
-			} elseif ($field instanceof ImmutableValue) {
+			} else if ($field instanceof ImmutableValue) {
 				$_fields [] = $field->__toString();
 			} else { // this is simple field
 				$_fields [] = $this->sanitize($field);

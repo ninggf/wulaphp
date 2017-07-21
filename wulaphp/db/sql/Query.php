@@ -10,12 +10,12 @@ use wulaphp\db\Orm;
  * @property Orm $orm
  */
 class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator {
-	private $fields         = array();
+	private $fields         = [];
 	private $countperformed = false;
 	private $size           = 0;
 	private $count          = 0;
-	private $resultSet      = array();//当前结果
-	private $resultSets     = array();//所有结果
+	private $resultSet      = [];//当前结果
+	private $resultSets     = [];//所有结果
 	private $resultIdx      = 0;//当前结果指针，用于遍历
 	private $maxIdx         = 0;//最大指针
 	private $treeKey        = null;
@@ -131,11 +131,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 */
 	public function tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0) {
 		if ($level == 0) {
-			$con = new Condition (array($upfield => $from));
+			$con = new Condition ([$upfield => $from]);
 			$this->where($con);
 		} else {
 			//更新查询条件，重新查询
-			$this->updateWhereData(array($upfield => $from));
+			$this->updateWhereData([$upfield => $from]);
 		}
 
 		$rows = $this->toArray();
@@ -234,6 +234,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 
 		if (!$this->resultSet) {
 			return null;
+		} else if (is_numeric($offset) && isset($this->resultSets[ $offset ])) {
+			return $this->resultSets[ $offset ];
 		} else if (isset ($this->resultSet [ $offset ])) {
 			return $this->resultSet [ $offset ];
 		} else if ($this->orm) {
@@ -340,11 +342,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 *
 	 * @return array
 	 */
-	public function toArray($var = null, $key = null, $rows = array()) {
+	public function toArray($var = null, $key = null, $rows = []) {
 		if (!$this->performed) {
 			$this->select();
 		}
-		$rows = is_array($rows) ? $rows : array();
+		$rows = is_array($rows) ? $rows : [];
 		if (is_array($var)) {
 			$rows = $var;
 			$var  = null;
@@ -380,7 +382,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			return $rows;
 		}
 
-		return array();
+		return [];
 	}
 
 	/**
@@ -392,10 +394,10 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 */
 	public function recurse(&$crumbs, $idkey = 'id', $upkey = 'upid') {
 		if (!$this->where) {
-			$con = new Condition (array($idkey => $crumbs [0] [ $upkey ]));
+			$con = new Condition ([$idkey => $crumbs [0] [ $upkey ]]);
 			$this->where($con, false);
 		} else {
-			$this->updateWhereData(array($idkey => $crumbs [0] [ $upkey ]));
+			$this->updateWhereData([$idkey => $crumbs [0] [ $upkey ]]);
 		}
 		$rst = $this->get();
 		if ($rst) {
@@ -658,6 +660,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			$this->size        = false;
 			$this->errorSQL    = $this->sql;
 			$this->errorValues = $this->values->__toString();
+			log_error($this->error . '[' . $this->sql . ']', 'sql.err');
 		}
 	}
 }

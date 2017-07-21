@@ -12,7 +12,7 @@ namespace wulaphp\util;
 
 abstract class DaemonCrontab implements ICrontabJob {
 	protected $singleton = false;
-	protected $timeout   = 120;
+	public    $timeout   = 120;
 	public    $fork      = true;
 
 	public function __construct($singleton = false) {
@@ -52,6 +52,7 @@ abstract class DaemonCrontab implements ICrontabJob {
 						$this->execute();
 						// 执行完毕删除lock文件
 						isset($lock) && @unlink($lock);
+						exit(0);//子进程要退出
 					} else {
 						// session process wait for the work process exit.
 						pcntl_waitpid($pid, $status);
@@ -59,6 +60,7 @@ abstract class DaemonCrontab implements ICrontabJob {
 				} else {
 					log_error('cannot set session for ' . get_class($this), 'crontab');
 				}
+				exit(0);//子进程要退出
 			} else if ($pid == -1) {
 				log_error('cannot fork process for ' . get_class($this), 'crontab');
 			}

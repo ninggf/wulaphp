@@ -191,7 +191,7 @@ abstract class Table extends View {
 		}
 		if ($con) {
 			$sql = new DeleteSQL();
-			$sql->from($this->table)->setDialect($this->dialect);
+			$sql->from($this->qualifiedName)->setDialect($this->dialect);
 			$sql->where($con);
 			$rst = $sql->exec();
 			$this->checkSQL($sql);

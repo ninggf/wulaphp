@@ -144,6 +144,21 @@ trait GearmanCommand {
 		return null;
 	}
 
+	protected function doHigh($job, $args, $id = null) {
+		if (is_array($args)) {
+			$args = json_encode($args);
+		}
+		$client = $this->getGearmanClient();
+		if ($client) {
+			$rst = $client->doHigh($job, $args, $id);
+			unset($client);
+
+			return $rst;
+		}
+
+		return null;
+	}
+
 	/**
 	 *
 	 * @param string       $job

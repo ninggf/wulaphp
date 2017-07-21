@@ -135,7 +135,7 @@ abstract class View {
 	 * @param array       $where  条件.
 	 * @param array|mixed $fields 字段或字段数组.
 	 * @param int|null    $limit  取多少条数据，默认10条.
-	 * @param int         $start
+	 * @param int         $start  开始位置
 	 *
 	 * @return Query 列表查询.
 	 */

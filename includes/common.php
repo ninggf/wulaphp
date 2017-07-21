@@ -147,6 +147,17 @@ function log_error($message, $file = '') {
 }
 
 /**
+ * 最后记录的日志信息.
+ *
+ * @return string
+ */
+function log_last_msg() {
+	global $_wula_last_msg;
+
+	return $_wula_last_msg;
+}
+
+/**
  * log.
  *
  * @param string $message
@@ -157,6 +168,8 @@ function log_error($message, $file = '') {
  * @filter logger\getLogger $logger $level $file
  */
 function log_message($message, $trace_info, $level, $file = 'wula') {
+	global $_wula_last_msg;
+	$_wula_last_msg = $message;
 	//记录关闭.
 	if (DEBUG == DEBUG_OFF) {
 		return;
@@ -247,7 +260,25 @@ function wula_exception_handler($e) {
 				$stack[] = implode('', $tss);
 			}
 			$errorFile = file_get_contents(__DIR__ . '/debug.tpl');
-			$errorFile = str_replace(['{$message}', '{$stackInfo}', '{$title}', '{$tip}', '{$cs}', '{$f}', '{$l}', '{$uri}'], [$msg, implode('', $stack), __('Oops'), __('Fatal error'), __('Call Stack'), __('Function'), __('Location'), \wulaphp\router\Router::getURI()], $errorFile);
+			$errorFile = str_replace([
+				'{$message}',
+				'{$stackInfo}',
+				'{$title}',
+				'{$tip}',
+				'{$cs}',
+				'{$f}',
+				'{$l}',
+				'{$uri}'
+			], [
+				$msg,
+				implode('', $stack),
+				__('Oops'),
+				__('Fatal error'),
+				__('Call Stack'),
+				__('Function'),
+				__('Location'),
+				\wulaphp\router\Router::getURI()
+			], $errorFile);
 			echo $errorFile;
 			exit(0);
 		}

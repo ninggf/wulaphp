@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\db\dialect;
 
 use wulaphp\conf\DatabaseConfiguration;
@@ -29,12 +30,12 @@ class MySQLDialect extends DatabaseDialect {
 	 * @return string
 	 */
 	public function getSelectSQL($fields, $from, $joins, $where, $having, $group, $order, $limit, $values, $forupdate) {
-		$sql = array('SELECT', $fields, 'FROM');
+		$sql = ['SELECT', $fields, 'FROM'];
 		$this->generateSQL($sql, $from, $joins, $where, $having, $group, $values);
 		if ($order) {
-			$_orders = array();
+			$_orders = [];
 			foreach ($order as $o) {
-				$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
+				$_orders [] = Condition::cleanField($o [0]) . ' ' . ($o [1] == 'a' ? 'ASC' : 'DESC');
 			}
 			$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
 		}
@@ -63,7 +64,7 @@ class MySQLDialect extends DatabaseDialect {
 	 * @return string
 	 */
 	public function getCountSelectSQL($fields, $from, $joins, $where, $having, $group, $values) {
-		$sql = array('SELECT', $fields, 'FROM');
+		$sql = ['SELECT', $fields, 'FROM'];
 		$this->generateSQL($sql, $from, $joins, $where, $having, $group, $values);
 		$sql = implode(' ', $sql);
 
@@ -79,7 +80,7 @@ class MySQLDialect extends DatabaseDialect {
 	 */
 	public function getInsertSQL($into, $data, $values) {
 		$sql    = "INSERT INTO $into (";
-		$fields = $_values = array();
+		$fields = $_values = [];
 		foreach ($data as $field => $value) {
 			$fields [] = Condition::cleanField($field);
 			if ($value instanceof ImmutableValue) { // a immutable value
@@ -125,7 +126,7 @@ class MySQLDialect extends DatabaseDialect {
 		}
 		if ($len == 0) {
 			if ($order) {
-				$_orders = array();
+				$_orders = [];
 				foreach ($order as $o) {
 					$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
 				}
@@ -153,16 +154,16 @@ class MySQLDialect extends DatabaseDialect {
 	public function getUpdateSQL($table, $data, $where, $values, $order, $limit) {
 		$len = count($table);
 		if ($len == 1) {
-			$sql = array('UPDATE', implode(' AS ', $table[0]), 'SET');
+			$sql = ['UPDATE', implode(' AS ', $table[0]), 'SET'];
 		} else {
 			$tables = [];
 			foreach ($table as $t) {
 				$tables[] = implode(' AS ', $t);
 			}
-			$sql = array('UPDATE', implode(' , ', $tables), 'SET');
+			$sql = ['UPDATE', implode(' , ', $tables), 'SET'];
 		}
 
-		$fields = array();
+		$fields = [];
 		foreach ($data as $field => $value) {
 			$field = Condition::cleanField($field);
 			if ($value instanceof Query) {
@@ -185,7 +186,7 @@ class MySQLDialect extends DatabaseDialect {
 
 		if ($len == 1) {
 			if ($order) {
-				$_orders = array();
+				$_orders = [];
 				foreach ($order as $o) {
 					$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
 				}
@@ -209,7 +210,15 @@ class MySQLDialect extends DatabaseDialect {
 		if ($options instanceof DatabaseConfiguration) {
 			$options = $options->toArray();
 		}
-		$opts    = array_merge(array('encoding' => 'UTF8MB4', 'dbname' => '', 'host' => 'localhost', 'port' => 3306, 'user' => 'root', 'password' => 'root', 'driver_options' => array()), $options);
+		$opts    = array_merge([
+			'encoding'       => 'UTF8MB4',
+			'dbname'         => '',
+			'host'           => 'localhost',
+			'port'           => 3306,
+			'user'           => 'root',
+			'password'       => 'root',
+			'driver_options' => []
+		], $options);
 		$charset = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8MB4';
 		if ($charset == null) {
 			$dsn = "mysql:dbname={$opts['dbname']};host={$opts['host']};port={$opts['port']}";
@@ -218,7 +227,7 @@ class MySQLDialect extends DatabaseDialect {
 		}
 		$this->charset = $charset;
 
-		return array($dsn, $opts ['user'], $opts ['password'], $opts ['driver_options']);
+		return [$dsn, $opts ['user'], $opts ['password'], $opts ['driver_options']];
 	}
 
 	/**
@@ -251,7 +260,7 @@ class MySQLDialect extends DatabaseDialect {
 	 * @return array
 	 */
 	public function listDatabases() {
-		$dbs = array();
+		$dbs = [];
 		$rst = $this->query('SHOW DATABASES');
 		if ($rst) {
 			$db = $rst->fetchAll(\PDO::FETCH_ASSOC);
@@ -288,7 +297,7 @@ class MySQLDialect extends DatabaseDialect {
 	 * @param BindValues $values
 	 */
 	private function generateSQL(&$sql, $from, $joins, $where, $having, $group, $values) {
-		$froms = array();
+		$froms = [];
 		foreach ($from as $f) {
 			$froms [] = $f [0] . ' AS ' . $f [1];
 		}
@@ -316,7 +325,7 @@ class MySQLDialect extends DatabaseDialect {
 	 * @return string
 	 */
 	public function buildWhereString($conditions, $values) {
-		$cons    = array();
+		$cons    = [];
 		$dialect = $this;
 		foreach ($conditions as $con) {
 			list ($filed, $value) = $con;
@@ -328,13 +337,16 @@ class MySQLDialect extends DatabaseDialect {
 			}
 			$filed = trim($filed);
 			if ($filed == '@' || $filed == '!@') { // exist or not exist
-				$vls   = is_array($value) ? $value : array($value);
-				$consx = array();
+				$vls   = is_array($value) ? $value : [$value];
+				$consx = [];
 				foreach ($vls as $value) {
 					if ($value instanceof Query) {
 						$value->setBindValues($values);
 						$value->setDialect($dialect);
-						$consx [] = str_replace(array('!', '@'), array('NOT ', 'EXISTS'), $filed) . ' (' . $value->__toString() . ')';
+						$consx [] = str_replace(['!', '@'], [
+								'NOT ',
+								'EXISTS'
+							], $filed) . ' (' . $value->__toString() . ')';
 					}
 				}
 				if (empty ($consx)) {
@@ -380,7 +392,7 @@ class MySQLDialect extends DatabaseDialect {
 						$value->setDialect($dialect);
 						$cons [] = $filed . ' ' . $op . ' (' . $value->__toString() . ')';
 					} else if (is_array($value)) {
-						$vs = array();
+						$vs = [];
 						foreach ($value as $v) {
 							$vs [] = $values->addValue($filed, $v);
 						}
@@ -397,7 +409,7 @@ class MySQLDialect extends DatabaseDialect {
 				} else if ($op == 'MATCH' || $op == ' *') {
 					$cons [] = "MATCH({$filed}) AGAINST (" . $values->addValue($filed, $value) . ')';
 				} else if ($op == '~' || $op == '!~') {
-					$op      = str_replace(array('!', '~'), array('NOT ', 'REGEXP'), $op);
+					$op      = str_replace(['!', '~'], ['NOT ', 'REGEXP'], $op);
 					$cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
 				} else {
 					if ($value instanceof ImmutableValue) {
