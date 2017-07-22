@@ -28,8 +28,17 @@ class Orm {
 			foreach ($this->queries as $a) {
 				$a[0]->close();
 			}
+			unset($this->queries);
 		}
-		unset($this->results, $this->queries);
+		unset($this->results, $this->eagerDatas, $this->ids);
+	}
+
+	/**
+	 *
+	 * @return \wulaphp\db\Orm
+	 */
+	public function cloneit() {
+		return new Orm($this->view, $this->primaryKey);
 	}
 
 	/**
@@ -108,7 +117,7 @@ class Orm {
 		$con = null;
 		if (isset($this->queries[ $field ])) {
 			$con = $this->queries[ $field ];
-		} elseif (method_exists($this->view, $field)) {
+		} else if (method_exists($this->view, $field)) {
 			$con = $this->view->{$field}();
 			/**@var Query $query */
 			list($query, $fk, $lk) = $con;

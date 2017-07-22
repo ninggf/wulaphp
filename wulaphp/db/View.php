@@ -124,7 +124,6 @@ abstract class View {
 		}
 		$sql = $this->select($fields);
 		$sql->where($where)->limit(0, 1);
-		$sql->orm = $this->ormObj;
 
 		return $sql;
 	}
@@ -147,7 +146,6 @@ abstract class View {
 		if ($limit) {
 			$sql->limit($start, $limit);
 		}
-		$sql->orm = $this->ormObj;
 
 		return $sql;
 	}
@@ -231,7 +229,7 @@ abstract class View {
 			}
 		}
 		$sql      = new Query($fileds);
-		$sql->orm = $this->ormObj;
+		$sql->orm = $this->ormObj->cloneit();
 		$sql->setDialect($this->dialect)->from($this->qualifiedName);
 
 		return $sql;
