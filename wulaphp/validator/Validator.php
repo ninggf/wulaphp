@@ -19,30 +19,30 @@ trait Validator {
 	private $rulesIdx       = [];
 	private $ruleKeys       = [];
 	private $preDefinedRule = [
-		'required'          => true,
-		'equalTo'           => true,
-		'notEqualTo'        => true,
-		'num'               => true,
-		'number'            => true,
-		'digits'            => true,
-		'min'               => true,
-		'max'               => true,
-		'range'             => true,
-		'minlength'         => true,
-		'maxlength'         => true,
-		'rangelength'       => true,
-		'callback'          => true,
-		'pattern'           => true,
-		'email'             => true,
-		'url'               => true,
-		'ip'                => true,
-		'ipv6'              => true,
-		'date'              => true,
-		'datetime'          => true,
-		'step'              => true,
-		'rangeWords'        => true,
-		'minWords'          => true,
-		'maxWords'          => true,
+		'required'           => true,
+		'equalTo'            => true,
+		'notEqualTo'         => true,
+		'num'                => true,
+		'number'             => true,
+		'digits'             => true,
+		'min'                => true,
+		'max'                => true,
+		'range'              => true,
+		'minlength'          => true,
+		'maxlength'          => true,
+		'rangelength'        => true,
+		'callback'           => true,
+		'pattern'            => true,
+		'email'              => true,
+		'url'                => true,
+		'ip'                 => true,
+		'ipv6'               => true,
+		'date'               => true,
+		'datetime'           => true,
+		'step'               => true,
+		'rangeWords'         => true,
+		'minWords'           => true,
+		'maxWords'           => true,
 		'require_from_group' => true
 	];
 
@@ -703,6 +703,22 @@ trait Validator {
 	}
 
 	protected function v_require_from_group($field, $exp, $data, $message) {
+		$exp = explode(',', $exp);
+		if (count($exp) > 2) {
+			$cnt = intval($exp[0]);
+			$exp = array_slice($exp, 2);
+			foreach ($exp as $f) {
+				if (isset($data[ $f ]) && ($data[ $f ] || is_numeric($data[ $f ]))) {
+					$cnt--;
+				}
+			}
+			if ($cnt <= 0) {
+				return true;
+			}
+
+			return $message;
+		}
+
 		return true;
 	}
 

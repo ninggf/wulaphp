@@ -28,13 +28,16 @@ class Annotation {
 	/**
 	 * Annotation constructor.
 	 *
-	 * @param \Reflector $obj 可以是{@link \ReflectionObject},
+	 * @param \Reflector|array $obj 可以是{@link \ReflectionObject},
 	 *                        {@link \ReflectionMethod},
 	 *                        {@link \ReflectionProperty},
 	 *                        {@link \ReflectionFunction}的实例。
 	 */
-	public function __construct(\Reflector $obj) {
-		if (method_exists($obj, 'getDocComment')) {
+	public function __construct($obj) {
+		if (is_array($obj)) {
+			$this->docComment  = '';
+			$this->annotations = $obj;
+		} else if (method_exists($obj, 'getDocComment')) {
 			$this->docComment = $obj->getDocComment();
 			$ignore           = self::IGNORE;
 			if ($this->docComment) {

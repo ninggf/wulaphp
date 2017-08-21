@@ -13,17 +13,14 @@ use wulaphp\validator\Validator;
  */
 abstract class FormTable extends Table {
 	use Validator;
-	protected $_skips_ = [];
-	protected $_maps_  = [];
-	/**
-	 * 本表单的字段实例.
-	 * @var array
-	 */
+	protected $_skips_    = [];
+	protected $_maps_     = [];
 	protected $_fields    = [];
 	protected $_widgets   = null;
 	protected $_excludes  = [];//不绘制的字段
 	protected $_tableData = [];//数据库表数据
 	protected $_formData  = [];//表单数据
+	private   $_xssClean  = true;
 
 	/**
 	 * FormTable constructor.
@@ -243,50 +240,73 @@ abstract class FormTable extends Table {
 	 * 7. typef 当type值为number时用来定义number_format参数.
 	 */
 	private function parseFields() {
-		$this->_fields = [];
-		$refobj        = new \ReflectionObject($this);
-		$dann          = new Annotation($refobj);
-		$xssClean      = $dann->getBool('xssclean', true);
+		$this->_fields   = [];
+		$refobj          = new \ReflectionObject($this);
+		$dann            = new Annotation($refobj);
+		$this->_xssClean = $dann->getBool('xssclean', true);
 		unset($dann);
 		$fields = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
-		if (empty($fields)) {
-			trigger_error('no field defined in ' . get_class($this), E_USER_ERROR);
-		}
-		$sfields = [];
-		/**@var  \ReflectionProperty $field */
-		foreach ($fields as $field) {
-			$ann = new Annotation($field);
-			if ($ann->has('type')) {
-				//表单名
-				$fname = $field->getName();
-				//字段名
-				$fieldName = $ann->getString('name', $fname);
-				//忽略值
-				$this->_skips_[ $fieldName ] = $ann->has('skip');
-				//字段配置
-				$this->_fields[ $fname ] = [
-					'annotation' => $ann,
-					'var'        => $ann->getString('var', ''),
-					'name'       => $fieldName,
-					'default'    => $this->{$fname},
-					'type'       => $ann->getString('type', 'string'),
-					'typef'      => $ann->getString('typef'),
-					'xssClean'   => $ann->getBool('xssclean', $xssClean)
-				];
-				//映射
-				$this->_maps_[ $fieldName ] = $fname;
-				$sfields[]                  = "`{$fieldName}`";
+		if (!empty($fields)) {
+			$sfields = [];
+			/**@var  \ReflectionProperty $field */
+			foreach ($fields as $field) {
+				$ann = new Annotation($field);
+				if ($ann->has('type')) {
+					//表单名
+					$fname     = $field->getName();
+					$sfields[] = $this->addField($fname, $ann, $this->{$fname});
+				}
+			}
+			if ($sfields) {
+				$this->defaultQueryFields = implode(',', $sfields);
 			}
 		}
-		if ($sfields) {
-			$this->defaultQueryFields = implode(',', $sfields);
-		}
+		fire(get_class($this) . '::onParseFields', $this);
 	}
 
+	/**
+	 * 排除字段(不会绘制)
+	 *
+	 * @param array ...$fields
+	 */
 	public function excludeFields(...$fields) {
 		foreach ($fields as $field) {
 			$this->_excludes[ $field ] = 1;
 		}
+	}
+
+	/**
+	 * 添加字段.
+	 *
+	 * @param string                   $fname
+	 * @param \wulaphp\util\Annotation $ann
+	 * @param string                   $default
+	 *
+	 * @return string 字段名
+	 */
+	protected function addField($fname, Annotation $ann, $default) {
+		if ($ann->has('type')) {
+			//字段名
+			$fieldName = $ann->getString('name', $fname);
+			//忽略值
+			$this->_skips_[ $fieldName ] = $ann->has('skip');
+			//字段配置
+			$this->_fields[ $fname ] = [
+				'annotation' => $ann,
+				'var'        => $ann->getString('var', ''),
+				'name'       => $fieldName,
+				'default'    => $default,
+				'type'       => $ann->getString('type', 'string'),
+				'typef'      => $ann->getString('typef'),
+				'xssClean'   => $ann->getBool('xssclean', $this->_xssClean)
+			];
+			//映射
+			$this->_maps_[ $fieldName ] = $fname;
+
+			return "`{$fieldName}`";
+		}
+
+		return null;
 	}
 
 	/**

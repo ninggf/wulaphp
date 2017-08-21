@@ -20,15 +20,17 @@ use wulaphp\mvc\controller\Controller;
  */
 trait JQueryValidator {
 	private $rules;
+	private $_encodit = true;
 
 	/**
 	 * 生成可供jquery.validator插件使用的验证规则.
 	 *
-	 * @param Controller $controller
+	 * @param Controller                           $controller
+	 * @param \wulaphp\validator\JQueryValidator[] $validators
 	 *
-	 * @return string
+	 * @return string|array
 	 */
-	public function encodeValidatorRule(Controller $controller = null) {
+	public function encodeValidatorRule(Controller $controller = null, JQueryValidator ...$validators) {
 		if (method_exists($this, 'getValidateRules')) {
 			$this->rules = $this->getValidateRules();
 		}
@@ -60,6 +62,9 @@ trait JQueryValidator {
 							case 'rangeWords':
 							case 'require_from_group':
 								$exp = explode(',', $exp);
+								if (count($exp) > 2) {
+									$exp = array_slice($exp, 0, 2);
+								}
 								break;
 							default:
 								break;
@@ -86,6 +91,21 @@ trait JQueryValidator {
 
 		$rtn = ['rules' => $rules, 'messages' => $msgs];
 
-		return json_encode($rtn);
+		if ($validators) {
+			/**@var \wulaphp\validator\JQueryValidator $v */
+			foreach ($validators as $v) {
+				$v->_encodit = false;
+				$vr          = $v->encodeValidatorRule($controller);
+				if ($vr) {
+					$rtn = array_merge_recursive($rtn, $vr);
+				}
+			}
+		}
+
+		if ($this->_encodit) {
+			return json_encode($rtn);
+		} else {
+			return $rtn;
+		}
 	}
 }

@@ -26,8 +26,9 @@ use wulaphp\wulaphp\db\TableLocker;
 abstract class View {
 	private static $tableClzs   = [];
 	public         $table       = null;//表名
-	protected      $tableName;
-	protected      $qualifiedName;
+	private        $originTable;
+	protected      $tableName;//带前缀表名
+	protected      $qualifiedName;//带AS的表名
 	protected      $primaryKeys = ['id'];
 	protected      $errors      = null;
 	protected      $lastSQL     = null;
@@ -41,7 +42,7 @@ abstract class View {
 	protected $dialect = null;
 	protected $dbconnection;
 	/** @var string 查询字段 */
-	protected $defaultQueryFields;
+	protected $defaultQueryFields = '*';
 
 	/**
 	 * 创建模型实例.
