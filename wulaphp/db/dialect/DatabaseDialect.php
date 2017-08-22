@@ -231,7 +231,7 @@ abstract class DatabaseDialect extends \PDO {
 	/**
 	 * get the delete SQL
 	 *
-	 * @param string     $from
+	 * @param string|array     $from
 	 * @param array      $joins
 	 * @param Condition  $where
 	 * @param BindValues $values

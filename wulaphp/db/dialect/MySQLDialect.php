@@ -100,7 +100,7 @@ class MySQLDialect extends DatabaseDialect {
 	}
 
 	/**
-	 * @param array      $from
+	 * @param array|string      $from
 	 * @param array      $joins
 	 * @param Condition  $where
 	 * @param BindValues $values
