@@ -48,6 +48,7 @@ abstract class FormField implements \ArrayAccess {
 			$opts ['wrapper'] = $ann->getString('wrapper');
 			$opts ['layout']  = $ann->getString('layout');
 			$this->options    = array_merge($this->options, $opts);
+			$form->alterFieldOptions($name, $this->options);
 		}
 	}
 

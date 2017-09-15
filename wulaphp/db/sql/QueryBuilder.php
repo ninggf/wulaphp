@@ -455,14 +455,40 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * alias of exec.
+	 * 获取 insert 语句生成的自增型ID数组.
 	 *
-	 * @param bool $checkNum
-	 *
-	 * @return bool
+	 * @return array
 	 */
-	public function perform($checkNum = false) {
-		return $this->exec($checkNum);
+	public function newIds() {
+		$ids = [];
+		$cnt = $this->count();
+		if ($cnt === false) {
+			if ($this->exception instanceof \PDOException) {
+				throw $this->exception;
+			}
+		} else if ($this instanceof InsertSQL) {
+			$ids = $this->lastInsertIds();
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * 获取 insert 语句生成的自增型ID.
+	 * @return int
+	 */
+	public function newId() {
+		$ids = [];
+		$cnt = $this->count();
+		if ($cnt === false) {
+			if ($this->exception instanceof \PDOException) {
+				throw $this->exception;
+			}
+		} else if ($this instanceof InsertSQL) {
+			$ids = $this->lastInsertIds();
+		}
+
+		return $ids ? $ids[0] : 0;
 	}
 
 	/**
@@ -471,7 +497,7 @@ abstract class QueryBuilder {
 	 * @param boolean $checkNum false 不检测,null直接返回影响的数量
 	 *                          是否检测影响的条数.
 	 *
-	 * @return boolean
+	 * @return boolean|int|mixed
 	 * @throws \PDOException
 	 */
 	public function exec($checkNum = false) {
@@ -481,7 +507,7 @@ abstract class QueryBuilder {
 				throw $this->exception;
 			}
 
-			return false;
+			return is_null($checkNum) ? 0 : false;
 		} else if ($this instanceof InsertSQL) {
 			if ($checkNum || is_null($checkNum)) {
 				return $cnt > 0;
@@ -497,6 +523,15 @@ abstract class QueryBuilder {
 		} else {
 			return true;
 		}
+	}
+
+	/**
+	 * 返回影响的行数.
+	 *
+	 * @return int
+	 */
+	public function affected() {
+		return $this->exec(null);
 	}
 
 	public static function addSqlCount() {

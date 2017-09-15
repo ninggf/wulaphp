@@ -27,6 +27,7 @@ trait Validator {
 		'digits'             => true,
 		'min'                => true,
 		'max'                => true,
+		'phone'              => true,
 		'range'              => true,
 		'minlength'          => true,
 		'maxlength'          => true,
@@ -548,6 +549,16 @@ trait Validator {
 		} else {
 			return empty ($message) ? _t('pattern@validator') : $message;
 		}
+	}
+
+	protected function v_phone($field, $exp, $data, $message) {
+		if ($this->isEmpty($field, $data)) {
+			return true;
+		}
+		$value = $data[ $field ];
+		$rst   = preg_match('/^1[34578]\d{9}$/', $value);
+
+		return $rst ? true : (empty ($message) ? _t('phone@validator') : $message);
 	}
 
 	// email

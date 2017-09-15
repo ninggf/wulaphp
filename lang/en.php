@@ -20,6 +20,7 @@ return [
 		'min'                => 'Please enter a value greater than or equal to %s.',
 		'digits'             => 'Please enter only digits.',
 		'num'                => 'Please enter a valid number.',
+		'phone'              => 'Please enter a valid phone number.',
 		'notEqualTo'         => 'Please enter the different value.',
 		'equalTo'            => 'Please enter the same value again.',
 		'rangeWords'         => 'Please enter between {0} and {1} words.',

@@ -306,7 +306,17 @@ abstract class FormTable extends Table {
 			return "`{$fieldName}`";
 		}
 
-		return null;
+		return "`{$fname}`";
+	}
+
+	/**
+	 * 修改字段属性.
+	 *
+	 * @param string $name    字段名
+	 * @param array  $options 字段属性.
+	 */
+	public function alterFieldOptions($name, &$options) {
+
 	}
 
 	/**

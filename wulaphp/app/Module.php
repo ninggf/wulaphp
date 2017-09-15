@@ -132,13 +132,26 @@ abstract class Module {
 	 */
 	public function info() {
 		$info = get_object_vars($this);
-		unset($info['reflection'], $info['path'], $info['clzName'], $info['dirname'], $info['namespace;'], $info['bound']);
+		unset($info['reflection'], $info['clzName'], $info['bound']);
 		$info['name']   = $this->getName();
 		$info['author'] = $this->getAuthor();
 		$info['desc']   = $this->getDescription();
 		$info['home']   = $this->getHomePageURL();
 		$info['ver']    = $info['currentVersion'];
-		unset($info['currentVersion']);
+		$info['cver']   = $info['installedVersion'];
+		unset($info['currentVersion'], $info['installedVersion']);
+
+		if ($this->installed) {
+			if ($this->upgradable && $this->enabled) {
+				$info['status'] = 2;
+			} else if ($this->enabled) {
+				$info['status'] = 1;
+			} else {
+				$info['status'] = 0;
+			}
+		} else {
+			$info['status'] = -1;
+		}
 
 		return $info;
 	}

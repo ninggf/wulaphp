@@ -15,6 +15,8 @@ class Passport {
 	public         $type      = 'default';
 	public         $username  = '';
 	public         $nickname  = '';
+	public         $phone     = '';
+	public         $email     = '';
 	public         $isLogin   = false;
 	public         $data      = [];
 	public         $error     = null;//错误信息.
@@ -88,6 +90,22 @@ class Passport {
 	}
 
 	/**
+	 * 获取通行证资料.
+	 *
+	 * @return array
+	 */
+	public function info() {
+		$info             = $this->data;
+		$info['id']       = $this->uid;
+		$info['username'] = $this->username;
+		$info['nickname'] = $this->nickname;
+		$info['phone']    = $this->phone;
+		$info['email']    = $this->email;
+
+		return $info;
+	}
+
+	/**
 	 * 将当前Passport存入SESSION。
 	 * @return bool
 	 */
@@ -106,6 +124,7 @@ class Passport {
 	public final function logout() {
 		fire('passport\on' . ucfirst($this->type) . 'PassportLogout', $this);
 		$_SESSION[ self::SESSION_NAME . '_' . $this->type ] = '';
+		unset($_SESSION[ self::SESSION_NAME . '_' . $this->type ]);
 	}
 
 	/**

@@ -10,7 +10,6 @@ use wulaphp\db\DialectException;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
 use wulaphp\io\Response;
-use wulaphp\mvc\controller\Controller;
 use wulaphp\router\Router;
 use wulaphp\util\ObjectCaller;
 
