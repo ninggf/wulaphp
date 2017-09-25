@@ -1,13 +1,14 @@
 <?php
+
 namespace wulaphp\io;
 // use cookie for session id
 class Session {
 
 	private $session_id;
 
-	private $expire = 900;
+	private $expire = 0;
 
-	public function __construct($expire = 900) {
+	public function __construct($expire = 0) {
 		$this->expire = intval($expire);
 	}
 

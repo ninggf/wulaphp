@@ -319,6 +319,9 @@ abstract class FormTable extends Table {
 
 	}
 
+	protected function beforeCreateWidgets() {
+	}
+
 	/**
 	 * 创建组件.
 	 *
@@ -328,6 +331,7 @@ abstract class FormTable extends Table {
 		if ($this->_widgets !== null) {
 			return $this->_widgets;
 		}
+		$this->beforeCreateWidgets();
 		$this->_widgets = [];
 		foreach ($this->_fields as $key => $field) {
 			if (isset($this->_excludes[ $key ])) {

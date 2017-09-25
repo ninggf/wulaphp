@@ -224,7 +224,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	public function offsetGet($offset) {
-		if (isset ($this->resultSet [ $offset ])) {
+		if (key_exists($offset, $this->resultSet)) {
 			return $this->resultSet [ $offset ];
 		}
 
@@ -236,7 +236,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			return null;
 		} else if (is_numeric($offset) && isset($this->resultSets[ $offset ])) {
 			return $this->resultSets[ $offset ];
-		} else if (isset ($this->resultSet [ $offset ])) {
+		} else if (key_exists($offset, $this->resultSet)) {
 			return $this->resultSet [ $offset ];
 		} else if ($this->orm) {
 			return $this->orm->getData($this->resultIdx, $offset, $this->resultSets, isset($this->eagerFields[ $offset ]));
@@ -329,6 +329,30 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		}
 
 		return $default;
+	}
+
+	/**
+	 * 将行数据转换为字符.
+	 *
+	 * @param string $field
+	 * @param string $sep
+	 * @param null   $cb
+	 *
+	 * @return string
+	 */
+	public function implode($field, $sep = ',', $cb = null) {
+		$rss = [];
+		if ($cb instanceof \Closure) {
+			foreach ($this->toArray() as $r) {
+				$rss[] = $cb($r[ $field ]);
+			}
+		} else {
+			foreach ($this->toArray() as $r) {
+				$rss[] = $r[ $field ];
+			}
+		}
+
+		return implode($sep, $rss);
 	}
 
 	/**
@@ -457,15 +481,18 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			$this->select();
 		}
 		if (empty($this->resultSet)) {
-			return [];
+			return $this->emptyQuery();
 		}
 		if ($this->orm) {
-			$query = $this->orm->getQuery($this->resultIdx, $name, $this->resultSets);
+			$q = $this->orm->getQuery($this->resultIdx, $name, $this->resultSets);
+			if (empty($q)) {
+				$q = $this->emptyQuery();
+			}
 
-			return $query;
+			return $q;
 		}
 
-		return [];
+		return $this->emptyQuery();
 	}
 
 	public function __set($field, $value) {
@@ -662,5 +689,15 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			$this->errorValues = $this->values->__toString();
 			log_error($this->error . '[' . $this->sql . ']', 'sql.err');
 		}
+	}
+
+	protected function emptyQuery() {
+		$q                 = new Query();
+		$q->resultSets     = [];
+		$q->resultSet      = [];
+		$q->performed      = true;
+		$q->countperformed = true;
+
+		return $q;
 	}
 }

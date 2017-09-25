@@ -61,13 +61,9 @@ class DatabaseConnection {
 			if ($dialect->inTransaction()) {
 				return true;
 			}
-			try {
-				$rst = $dialect->beginTransaction();
-				if ($rst) {
-					return true;
-				}
-			} catch (\Exception $e) {
-				$this->error = $e->getMessage();
+			$rst = $dialect->beginTransaction();
+			if ($rst) {
+				return true;
 			}
 		}
 
@@ -116,41 +112,45 @@ class DatabaseConnection {
 	 * 在事务中运行.
 	 * 事务过程函数返回非真值[null,false,'',0,空数组等]或抛出任何异常都将导致事务回滚.
 	 *
-	 * @param callable $trans 事务过程函数,声明如下:
+	 * @param \Closure $trans 事务过程函数,声明如下:
 	 *                        function trans(DatabaseConnection $con,mixed $data);
 	 *                        1. $con 数据库链接
 	 *                        2. $data 锁返回的数据.
+	 * @param string   $error 错误信息
 	 * @param ILock    $lock  锁.
 	 *
 	 * @return mixed|null  事务过程函数的返回值或null
 	 */
-	public function trans(callable $trans, ILock $lock = null) {
-		if (is_callable($trans)) {
-			return false;
-		}
-		$rst = $this->start();
-		if ($rst) {
-			try {
-				$data = false;
-				if ($lock && ($data = $lock->lock()) !== false) {
-					throw new \Exception('Cannot get lock from ' . get_class($lock));
-				}
-				if ($lock) {
-					$rst = call_user_func_array($trans, [$this, $data]);
-				} else {
-					$rst = call_user_func_array($trans, [$this]);
-				}
-				if (empty($rst)) {
-					$this->rollback();
+	public function trans(\Closure $trans, &$error = null, ILock $lock = null) {
+		try {
+			$rst = $this->start();
+			if ($rst) {
+				try {
+					$data = false;
+					if ($lock && ($data = $lock->lock()) !== false) {
+						throw new \Exception('Cannot get lock from ' . get_class($lock));
+					}
+					if ($lock) {
+						$rst = call_user_func_array($trans, [$this, $data]);
+					} else {
+						$rst = call_user_func_array($trans, [$this]);
+					}
+					if (empty($rst)) {
+						$this->rollback();
 
-					return $rst;
-				} elseif ($this->commit()) {
-					return $rst;
+						return $rst;
+					} else if ($this->commit()) {
+						return $rst;
+					} else {
+						$error = $this->error = 'Cannot commit trans.';
+					}
+				} catch (\Exception $e) {
+					$error = $this->error = $e->getMessage();
+					$this->rollback();
 				}
-			} catch (\Exception $e) {
-				$this->error = $e->getMessage();
-				$this->rollback();
 			}
+		} catch (\Exception $e) {
+			$error = $this->error = $e->getMessage();
 		}
 
 		return null;
@@ -346,6 +346,17 @@ class DatabaseConnection {
 		$sql->setDialect($this->dialect);
 
 		return $sql;
+	}
+
+	/**
+	 * 批量插入.
+	 *
+	 * @param array $datas
+	 *
+	 * @return \wulaphp\db\sql\InsertSQL
+	 */
+	public function inserts($datas) {
+		return $this->insert($datas, true);
 	}
 
 	/**

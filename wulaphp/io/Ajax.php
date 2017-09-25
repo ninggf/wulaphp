@@ -65,7 +65,15 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function error($message, $style = null) {
-		return new JsonView(['code' => self::ERROR, 'message' => $message, 'style' => $style], ['ajax' => '1'], 500);
+		return new JsonView(['code' => self::ERROR, 'message' => $message, 'style' => $style], ['ajax' => '1']);
+	}
+
+	public static function fatal($message, $code = 500) {
+		return new JsonView([
+			'code'    => self::ERROR,
+			'message' => $message,
+			'style'   => 'notice'
+		], ['ajax' => '1'], $code);
 	}
 
 	/**

@@ -2,6 +2,7 @@
 
 namespace wulaphp\mvc\controller;
 
+use wulaphp\app\App;
 use wulaphp\io\Session;
 
 /**
@@ -11,6 +12,7 @@ use wulaphp\io\Session;
  */
 trait SessionSupport {
 	protected function onInitSessionSupport() {
-		(new Session ())->start();
+		$expire = App::icfg('session.expire', 0);
+		(new Session ($expire))->start();
 	}
 }

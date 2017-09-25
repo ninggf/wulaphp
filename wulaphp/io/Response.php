@@ -173,6 +173,14 @@ class Response {
 			$data ['message'] = $message;
 			$view             = template('404.tpl', $data);
 			echo $view->render();
+		} else if ($status == 403) {
+			$data ['message'] = $message;
+			$view             = template('403.tpl', $data);
+			echo $view->render();
+		} else if ($status == 500) {
+			$data ['message'] = $message;
+			$view             = template('500.tpl', $data);
+			echo $view->render();
 		} else if ($message) {
 			if (is_array($message)) {
 				$message = json_encode($message);

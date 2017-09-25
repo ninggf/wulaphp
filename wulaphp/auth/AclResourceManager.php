@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\auth;
 /**
  * Acl资源管理器.
@@ -9,7 +10,7 @@ class AclResourceManager {
 
 	private $root;
 
-	public function __construct() {
+	private function __construct() {
 		$this->root = new AclResource ('/');
 	}
 
@@ -20,19 +21,22 @@ class AclResourceManager {
 	 *
 	 * @return AclResource
 	 */
-	public function getResource($id = '', $name = '') {
+	public function getResource($id = '', $name = '', $defaultOp = null) {
 		if (empty ($id) || $id == '/') {
 			return $this->root;
 		} else {
 			$ids  = explode('/', $id);
 			$node = $this->root;
-			$path = array();
+			$path = [];
 			while (($id = array_shift($ids)) != null) {
 				$path [] = $id;
 				$node    = $node->getNode($id, implode('/', $path));
 			}
 			if (!empty ($name)) {
 				$node->setName($name);
+			}
+			if ($defaultOp) {
+				$node->addOperate($defaultOp, '', '', true);
 			}
 
 			return $node;
@@ -48,9 +52,9 @@ class AclResourceManager {
 	 */
 	public static function getInstance($type = 'default') {
 		static $aclm = [];
-		if (!isset($aclm)) {
+		if (!isset($aclm[ $type ])) {
 			$manager = new AclResourceManager();
-			file('rbac\init' . ucfirst($type) . 'Acl', $manager);
+			@fire('rbac\init' . ucfirst($type) . 'Manager', $manager);
 			$aclm[ $type ] = $manager;
 		}
 

@@ -131,8 +131,6 @@ abstract class FormField implements \ArrayAccess {
 	/**
 	 * 取数据提供器.
 	 *
-	 * @param array $option 配置选项.
-	 *
 	 * @return \wulaphp\form\providor\FieldDataProvidor
 	 */
 	public function getDataProvidor() {

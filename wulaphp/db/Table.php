@@ -6,6 +6,7 @@ use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\UpdateSQL;
 use wulaphp\validator\ValidateException;
+use wulaphp\wulaphp\db\ILock;
 
 /**
  * 表基类,提供与表相关的简单操作。
@@ -29,6 +30,18 @@ abstract class Table extends View {
 	}
 
 	/**
+	 * 在事务中运行.
+	 *
+	 * @param \Closure                       $fun
+	 * @param \wulaphp\wulaphp\db\ILock|null $lock
+	 *
+	 * @return mixed|null
+	 */
+	protected function trans(\Closure $fun, ILock $lock = null) {
+		return $this->dbconnection->trans($fun, $this->errors, $lock);
+	}
+
+	/**
 	 * 创建记录.
 	 *
 	 * @param array    $data 数据.
@@ -36,6 +49,7 @@ abstract class Table extends View {
 	 *
 	 * @return bool|int 成功返回true或主键值,失败返回false.
 	 * @throws ValidateException
+	 * @throws \PDOException
 	 */
 	protected function insert($data, $cb = null) {
 		if ($cb && $cb instanceof \Closure) {
@@ -53,10 +67,7 @@ abstract class Table extends View {
 			$sql = new InsertSQL($data);
 			$sql->into($this->table)->setDialect($this->dialect);
 			if ($this->autoIncrement) {
-				$rst = $sql->exec();
-				if ($rst && $rst [0]) {
-					$rst = $rst [0];
-				}
+				$rst = $sql->newId();
 			} else {
 				$rst = $sql->exec(true);
 			}

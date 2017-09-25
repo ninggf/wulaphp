@@ -64,7 +64,7 @@ trait Validator {
 				/**@var $ann \wulaphp\util\Annotation */
 				$ann      = $def['annotation'];
 				$anns     = $ann->getAll();
-				$multiple = $def['type'] == 'array';
+				$multiple = $def['type'] == 'array' || $def['type'] == '[]';
 				foreach ($anns as $an => $va) {
 					if (isset($this->preDefinedRule[ $an ]) && !is_array($va)) {
 						// 用=>分隔参数与提示消息.$r[0]参数,$r[1]为提示信息
@@ -355,6 +355,7 @@ trait Validator {
 		}
 		$value = $data[ $field ];
 		$rst   = false;
+		$exp   = ltrim($exp, '#');
 		if (isset ($data [ $exp ])) {
 			$rst = $value == $data [ $exp ];
 		}
@@ -373,6 +374,7 @@ trait Validator {
 		$value = $data[ $field ];
 		$rst   = false;
 		$v1    = null;
+		$exp   = ltrim($exp, '#');
 		if (isset ($data [ $exp ])) {
 			$v1  = $data [ $exp ];
 			$rst = $value != $v1;
