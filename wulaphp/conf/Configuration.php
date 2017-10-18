@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\conf;
 
 /**
@@ -9,7 +10,7 @@ namespace wulaphp\conf;
  */
 class Configuration implements \ArrayAccess, \IteratorAggregate {
 
-	protected $settings = array();
+	protected $settings = [];
 
 	protected $name;
 
@@ -26,7 +27,9 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 	}
 
 	public function setConfigs($settings = []) {
-		$this->settings = $settings;
+		if ($settings) {
+			$this->settings = array_merge($this->settings, (array)$settings);
+		}
 	}
 
 	public function offsetExists($offset) {

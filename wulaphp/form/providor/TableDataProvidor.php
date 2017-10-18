@@ -18,7 +18,7 @@ use wulaphp\db\SimpleTable;
 class TableDataProvidor extends FieldDataProvidor {
 
 	public function getData($search = false) {
-		$options = $this->option;
+		$options = $this->optionAry;
 		if (!isset($options['table'])) {
 			return [];
 		}

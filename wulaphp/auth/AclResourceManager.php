@@ -16,8 +16,9 @@ class AclResourceManager {
 
 	/**
 	 *
-	 * @param string $id
-	 * @param string $name
+	 * @param string      $id
+	 * @param string      $name
+	 * @param string|null $defaultOp
 	 *
 	 * @return AclResource
 	 */

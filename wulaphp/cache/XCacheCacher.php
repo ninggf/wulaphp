@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\cache;
 
 class XCacheCacher extends Cache {
@@ -16,11 +17,7 @@ class XCacheCacher extends Cache {
 	}
 
 	public function get($key) {
-		if (@xcache_isset($key)) {
-			return @xcache_get($key);
-		}
-
-		return null;
+		return @xcache_get($key);
 	}
 
 	public function clear($check = true) {

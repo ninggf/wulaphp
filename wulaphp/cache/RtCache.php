@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\cache {
 
 	/* 运行时缓存 */
@@ -18,7 +19,7 @@ namespace wulaphp\cache {
 				RtCache::$PRE = defined('APPID') && APPID ? APPID : WWWROOT;
 				if (APP_MODE != 'pro') {
 					RtCache::$CACHE = new Cache ();
-				} else if (function_exists('apc_store')) {
+				} else if (function_exists('apcu_store')) {
 					RtCache::$CACHE = new ApcCacher ();
 				} else if (function_exists('xcache_get')) {
 					RtCache::$CACHE = new XCacheCacher ();
@@ -32,8 +33,9 @@ namespace wulaphp\cache {
 
 		public static function add($key, $data) {
 			$key = md5(RtCache::$PRE . $key);
+			RtCache::$CACHE->add($key, $data);
 
-			return RtCache::$CACHE->add($key, $data);
+			return true;
 		}
 
 		public static function get($key) {
@@ -70,6 +72,7 @@ namespace wulaphp\cache {
 
 	RtCache::init();
 }
+
 namespace {
 
 	/**

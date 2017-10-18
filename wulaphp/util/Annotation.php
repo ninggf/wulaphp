@@ -4,10 +4,7 @@ namespace wulaphp\util;
 
 class Annotation {
 	const IGNORE = [
-		'param'      => 1,
-		'return'     => 1,
 		'global'     => 1,
-		'see'        => 1,
 		'use'        => 1,
 		'internal'   => 1,
 		'link'       => 1,
@@ -23,7 +20,6 @@ class Annotation {
 	];
 	protected $docComment  = '';
 	protected $annotations = [];
-	private   $anns        = [];
 
 	/**
 	 * Annotation constructor.
@@ -122,6 +118,18 @@ class Annotation {
 		return $default;
 	}
 
+	public function getMultiValues($annotation, $default = []) {
+		$str = $this->getString($annotation);
+		if (is_array($str)) {
+			return $str;
+		}
+		if ($str) {
+			return [$str];
+		}
+
+		return $default;
+	}
+
 	public function getBool($name, $default = false) {
 		if (!$this->has($name)) {
 			return $default;
@@ -142,6 +150,9 @@ class Annotation {
 	 */
 	public function getJsonArray($annotation, $default = []) {
 		$str = $this->getString($annotation);
+		if (is_array($str)) {
+			return $str;
+		}
 		if ($str) {
 			$str = trim($str);
 			if (preg_match('#^[\[\{](.*)[\}\]]$#', $str)) {

@@ -15,9 +15,10 @@ use wulaphp\db\sql\ImmutableValue;
  * @method array inflate()
  */
 trait Validator {
-	private $rules          = [];
-	private $rulesIdx       = [];
-	private $ruleKeys       = [];
+	private $rules    = [];
+	private $rulesIdx = [];
+	private $ruleKeys = [];
+	//预定义的验证规则
 	private $preDefinedRule = [
 		'required'           => true,
 		'equalTo'            => true,
@@ -44,7 +45,8 @@ trait Validator {
 		'rangeWords'         => true,
 		'minWords'           => true,
 		'maxWords'           => true,
-		'require_from_group' => true
+		'require_from_group' => true,
+		'passwd'             => true
 	];
 
 	/**
@@ -733,6 +735,32 @@ trait Validator {
 		}
 
 		return true;
+	}
+
+	protected function v_passwd($field, $exp, $data, $message) {
+		if ($this->isEmpty($field, $data)) {
+			return true;
+		}
+		$value = $data[ $field ];
+
+		switch ($exp) {
+			case '2'://有字母，数字，符号
+				$rst = preg_match('/[a-z]/i', $value) && preg_match('/\d/', $value) && preg_match('/[^a-z\d]/i', $value);
+				break;
+			case '3':
+				$rst = preg_match('/[A-Z]/', $value) && preg_match('/[a-z]/', $value) && preg_match('/\d/', $value) && preg_match('/[^a-z\d]/i', $value);
+				//有小写字母，大写字母，数字，符号
+				break;
+			case '1'://有字母，数字
+			default:
+				$exp = '';
+				$rst = preg_match('/[a-z]/i', $value) && preg_match('/\d/', $value);
+		}
+		if ($rst) {
+			return true;
+		}
+
+		return (empty ($message) ? _t('password' . $exp . '@validator') : $message);
 	}
 
 	/**

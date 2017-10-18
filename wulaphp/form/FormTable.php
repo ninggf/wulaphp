@@ -64,6 +64,11 @@ abstract class FormTable extends Table {
 				$formData[ $key ] = $data[ $v['name'] ] = $v['default'];
 			} else if ($v['type'] == 'bool') {
 				$formData[ $key ] = $data[ $v['name'] ] = 0;
+				$this->{$key}     = 0;
+			} else if ($v['type'] == 'array' || $v['type'] == '[]') {
+				$data[ $v['name'] ] = $this->pack($key, [], $v);
+				$formData[ $key ]   = [];
+				$this->{$key}       = [];
 			}
 		}
 
@@ -100,8 +105,8 @@ abstract class FormTable extends Table {
 	 * @return array
 	 */
 	public final function inflateByData($data) {
-		$rtn      = [];
-		$formData = [];
+		$rtn      = $this->_tableData;
+		$formData = $this->_formData;
 		if ($data) {
 			foreach ($this->_maps_ as $key => $v) {
 				if (isset($data[ $key ])) {
@@ -180,7 +185,6 @@ abstract class FormTable extends Table {
 			case 'float':
 				return floatval($value);
 			case 'array':
-				return @unserialize($value);
 			case 'json':
 				return @json_decode($value, true);
 			case 'date':
@@ -208,7 +212,6 @@ abstract class FormTable extends Table {
 			case 'float':
 				return floatval($value);
 			case 'array':
-				return @serialize($value);
 			case 'json':
 				return @json_encode($value);
 			case 'bool':
@@ -284,12 +287,12 @@ abstract class FormTable extends Table {
 	 *
 	 * @return string 字段名
 	 */
-	protected function addField($fname, Annotation $ann, $default) {
+	protected function addField($fname, Annotation $ann, $default = '') {
 		if ($ann->has('type')) {
 			//字段名
 			$fieldName = $ann->getString('name', $fname);
 			//忽略值
-			$this->_skips_[ $fieldName ] = $ann->has('skip');
+			$this->_skips_[ $fname ] = $ann->has('skip');
 			//字段配置
 			$this->_fields[ $fname ] = [
 				'annotation' => $ann,
@@ -301,9 +304,9 @@ abstract class FormTable extends Table {
 				'xssClean'   => $ann->getBool('xssclean', $this->_xssClean)
 			];
 			//映射
-			$this->_maps_[ $fieldName ] = $fname;
+			$this->_maps_[ $fname ] = $fname;
 
-			return "`{$fieldName}`";
+			return "`{$fname}`";
 		}
 
 		return "`{$fname}`";

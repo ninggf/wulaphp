@@ -25,7 +25,7 @@ use wulaphp\wulaphp\db\TableLocker;
  */
 abstract class View {
 	private static $tableClzs   = [];
-	public         $table       = null;//表名
+	public         $table       = '';//表名
 	private        $originTable;
 	protected      $tableName;//带前缀表名
 	protected      $qualifiedName;//带AS的表名
@@ -50,33 +50,35 @@ abstract class View {
 	 * @param string|array|DatabaseConnection|View $db 数据库实例.
 	 */
 	public function __construct($db = null) {
-		$tb          = explode("\\", get_class($this));
-		$this->alias = preg_replace('#(View|Table|Model)$#', '', array_pop($tb));
-		if (!$this->table) {
-			$table = $this->myTableName();
-			if (!$table) {
-				$table = lcfirst($this->alias);
+		if ($this->table !== null) {
+			$tb          = explode("\\", get_class($this));
+			$this->alias = preg_replace('#(View|Table|Model|Form)$#', '', array_pop($tb));
+			if (!$this->table) {
+				$table = $this->myTableName();
+				if (!$table) {
+					$table = lcfirst($this->alias);
+				}
+				$this->table = preg_replace_callback('#[A-Z]#', function ($r) {
+					return '_' . strtolower($r [0]);
+				}, $table);
 			}
-			$this->table = preg_replace_callback('#[A-Z]#', function ($r) {
-				return '_' . strtolower($r [0]);
-			}, $table);
-		}
-		$this->foreignKey  = $this->table . '_id';//被其它表引用时的字段名
-		$this->primaryKey  = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];//本表主键字段
-		$this->originTable = $this->table;
-		$this->table       = '{' . $this->table . '}';
+			$this->foreignKey  = $this->table . '_id';//被其它表引用时的字段名
+			$this->primaryKey  = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];//本表主键字段
+			$this->originTable = $this->table;
+			$this->table       = '{' . $this->table . '}';
 
-		if ($db instanceof View) {
-			$this->dbconnection = $db->dbconnection;
-		} else if (!$db instanceof DatabaseConnection) {
-			$this->dbconnection = App::db($db === null ? 'default' : $db);
-		} else {
-			$this->dbconnection = $db;
+			if ($db instanceof View) {
+				$this->dbconnection = $db->dbconnection;
+			} else if (!$db instanceof DatabaseConnection) {
+				$this->dbconnection = App::db($db === null ? 'default' : $db);
+			} else {
+				$this->dbconnection = $db;
+			}
+			$this->dialect       = $this->dbconnection->getDialect();
+			$this->tableName     = $this->dialect->getTableName($this->table);
+			$this->qualifiedName = $this->table . ' AS ' . $this->alias;
+			$this->ormObj        = new Orm($this, $this->primaryKeys[0]);
 		}
-		$this->dialect       = $this->dbconnection->getDialect();
-		$this->tableName     = $this->dialect->getTableName($this->table);
-		$this->qualifiedName = $this->table . ' AS ' . $this->alias;
-		$this->ormObj        = new Orm($this, $this->primaryKeys[0]);
 	}
 
 	/**

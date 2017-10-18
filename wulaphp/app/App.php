@@ -65,9 +65,9 @@ class App {
 			throw new \Exception('cannot find configuration loader: ' . $clz);
 		}
 		if ($configLoader instanceof ConfigurationLoader) {
+			$this->configLoader = $configLoader;
 			$configLoader->beforeLoad();
 			$this->configs ['default'] = $configLoader->loadConfig();
-			$this->configLoader        = $configLoader;
 			$configLoader->postLoad();
 		} else {
 			throw new \Exception('no ConfigurationLoader found!');
@@ -390,6 +390,25 @@ class App {
 
 			return intval($val);
 		}
+	}
+
+	/**
+	 * 取数组.
+	 *
+	 * @param string $name
+	 * @param array  $default
+	 *
+	 * @return array
+	 */
+	public static function acfg($name, $default = []) {
+		$value = self::cfg($name);
+		if ($value) {
+			$value = @json_decode($value, true);
+		} else {
+			$value = $default;
+		}
+
+		return $value;
 	}
 
 	/**

@@ -13,9 +13,14 @@ namespace wulaphp\form\providor;
 class FieldDataProvidor {
 	/**
 	 * 选项.
-	 * @var array
+	 * @var string|array
 	 */
 	protected $option;
+	/**
+	 * @var array
+	 */
+	protected $optionAry;
+
 	/**
 	 * @var \wulaphp\form\FormTable
 	 */
@@ -30,12 +35,17 @@ class FieldDataProvidor {
 	 *
 	 * @param \wulaphp\form\FormTable  $form
 	 * @param  \wulaphp\form\FormField $field
-	 * @param array                    $option 选项
+	 * @param string                   $option 选项
 	 */
-	public function __construct($form, $field, $option = []) {
+	public function __construct($form, $field, $option = '') {
 		$this->option = $option;
-		$this->form   = $form;
-		$this->field  = $field;
+		if (!is_array($option)) {
+			$this->optionAry = @json_decode($this->option, true);
+		} else {
+			$this->optionAry = $this->option;
+		}
+		$this->form  = $form;
+		$this->field = $field;
 	}
 
 	/**

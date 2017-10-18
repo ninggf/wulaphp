@@ -17,6 +17,7 @@ class Passport {
 	public         $nickname  = '';
 	public         $phone     = '';
 	public         $email     = '';
+	public         $avatar    = '';
 	public         $isLogin   = false;
 	public         $data      = [];
 	public         $error     = null;//错误信息.
@@ -41,7 +42,11 @@ class Passport {
 			$defaultPassport = apply_filter('passport\new' . ucfirst($type) . 'Passport', new Passport());
 			$passport        = sess_get(self::SESSION_NAME . '_' . $type);
 			if ($passport) {
-				self::$INSTANCES[ $type ] = @unserialize($passport);
+				if (function_exists('igbinary_unserialize')) {
+					self::$INSTANCES[ $type ] = @igbinary_unserialize($passport);
+				} else {
+					self::$INSTANCES[ $type ] = @unserialize($passport);
+				}
 			} else {
 				$defaultPassport->type    = $type;
 				self::$INSTANCES[ $type ] = $defaultPassport;
@@ -101,6 +106,7 @@ class Passport {
 		$info['nickname'] = $this->nickname;
 		$info['phone']    = $this->phone;
 		$info['email']    = $this->email;
+		$info['avatar']   = $this->avatar;
 
 		return $info;
 	}
@@ -110,7 +116,11 @@ class Passport {
 	 * @return bool
 	 */
 	public function store() {
-		$s = @serialize($this);
+		if (function_exists('igbinary_serialize')) {
+			$s = @igbinary_serialize($this);
+		} else {
+			$s = @serialize($this);
+		}
 		if ($s) {
 			$_SESSION[ self::SESSION_NAME . '_' . $this->type ] = $s;
 		}

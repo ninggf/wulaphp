@@ -91,22 +91,23 @@ class DefaultDispatcher implements IURLDispatcher {
 				//模块不可用.
 				return null;
 			}
-			$app = RtCache::get($url);
+			$ckey = 'rt@'.$url;
+			$app = RtCache::get($ckey);
 			if (!$app) {
 				$app = $this->findApp($module, $action, $pms, $namespace);
-				RtCache::add($url, $app);
+				RtCache::add($ckey, $app);
 			} else if (is_file($app[3])) {
 				include $app[3];
 			} else {
 				$app = $this->findApp($module, $action, $pms, $namespace);
 				if ($app) {
-					RtCache::add($url, $app);
+					RtCache::add($ckey, $app);
 				}
 			}
 			if ($app) {
 				list ($controllerClz, $action, $pms, , $controllerSlag, $actionSlag) = $app;
 				if (in_array($action, ['beforerun', 'afterrun', 'geturlprefix'])) {
-					RtCache::delete($url);
+					RtCache::delete($ckey);
 
 					return null;
 				}
@@ -120,7 +121,7 @@ class DefaultDispatcher implements IURLDispatcher {
 							$cprefix   = $tmpPrefix && isset($tmpPrefix[1]) ? $tmpPrefix[1] : '';
 						}
 						if (($cprefix || $prefix) && $cprefix != $prefix) {
-							RtCache::delete($url);
+							RtCache::delete($ckey);
 
 							return null;
 						}

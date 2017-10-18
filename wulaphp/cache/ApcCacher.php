@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\cache;
 
 /**
@@ -9,25 +10,29 @@ namespace wulaphp\cache;
  */
 class ApcCacher extends Cache {
 
-    public function add($key, $data, $expire = 0) {
-        apc_store ( $key, $data );
-        return true;
-    }
+	public function add($key, $data, $expire = 0) {
+		apcu_store($key, $data);
 
-    public function delete($key) {
-        apc_delete ( $key );
-        return true;
-    }
+		return true;
+	}
 
-    public function get($key) {
-        return apc_fetch ( $key );
-    }
+	public function delete($key) {
+		apcu_delete($key);
 
-    public function clear($check = true) {
-        return apc_clear_cache ( 'user' );
-    }
+		return true;
+	}
 
-    public function has_key($key) {
-        return apc_exists ( $key );
-    }
+	public function get($key) {
+		$v = apcu_fetch($key, $rtn);
+
+		return $rtn ? $v : null;
+	}
+
+	public function clear($check = true) {
+		return apcu_clear_cache();
+	}
+
+	public function has_key($key) {
+		return apcu_exists($key);
+	}
 }

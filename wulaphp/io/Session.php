@@ -27,7 +27,9 @@ class Session {
 		$http_only      = true;
 		@ini_set('session.use_cookies', 1);
 		@session_set_cookie_params($session_expire, '/', '', false, $http_only);
-
+		if ($session_expire) {
+			@ini_set('session.gc_maxlifetime', $session_expire + 2);
+		}
 		$session_name = get_session_name();
 		if (empty($session_id)) {
 			$session_id = isset ($_COOKIE [ $session_name ]) ? $_COOKIE [ $session_name ] : null;

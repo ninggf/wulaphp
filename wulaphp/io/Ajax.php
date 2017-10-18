@@ -52,7 +52,7 @@ class Ajax {
 	 *
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
-	public static function success($message, $style = null) {
+	public static function success($message = '', $style = null) {
 		return new JsonView(['code' => self::SUCCESS, 'message' => $message, 'style' => $style], ['ajax' => '1']);
 	}
 

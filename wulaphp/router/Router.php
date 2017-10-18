@@ -154,16 +154,15 @@ class Router {
 		$this->requestURL = $url;
 		//从原生的URL中解析出参数
 		$query = parse_url($uri, PHP_URL_QUERY);
-		$args  = array();
+		$args  = [];
 		if ($query) {
 			parse_str($query, $args);
 			$this->xssCleaner->xss_clean($args);
 		}
 		$this->queryParams = $args;
 		$view              = null;
-		//在分发之前
 		fire('router\beforeDispatch', $this);
-		//预处理，读取缓存的好时机
+		//预处理
 		foreach ($this->preDispatchers as $dispatchers) {
 			foreach ($dispatchers as $d) {
 				if ($d instanceof IURLPreDispatcher) {
@@ -189,7 +188,6 @@ class Router {
 					break;
 				}
 			}
-			// 分发后处理，缓存内容的好时机.
 			foreach ($this->postDispatchers as $dispatchers) {
 				foreach ($dispatchers as $d) {
 					if ($d instanceof IURLPostDispatcher) {
@@ -230,7 +228,7 @@ class Router {
 	 *
 	 * @param string $string 要转换的字符.
 	 *
-	 * @return mixed 转换后的字符.
+	 * @return string 转换后的字符.
 	 */
 	public static function addSlash($string) {
 		$string = lcfirst($string);

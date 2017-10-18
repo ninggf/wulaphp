@@ -12,7 +12,7 @@ use wulaphp\io\Session;
  */
 trait SessionSupport {
 	protected function onInitSessionSupport() {
-		$expire = App::icfg('session.expire', 0);
+		$expire = App::icfg('expire', 0);
 		(new Session ($expire))->start();
 	}
 }

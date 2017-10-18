@@ -42,12 +42,15 @@ abstract class FormField implements \ArrayAccess {
 		/**@var \wulaphp\util\Annotation */
 		$ann = $options['annotation'];
 		if ($ann) {
-			$opts             = $ann->getJsonArray('option', []);
-			$opts ['label']   = $ann->getString('label', $ann->getDoc());
-			$opts ['render']  = $ann->getString('render');
-			$opts ['wrapper'] = $ann->getString('wrapper');
-			$opts ['layout']  = $ann->getString('layout');
-			$this->options    = array_merge($this->options, $opts);
+			$opts ['label']      = $ann->getString('label', $ann->getDoc());
+			$opts ['render']     = $ann->getString('render');
+			$opts ['wrapper']    = $ann->getString('wrapper');
+			$opts ['layout']     = $ann->getString('layout');
+			$opts ['dataSource'] = $ann->getString('dataSource', $ann->getString('see', null));
+			$opts ['dsCfg']      = $ann->getString('dsCfg');
+			$opts ['note']       = $ann->getString('note');
+			$opts1               = $ann->getJsonArray('option', []);
+			$this->options       = array_merge($this->options, $opts, $opts1);
 			$form->alterFieldOptions($name, $this->options);
 		}
 	}
@@ -144,7 +147,7 @@ abstract class FormField implements \ArrayAccess {
 			return FieldDataProvidor::emptyDatasource();
 		}
 
-		return new $dsp($this->form, $this, isset($this->options['dsCfg']) ? $this->options['dsCfg'] : []);
+		return new $dsp($this->form, $this, isset($this->options['dsCfg']) ? $this->options['dsCfg'] : '');
 	}
 
 	public function offsetExists($offset) {

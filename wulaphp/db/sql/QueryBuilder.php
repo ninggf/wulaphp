@@ -285,15 +285,16 @@ abstract class QueryBuilder {
 			$field = rqst('sort.name');
 			$order = rqst('sort.dir', 'a');
 		}
-
-		if (is_string($field)) {
-			$orders = explode(',', strtolower($order));
-			$fields = explode(',', $field);
-			foreach ($fields as $i => $field) {
-				$this->order [] = [$field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]];
+		if ($field) {
+			if (is_string($field)) {
+				$orders = explode(',', strtolower($order));
+				$fields = explode(',', $field);
+				foreach ($fields as $i => $field) {
+					$this->order [] = [$field, isset($orders[ $i ]) ? $orders[ $i ] : $orders[0]];
+				}
+			} else if (is_array($field)) {
+				$this->sort($field[0], isset($field[1]) ? $field[1] : 'a');
 			}
-		} else if (is_array($field)) {
-			$this->sort($field[0], isset($field[1]) ? $field[1] : 'a');
 		}
 
 		return $this;

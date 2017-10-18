@@ -49,10 +49,12 @@ abstract class Module {
 	}
 
 	/**
+	 * @param string $file 文件名.
+	 *
 	 * @return string 路径
 	 */
-	public final function getPath() {
-		return $this->path;
+	public final function getPath($file = null) {
+		return $this->path . ($file ? DS . $file : '');
 	}
 
 	/**

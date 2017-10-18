@@ -10,9 +10,12 @@
 
 namespace wulaphp\form\providor;
 /**
- * 一行一条数据。用=号分隔Key与Value.如：
+ * 1. 一行一条数据。用=号分隔Key与Value.如：
  * "1=你好\n2=我好"
  * 将解析为 [1=>'你好',2=>'我好']
+ *
+ * 2. 或者用Json格式，如：
+ * { "1":"你好","2":"我好"}
  *
  * @package wulaphp\form\providor
  * @since   1.0.0
@@ -24,8 +27,8 @@ class LineDataProvidor extends FieldDataProvidor {
 		if (is_callable($options)) {
 			$options = call_user_func_array($options, []);
 		}
-		if (is_array($options)) {
-			$datas = $options;
+		if (is_array($this->optionAry)) {
+			$datas = $this->optionAry;
 		} else if ($options) {
 			$data = explode("\n", $options);
 			foreach ($data as $defaut) {
