@@ -133,6 +133,9 @@ return [
 		'minWords'           => '请至少输入%s个单词',
 		'maxWords'           => '最多输入%s个单词',
 		'notsupportmethod'   => '%s使用了系统不支持的验证方法:%s',
-		'require_from_group' => '这些字段至少填%s个'
+		'require_from_group' => '这些字段至少填%s个',
+		'password'           => '密码必须由数字、字母组成',
+		'password2'          => '密码必须由数字、字母和符号组成',
+		'password3'          => '密码必须由数字、小写字母、大写字母和符号组成'
 	]
 ];

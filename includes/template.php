@@ -167,6 +167,10 @@ function smarty_modifiercompiler_timediff($params, $compiler) {
 	return "timediff({$cnt})";
 }
 
+function smarty_modifiercompiler_media($params, $compiler) {
+	return 'the_media_src(' . $params [0] . ')';
+}
+
 function smarty_modifiercompiler_app($params, $compiler) {
 	return "wulaphp\\app\\App::url({$params[0]})";
 }

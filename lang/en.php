@@ -28,5 +28,8 @@ return [
 		'maxWords'           => 'Please enter {0} words or less.',
 		'notsupportmethod'   => 'not support validate method: %s',
 		'require_from_group' => 'Please fill at least %s of these fields.',
+		'password'           => 'password must consist of numbers and letters',
+		'password2'          => 'password must consist of numbers, letters, and symbols',
+		'password3'          => 'password must consist of numbers, lowercase letters, capital letters, and symbols'
 	]
 ];
