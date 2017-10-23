@@ -6,7 +6,7 @@
  * @name   $__ksg_rtk_hooks
  * @var array
  */
-$__ksg_rtk_hooks = array();
+$__ksg_rtk_hooks = [];
 /**
  * 已经排序的插件
  *
@@ -14,7 +14,7 @@ $__ksg_rtk_hooks = array();
  * @name   $__ksg_sorted_hooks
  * @var array
  */
-$__ksg_sorted_hooks = array();
+$__ksg_sorted_hooks = [];
 /**
  * 正在触发的HOOKS
  *
@@ -22,7 +22,7 @@ $__ksg_sorted_hooks = array();
  * @name   $__ksg_triggering_hooks
  * @var array
  */
-$__ksg_triggering_hooks = array();
+$__ksg_triggering_hooks = [];
 
 /**
  * 注册一个HOOK的回调函数
@@ -46,7 +46,7 @@ function bind($hook, $hook_func, $priority = 10, $accepted_args = 1) {
 	$priority = $priority ? $priority : 10;
 	if (is_string($hook_func) && $hook_func{0} == '&') {
 		$hook_func = ltrim($hook_func, '&');
-		$hook_func = array($hook_func, $hook);
+		$hook_func = [$hook_func, $hook];
 	}
 	if (empty ($hook_func)) {
 		log_error('the hook function must not be empty!', 'plugin');
@@ -54,7 +54,7 @@ function bind($hook, $hook_func, $priority = 10, $accepted_args = 1) {
 		return false;
 	}
 	$idx                                              = __rt_hook_unique_id($hook_func);
-	$__ksg_rtk_hooks [ $hook ] [ $priority ] [ $idx ] = array('func' => $hook_func, 'accepted_args' => $accepted_args);
+	$__ksg_rtk_hooks [ $hook ] [ $priority ] [ $idx ] = ['func' => $hook_func, 'accepted_args' => $accepted_args];
 
 	unset ($__ksg_sorted_hooks [ $hook ]);
 
@@ -123,6 +123,7 @@ function unbind_all($hook, $priority = false) {
  * @param string $hook                   HOOK名称
  * @param mixed  $arg                    参数
  *
+ * @return string
  */
 function fire($hook, $arg = '') {
 	global $__ksg_rtk_hooks, $__ksg_sorted_hooks, $__ksg_triggering_hooks;
@@ -131,9 +132,9 @@ function fire($hook, $arg = '') {
 	if (!isset ($__ksg_rtk_hooks [ $hook ])) { // 没有该HOOK的回调
 		array_pop($__ksg_triggering_hooks);
 
-		return;
+		return '';
 	}
-	$args = array();
+	$args = [];
 	if (is_array($arg) && 1 == count($arg) && is_object($arg [0])) { // array(&$this)
 		$args [] = &$arg [0];
 	} else {
@@ -150,18 +151,25 @@ function fire($hook, $arg = '') {
 	}
 	// 重置hook回调数组
 	reset($__ksg_rtk_hooks [ $hook ]);
-	do {
-		foreach (( array )current($__ksg_rtk_hooks [ $hook ]) as $the_) {
-			if (!is_null($the_ ['func'])) {
-				if (is_array($the_['func'])) {
-					\wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], $args);
-				} else if (is_callable($the_ ['func'])) {
-					call_user_func_array($the_ ['func'], array_slice($args, 0, ( int )$the_ ['accepted_args']));
+	@ob_start();
+	try {
+		do {
+			foreach (( array )current($__ksg_rtk_hooks [ $hook ]) as $the_) {
+				if (!is_null($the_ ['func'])) {
+					if (is_array($the_['func'])) {
+						\wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], $args);
+					} else if (is_callable($the_ ['func'])) {
+						call_user_func_array($the_ ['func'], array_slice($args, 0, ( int )$the_ ['accepted_args']));
+					}
 				}
 			}
-		}
-	} while (next($__ksg_rtk_hooks [ $hook ]) !== false);
+		} while (next($__ksg_rtk_hooks [ $hook ]) !== false);
+	} catch (Exception $e) {
+
+	}
 	array_pop($__ksg_triggering_hooks);
+
+	return @ob_get_clean();
 }
 
 /**
