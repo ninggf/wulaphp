@@ -20,16 +20,19 @@ class Annotation {
 	];
 	protected $docComment  = '';
 	protected $annotations = [];
+	protected $remove      = true;
 
 	/**
 	 * Annotation constructor.
 	 *
-	 * @param \Reflector|array $obj 可以是{@link \ReflectionObject},
+	 * @param \Reflector|array $obj    可以是{@link \ReflectionObject},
 	 *                        {@link \ReflectionMethod},
 	 *                        {@link \ReflectionProperty},
 	 *                        {@link \ReflectionFunction}的实例。
+	 * @param bool             $remove 是否删除换行,默认true
 	 */
-	public function __construct($obj) {
+	public function __construct($obj, $remove = true) {
+		$this->remove = $remove;
 		if (is_array($obj)) {
 			$this->docComment  = '';
 			$this->annotations = $obj;
@@ -51,7 +54,7 @@ class Annotation {
 						}
 
 						$value = isset($ms[3]) ? $ms[3] : '';
-						$value = $this->text($i, $value, $len);
+						$value = $this->text($i, $value, $len, $this->remove ? '' : "\n");
 						if (isset($this->annotations[ $ann ])) {
 							if (is_array($this->annotations[ $ann ])) {
 								$this->annotations[ $ann ][] = $value;
@@ -183,11 +186,17 @@ class Annotation {
 		$j = $i + 1;
 
 		while ($j < $len) {
-			$val = trim(substr(trim($this->docComment[ $j ]), 1));
-			if ($val{0} == '@') {
+			$val = substr(trim($this->docComment[ $j ]), 1);
+			$ov  = trim($val);
+			if ($sep) {
+				$val = substr($val, 1);
+			} else {
+				$val = trim($val);
+			}
+			if ($ov && $ov{0} == '@') {
 				$j--;//归位
 				break;
-			} else if ($val) {
+			} else {
 				$text .= $sep . $val;
 			}
 			$j++;
