@@ -27,7 +27,7 @@ trait JQueryValidatorController {
 	public function validate($_arg0_form, $_arg1_filed) {
 		if (isset($this->reflectionObj) && $this->reflectionObj) {
 			$ann        = new Annotation($this->reflectionObj);
-			$accepts    = $ann->getArray('accept');
+			$accepts    = $ann->getMultiValues('accept');
 			$_arg0_form = ltrim(str_replace('.', '\\', $_arg0_form), '\\');
 			if ($_arg0_form && in_array($_arg0_form, $accepts) && is_subclass_of($_arg0_form, FormTable::class)) {
 				/**@var \wulaphp\form\FormTable $form */

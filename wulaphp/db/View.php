@@ -35,13 +35,16 @@ abstract class View {
 	protected      $lastValues  = null;
 	protected      $dumpSQL     = null;
 	protected      $alias       = null;
-	private        $ormObj      = null;
 	protected      $foreignKey  = null;//本表主键在其它表中的引用字段
 	protected      $primaryKey  = null;//本表主键字段
-	/** @var \wulaphp\db\dialect\DatabaseDialect 数据库链接（PDO） */
+	/**
+	 * @var \wulaphp\db\dialect\DatabaseDialect 数据库链接（PDO）
+	 */
 	protected $dialect = null;
 	protected $dbconnection;
-	/** @var string 查询字段 */
+	/**
+	 * @var string 查询字段
+	 */
 	protected $defaultQueryFields = '*';
 
 	/**
@@ -77,7 +80,6 @@ abstract class View {
 			$this->dialect       = $this->dbconnection->getDialect();
 			$this->tableName     = $this->dialect->getTableName($this->table);
 			$this->qualifiedName = $this->table . ' AS ' . $this->alias;
-			$this->ormObj        = new Orm($this, $this->primaryKeys[0]);
 		}
 	}
 
@@ -232,7 +234,7 @@ abstract class View {
 			}
 		}
 		$sql      = new Query($fileds);
-		$sql->orm = $this->ormObj->cloneit();
+		$sql->orm = new Orm($this, $this->primaryKeys[0]);
 		$sql->setDialect($this->dialect)->from($this->qualifiedName);
 
 		return $sql;

@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\cache;
 
 use wulaphp\conf\Configuration;
@@ -52,7 +53,7 @@ class RedisCache extends Cache {
 	}
 
 	public function add($key, $value, $expire = 0) {
-		$value = array($value);
+		$value = [$value];
 		$value = @json_encode($value);
 		if ($expire > 0) {
 			$this->redis->set($key, $value, $expire);
@@ -64,7 +65,7 @@ class RedisCache extends Cache {
 	public function get($key) {
 		$value = $this->redis->get($key);
 		if ($value) {
-			$value = json_decode($value);
+			$value = @json_decode($value, true);
 			if ($value) {
 				return $value[0];
 			}

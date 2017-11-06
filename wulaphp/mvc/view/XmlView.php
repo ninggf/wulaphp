@@ -33,13 +33,24 @@ class XmlView extends View {
 	public function render() {
 		if (extension_loaded('xml')) {
 			$xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><' . $this->root . '/>');
-			array_walk_recursive($this->data, function ($v, $k) use ($xml) {
-				$xml->addChild($k, $v);
-			});
+			$this->addNode($xml, $this->data);
 
 			return $xml->asXML();
 		} else {
 			return '<?xml version="1.0"><error>xml extension is not installed</error>';
+		}
+	}
+
+	private function addNode(\SimpleXMLElement &$node, $data) {
+		foreach ($data as $k => $v) {
+			if (is_array($v)) {
+				$nn = $node->addChild($k);
+				$this->addNode($nn, $v);
+			} else if ($k{0} == '@') {
+				$node->addAttribute(substr($k, 1), $v);
+			} else {
+				$node->addChild($k, $v);
+			}
 		}
 	}
 

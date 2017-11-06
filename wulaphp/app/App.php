@@ -4,6 +4,7 @@ namespace wulaphp\app;
 
 use wulaphp\conf\Configuration;
 use wulaphp\conf\ConfigurationLoader;
+use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\DatabaseConnection;
 use wulaphp\db\dialect\DatabaseDialect;
 use wulaphp\db\DialectException;
@@ -146,7 +147,7 @@ class App {
 		if (!self::$app) {
 			new App ();
 		}
-		$debug = App::icfg('debug', DEBUG_WARN);
+		$debug = App::icfg('debug', DEBUG_ERROR);
 		if ($debug > 400 || $debug < 0) {
 			$debug = DEBUG_WARN;
 		}
@@ -228,7 +229,7 @@ class App {
 	/**
 	 * 获取数据库连接实例.
 	 *
-	 * @param string $name 数据库配置名.
+	 * @param string|array|DatabaseConfiguration $name 数据库配置名/配置数组/配置实例.
 	 *
 	 * @return DatabaseConnection
 	 * @throws DialectException
@@ -251,6 +252,9 @@ class App {
 				return $dbs [ $name ];
 			}
 			$config = self::$app->configLoader->loadDatabaseConfig($name);
+		} else if ($name instanceof DatabaseConfiguration) {
+			$config = $name;
+			$name   = $config->__toString();
 		}
 		if ($config) {
 			$dialect = DatabaseDialect::getDialect($config);

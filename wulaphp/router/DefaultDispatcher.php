@@ -5,6 +5,8 @@ namespace wulaphp\router;
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 use wulaphp\mvc\controller\Controller;
+use wulaphp\mvc\view\JsonView;
+use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\SmartyView;
 use wulaphp\mvc\view\View;
 use wulaphp\util\ObjectCaller;
@@ -75,7 +77,7 @@ class DefaultDispatcher implements IURLDispatcher {
 				$namespace = $dir;
 				$module    = App::id2dir($namespace);
 				$action    = 'index';
-			} elseif ($prefix) {
+			} else if ($prefix) {
 				// uri = prefix/action，需要查找module且重置$action
 				if ($action != 'index') {
 					array_unshift($pms, $action);
@@ -91,8 +93,8 @@ class DefaultDispatcher implements IURLDispatcher {
 				//模块不可用.
 				return null;
 			}
-			$ckey = 'rt@'.$url;
-			$app = RtCache::get($ckey);
+			$ckey = 'rt@' . $url;
+			$app  = RtCache::get($ckey);
 			if (!$app) {
 				$app = $this->findApp($module, $action, $pms, $namespace);
 				RtCache::add($ckey, $app);
@@ -160,12 +162,7 @@ class DefaultDispatcher implements IURLDispatcher {
 							/* @var \ReflectionParameter[] $params */
 							$params = $method->getParameters();
 							if (count($params) < count($pms)) {
-								if (APP_MODE != 'pro') {
-									$msg = __('The count of parameters of "%s" does not match, expect %s but %s given.', $controllerClz . '::' . $action, count($params), count($pms));
-									throw new \Exception($msg);
-								} else {
-									return null;
-								}
+								return null;
 							}
 							$rtn = $clz->beforeRun($action, $method);
 							//beforeRun可以返回view了
@@ -174,7 +171,7 @@ class DefaultDispatcher implements IURLDispatcher {
 
 								return $rtn;
 							}
-							$args = array();
+							$args = [];
 							if ($params) {
 								$idx = 0;
 								foreach ($params as $p) {
@@ -189,6 +186,13 @@ class DefaultDispatcher implements IURLDispatcher {
 							}
 							$view = ObjectCaller::callObjMethod($clz, $action, $args);
 							$view = $clz->afterRun($action, $view);
+							if ($view !== null) {
+								if (is_array($view)) {
+									$view = new JsonView($view);
+								} else if (!$view instanceof View) {
+									$view = new SimpleView($view);
+								}
+							}
 							$this->prepareView($view, $module, $clz, $action);
 
 							return $view;
@@ -224,11 +228,11 @@ class DefaultDispatcher implements IURLDispatcher {
 			// Action Controller 的 index方法
 			$controllerClz   = str_replace('-', '', ucwords($action, '-')) . 'Controller';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
-			$files []        = array($controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action);
+			$files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action];
 			// 默认controller的action方法
 			$controllerClz   = 'IndexController';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
-			$files []        = array($controller_file, $namespace . '\controllers\\' . $controllerClz, $action, 'index');
+			$files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, $action, 'index'];
 
 			foreach ($files as $file) {
 				list ($controller_file, $controllerClz, $action, $controller) = $file;
@@ -239,7 +243,14 @@ class DefaultDispatcher implements IURLDispatcher {
 							$action = array_shift($params);
 						}
 
-						return array($controllerClz, Router::removeSlash($action), $params, $controller_file, $controller, $action);
+						return [
+							$controllerClz,
+							Router::removeSlash($action),
+							$params,
+							$controller_file,
+							$controller,
+							$action
+						];
 					}
 				}
 			}
@@ -251,7 +262,7 @@ class DefaultDispatcher implements IURLDispatcher {
 			if (is_file($controller_file)) {
 				include $controller_file;
 				if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
-					return array($controllerClz, Router::removeSlash($action), $params, $controller_file, 'index', $action);
+					return [$controllerClz, Router::removeSlash($action), $params, $controller_file, 'index', $action];
 				}
 			}
 		}

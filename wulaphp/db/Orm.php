@@ -10,16 +10,18 @@ use wulaphp\db\sql\Query;
  * @package wulaphp\db
  */
 class Orm {
-	private $view;
-	private $results    = [];
-	private $queries    = [];
-	private $primaryKey;
-	private $ids        = null;
-	private $eagerDatas = [];
+	private        $view;
+	private        $results    = [];
+	private        $queries    = [];
+	private        $primaryKey;
+	private        $ids        = null;
+	private        $eagerDatas = [];
+	private static $cnt        = 0;
 
 	public function __construct(View $view, $pk) {
 		$this->view       = $view;
 		$this->primaryKey = $pk;
+		self::$cnt++;
 	}
 
 	public function __destruct() {

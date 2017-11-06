@@ -174,4 +174,13 @@ abstract class FormField implements \ArrayAccess {
 	 * @return string
 	 */
 	protected abstract function renderWidget($opts);
+
+	/**
+	 * 字段配置.
+	 *
+	 * @return array
+	 */
+	protected function config() {
+		return [];
+	}
 }

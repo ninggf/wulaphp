@@ -95,6 +95,21 @@ trait Validator {
 	}
 
 	/**
+	 * 应用规则.
+	 *
+	 * @param \wulaphp\validator\Validator $form
+	 *
+	 * @return $this
+	 */
+	public function applyRules($form) {
+		if (is_subclass_of($form, Validator::class)) {
+			$this->rules = $form->getValidateRules();
+		}
+
+		return $this;
+	}
+
+	/**
 	 * 数据校验规则.
 	 *
 	 * @param array $fileds 字段.

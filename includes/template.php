@@ -323,11 +323,11 @@ function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/htm
  * @return \wulaphp\mvc\view\ThemeView
  */
 function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) {
-	static $called_funcs = [];
-	$theme   = apply_filter('get_theme', 'default');
+	$tpls    = explode('/', $tpl, 2);
+	$theme   = $tpls[0];
+	$tpl     = $tpls[1];
 	$tplname = str_replace(['/', '.'], '_', basename($tpl, '.tpl'));
-	list($_tpl, $theme) = apply_filter('get_custome_tplfile', [$tpl, $theme], $data);
-	$_tpl = $theme . DS . $_tpl;
+	$_tpl    = $theme . DS . $tpl;
 	if (is_file(THEME_PATH . $_tpl)) {
 		$tplfile = $_tpl;
 	} else {
@@ -338,31 +338,12 @@ function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) 
 	if (is_file($template_func_file)) {
 		include_once $template_func_file;
 		$func = $theme . '_' . $tplname . '_template_data';
-		if (function_exists($func) && !isset($called_funcs[ $func ])) {
-			$called_funcs[ $func ] = 1;
+		if (function_exists($func)) {
 			$func ($data);
 		}
 		$func = $theme . '_template_data';
-		if (function_exists($func) && !isset($called_funcs[ $func ])) {
-			$called_funcs[ $func ] = 1;
+		if (function_exists($func)) {
 			$func ($data);
-		}
-	}
-	if ($theme != 'default') {
-		$template_func_file = THEME_PATH . 'default' . DS . 'template.php';
-		if (is_file($template_func_file)) {
-			include_once $template_func_file;
-			$func = 'default_' . $tplname . '_template_data';
-			if (function_exists($func) && !isset($called_funcs[ $func ])) {
-				$called_funcs[ $func ] = 1;
-				$func ($data);
-
-			}
-			$func = 'default_template_data';
-			if (function_exists($func) && !isset($called_funcs[ $func ])) {
-				$called_funcs[ $func ] = 1;
-				$func ($data);
-			}
 		}
 	}
 	$data ['_current_template'] = $tplfile;

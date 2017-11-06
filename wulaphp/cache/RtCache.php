@@ -4,6 +4,8 @@ namespace wulaphp\cache {
 
 	/* 运行时缓存 */
 
+	use wulaphp\conf\ConfigurationLoader;
+
 	class RtCache {
 		/**
 		 * @var Cache
@@ -19,6 +21,15 @@ namespace wulaphp\cache {
 				RtCache::$PRE = defined('APPID') && APPID ? APPID : WWWROOT;
 				if (APP_MODE != 'pro') {
 					RtCache::$CACHE = new Cache ();
+				} else if (defined('RUN_IN_CLUSTER')) {//部署到集群中，使用REDIS
+					$loader = new ConfigurationLoader();
+					$cfg    = $loader->loadConfig('cluster');
+					$cache  = RedisCache::getInstance($cfg);
+					if ($cache) {
+						RtCache::$CACHE = $cache;
+					} else {
+						RtCache::$CACHE = new Cache();
+					}
 				} else if (function_exists('apcu_store')) {
 					RtCache::$CACHE = new ApcCacher ();
 				} else if (function_exists('xcache_get')) {
@@ -88,8 +99,8 @@ namespace {
 		if (APP_MODE == 'pro') {
 			return $default;
 		}
-		if ($envs === null && is_file(APPROOT . '.env')) {
-			$envs = @parse_ini_file(APPROOT . '.env');
+		if ($envs === null && is_file(CONFIG_PATH . '.env')) {
+			$envs = @parse_ini_file(CONFIG_PATH . '.env');
 			if (!$envs) {
 				$envs = [];
 			}

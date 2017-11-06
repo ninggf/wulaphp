@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\cache;
 
 use wulaphp\conf\ConfigurationLoader;
@@ -20,7 +21,7 @@ class Cache implements \ArrayAccess {
 		if (!$type) {
 			$loader = new ConfigurationLoader();
 			$cfg    = $loader->loadConfig('cache');
-			$type   = $cfg->getb('type', CACHE_TYPE_REDIS);
+			$type   = $cfg->get('type', CACHE_TYPE_REDIS);
 		}
 		if (!isset($caches[ $type ])) {
 			if (APP_MODE == 'dev') {

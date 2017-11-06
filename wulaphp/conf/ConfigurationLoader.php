@@ -26,7 +26,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 		$wula_cfg_fiels [] = $_wula_config_file . '.php';
 		foreach ($wula_cfg_fiels as $_wula_config_file) {
 			if (is_file($_wula_config_file)) {
-				$cfg = include $_wula_config_file;
+				$cfg = @include $_wula_config_file;
 				if ($cfg instanceof Configuration) {
 					$cfg->setName($name);
 					$config = $cfg;

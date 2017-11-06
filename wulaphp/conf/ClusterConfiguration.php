@@ -7,11 +7,9 @@
 
 namespace wulaphp\conf;
 
-define('CLUSTER_TYPE_REDIS', 'redis');
-
 class ClusterConfiguration extends Configuration {
 
-	public function __construct($type = CLUSTER_TYPE_REDIS) {
+	public function __construct() {
 		parent::__construct('cluster');
 	}
 

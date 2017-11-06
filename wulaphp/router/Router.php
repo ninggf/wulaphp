@@ -70,6 +70,25 @@ class Router {
 	}
 
 	/**
+	 * 获取本次请求的全URI
+	 * @return null|string
+	 */
+	public static function getFullURI() {
+		if (isset($_SERVER ['REQUEST_URI'])) {
+			if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off') {
+				$schema = 'https://';
+			} else {
+				$schema = 'http://';
+			}
+			$uri = $schema . $_SERVER['HTTP_HOST'] . $_SERVER ['REQUEST_URI'];
+
+			return $uri;
+		}
+
+		return null;
+	}
+
+	/**
 	 * 当前是否在请求$url页面.
 	 *
 	 * @param string $url
@@ -179,12 +198,12 @@ class Router {
 				foreach ($dispatchers as $d) {
 					if ($d instanceof IURLDispatcher) {
 						$view = $d->dispatch($url, $this, $this->urlParsedInfo);
-						if ($view) {
+						if (is_array($view) || $view) {
 							break;
 						}
 					}
 				}
-				if ($view) {
+				if (is_array($view) || $view) {
 					break;
 				}
 			}
@@ -195,7 +214,7 @@ class Router {
 					}
 				}
 			}
-			if ($view || is_array($view)) {
+			if (is_array($view) || $view) {
 				$response->output($view);
 			} else if (php_sapi_name() == 'cli-server' && is_file(WWWROOT . $url)) {
 				return false;

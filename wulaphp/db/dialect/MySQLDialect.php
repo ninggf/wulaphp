@@ -211,7 +211,7 @@ class MySQLDialect extends DatabaseDialect {
 			$options = $options->toArray();
 		}
 		$opts    = array_merge([
-			'encoding'       => 'UTF8MB4',
+			'encoding'       => 'UTF8',
 			'dbname'         => '',
 			'host'           => 'localhost',
 			'port'           => 3306,
@@ -219,7 +219,7 @@ class MySQLDialect extends DatabaseDialect {
 			'password'       => 'root',
 			'driver_options' => []
 		], $options);
-		$charset = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8MB4';
+		$charset = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8';
 		if ($charset == null) {
 			$dsn = "mysql:dbname={$opts['dbname']};host={$opts['host']};port={$opts['port']}";
 		} else {
