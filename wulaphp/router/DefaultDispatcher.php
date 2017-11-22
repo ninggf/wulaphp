@@ -96,12 +96,12 @@ class DefaultDispatcher implements IURLDispatcher {
 			$ckey = 'rt@' . $url;
 			$app  = RtCache::get($ckey);
 			if (!$app) {
-				$app = $this->findApp($module, $action, $pms, $namespace);
+				$app = self::findApp($module, $action, $pms, $namespace);
 				RtCache::add($ckey, $app);
 			} else if (is_file($app[3])) {
 				include $app[3];
 			} else {
-				$app = $this->findApp($module, $action, $pms, $namespace);
+				$app = self::findApp($module, $action, $pms, $namespace);
 				if ($app) {
 					RtCache::add($ckey, $app);
 				}
@@ -160,40 +160,50 @@ class DefaultDispatcher implements IURLDispatcher {
 								return null;
 							}
 							/* @var \ReflectionParameter[] $params */
-							$params = $method->getParameters();
-							if (count($params) < count($pms)) {
-								return null;
+							$params      = $method->getParameters();
+							$paramsCount = count($params);
+							if ($paramsCount < count($pms)) {
+								if ($paramsCount == 1 && !$params[0]->isVariadic()) {
+									return null;
+								}
 							}
 							$rtn = $clz->beforeRun($action, $method);
 							//beforeRun可以返回view了
 							if ($rtn instanceof View) {
-								$this->prepareView($rtn, $module, $clz, $action);
+								self::prepareView($rtn, $module, $clz, $action);
 
 								return $rtn;
 							}
-							$args = [];
-							if ($params) {
-								$idx = 0;
-								foreach ($params as $p) {
-									$name    = $p->getName();
-									$def     = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
-									$value   = rqst($name, $def, true);
-									$args [] = is_array($value) ? array_map(function ($v) {
-										return is_array($v) ? $v : urldecode($v);
-									}, $value) : urldecode($value);
-									$idx++;
+							$args    = [];
+							$aryArgs = false;//使用可变参数了
+							if ($paramsCount) {
+								if ($paramsCount == 1 && $params[0]->isVariadic()) {
+									$args    = $pms;
+									$aryArgs = true;
+								} else {
+									$idx = 0;
+									foreach ($params as $p) {
+										$name    = $p->getName();
+										$def     = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
+										$value   = rqst($name, $def, true);
+										$args [] = is_array($value) ? array_map(function ($v) {
+											return is_array($v) ? $v : urldecode($v);
+										}, $value) : urldecode($value);
+										$idx++;
+									}
 								}
 							}
-							$view = ObjectCaller::callObjMethod($clz, $action, $args);
+							$view = $clz->{$action}(...$args);
 							$view = $clz->afterRun($action, $view);
 							if ($view !== null) {
 								if (is_array($view)) {
 									$view = new JsonView($view);
 								} else if (!$view instanceof View) {
 									$view = new SimpleView($view);
+								} else if (!$aryArgs) {
+									self::prepareView($view, $module, $clz, $action);
 								}
 							}
-							$this->prepareView($view, $module, $clz, $action);
 
 							return $view;
 						}
@@ -216,13 +226,18 @@ class DefaultDispatcher implements IURLDispatcher {
 	 * @param string $action
 	 * @param array  $params
 	 * @param string $namespace
+	 * @param string $subnamespace
 	 *
 	 * @return array array ($controllerClz,$action,$params )
 	 */
-	protected function findApp($module, $action, $params, $namespace) {
+	public static function findApp($module, $action, $params, $namespace, $subnamespace = '') {
 		if (is_numeric($action)) {
 			array_unshift($params, $action);
 			$action = 'index';
+		}
+		if ($subnamespace) {
+			$module    .= DS . $subnamespace;
+			$namespace .= '\\' . $subnamespace;
 		}
 		if ($action != 'index') {
 			// Action Controller 的 index方法
@@ -271,12 +286,12 @@ class DefaultDispatcher implements IURLDispatcher {
 	}
 
 	/**
-	 * @param $view
-	 * @param $module
-	 * @param $clz
-	 * @param $action
+	 * @param mixed                              $view
+	 * @param string                             $module
+	 * @param \wulaphp\mvc\controller\Controller $clz
+	 * @param string                             $action
 	 */
-	private function prepareView(&$view, $module, $clz, $action) {
+	public static function prepareView($view, $module, $clz, $action) {
 		if ($view instanceof SmartyView) {
 			$tpl = $view->getTemplate();
 			if ($tpl) {
