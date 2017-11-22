@@ -24,8 +24,10 @@ class LineDataProvidor extends FieldDataProvidor {
 	public function getData($search = false) {
 		$options = $this->option;
 		$datas   = [];
-		if (is_callable($options)) {
-			$options = call_user_func_array($options, []);
+		if ($options instanceof \Closure) {
+			$options = $options();
+		} else if (is_callable($options)) {
+			$options = call_user_func($options);
 		}
 		if (is_array($this->optionAry)) {
 			$datas = $this->optionAry;

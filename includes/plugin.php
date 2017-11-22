@@ -158,8 +158,12 @@ function fire($hook, $arg = '') {
 				if (!is_null($the_ ['func'])) {
 					if (is_array($the_['func'])) {
 						\wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], $args);
+					} else if ($the_ ['func'] instanceof Closure) {
+						$params = array_slice($args, 0, ( int )$the_ ['accepted_args']);
+						$the_ ['func'](...$params);
 					} else if (is_callable($the_ ['func'])) {
-						call_user_func_array($the_ ['func'], array_slice($args, 0, ( int )$the_ ['accepted_args']));
+						$params = array_slice($args, 0, ( int )$the_ ['accepted_args']);
+						$the_ ['func'](...$params);
 					}
 				}
 			}
@@ -207,8 +211,12 @@ function apply_filter($filter, $value) {
 				$args [1] = $value;
 				if (is_array($the_['func'])) {
 					$value = \wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], array_slice($args, 1));
+				} else if ($the_ ['func'] instanceof Closure) {
+					$params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
+					$value  = $the_ ['func'](...$params);
 				} else if (is_callable($the_ ['func'])) {
-					$value = call_user_func_array($the_ ['func'], array_slice($args, 1, ( int )$the_ ['accepted_args']));
+					$params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
+					$value  = $the_ ['func'](...$params);
 				}
 			}
 		}

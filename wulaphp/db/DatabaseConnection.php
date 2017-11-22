@@ -131,9 +131,9 @@ class DatabaseConnection {
 						throw new \Exception('Cannot get lock from ' . get_class($lock));
 					}
 					if ($lock) {
-						$rst = call_user_func_array($trans, [$this, $data]);
+						$rst = $trans($this, $data);
 					} else {
-						$rst = call_user_func_array($trans, [$this]);
+						$rst = $trans($this);
 					}
 					if (empty($rst)) {
 						$this->rollback();

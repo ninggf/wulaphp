@@ -115,12 +115,12 @@ abstract class FormField implements \ArrayAccess {
 	 * @return string
 	 */
 	public function render($opts = []) {
-		if ($this->options['render'] && is_callable([$this->form, $this->options['render']])) {
-			return call_user_func_array([$this->form, $this->options['render']], [$this, $opts]);
+		if ($this->options['render'] && method_exists($this->form, $this->options['render'])) {
+			return $this->form->{$this->options['render']}($this, $opts);
 		} else {
 			$html = $this->renderWidget($opts);
-			if ($this->options['wrapper'] && is_callable([$this->form, $this->options['wrapper']])) {
-				$html = call_user_func_array([$this->form, $this->options['wrapper']], [$html, $this, $opts]);
+			if ($this->options['wrapper'] && method_exists($this->form, $this->options['wrapper'])) {
+				$html = $this->form->{$this->options['wrapper']}($html, $this, $opts);
 			}
 
 			return $html;

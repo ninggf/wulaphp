@@ -143,7 +143,7 @@ spl_autoload_register(function ($clz) {
 	$key      = $clz . '.class';
 	$clz_file = RtCache::get($key);
 	if (is_file($clz_file)) {
-		include @$clz_file;
+		@include $clz_file;
 
 		return;
 	}
@@ -153,7 +153,7 @@ spl_autoload_register(function ($clz) {
 			$clz_file = $cp . $clzf . '.php';
 			if (is_file($clz_file)) {
 				RtCache::add($key, $clz_file);
-				include @$clz_file;
+				@include $clz_file;
 
 				return;
 			}
@@ -162,7 +162,7 @@ spl_autoload_register(function ($clz) {
 		$clz_file = App::loadClass($clz);
 		if ($clz_file && is_file($clz_file)) {
 			RtCache::add($key, $clz_file);
-			include @$clz_file;
+			@include $clz_file;
 
 			return;
 		}
@@ -171,7 +171,7 @@ spl_autoload_register(function ($clz) {
 		$clz_file = $path . DS . $clz . '.php';
 		if (is_file($clz_file)) {
 			RtCache::add($key, $clz_file);
-			include @$clz_file;
+			@include $clz_file;
 
 			return;
 		}
