@@ -30,7 +30,7 @@ abstract class Module {
 		$this->clzName = get_class($this);
 		$ns            = explode('\\', $this->clzName);
 		$ann           = new Annotation($this->reflection);
-		$this->group   = $ann->getString('group');
+		$this->group   = $ann->getString('group','Unknown');
 		array_pop($ns);
 		$this->namespace      = implode('\\', $ns);
 		$this->path           = dirname($ref->getFileName());

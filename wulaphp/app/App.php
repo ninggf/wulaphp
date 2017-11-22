@@ -451,7 +451,7 @@ class App {
 	/**
 	 * 获取模块信息.
 	 *
-	 * @param string $module dir.
+	 * @param string $module namespace of the module.
 	 *
 	 * @return Module
 	 */
@@ -465,14 +465,28 @@ class App {
 	}
 
 	/**
-	 * @param string $id
+	 * alias of getModule.
+	 *
+	 * @param string $id namespace of the module
 	 *
 	 * @return Module
 	 */
 	public static function getModuleById($id) {
-		$dir = self::id2dir($id);
+		//$dir = self::id2dir($id);
+		return self::getModule($id);
+	}
 
-		return self::getModule($dir);
+	/**
+	 * 根据目录查找模块.
+	 *
+	 * @param string $dir the dir of the module.
+	 *
+	 * @return Module
+	 */
+	public static function getModuleByDir($dir) {
+		$id = self::dir2id($dir);
+
+		return self::getModule($id);
 	}
 
 	/**

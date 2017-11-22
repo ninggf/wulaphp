@@ -24,7 +24,7 @@ namespace wulaphp\cache {
 				} else if (defined('RUN_IN_CLUSTER')) {//部署到集群中，使用REDIS
 					$loader = new ConfigurationLoader();
 					$cfg    = $loader->loadConfig('cluster');
-					$cache  = RedisCache::getInstance($cfg);
+					$cache  = $cfg->getb('enabled', false) ? RedisCache::getInstance($cfg) : null;
 					if ($cache) {
 						RtCache::$CACHE = $cache;
 					} else {
