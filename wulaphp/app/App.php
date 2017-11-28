@@ -576,6 +576,15 @@ class App {
 		Response::redirect($url);
 	}
 
+	public static function base($url) {
+		if (preg_match('#^(/|https?://).+#', $url)) {
+			return $url;
+		}
+		$url = preg_replace('#/?index\.html?$#', '', $url);
+
+		return WWWROOT_DIR . $url;
+	}
+
 	/**
 	 * 生成模块url.
 	 *

@@ -93,7 +93,7 @@ abstract class ArtisanCommand {
 							$options[ $key ] = $v;
 							break;
 						} else if ($r == 11) {
-							$this->help('unkown option: ' . $this->color->str(trim($ov, '-'), 'red'));
+							$this->help('unknown option: ' . $this->color->str(trim($ov, '-'), 'red'));
 						}
 					}
 					for ($j = $i + 1; $j < $argc; $j++) {
@@ -121,7 +121,7 @@ abstract class ArtisanCommand {
 		for ($i = 2; $i < $argc; $i++) {
 			if ($argv[ $i ] && preg_match('#^(-([^-]*).*|--(.*))$#', $argv[ $i ], $ms)) {
 				if ($ms[2]) {
-					$this->help('unkown option: ' . $this->color->str($ms[2], 'red'));
+					$this->help('unknown option: ' . $this->color->str($ms[2], 'red'));
 				} else {
 					$argv[ $i ] = null;
 				}

@@ -174,7 +174,9 @@ function smarty_modifiercompiler_media($params, $compiler) {
 function smarty_modifiercompiler_app($params, $compiler) {
 	return "wulaphp\\app\\App::url({$params[0]})";
 }
-
+function smarty_modifiercompiler_url($params, $compiler) {
+	return "wulaphp\\app\\App::base({$params[0]})";
+}
 function smarty_modifiercompiler_action($params, $compiler) {
 	return "wulaphp\\app\\App::action({$params[0]})";
 }
