@@ -3,6 +3,7 @@
 namespace wulaphp\cache;
 
 use wulaphp\conf\Configuration;
+use wulaphp\util\RedisClient;
 
 class RedisCache extends Cache {
 	/**
@@ -22,30 +23,13 @@ class RedisCache extends Cache {
 	public static function getInstance(Configuration $cfg) {
 		$cache = null;
 		if (extension_loaded('redis')) {
-			try {
-				$redisConfig = $cfg->get('redis');
-				if ($redisConfig) {
-					$redis = new \Redis();
-					list($host, $port, $db, $timeout, $auth) = $redisConfig;
-
-					if ($host && $port && $redis->connect($host, $port, $timeout)) {
-						$redis->select($db);
-						if (extension_loaded('igbinary')) {
-							$redis->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_IGBINARY);
-						} else {
-							$redis->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_PHP);
-						}
-						if ($auth) {
-							if ($redis->auth($auth)) {
-								$cache = new RedisCache($redis);
-							}
-						} else {
-							$cache = new RedisCache($redis);
-						}
-					}
+			$redisConfig = $cfg->get('redis');
+			if ($redisConfig) {
+				list($host, $port, $db, $timeout, $auth) = $redisConfig;
+				$redis = RedisClient::getRedis([$host, $port, $timeout, $auth, $db]);
+				if ($redis) {
+					$cache = new RedisCache($redis);
 				}
-			} catch (\RedisException $e) {
-				log_warn($e->getMessage(), 'cache_redis');
 			}
 		}
 

@@ -23,7 +23,7 @@ class JsonView extends View {
 		return json_encode($this->data);
 	}
 
-	public function setHeader() {
-		@header('Content-type: application/json', true);
+	protected function setHeader() {
+		$this->headers['Content-type'] = 'application/json';
 	}
 }

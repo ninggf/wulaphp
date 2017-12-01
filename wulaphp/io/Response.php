@@ -88,11 +88,13 @@ class Response {
 	}
 
 	/**
-	 * @param null $last_modify
-	 * @param int  $expire
-	 * @param null $etag
+	 * 输出缓存头.
+	 *
+	 * @param int|null    $last_modify
+	 * @param int         $expire
+	 * @param string|null $etag
 	 */
-	function out_cache_header($last_modify = null, $expire = 3600, $etag = null) {
+	public static function out_cache_header($last_modify = null, $expire = 3600, $etag = null) {
 		$last_modify = $last_modify == null ? time() : $last_modify;
 		@header('Pragma: cache');
 		@header('Cache-Control: public, must-revalidate,  max-age=' . $expire, true);
@@ -103,8 +105,14 @@ class Response {
 		}
 	}
 
-	public static function cache($expire = 3600) {
-		$time    = time();
+	/**
+	 * 缓存头版本2.
+	 *
+	 * @param int      $expire
+	 * @param int|null $last_modify
+	 */
+	public static function cache($expire = 3600, $last_modify = null) {
+		$time    = $last_modify ? $last_modify : time();
 		$date    = gmdate('D, d M Y H:i:s', $time) . ' GMT';
 		$headers = [
 			'Age'           => $expire,
@@ -251,7 +259,7 @@ class Response {
 			if ($return) {
 				return $content;
 			} else {
-				$content = apply_filter('before_output_content', $content);
+				$content = apply_filter('before_output_content', $content, $this->view);
 				echo str_replace('<!-- benchmark -->', (microtime(true) - WULA_STARTTIME), $content);
 			}
 		} else {

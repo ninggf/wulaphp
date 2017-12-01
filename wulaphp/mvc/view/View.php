@@ -30,16 +30,16 @@ abstract class View implements \ArrayAccess, Renderable {
 	 *
 	 * @throws \Exception
 	 */
-	public function __construct($data = array(), $tpl = '', $headers = array(), $status = 200) {
+	public function __construct($data = [], $tpl = '', $headers = [], $status = 200) {
 		if (empty ($data)) {
 			$this->tpl  = str_replace('/', DS, $tpl);
-			$this->data = array();
+			$this->data = [];
 		} else if (is_array($data)) {
 			$this->tpl  = str_replace('/', DS, $tpl);
 			$this->data = $data;
 		} else if (is_string($data)) {
 			$this->tpl  = str_replace('/', DS, $data);
-			$this->data = array();
+			$this->data = [];
 		} else {
 			throw new \Exception(__('Please give me a template file to render'));
 		}
@@ -47,6 +47,7 @@ abstract class View implements \ArrayAccess, Renderable {
 		if (is_array($headers)) {
 			$this->headers = $headers;
 		}
+		$this->setHeader();
 		$this->status = $status;
 	}
 
@@ -67,8 +68,8 @@ abstract class View implements \ArrayAccess, Renderable {
 	}
 
 	/**
-	 * @param array $data
-	 * @param null  $value
+	 * @param array|string $data
+	 * @param mixed|null   $value
 	 *
 	 * @return \wulaphp\mvc\view\View
 	 */
@@ -90,8 +91,18 @@ abstract class View implements \ArrayAccess, Renderable {
 		$this->tpl = $tpl;
 	}
 
-	public function expire($expire) {
+	/**
+	 * 设置缓存时间.
+	 *
+	 * @param int $expire 默认3600秒
+	 *
+	 * @return \wulaphp\mvc\view\View
+	 */
+	public function expire($expire = 3600) {
 		$this->cache_expire = intval($expire);
+		defined('CACHE_EXPIRE') or define('CACHE_EXPIRE', $expire);
+
+		return $this;
 	}
 
 	public function addStyle($file) {
@@ -167,7 +178,10 @@ abstract class View implements \ArrayAccess, Renderable {
 				@header("$name: $value", true);
 			}
 		}
-		$this->setHeader();
+	}
+
+	public function getHeaders() {
+		return $this->headers;
 	}
 
 	/**

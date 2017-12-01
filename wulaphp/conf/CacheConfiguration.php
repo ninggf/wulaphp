@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\conf;
 
 define('CACHE_TYPE_REDIS', 'redis');
@@ -18,7 +19,7 @@ class CacheConfiguration extends Configuration {
 	 * @param integer $timeout
 	 * @param string  $auth
 	 */
-	public function addRedisServer($host, $port = 6379, $db = 0, $timeout = 3, $auth = '') {
+	public function addRedisServer($host, $port = 6379, $db = 0, $timeout = 5, $auth = '') {
 		$this->settings['redis'] = [$host, $port, $db, $timeout, $auth];
 	}
 

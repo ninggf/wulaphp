@@ -22,7 +22,7 @@ class ClusterConfiguration extends Configuration {
 	 * @param integer $timeout
 	 * @param string  $auth
 	 */
-	public function addRedisServer($host, $port = 6379, $db = 0, $timeout = 2, $auth = '') {
+	public function addRedisServer($host, $port = 6379, $db = 0, $timeout = 5, $auth = '') {
 		$this->settings['redis'] = [$host, $port, $db, $timeout, $auth];
 	}
 

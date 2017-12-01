@@ -30,6 +30,8 @@ namespace wulaphp\cache {
 					} else {
 						RtCache::$CACHE = new Cache();
 					}
+				} else if (extension_loaded('yac')) {
+					RtCache::$CACHE = new YacCache();
 				} else if (function_exists('apcu_store')) {
 					RtCache::$CACHE = new ApcCacher ();
 				} else if (function_exists('xcache_get')) {

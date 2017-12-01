@@ -1,4 +1,5 @@
 <?php
+
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
@@ -131,6 +132,7 @@ include WULA_ROOT . 'wulaphp/conf/ConfigurationLoader.php';
 /* 加载运行时缓存 */
 include WULA_ROOT . 'wulaphp/cache/Cache.php';
 include WULA_ROOT . 'wulaphp/cache/ApcCacher.php';
+include WULA_ROOT . 'wulaphp/cache/YacCache.php';
 include WULA_ROOT . 'wulaphp/cache/XCacheCacher.php';
 include WULA_ROOT . 'wulaphp/cache/RedisCache.php';
 include WULA_ROOT . 'wulaphp/cache/MemcachedCache.php';

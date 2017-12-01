@@ -25,7 +25,7 @@ class RedisLock {
 	 * 非阻塞锁.
 	 *
 	 * @param string   $lock     锁名
-	 * @param \Closure $callback 成功获取到锁后要执行的代码
+	 * @param \Closure $callback 成功获取到锁后要执行的代码.
 	 * @param int      $timeout  锁多久会自动释放(默认120秒).
 	 *
 	 * @return bool|mixed  无法获取锁时返回false，成功获取锁后返回$callback的返回值.
@@ -60,7 +60,7 @@ class RedisLock {
 	 * 阻塞锁.
 	 *
 	 * @param string   $lock     锁名
-	 * @param \Closure $callback 成功获取到锁后要执行的代码
+	 * @param \Closure $callback 成功获取到锁后要执行的代码,它有一个bool类型的参数用以标识是否是等待了其它锁。
 	 * @param int      $timeout  获取锁超时
 	 *
 	 * @return bool|mixed 无法获取锁时返回false，成功获取锁后返回$callback的返回值.
@@ -71,8 +71,10 @@ class RedisLock {
 			if ($redis) {
 				$start = time();
 				$cnt   = $redis->incr($lock);
+				$wait  = false;
 				while ($cnt != 1) {
-					usleep(500);
+					usleep(200);
+					$wait = true;
 					if ((time() - $start) > $timeout) {
 						break;//超时
 					}
@@ -83,8 +85,9 @@ class RedisLock {
 				if ($cnt != 1) {
 					return false;
 				}
+				$redis->setTimeout($lock, $timeout * 2);//防止死锁
 				try {
-					return $callback();
+					return $callback($wait);
 				} catch (\Exception $e) {
 					log_warn($e->getMessage(), 'redis_lock');
 
@@ -98,5 +101,59 @@ class RedisLock {
 		}
 
 		return false;
+	}
+
+	/**
+	 * 用户锁，不自动释放，需要用户手动释放.
+	 *
+	 * @param string    $lock
+	 * @param int       $timeout
+	 * @param bool|null $wait 是否等待了锁.
+	 *
+	 * @return bool
+	 */
+	public static function ulock($lock, $timeout = 30, &$wait = null) {
+		try {
+			$redis = RedisClient::getRedis();
+			if ($redis) {
+				$start = time();
+				$cnt   = $redis->incr($lock);
+				while ($cnt != 1) {
+					$wait = true;//等了
+					usleep(200);
+					if ((time() - $start) > $timeout) {
+						break;//超时
+					}
+					if (!$redis->exists($lock)) {//锁释放方式为删除
+						$cnt = $redis->incr($lock);
+					}
+				}
+				if ($cnt == 1) {
+					$redis->setTimeout($lock, $timeout * 2);//设置超时，防止死锁
+
+					return true;
+				}
+			}
+		} catch (\Exception $e) {
+			log_warn($e->getMessage(), 'redis_lock');
+		}
+
+		return false;
+	}
+
+	/**
+	 * 释放锁.
+	 *
+	 * @param string $lock
+	 */
+	public static function uunlock($lock) {
+		try {
+			$redis = RedisClient::getRedis();
+			if ($redis) {
+				$redis->del($lock);
+			}
+		} catch (\Exception $e) {
+			log_warn($e->getMessage(), 'redis_lock');
+		}
 	}
 }

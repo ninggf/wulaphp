@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\mvc\view;
 
 class HtmlView extends View {
@@ -24,6 +25,6 @@ class HtmlView extends View {
 	}
 
 	public function setHeader() {
-		@header('Content-Type: text/html');
+		$this->headers['Content-Type'] = 'text/html; charset=utf-8';
 	}
 }

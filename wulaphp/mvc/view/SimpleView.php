@@ -30,7 +30,7 @@ class SimpleView extends View {
 		return array_pop($this->data);
 	}
 
-	public function setHeader() {
-		@header('Content-type: text/plain; charset=utf-8', true);
+	protected function setHeader() {
+		$this->headers['Content-type'] = 'text/plain; charset=utf-8';
 	}
 }

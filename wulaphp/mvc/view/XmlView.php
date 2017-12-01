@@ -54,7 +54,7 @@ class XmlView extends View {
 		}
 	}
 
-	public function setHeader() {
-		@header('Content-type: text/xml; charset=utf-8', true);
+	protected function setHeader() {
+		$this->headers['Content-type'] = 'text/xml; charset=utf-8';
 	}
 }
