@@ -34,7 +34,7 @@ defined('EXTENSION_DIR') or define('EXTENSION_DIR', 'extensions');
 defined('WWWROOT_DIR') or define('WWWROOT_DIR', '/');
 defined('PUBLIC_DIR') or define('PUBLIC_DIR', 'wwwroot');
 defined('ASSETS_DIR') or define('ASSETS_DIR', 'assets');
-defined('VENDOR_DIR') or define('VENDOR_DIR', 'vendor');
+defined('VENDOR_DIR') or define('VENDOR_DIR', 'assets');
 defined('TMP_DIR') or define('TMP_DIR', 'tmp');
 defined('LOGS_DIR') or define('LOGS_DIR', 'logs');
 define('WEB_ROOT', WWWROOT);//alias of WWWROOT
