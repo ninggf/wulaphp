@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\app;
 
 use wulaphp\cache\RtCache;
@@ -12,7 +13,11 @@ class ModuleLoader {
 		$_wula_namespace_classpath['tmpmodules'] = MODULES_PATH;
 		$modules                                 = $this->scanModules();
 		foreach ($modules as $file) {
-			include $file;
+			try {
+				include $file;
+			} catch (\Exception $e) {
+				log_warn($e->getMessage(), 'loader');
+			}
 		}
 		unset($_wula_namespace_classpath['tmpmodules']);
 	}

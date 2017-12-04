@@ -419,18 +419,20 @@ class App {
 	 * 注册模块.
 	 *
 	 * @param Module $module
-	 *
-	 * @throws \Exception
 	 */
 	public static function register(Module $module) {
 		$name = $module->getNamespace();
 		if ($name == 'wulaphp') {
 			$msg = __('the namespace of %s cannot be wulaphp', $module->clzName);
-			throw new \Exception($msg);
+			log_warn($msg, 'bootstrap');
+
+			return;
 		}
 		if (!preg_match('/^[a-z][a-z_\d]+(\\\\[a-z][a-z_\d]+)*$/i', $name)) {
 			$msg = __('The namespace "%s" of %s is invalid', $name, $module->clzName);
-			throw new \Exception($msg);
+			log_warn($msg, 'bootstrap');
+
+			return;
 		}
 		$dir = $module->getDirname();
 		if ($dir != $name) {
