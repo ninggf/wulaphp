@@ -174,9 +174,11 @@ function smarty_modifiercompiler_media($params, $compiler) {
 function smarty_modifiercompiler_app($params, $compiler) {
 	return "wulaphp\\app\\App::url({$params[0]})";
 }
+
 function smarty_modifiercompiler_url($params, $compiler) {
 	return "wulaphp\\app\\App::base({$params[0]})";
 }
+
 function smarty_modifiercompiler_action($params, $compiler) {
 	return "wulaphp\\app\\App::action({$params[0]})";
 }
@@ -320,19 +322,16 @@ function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/htm
  * @param array  $data
  * @param array  $headers
  *
- * @filter get_theme $theme
- * @filter get_custome_tplfile [$tpl,$theme], $data
+ * @filter get_theme $theme $data
+ * @filter get_tpl [$tpl,$theme], $data
  * @return \wulaphp\mvc\view\ThemeView
  */
 function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) {
-	$tpls    = explode('/', $tpl, 2);
-	$theme   = $tpls[0];
-	$tpl     = $tpls[1];
+	$theme   = apply_filter('get_theme', 'default', $data);
+	$tpl     = apply_filter(('get_tpl'), $tpl, $data);
 	$tplname = str_replace(['/', '.'], '_', basename($tpl, '.tpl'));
-	$_tpl    = $theme . DS . $tpl;
-	if (is_file(THEME_PATH . $_tpl)) {
-		$tplfile = $_tpl;
-	} else {
+	$tplfile = $_tpl = $theme . DS . $tpl;
+	if (!is_file(THEME_PATH . $_tpl) && $theme != 'default') {
 		$tplfile = 'default' . DS . $tpl;
 		$theme   = 'default';
 	}
