@@ -163,7 +163,7 @@ class DefaultDispatcher implements IURLDispatcher {
 							$params      = $method->getParameters();
 							$paramsCount = count($params);
 							if ($paramsCount < count($pms)) {
-								if ($paramsCount == 1 && !$params[0]->isVariadic()) {
+								if ($paramsCount == 0 || ($paramsCount == 1 && !$params[0]->isVariadic())) {
 									return null;
 								}
 							}
@@ -194,7 +194,7 @@ class DefaultDispatcher implements IURLDispatcher {
 								}
 							}
 							$view = $clz->{$action}(...$args);
-							$view = $clz->afterRun($action, $view);
+							$view = $clz->afterRun($action, $view, $method);
 							if ($view !== null) {
 								if (is_array($view)) {
 									$view = new JsonView($view);

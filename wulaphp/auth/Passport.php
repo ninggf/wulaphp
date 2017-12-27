@@ -8,7 +8,7 @@ use wulaphp\wulaphp\auth\AclExtraChecker;
  * Class Passport
  * @package wulaphp\auth
  */
-class Passport {
+class Passport implements \ArrayAccess {
 	const SESSION_NAME = 'wula_passport';
 	/**@var int $uid */
 	public         $uid       = 0;
@@ -226,5 +226,31 @@ class Passport {
 
 	public function __toString() {
 		return $this->nickname;
+	}
+
+	public function offsetExists($offset) {
+		if (isset($this->{$offset})) {
+			return true;
+		} else if (isset($this->data[ $offset ])) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public function offsetGet($offset) {
+		if (isset($this->{$offset})) {
+			return $this->{$offset};
+		} else if (isset($this->data[ $offset ])) {
+			return $this->data[ $offset ];
+		}
+
+		return null;
+	}
+
+	public function offsetSet($offset, $value) {
+	}
+
+	public function offsetUnset($offset) {
 	}
 }

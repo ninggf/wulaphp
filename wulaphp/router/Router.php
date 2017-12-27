@@ -33,6 +33,7 @@ class Router {
 	 * @filter router\registerDispatcher Router
 	 */
 	private function __construct() {
+		define('PHP_RUNTIME_NAME', php_sapi_name());
 		$this->xssCleaner = new XssCleaner();
 		$this->register(new DefaultDispatcher (), 0);
 		fire('router\registerDispatcher', $this);
@@ -180,7 +181,7 @@ class Router {
 		}
 		$this->queryParams = $args;
 		$view              = null;
-		fire('router\beforeDispatch', $this);
+		fire('router\beforeDispatch', $this, $url);
 		//预处理
 		foreach ($this->preDispatchers as $dispatchers) {
 			foreach ($dispatchers as $d) {
@@ -216,7 +217,7 @@ class Router {
 			}
 			if (is_array($view) || $view) {
 				$response->output($view);
-			} else if (php_sapi_name() == 'cli-server' && is_file(WWWROOT . $url)) {
+			} else if (PHP_RUNTIME_NAME == 'cli-server' && is_file(WWWROOT . $url)) {
 				return false;
 			} else if (DEBUG < DEBUG_ERROR) {
 				throw new \Exception(__('No route for %s', $uri));

@@ -26,17 +26,18 @@ class ThemeView extends View {
 	 *
 	 * @filter init_smarty_engine $smarty
 	 * @filter init_template_smarty_engine $smarty
+	 * @throws \Exception
 	 */
 	public function __construct($data = array(), $tpl = '', $headers = array('Content-Type' => 'text/html')) {
 		if (!isset ($headers ['Content-Type'])) {
 			$headers ['Content-Type'] = 'text/html';
 		}
 		parent::__construct($data, $tpl, $headers);
-
 	}
 
 	/**
 	 * 绘制.
+	 * @throws \Exception
 	 */
 	public function render() {
 		$tpl    = THEME_PATH . $this->tpl;

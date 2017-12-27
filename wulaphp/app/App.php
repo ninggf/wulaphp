@@ -54,6 +54,10 @@ class App {
 	 */
 	private static $app = null;
 
+	/**
+	 * App constructor.
+	 * @throws \Exception 无法加载配置、模块、扩展加载器时
+	 */
 	private function __construct() {
 		self::$app = $this;
 		/* 加载配置文件 */
@@ -386,7 +390,6 @@ class App {
 	 * @return int
 	 */
 	public static function icfg($name, $default = 0) {
-
 		if ($name == null) {
 			return 0;
 		} else {
@@ -784,18 +787,23 @@ class App {
 
 	/**
 	 * 启动APP.
-	 * @throws \Exception
+	 *
 	 * @return mixed
 	 */
 	public static function run() {
 		if (!isset ($_SERVER ['REQUEST_URI'])) {
-			throw new \Exception('Your web server did not provide REQUEST_URI, stop route request.');
+			Response::respond(500, 'Your web server did not provide REQUEST_URI, stop route request.');
 		}
 		if (!self::$app->router) {
 			self::$app->router = Router::getRouter();
 		}
 		$uri = Router::getURI();
+		try {
+			return self::$app->router->route($uri);
+		} catch (\Exception $e) {
+			Response::respond(500, $e->getMessage());
+		}
 
-		return self::$app->router->route($uri);
+		return null;
 	}
 }

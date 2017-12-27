@@ -127,16 +127,28 @@ class Ajax {
 	/**
 	 * 弹出对话框.
 	 *
-	 * @param string $content 内容HTML或内容的URL.
-	 * @param string $title   对话框标题.
-	 * @param int    $width   宽度,0 为auto.
-	 * @param int    $height  高度,0 为auto.
-	 * @param bool   $ajax
+	 * @param string|array $content 内容HTML或内容的URL.
+	 * @param string       $title   对话框标题.
+	 * @param string       $width   宽度
+	 * @param string       $height  高度
+	 * @param bool         $ajax    ajax方式打开
 	 *
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
-	public static function dialog($content, $title, $width = 0, $height = 0, $ajax = false) {
-		$args = ['title' => $title, 'width' => $width, 'height' => $height, 'ajax' => $ajax, 'content' => $content];
+	public static function dialog($content, $title = '', $width = 'auto', $height = 'auto', $ajax = true) {
+		if (is_array($content)) {
+			$args          = $content;
+			$args['title'] = $title;
+			$args['area']  = $width . ',' . $height;
+			$args['type']  = $ajax ? 'ajax' : 2;
+		} else {
+			$args = [
+				'title'   => $title,
+				'area'    => $width . ',' . $height,
+				'type'    => $ajax ? 'ajax' : 2,
+				'content' => $content
+			];
+		}
 
 		return new JsonView(['code' => self::SUCCESS, 'args' => $args, 'action' => self::ACT_DIALOG], ['ajax' => '1']);
 	}

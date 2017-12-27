@@ -180,20 +180,23 @@ class Response {
 		if ($status == 404) {
 			$data ['message'] = $message;
 			$view             = template('404.tpl', $data);
-			echo $view->render();
 		} else if ($status == 403) {
 			$data ['message'] = $message;
 			$view             = template('403.tpl', $data);
-			echo $view->render();
 		} else if ($status == 500) {
 			$data ['message'] = $message;
 			$view             = template('500.tpl', $data);
-			echo $view->render();
 		} else if ($message) {
 			if (is_array($message)) {
-				$message = json_encode($message);
+				$view = new JsonView($message);
+			} else {
+				$view = new SimpleView($message);
 			}
-			echo $message;
+		} else {
+			$view = null;
+		}
+		if ($view) {
+			Response::getInstance()->output($view);
 		}
 		exit ();
 	}
@@ -265,6 +268,8 @@ class Response {
 		} else {
 			Response::respond(404);
 		}
+
+		return null;
 	}
 
 	/**

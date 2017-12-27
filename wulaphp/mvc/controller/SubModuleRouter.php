@@ -112,7 +112,7 @@ class SubModuleRouter extends Controller {
 							}
 						}
 						$view = $clz->{$action}(...$args);
-						$view = $clz->afterRun($action, $view);
+						$view = $clz->afterRun($action, $view, $method);
 						if ($view !== null) {
 							if (is_array($view)) {
 								$view = new JsonView($view);

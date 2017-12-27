@@ -100,6 +100,10 @@ class Annotation {
 		return isset($this->annotations[ $annotation ]) ? $this->annotations[ $annotation ] : $default;
 	}
 
+	public function getInt($ann, $default = 0) {
+		return isset($this->annotations[ $ann ]) ? intval(trim($this->annotations[ $ann ])) : $default;
+	}
+
 	/**
 	 * @param string $annotation
 	 * @param array  $default

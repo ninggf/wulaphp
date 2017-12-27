@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\mvc\controller;
 
 use wulaphp\app\Module;
@@ -55,15 +56,16 @@ abstract class Controller {
 	}
 
 	/**
-	 * @param string     $action
-	 * @param View|mixed $view
+	 * @param string            $action
+	 * @param View|mixed        $view
+	 * @param \ReflectionMethod $method
 	 *
 	 * @return View
 	 */
-	public function afterRun($action, $view) {
+	public function afterRun($action, $view, $method) {
 		if ($this->afterFeatures) {
 			foreach ($this->afterFeatures as $feature) {
-				$view = $this->$feature($action, $view);
+				$view = $this->$feature($action, $view, $method);
 			}
 		}
 
