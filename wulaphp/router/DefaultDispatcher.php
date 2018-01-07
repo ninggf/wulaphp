@@ -194,7 +194,6 @@ class DefaultDispatcher implements IURLDispatcher {
 								}
 							}
 							$view = $clz->{$action}(...$args);
-							$view = $clz->afterRun($action, $view, $method);
 							if ($view !== null) {
 								if (is_array($view)) {
 									$view = new JsonView($view);
@@ -205,7 +204,7 @@ class DefaultDispatcher implements IURLDispatcher {
 								}
 							}
 
-							return $view;
+							return $clz->afterRun($action, $view, $method);
 						}
 					}
 				} catch (\ReflectionException $e) {
@@ -277,7 +276,35 @@ class DefaultDispatcher implements IURLDispatcher {
 			if (is_file($controller_file)) {
 				include $controller_file;
 				if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
-					return [$controllerClz, Router::removeSlash($action), $params, $controller_file, 'index', $action];
+					return [
+						$controllerClz,
+						Router::removeSlash($action),
+						$params,
+						$controller_file,
+						'index',
+						$action
+					];
+				}
+			}
+		}
+
+		if (!$subnamespace) {
+			//子模块路由
+			$controller_file = MODULES_PATH . $module . DS . 'Router.php';
+			if (is_file($controller_file)) {
+				$controllerClz = $namespace . '\\Router';
+				include $controller_file;
+				if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\SubModuleRouter')) {
+					array_unshift($params, $action);
+
+					return [
+						$controllerClz,
+						'index',
+						$params,
+						$controller_file,
+						'index',
+						'index'
+					];
 				}
 			}
 		}

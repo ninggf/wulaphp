@@ -3,7 +3,6 @@
 namespace wulaphp\auth;
 
 use wulaphp\mvc\view\SmartyView;
-use wulaphp\mvc\view\View;
 
 /**
  * 用户通行证认证特性。添加此特性后，在控制器中可直接通过$passport属性访问当前用户的通行证.
@@ -28,7 +27,7 @@ trait PassportSupport {
 		}
 	}
 
-	public function afterRunInPassportSupport($action, View $view, $method) {
+	public function afterRunInPassportSupport($action, $view, $method) {
 		if ($view instanceof SmartyView) {
 			$view->assign('myPassport', $this->passport);
 		}

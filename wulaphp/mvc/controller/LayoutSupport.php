@@ -11,36 +11,39 @@ use wulaphp\app\App;
  */
 trait LayoutSupport {
 	/**
-	 * @param string $tpl
-	 * @param array  $data
+	 * @param string|array $tpl
+	 * @param array        $data
 	 *
 	 * @return \wulaphp\mvc\view\View
-	 * @throws \Exception
 	 */
-	protected function doLayout($tpl, $data = []) {
+	protected function render($tpl = null, $data = []) {
 		if ($this instanceof Controller) {
+			if (is_array($tpl)) {
+				$data = $tpl;
+				$tpl  = null;
+			}
 			$layout = '~' . $this->layout;
 			$data   = $this->onInitLayoutData($data);
-			if ($tpl{0} == '~') {
-				$tpl     = substr($tpl, 1);
-				$tpls    = explode('/', $tpl);
-				$tpls[0] = App::id2dir($tpls[0]);
-				$tpl     = implode('/', $tpls) . '.tpl';
-				unset($tpls[0]);
+			if ($tpl && $tpl{0} == '~') {
+				$tpl = substr($tpl, 1);
+				$tpl = $this->realPath($tpl . '.tpl');
+			} else if ($tpl) {
+				$path = str_replace(['\\', 'controllers'], [DS, 'views'], $this->reflectionObj->getNamespaceName());
+				$tpl  = $this->realPath($path . DS . $tpl . '.tpl');
 			} else {
-				$path = $this->module->getDirname();
-				$tpl  = $path . '/views/' . $tpl . '.tpl';
+				$path = str_replace(['\\', 'controllers'], [DS, 'views'], $this->reflectionObj->getNamespaceName());
+				$tpl  = $this->realPath($path . DS . $this->ctrName . DS . $this->action . '.tpl');
 			}
 			$data['workspaceView'] = $tpl;
 			$view                  = view($layout, $data);
 
 			return $view;
 		}
-		$msg = __('%s is not instance of wulaphp\mvc\Controller', get_class($this));
-		throw new \Exception($msg);
+
+		return null;
 	}
 
-	protected function onInitLayoutSupport() {
+	protected final function onInitLayoutSupport() {
 		if (!isset($this->layout)) {
 			$msg = __('The layout property of %s is not found', get_class($this));
 			throw new \BadMethodCallException($msg);
@@ -54,5 +57,15 @@ trait LayoutSupport {
 	 *
 	 * @return array
 	 */
-	protected abstract function onInitLayoutData($data);
+	protected function onInitLayoutData($data) {
+		return $data;
+	}
+
+	private function realPath($path) {
+		$tpls    = explode('/', $path);
+		$tpls[0] = App::id2dir($tpls[0]);
+		$tpl     = implode('/', $tpls);
+
+		return $tpl;
+	}
 }

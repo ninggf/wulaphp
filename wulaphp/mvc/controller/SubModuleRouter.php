@@ -10,13 +10,30 @@
 
 namespace wulaphp\mvc\controller;
 
+use wulaphp\app\Module;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\View;
 use wulaphp\router\DefaultDispatcher;
 use wulaphp\router\Router;
 
+/**
+ * Class SubModuleRouter
+ * @package wulaphp\mvc\controller
+ * @property array $routes 自定义本模块的路由处理器
+ */
 class SubModuleRouter extends Controller {
+	public function __construct(Module $module) {
+		parent::__construct($module);
+		$this->slag = 'index';
+		if (isset($this->routes) && is_array($this->routes)) {
+			$ns = $module->getNamespace();
+			foreach ($this->routes as $route => $cb) {
+				bind('router:' . $ns . '/' . $route, $cb, 1, 2);
+			}
+		}
+	}
+
 	/**
 	 * @param array ...$args
 	 *
@@ -112,7 +129,6 @@ class SubModuleRouter extends Controller {
 							}
 						}
 						$view = $clz->{$action}(...$args);
-						$view = $clz->afterRun($action, $view, $method);
 						if ($view !== null) {
 							if (is_array($view)) {
 								$view = new JsonView($view);
@@ -123,7 +139,7 @@ class SubModuleRouter extends Controller {
 							}
 						}
 
-						return $view;
+						return $clz->afterRun($action, $view, $method);
 					}
 				}
 			} catch (\ReflectionException $e) {
@@ -133,6 +149,9 @@ class SubModuleRouter extends Controller {
 			}
 		}
 
-		return null;
+		//通过插件扩展路由
+		$ns = 'router:' . $this->module->getNamespace() . '/' . $subname;
+
+		return apply_filter($ns, apply_filter($ns . '/' . $action, null, $args), $action, $args);
 	}
 }

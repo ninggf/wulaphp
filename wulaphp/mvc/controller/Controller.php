@@ -17,6 +17,7 @@ abstract class Controller {
 	public $clzName;
 	public $ctrName;
 	public $slag;
+	public $action;
 	/**
 	 * @var \ReflectionObject
 	 */
@@ -45,7 +46,8 @@ abstract class Controller {
 	 * @return View
 	 */
 	public function beforeRun($action, $refMethod) {
-		$view = null;
+		$view         = null;
+		$this->action = $action;
 		if ($this->beforeFeatures) {
 			foreach ($this->beforeFeatures as $feature) {
 				$view = $this->$feature($refMethod, $view);

@@ -51,6 +51,8 @@ abstract class View {
 	 * 创建模型实例.
 	 *
 	 * @param string|array|DatabaseConnection|View $db 数据库实例.
+	 *
+	 * @throws \wulaphp\db\DialectException
 	 */
 	public function __construct($db = null) {
 		if ($this->table !== null) {
@@ -241,11 +243,21 @@ abstract class View {
 	}
 
 	/**
+	 * 获取数据链接.
+	 *
+	 * @return \wulaphp\db\DatabaseConnection
+	 */
+	public function db() {
+		return $this->dbconnection;
+	}
+
+	/**
 	 * 锁定符合条件的行.
 	 *
 	 * @param string|int|array $con 条件中一定要有主键或唯一索引.
 	 *
 	 * @return ILock
+	 * @throws \Exception
 	 */
 	public function lock($con) {
 		if (!$con) {
