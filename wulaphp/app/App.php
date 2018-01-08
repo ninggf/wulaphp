@@ -651,29 +651,26 @@ class App {
 		}
 
 		if (!isset($prefixes[ $clz ])) {
-			$clzs = explode('\\', $clz);
-
-			$ctrClz = array_pop($clzs);
-			array_pop($clzs);
-
-			$id = implode('\\', $clzs);
-
-			$path = App::id2dir($id);
-			if (!is_file(MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php')) {
+			$clzs    = explode('\\', $clz);
+			$id      = $clzs[0];
+			$clzs[0] = App::id2dir($id);
+			$file    = MODULES_PATH . implode(DS, $clzs) . '.php';
+			if (!is_file($file)) {
 				return '#';
 			} else {
-				@include_once MODULES_PATH . $path . '/controllers/' . $ctrClz . '.php';
+				@include_once $file;
 				if (!class_exists($clz) || !is_subclass_of($clz, 'wulaphp\mvc\controller\Controller')) {
 					return '#';
 				}
 			}
+			$ctrClz = array_pop($clzs);
+			array_pop($clzs);
 
 			$ctr = preg_replace('#Controller$#', '', $ctrClz);
-
 			$ctr = Router::addSlash($ctr);
 
 			if ('index' != $ctr) {
-				$path .= '/' . $ctr;
+				array_push($clzs, $ctr);
 			}
 
 			$prefix = '';
@@ -684,7 +681,7 @@ class App {
 				}
 			}
 
-			$prefixes[ $clz ] = $prefix . $path;
+			$prefixes[ $clz ] = $prefix . implode('/', $clzs);
 		}
 		if ($action && $action != 'index') {
 			return self::url($prefixes[ $clz ] . '/' . Router::addSlash($action), false);
