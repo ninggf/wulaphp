@@ -18,7 +18,16 @@ class SmartyView extends View {
 	private $__smarty;
 	private $__mustache = false;
 
-	public function __construct($data = array(), $tpl = '', $headers = array('Content-Type' => 'text/html')) {
+	/**
+	 * SmartyView constructor.
+	 *
+	 * @param array  $data
+	 * @param string $tpl
+	 * @param array  $headers
+	 *
+	 * @throws \Exception
+	 */
+	public function __construct($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
 		if (!isset ($headers ['Content-Type'])) {
 			$headers ['Content-Type'] = 'text/html; charset=utf8';
 		}
@@ -29,6 +38,7 @@ class SmartyView extends View {
 	 * 绘制
 	 * @filter init_smarty_engine $smarty
 	 * @filter init_view_smarty_engine $smarty
+	 * @throws \Exception
 	 */
 	public function render() {
 		$tpl    = MODULES_PATH . $this->tpl . '.tpl';

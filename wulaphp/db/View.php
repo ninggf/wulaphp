@@ -136,6 +136,26 @@ abstract class View {
 	}
 
 	/**
+	 * 将json格式的字段值解析为array.
+	 *
+	 * @param int|array $id    主键或条件.
+	 * @param string    $field 字段.
+	 *
+	 * @return array
+	 */
+	public function json_decode($id, $field) {
+		$rtn = $this->get($id, $field)[ $field ];
+		if ($rtn) {
+			$rtn = @json_decode($rtn, true);
+			if ($rtn) {
+				return $rtn;
+			}
+		}
+
+		return [];
+	}
+
+	/**
 	 * 获取列表.
 	 *
 	 * @param array       $where  条件.

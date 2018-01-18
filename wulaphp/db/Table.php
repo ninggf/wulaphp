@@ -23,6 +23,8 @@ abstract class Table extends View {
 	 * Table constructor.
 	 *
 	 * @param string|array|DatabaseConnection|View $db
+	 *
+	 * @throws \wulaphp\db\DialectException
 	 */
 	public function __construct($db = null) {
 		parent::__construct($db);
