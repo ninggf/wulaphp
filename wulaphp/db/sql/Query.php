@@ -2,6 +2,7 @@
 
 namespace wulaphp\db\sql;
 
+use wulaphp\db\DialectException;
 use wulaphp\db\Orm;
 
 /**
@@ -260,7 +261,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 * @return array|bool 成功返回查询到的数据,失败返回false.
 	 */
 	public function forupdate() {
-		$this->checkDialect();
+		try {
+			$this->checkDialect();
+		} catch (DialectException $e) {
+			return false;
+		}
 		// 不在事务中锁定失败.
 		if (!$this->dialect->inTransaction()) {
 			return false;
@@ -410,6 +415,15 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	/**
+	 * 将结果转换为普通数组.
+	 *
+	 * @return array
+	 */
+	public function ary() {
+		return $this->resultSet;
+	}
+
+	/**
 	 * 从crumbs[0]开始逐级向上查询.
 	 *
 	 * @param array  $crumbs [0=>[$idkey=>idvalue,$upkey=>keyvalue]]
@@ -499,10 +513,17 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		$this->{$field} = $value;
 	}
 
+	/**
+	 * @see \Iterator::current()
+	 * @return $this|mixed
+	 */
 	public function current() {
 		return $this;
 	}
 
+	/**
+	 * @see \Iterator::next()
+	 */
 	public function next() {
 		$this->resultIdx++;
 		if ($this->resultIdx <= $this->maxIdx) {
@@ -510,14 +531,25 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		}
 	}
 
+	/**
+	 * @see \Iterator::key()
+	 * @return int|mixed
+	 */
 	public function key() {
 		return $this->resultIdx;
 	}
 
+	/**
+	 * @see \Iterator::valid()
+	 * @return bool
+	 */
 	public function valid() {
 		return $this->resultIdx <= $this->maxIdx && $this->size > 0;
 	}
 
+	/**
+	 * @see \Iterator::rewind()
+	 */
 	public function rewind() {
 		if (!$this->performed) {
 			$this->select();
@@ -534,13 +566,18 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 * perform the select statement.
 	 */
 	private function select() {
-		$this->performed = true;
-		$this->checkDialect();
+		$this->performed  = true;
 		$this->resultSet  = [];
 		$this->resultSets = [];
 		$this->resultIdx  = 0;
 		$this->maxIdx     = 0;
 		$this->size       = 0;
+		try {
+			$this->checkDialect();
+		} catch (DialectException $e) {
+			return;
+		}
+		//生成SQL
 		if (!$this->sql) {
 			$this->sql = $this->getSQL();
 			if (!$this->sql) {
@@ -553,9 +590,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			//重新生成SQL.
 			$this->statement = null;
 		}
+		//生成prepare statement
 		if (!$this->statement) {
 			$this->prepareStatement();
 		}
+		//执行
 		if ($this->statement) {
 			try {
 				if ($this->values) {
@@ -600,7 +639,17 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 * @param string $field
 	 */
 	private function performCount($field = '*') {
-		$this->checkDialect();
+		try {
+			$this->checkDialect();
+		} catch (DialectException $e) {
+			$this->error          = $e->getMessage();
+			$this->count          = 0;
+			$this->errorSQL       = '';
+			$this->errorValues    = null;
+			$this->countperformed = true;
+
+			return;
+		}
 		$this->count = false;
 		$values      = new BindValues ();
 		$fields [0]  = 'COUNT(' . $field . ')';
@@ -660,7 +709,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 * @return string
 	 */
 	private function getSQL() {
-		$this->checkDialect();
+		try {
+			$this->checkDialect();
+		} catch (DialectException $e) {
+			return null;
+		}
 		if (!$this->values) {
 			$this->values = new BindValues ();
 		}

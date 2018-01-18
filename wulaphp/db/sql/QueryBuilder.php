@@ -379,11 +379,20 @@ abstract class QueryBuilder {
 	 * @return DatabaseDialect
 	 */
 	public function getDialect() {
-		$this->checkDialect();
+		try {
+			$this->checkDialect();
 
-		return $this->dialect;
+			return $this->dialect;
+		} catch (DialectException $e) {
+			return null;
+		}
 	}
 
+	/**
+	 * 检测数据库连接是否有效.
+	 *
+	 * @throws \wulaphp\db\DialectException
+	 */
 	protected function checkDialect() {
 		if (!$this->dialect instanceof DatabaseDialect) {
 			throw new DialectException('Cannot connect to database server');
@@ -544,7 +553,12 @@ abstract class QueryBuilder {
 	}
 
 	protected function sanitize($var) {
-		$this->checkDialect();
+		try {
+			$this->checkDialect();
+		} catch (DialectException $e) {
+			return $var;
+		}
+
 		if (is_string($var)) {
 			return $this->dialect->sanitize($var);
 		} else if (is_array($var)) {
