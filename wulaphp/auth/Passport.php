@@ -249,8 +249,10 @@ class Passport implements \ArrayAccess {
 	}
 
 	public function offsetSet($offset, $value) {
+		$this->data[ $offset ] = $value;
 	}
 
 	public function offsetUnset($offset) {
+		unset($this->data[ $offset ]);
 	}
 }
