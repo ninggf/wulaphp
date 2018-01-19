@@ -5,7 +5,6 @@ namespace wulaphp\db;
 use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\UpdateSQL;
-use wulaphp\validator\ValidateException;
 use wulaphp\wulaphp\db\ILock;
 
 /**
@@ -24,7 +23,6 @@ abstract class Table extends View {
 	 *
 	 * @param string|array|DatabaseConnection|View $db
 	 *
-	 * @throws \wulaphp\db\DialectException
 	 */
 	public function __construct($db = null) {
 		parent::__construct($db);
@@ -50,8 +48,7 @@ abstract class Table extends View {
 	 * @param \Closure $cb   数据处理函数.
 	 *
 	 * @return bool|int 成功返回true或主键值,失败返回false.
-	 * @throws ValidateException
-	 * @throws \PDOException
+	 * @throws
 	 */
 	protected function insert($data, $cb = null) {
 		if ($cb && $cb instanceof \Closure) {
@@ -94,6 +91,7 @@ abstract class Table extends View {
 	 * @param \Closure $cb
 	 *
 	 * @return bool|array 如果配置了自增键将返回自增键值的数组.
+	 * @throws
 	 */
 	protected function inserts($datas, \Closure $cb = null) {
 		if ($cb && $cb instanceof \Closure) {
@@ -136,7 +134,7 @@ abstract class Table extends View {
 	 * @param \Closure   $cb   数据处理器.
 	 *
 	 * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
-	 * @throws ValidateException
+	 * @throws
 	 */
 	protected function update($data = null, $con = null, $cb = null) {
 		if ($data === null) {
@@ -190,6 +188,7 @@ abstract class Table extends View {
 	 * @param array|int $con 条件或主键.
 	 *
 	 * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
+	 * @throws
 	 */
 	protected function delete($con = null) {
 		if ($con === null) {
@@ -224,6 +223,7 @@ abstract class Table extends View {
 	 * @param \Closure $cb  回调.
 	 *
 	 * @return boolean 成功true，失败false.
+	 * @throws
 	 */
 	protected function recycle($con, $uid = 0, $cb = null) {
 		if (!$con) {

@@ -23,6 +23,13 @@ class DatabaseConnection {
 
 	public $error = null;
 
+	/**
+	 * DatabaseConnection constructor.
+	 *
+	 * @param $dialect
+	 *
+	 * @throws
+	 */
 	public function __construct($dialect) {
 		if (!$dialect instanceof DatabaseDialect) {
 			throw new \Exception('the dialect is not instance of DatabaseDialect');

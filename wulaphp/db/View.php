@@ -51,8 +51,6 @@ abstract class View {
 	 * 创建模型实例.
 	 *
 	 * @param string|array|DatabaseConnection|View $db 数据库实例.
-	 *
-	 * @throws \wulaphp\db\DialectException
 	 */
 	public function __construct($db = null) {
 		if ($this->table !== null) {
@@ -75,7 +73,14 @@ abstract class View {
 			if ($db instanceof View) {
 				$this->dbconnection = $db->dbconnection;
 			} else if (!$db instanceof DatabaseConnection) {
-				$this->dbconnection = App::db($db === null ? 'default' : $db);
+				try {
+					$this->dbconnection = App::db($db === null ? 'default' : $db);
+				} catch (\Exception $e) {
+					//无法连接数据库
+					log_error($e->getMessage(), 'sql');
+
+					return;
+				}
 			} else {
 				$this->dbconnection = $db;
 			}
@@ -99,6 +104,7 @@ abstract class View {
 
 		return ObjectCaller::callObjMethod(self::$tableClzs[ $clz ], substr($name, 1), $arguments);
 	}
+
 	/**
 	 * 指定此表的别名.
 	 *

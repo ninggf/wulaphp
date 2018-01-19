@@ -27,8 +27,6 @@ abstract class FormTable extends Table {
 	 *
 	 * @param bool                                                         $parse 是否解析字段.
 	 * @param string|array|\wulaphp\db\DatabaseConnection|\wulaphp\db\View $db
-	 *
-	 * @throws \wulaphp\db\DialectException
 	 */
 	public function __construct($parse = false, $db = null) {
 		if ($parse) {

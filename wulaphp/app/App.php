@@ -7,7 +7,6 @@ use wulaphp\conf\ConfigurationLoader;
 use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\DatabaseConnection;
 use wulaphp\db\dialect\DatabaseDialect;
-use wulaphp\db\DialectException;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
 use wulaphp\io\Response;
@@ -236,7 +235,7 @@ class App {
 	 * @param string|array|DatabaseConfiguration $name 数据库配置名/配置数组/配置实例.
 	 *
 	 * @return DatabaseConnection
-	 * @throws DialectException
+	 * @throws \Exception
 	 */
 	public static function db($name = 'default') {
 		static $dbs = [];
