@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\db\sql;
 
 use wulaphp\db\dialect\DatabaseDialect;
@@ -17,12 +18,12 @@ use wulaphp\db\dialect\DatabaseDialect;
  */
 class Condition implements \ArrayAccess, \Countable {
 
-	private $conditions = array();
+	private $conditions = [];
 
-	private $uniques = array();
+	private $uniques = [];
 	private $alias   = null;
 
-	public function __construct($con = array(), $alias = null) {
+	public function __construct($con = [], $alias = null) {
 		$this->alias = $alias;
 		if ($con && is_array($con)) {
 			foreach ($con as $key => $value) {
@@ -39,7 +40,7 @@ class Condition implements \ArrayAccess, \Countable {
 	 * @return string
 	 */
 	public static function safeField($field) {
-		return str_replace(array('`', '.'), array('', '_'), $field);
+		return str_replace(['`', '.'], ['', '_'], $field);
 	}
 
 	/**
@@ -54,10 +55,10 @@ class Condition implements \ArrayAccess, \Countable {
 			return $field;
 		}
 		$strings = explode('.', $field);
-		$fields  = array();
+		$fields  = [];
 		foreach ($strings as $str) {
 			$strs = preg_split('#\bas\b#i', $str);
-			$fs   = array();
+			$fs   = [];
 			foreach ($strs as $s) {
 				if ($s == '*') {
 					$fs [] = '*';
@@ -120,9 +121,34 @@ class Condition implements \ArrayAccess, \Countable {
 			}
 			$this->uniques [ $key ] = 1;
 		}
-		$this->conditions [] = array($offset, $value);
+		$this->conditions [] = [$offset, $value];
 	}
 
 	public function offsetUnset($offset) {
+	}
+
+	/**
+	 * 解析查询条件.
+	 *
+	 * @param string $expression
+	 * @param array  $defines
+	 *
+	 * @return array
+	 */
+	public static function parseSearchExpression($expression, $defines) {
+		$where = [];
+		if ($expression && $defines && is_array($defines)) {
+			$expressions = explode('&&', $expression);
+			foreach ($expressions as $exp) {
+				if (preg_match("#^'([^']+)'\s+([^\s]+)\s+(.*)#", trim($exp), $ms)) {
+					if (isset($defines[ $ms[1] ])) {
+						$field           = $defines[ $ms[1] ] . ($ms[2] == '=' ? '' : ' ' . $ms[2]);
+						$where[ $field ] = $ms[3];
+					}
+				}
+			}
+		}
+
+		return $where;
 	}
 }

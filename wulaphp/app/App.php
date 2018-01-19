@@ -282,7 +282,11 @@ class App {
 	 * @return \wulaphp\db\SimpleTable
 	 */
 	public static function table($table, $db = 'default') {
-		return new SimpleTable($table, $db);
+		try {
+			return new SimpleTable($table, $db);
+		} catch (\Exception $e) {
+			return null;
+		}
 	}
 
 	/**

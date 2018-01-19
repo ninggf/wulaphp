@@ -99,7 +99,6 @@ abstract class View {
 
 		return ObjectCaller::callObjMethod(self::$tableClzs[ $clz ], substr($name, 1), $arguments);
 	}
-
 	/**
 	 * 指定此表的别名.
 	 *
