@@ -29,7 +29,7 @@ class SubModuleRouter extends Controller {
 		if (isset($this->routes) && is_array($this->routes)) {
 			$ns = $module->getNamespace();
 			foreach ($this->routes as $route => $cb) {
-				bind('router:' . $ns . '/' . $route, $cb, 1, 2);
+				bind('router:' . $ns . '/' . $route, $ns . '\\' . $cb, 1, 2);
 			}
 		}
 	}
