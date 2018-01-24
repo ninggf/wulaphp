@@ -325,6 +325,7 @@ function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/htm
  * @filter get_theme $theme $data
  * @filter get_tpl [$tpl,$theme], $data
  * @return \wulaphp\mvc\view\ThemeView
+ * @throws
  */
 function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) {
 	$theme   = apply_filter('get_theme', 'default', $data);
