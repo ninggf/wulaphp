@@ -281,8 +281,14 @@ class App {
 	 * @return \wulaphp\db\SimpleTable
 	 */
 	public static function table($table, $db = 'default') {
+		static $tables = [];
 		try {
-			return new SimpleTable($table, $db);
+			$dbid = get_unique_id($db);
+			if (!isset($tables[ $dbid ][ $table ])) {
+				$tables[ $dbid ][ $table ] = new SimpleTable($table, $db);
+			}
+
+			return $tables[ $dbid ][ $table ];
 		} catch (\Exception $e) {
 			return null;
 		}
