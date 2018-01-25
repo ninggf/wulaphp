@@ -218,6 +218,23 @@ function imv($val, $alias = null) {
 }
 
 /**
+ * @param mixed $obj
+ *
+ * @return string
+ */
+function get_unique_id($obj) {
+	if (is_string($obj) || is_numeric($obj) || empty($obj)) {
+		return $obj;
+	} else if (is_array($obj)) {
+		return md5(serialize($obj));
+	} else if (is_object($obj) || $obj instanceof Closure) {
+		return spl_object_hash($obj);
+	}
+
+	return null;
+}
+
+/**
  * 取当前用户的通行证.
  *
  * @param string $type 通行证类型.
