@@ -420,6 +420,10 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 * @return array
 	 */
 	public function ary() {
+		if (!$this->performed) {
+			$this->select();
+		}
+
 		return $this->resultSet;
 	}
 
