@@ -19,7 +19,7 @@ class ObjectCaller {
 
 	public static function callClzMethod($clz, $method, $args = []) {
 		if (is_object($clz)) {
-			$clz = get_class($clz);
+			return self::callObjMethod($clz, $method, $args);
 		}
 
 		return $clz::{$method}(...$args);

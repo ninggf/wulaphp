@@ -119,6 +119,7 @@ class App {
 	 * 获取系统配置加载器.
 	 *
 	 * @return \wulaphp\conf\ConfigurationLoader
+	 * @throws
 	 */
 	public static function cfgLoader() {
 		if (!self::$app) {
@@ -132,6 +133,7 @@ class App {
 	 * 获取系统模块加载器.
 	 *
 	 * @return \wulaphp\app\ModuleLoader
+	 * @throws
 	 */
 	public static function moduleLoader() {
 		if (!self::$app) {
@@ -145,6 +147,7 @@ class App {
 	 * 启动App.
 	 *
 	 * @return App
+	 * @throws
 	 */
 	public static function start() {
 		if (!self::$app) {
