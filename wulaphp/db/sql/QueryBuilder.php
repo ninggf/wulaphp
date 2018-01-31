@@ -465,25 +465,6 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * 获取 insert 语句生成的自增型ID数组.
-	 *
-	 * @return array
-	 */
-	public function newIds() {
-		$ids = [];
-		$cnt = $this->count();
-		if ($cnt === false) {
-			if ($this->exception instanceof \PDOException) {
-				throw $this->exception;
-			}
-		} else if ($this instanceof InsertSQL) {
-			$ids = $this->lastInsertIds();
-		}
-
-		return $ids;
-	}
-
-	/**
 	 * 获取 insert 语句生成的自增型ID.
 	 * @return int
 	 */

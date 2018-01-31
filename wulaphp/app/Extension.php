@@ -2,6 +2,7 @@
 
 namespace wulaphp\app;
 
+use wulaphp\i18n\I18n;
 use wulaphp\util\Annotation;
 
 abstract class Extension {
@@ -9,9 +10,11 @@ abstract class Extension {
 	public    $reflection;
 	protected $currentVersion;
 	protected $bound = false;
+	protected $path;
 
 	public function __construct() {
 		$this->reflection     = $ref = new \ReflectionObject($this);
+		$this->path           = dirname($ref->getFileName());
 		$this->clzName        = get_class($this);
 		$vs                   = $this->getVersionList();
 		$this->currentVersion = array_pop(array_keys($vs));
@@ -26,7 +29,13 @@ abstract class Extension {
 			return;
 		}
 		$this->bound = true;
-		$ms          = $this->reflection->getMethods(\ReflectionMethod::IS_STATIC);
+		//加载语言
+		if (is_dir($this->path . DS . 'lang')) {
+			I18n::addLang($this->path . DS . 'lang');
+		}
+		// 批量绑定
+		$this->bind();
+		$ms = $this->reflection->getMethods(\ReflectionMethod::IS_STATIC);
 		foreach ($ms as $m) {
 			if (!$m->isPublic()) {
 				continue;
@@ -56,6 +65,13 @@ abstract class Extension {
 		$v ['1.0.0'] = 0;
 
 		return $v;
+	}
+
+	/**
+	 * 批量事件处理器注册.
+	 */
+	protected function bind() {
+
 	}
 
 	public abstract function getName();

@@ -10,7 +10,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 
 	private $batch;
 
-	private $ids = array();
+	private $ids = [];
 
 	private $keyField = null;
 
@@ -66,7 +66,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 		$values    = new BindValues ();
 		$ids       = array_keys($this->datas);
 		$data      = $this->batch ? $this->datas [ $ids [0] ] : $this->datas;
-		$into      = $this->prepareFrom(array(array($this->intoTable, null)));
+		$into      = $this->prepareFrom([[$this->intoTable, null]]);
 		$sql       = $this->dialect->getInsertSQL($into [0] [0], $data, $values);
 		$this->sql = $sql;
 		if ($sql) {

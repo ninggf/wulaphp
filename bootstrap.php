@@ -156,7 +156,11 @@ spl_autoload_register(function ($clz) {
 			return;
 		}
 	}
-	fire('loader\loadClass', $clz);
+	$clz_file = apply_filter('loader\loadClass', null, $clz);
+	if ($clz_file && is_file($clz_file)) {
+		RtCache::add($key, $clz_file);
+		@include $clz_file;
+	}
 });
 require WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
