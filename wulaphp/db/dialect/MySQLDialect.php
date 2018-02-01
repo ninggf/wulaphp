@@ -100,12 +100,12 @@ class MySQLDialect extends DatabaseDialect {
 	}
 
 	/**
-	 * @param array|string      $from
-	 * @param array      $joins
-	 * @param Condition  $where
-	 * @param BindValues $values
-	 * @param array      $order
-	 * @param array      $limit
+	 * @param array|string $from
+	 * @param array        $joins
+	 * @param Condition    $where
+	 * @param BindValues   $values
+	 * @param array        $order
+	 * @param array        $limit
 	 *
 	 * @return string
 	 */
@@ -128,7 +128,7 @@ class MySQLDialect extends DatabaseDialect {
 			if ($order) {
 				$_orders = [];
 				foreach ($order as $o) {
-					$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
+					$_orders [] = Condition::cleanField($o [0]) . ' ' . ($o [1] == 'a' ? 'ASC' : 'DESC');
 				}
 				$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
 			}
@@ -188,7 +188,7 @@ class MySQLDialect extends DatabaseDialect {
 			if ($order) {
 				$_orders = [];
 				foreach ($order as $o) {
-					$_orders [] = Condition::cleanField($o [0]) . ' ' . $o [1];
+					$_orders [] = Condition::cleanField($o [0]) . ' ' . ($o [1] == 'a' ? 'ASC' : 'DESC');
 				}
 				$sql [] = 'ORDER BY ' . implode(' , ', $_orders);
 			}
