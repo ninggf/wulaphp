@@ -98,7 +98,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 *
 	 * @param string $key 主键字段.
 	 *
-	 * @return $this
+	 * @return \wulaphp\db\sql\Query
 	 */
 	public function treeKey($key) {
 		$this->treeKey = $key;
@@ -455,7 +455,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 *
 	 * @param array ...$fields
 	 *
-	 * @return $this
+	 * @return \wulaphp\db\sql\Query
 	 */
 	public function with(...$fields) {
 		foreach ($fields as $f) {
@@ -466,13 +466,20 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	public function __toString() {
-		$sql = $this->getSQL();
+		if (!$this->sql) {
+			$sql = $this->getSQL();
+		} else {
+			$sql = $this->sql;
+		}
 
 		return $sql;
 	}
 
+	/**
+	 * @return null|string
+	 */
 	public function getSqlString() {
-		return $this->sql;
+		return $this->__toString();
 	}
 
 	/**
@@ -519,7 +526,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 
 	/**
 	 * @see \Iterator::current()
-	 * @return $this|mixed
+	 * @return \wulaphp\db\sql\Query|mixed
 	 */
 	public function current() {
 		return $this;

@@ -58,6 +58,9 @@ abstract class QueryBuilder {
 		$this->close();
 	}
 
+	/**
+	 * 关闭
+	 */
 	public function close() {
 		$this->alias   = null;
 		$this->dialect = null;
@@ -158,7 +161,7 @@ abstract class QueryBuilder {
 	 * @param array|Condition $con
 	 * @param bool            $append
 	 *
-	 * @return $this
+	 * @return \wulaphp\db\sql\QueryBuilder
 	 */
 	public function where($con, $append = true) {
 		if (is_array($con) && !empty ($con)) {
@@ -306,7 +309,7 @@ abstract class QueryBuilder {
 	 * @param int      $start start position or limit.
 	 * @param int|null $limit
 	 *
-	 * @return $this
+	 * @return \wulaphp\db\sql\QueryBuilder
 	 */
 	public function limit($start, $limit = null) {
 		if ($limit === null) {
@@ -339,7 +342,7 @@ abstract class QueryBuilder {
 	 * @param int|null $pageNo 页数,从1开始.
 	 * @param int      $size   默认每页20条
 	 *
-	 * @return $this
+	 * @return \wulaphp\db\sql\QueryBuilder
 	 */
 	public function page($pageNo = null, $size = 20) {
 		if ($pageNo === null) {
@@ -559,7 +562,7 @@ abstract class QueryBuilder {
 	 *
 	 * @param mixed $item
 	 *
-	 * @deprecated .
+	 * @deprecated
 	 */
 	public function sanitizeAry(&$item) {
 		if (is_string($item)) {
