@@ -466,7 +466,7 @@ abstract class View {
 
 		$sql = $tableCls->select();
 
-		return [$sql, $foreign_key, $value_key, false, 'belongsTo'];
+		return [$sql, $foreign_key, $value_key, true, 'belongsTo'];
 	}
 
 	/**

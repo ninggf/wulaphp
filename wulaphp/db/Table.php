@@ -26,6 +26,9 @@ abstract class Table extends View {
 	 */
 	public function __construct($db = null) {
 		parent::__construct($db);
+		if (count($this->primaryKeys) != 1) {
+			$this->autoIncrement = false;
+		}
 		$this->parseTraits();
 	}
 
