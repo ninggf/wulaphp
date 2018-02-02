@@ -3,6 +3,7 @@
 namespace wulaphp\validator;
 
 use wulaphp\db\sql\ImmutableValue;
+use wulaphp\util\Annotation;
 
 /**
  * 数据检验器.
@@ -58,14 +59,23 @@ trait Validator {
 		if (empty($fields)) {
 			if (isset($this->_fields) && $this->_fields) {
 				$fields = $this->_fields;
+			} else if (!isset($this->_fields)) {
+				$obj  = new \ReflectionObject($this);
+				$vars = $obj->getProperties(\ReflectionProperty::IS_PUBLIC);
+				foreach ($vars as $var) {
+					$name            = $var->getName();
+					$fields[ $name ] = ['annotation' => new Annotation($var)];
+				}
+				unset($obj, $vars);
 			}
 		}
 		if ($fields) {
 			foreach ($fields as $field => $def) {
 				$rule = [];
 				/**@var $ann \wulaphp\util\Annotation */
-				$ann      = $def['annotation'];
-				$anns     = $ann->getAll();
+				$ann  = $def['annotation'];
+				$anns = $ann->getAll();
+				if (!$anns) continue;
 				$multiple = $def['type'] == 'array' || $def['type'] == '[]';
 				foreach ($anns as $an => $va) {
 					if (isset($this->preDefinedRule[ $an ]) && !is_array($va)) {
