@@ -3,6 +3,7 @@
 namespace wulaphp\util;
 
 use wulaphp\validator\ValidateException;
+use wulaphp\validator\Validator;
 
 /**
  * 参数定义类，用于快速给方法提供准确参数.
@@ -14,22 +15,36 @@ use wulaphp\validator\ValidateException;
  * 所有未明确指定值或指定值为null的参数将不会出现的结果数组里。
  * 如果想输出null,请使用imv('null')对参数进行赋值。
  * 只需定义public属性即可。
- * @method onInitValidator($fields = [])
- * @method validateNewData(array $data)
  */
 abstract class Params {
+	use Validator;
 	private $__vars = [];
 
-	public function __construct() {
+	/**
+	 * Params constructor.
+	 *
+	 * @param bool $inflate  是否填充
+	 * @param bool $xssClean 清洗
+	 */
+	public function __construct($inflate = false, $xssClean = true) {
 		$fields = [];
 		$obj    = new \ReflectionObject($this);
 		$vars   = $obj->getProperties(\ReflectionProperty::IS_PUBLIC);
-		foreach ($vars as $var) {
-			$name            = $var->getName();
-			$ann             = new Annotation($var);
-			$fields[ $name ] = ['annotation' => $ann];
+		if ($inflate) {
+			foreach ($vars as $var) {
+				$name            = $var->getName();
+				$this->{$name}   = rqst($name, null, $xssClean);
+				$ann             = new Annotation($var);
+				$fields[ $name ] = ['annotation' => $ann];
+			}
+		} else {
+			foreach ($vars as $var) {
+				$name            = $var->getName();
+				$ann             = new Annotation($var);
+				$fields[ $name ] = ['annotation' => $ann];
+			}
 		}
-		if ($fields && method_exists($this, 'onInitValidator')) {
+		if ($fields) {
 			$this->onInitValidator($fields);
 		}
 		$this->__vars = $fields;
@@ -55,7 +70,7 @@ abstract class Params {
 			$ary[ $field ] = $value;
 		}
 		unset($obj, $vars, $var);
-		if ($fields && method_exists($this, 'onInitValidator')) {
+		if ($fields) {
 			try {
 				$this->validateNewData($ary);
 			} catch (ValidateException $e) {
