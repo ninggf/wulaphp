@@ -8,19 +8,20 @@ class HtmlView extends View {
 	 * 绘制
 	 *
 	 * @return string
+	 * @throws
 	 */
 	public function render() {
-		$tpl = '';
-		if (is_file($tpl)) {
+		$this->tpl = MODULES_PATH . $this->tpl;
+		if (is_file($this->tpl)) {
 			extract($this->data);
 			@ob_start();
-			include $tpl;
+			@include $this->tpl;
 			$content = @ob_get_contents();
 			@ob_end_clean();
 
 			return $content;
 		} else {
-			return '';
+			throw_exception('tpl is not found:' . $this->tpl);
 		}
 	}
 

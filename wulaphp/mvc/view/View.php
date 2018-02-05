@@ -27,8 +27,6 @@ abstract class View implements \ArrayAccess, Renderable {
 	 * @param string       $tpl
 	 * @param array        $headers
 	 * @param int          $status
-	 *
-	 * @throws \Exception
 	 */
 	public function __construct($data = [], $tpl = '', $headers = [], $status = 200) {
 		if (empty ($data)) {
@@ -40,10 +38,7 @@ abstract class View implements \ArrayAccess, Renderable {
 		} else if (is_string($data)) {
 			$this->tpl  = str_replace('/', DS, $data);
 			$this->data = [];
-		} else {
-			throw new \Exception(__('Please give me a template file to render'));
 		}
-
 		if (is_array($headers)) {
 			$this->headers = $headers;
 		}
