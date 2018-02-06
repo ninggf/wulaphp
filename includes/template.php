@@ -339,11 +339,11 @@ function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) 
 	$template_func_file = THEME_PATH . $theme . DS . 'template.php';
 	if (is_file($template_func_file)) {
 		include_once $template_func_file;
-		$func = $theme . '_' . $tplname . '_template_data';
+		$func = $theme . '_template_data';
 		if (function_exists($func)) {
 			$func ($data);
 		}
-		$func = $theme . '_template_data';
+		$func = $theme . '_' . $tplname . '_template_data';
 		if (function_exists($func)) {
 			$func ($data);
 		}
