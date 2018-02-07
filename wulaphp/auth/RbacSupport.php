@@ -74,9 +74,9 @@ trait RbacSupport {
 			}
 
 			if (!$rst) {
-				$msg = $annotation->getString('aclmsg') || $this->globalRbacSetting['aclmsg'];
+				$msg = $annotation->getString('aclmsg');
 
-				return $this->onDenied($msg, $view);
+				return $this->onDenied($msg ? $msg : $this->globalRbacSetting['aclmsg'], $view);
 			}
 		} else {
 			return $this->onDenied($this->globalRbacSetting['aclmsg'], $view);
