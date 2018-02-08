@@ -24,20 +24,16 @@ class Cache implements \ArrayAccess {
 			$type   = $cfg->get('default', CACHE_TYPE_REDIS);
 		}
 		if (!isset($caches[ $type ])) {
-			if (APP_MODE == 'dev') {
+			if (!isset($cfg)) {
+				$loader = new ConfigurationLoader();
+				$cfg    = $loader->loadConfig('cache');
+			}
+			if (!$cfg->getb('enabled')) {
+				return new Cache();
+			}
+			$cache = apply_filter('get_' . $type . '_cache', null, $cfg);
+			if (!$cache instanceof Cache) {
 				$cache = new Cache ();
-			} else {
-				if (!isset($cfg)) {
-					$loader = new ConfigurationLoader();
-					$cfg    = $loader->loadConfig('cache');
-				}
-				if (!$cfg->getb('enabled')) {
-					return new Cache();
-				}
-				$cache = apply_filter('get_' . $type . '_cache', null, $cfg);
-				if (!$cache instanceof Cache) {
-					$cache = new Cache ();
-				}
 			}
 			$caches[ $type ] = $cache;
 		}

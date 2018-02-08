@@ -48,10 +48,10 @@ class CacheConfiguration extends Configuration {
 	 * @param mixed  $config
 	 */
 	public function addConfig($type, $config) {
-		$this->settings[ $type ][] = $config;
+		$this->settings[ $type ] = $config;
 	}
 
 	public function setDefaultCache($cache) {
-		$this->settings['default'] = $cache == CACHE_TYPE_MEMCACHED ? CACHE_TYPE_MEMCACHED : CACHE_TYPE_REDIS;
+		$this->settings['default'] = $cache;
 	}
 }
