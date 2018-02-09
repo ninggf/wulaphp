@@ -30,11 +30,11 @@ class CrontabCommand extends ArtisanMonitoredTask {
 	}
 
 	protected function argDesc() {
-		return '<crontab_job_class>';
+		return '<crontab_job_class> [start|stop|status]';
 	}
 
 	protected function argValid($options) {
-		$this->clz = $this->opt();
+		$this->clz = $this->opt(-2);
 		if (!$this->clz) {
 			$this->error('Please give me a crontab job.');
 
@@ -84,5 +84,9 @@ class CrontabCommand extends ArtisanMonitoredTask {
 
 	protected function loop($options) {
 		// NOTHING TO DO.
+	}
+
+	protected function getPidFilename($cmd) {
+		return $cmd . '-' . str_replace('\\', '-', trim($this->clz, '\\'));
 	}
 }

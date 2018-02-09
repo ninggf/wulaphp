@@ -57,18 +57,18 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	}
 
 	private function start($options, $cmd) {
-		$pid = pcntl_fork();
-
+		$pidf = $this->getPidFilename($cmd);
+		$pid  = pcntl_fork();
 		if ($pid > 0) {
 			//主程序退出
-			$pidfile = TMP_PATH . '.' . $cmd . '.pid';
+			$pidfile = TMP_PATH . '.' . $pidf . '.pid';
 			$opids   = @file_get_contents($pidfile);
 			if ($opids) {
 				$pid = $opids . ',' . $pid;
 			}
 			@file_put_contents($pidfile, $pid);
 			exit(0);
-		} elseif (0 === $pid) {
+		} else if (0 === $pid) {
 			umask(0);
 			$sid = posix_setsid();
 			if ($sid < 0) {
@@ -94,7 +94,8 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	}
 
 	private function stop($cmd) {
-		$pidfile = TMP_PATH . '.' . $cmd . '.pid';
+		$pidf    = $this->getPidFilename($cmd);
+		$pidfile = TMP_PATH . '.' . $pidf . '.pid';
 		$opids   = @file_get_contents($pidfile);
 		if ($opids) {
 			@unlink($pidfile);
@@ -114,7 +115,8 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	}
 
 	private function status($cmd) {
-		$pidfile = TMP_PATH . '.' . $cmd . '.pid';
+		$pidf    = $this->getPidFilename($cmd);
+		$pidfile = TMP_PATH . '.' . $pidf . '.pid';
 		$opids   = @file_get_contents($pidfile);
 		if ($opids) {
 			$pids = explode(',', $opids);
@@ -199,9 +201,9 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	 * 绑定中断
 	 */
 	private function initSignal() {
-		$signals = array(SIGTERM, SIGINT, SIGHUP, SIGUSR1, SIGTSTP, SIGTTOU);
+		$signals = [SIGTERM, SIGINT, SIGHUP, SIGUSR1, SIGTSTP, SIGTTOU];
 		foreach (array_unique($signals) as $signal) {
-			pcntl_signal($signal, array($this, 'signal'));
+			pcntl_signal($signal, [$this, 'signal']);
 		}
 	}
 
@@ -236,6 +238,17 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			$this->loop($options);
 			usleep(10);
 		}
+	}
+
+	/**
+	 * PID 文件命名.
+	 *
+	 * @param string $cmd
+	 *
+	 * @return string
+	 */
+	protected function getPidFilename($cmd) {
+		return $cmd;
 	}
 
 	protected abstract function loop($options);
