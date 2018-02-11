@@ -72,10 +72,13 @@ class CrontabCommand extends ArtisanMonitoredTask {
 			$intv = $interval;
 			if ($fixed) {
 				$intv = $interval - ($e - $s) * 1000000;
+				$s    = microtime(true);
 			}
-			while ($intv > 0) {
-				usleep(5000);
-				$intv -= 5000;
+			$i = $intv;
+			while ($i > 0) {
+				usleep(500);
+				$e = microtime(true);
+				$i = $intv - ($e - $s) * 1000000;
 			}
 		}
 
