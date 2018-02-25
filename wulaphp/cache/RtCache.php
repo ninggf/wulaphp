@@ -101,13 +101,17 @@ namespace {
 		if (APP_MODE == 'pro') {
 			return $default;
 		}
-		if ($envs === null && is_file(CONFIG_PATH . '.env')) {
-			$envs = @parse_ini_file(CONFIG_PATH . '.env');
+		if ($envs === null) {
+			if (is_file(CONFIG_PATH . '.env')) {
+				$envs = @parse_ini_file(CONFIG_PATH . '.env');
+			}
 			if (!$envs) {
 				$envs = [];
 			}
 			if (isset($envs['debug'])) {
 				$envs['debug'] = intval($envs['debug']);
+			} else {
+				$envs['debug'] = 100;
 			}
 		}
 		if (isset($envs[ $key ])) {
