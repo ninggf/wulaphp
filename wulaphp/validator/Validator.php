@@ -112,8 +112,8 @@ trait Validator {
 	 * @return $this
 	 */
 	public function applyRules($form) {
-		if (is_subclass_of($form, Validator::class)) {
-			$this->rules = $form->getValidateRules();
+		if (method_exists($form, 'getValidateRules')) {
+			$this->rules = array_merge($this->rules, $form->getValidateRules());
 		}
 
 		return $this;
