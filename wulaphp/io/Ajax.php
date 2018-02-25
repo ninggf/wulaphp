@@ -53,7 +53,20 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function success($message = '', $style = null) {
-		return new JsonView(['code' => self::SUCCESS, 'message' => $message, 'style' => $style], ['ajax' => '1']);
+		if (is_array($message)) {
+			$msg     = unget($message, 'message');
+			$args    = $message;
+			$message = $msg ? $msg : '';
+		} else {
+			$args = [];
+		}
+
+		return new JsonView([
+			'code'    => self::SUCCESS,
+			'message' => $message,
+			'args'    => $args,
+			'style'   => $style
+		], ['ajax' => '1']);
 	}
 
 	/**
@@ -65,13 +78,35 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function error($message, $style = null) {
-		return new JsonView(['code' => self::ERROR, 'message' => $message, 'style' => $style], ['ajax' => '1']);
-	}
+		if (is_array($message)) {
+			$msg     = unget($message, 'message');
+			$args    = $message;
+			$message = $msg ? $msg : '';
+		} else {
+			$args = [];
+		}
 
-	public static function fatal($message, $code = 500) {
 		return new JsonView([
 			'code'    => self::ERROR,
 			'message' => $message,
+			'args'    => $args,
+			'style'   => $style
+		], ['ajax' => '1']);
+	}
+
+	public static function fatal($message, $code = 500) {
+		if (is_array($message)) {
+			$msg     = unget($message, 'message');
+			$args    = $message;
+			$message = $msg ? $msg : '';
+		} else {
+			$args = [];
+		}
+
+		return new JsonView([
+			'code'    => self::ERROR,
+			'message' => $message,
+			'args'    => $args,
 			'style'   => 'notice'
 		], ['ajax' => '1'], $code);
 	}
@@ -85,7 +120,20 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function warn($message, $style = null) {
-		return new JsonView(['code' => self::WARNING, 'message' => $message, 'style' => $style], ['ajax' => '1']);
+		if (is_array($message)) {
+			$msg     = unget($message, 'message');
+			$args    = $message;
+			$message = $msg ? $msg : '';
+		} else {
+			$args = [];
+		}
+
+		return new JsonView([
+			'code'    => self::WARNING,
+			'message' => $message,
+			'args'    => $args,
+			'style'   => $style
+		], ['ajax' => '1']);
 	}
 
 	/**
@@ -97,7 +145,20 @@ class Ajax {
 	 * @return \wulaphp\mvc\view\JsonView
 	 */
 	public static function info($message, $style = null) {
-		return new JsonView(['code' => self::INFO, 'message' => $message, 'style' => $style], ['ajax' => '1']);
+		if (is_array($message)) {
+			$msg     = unget($message, 'message');
+			$args    = $message;
+			$message = $msg ? $msg : '';
+		} else {
+			$args = [];
+		}
+
+		return new JsonView([
+			'code'    => self::INFO,
+			'message' => $message,
+			'args'    => $args,
+			'style'   => $style
+		], ['ajax' => '1']);
 	}
 
 	/**

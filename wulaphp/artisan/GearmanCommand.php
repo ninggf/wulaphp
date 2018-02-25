@@ -22,7 +22,8 @@ trait GearmanCommand {
 	protected $host;
 	protected $port;
 
-	protected function execute($options) {
+	protected function execute(/** @noinspection PhpUnusedParameterInspection */
+		$options) {
 		$worker = $this->worker();
 		if (!$worker) {
 			sleep(1);
@@ -30,6 +31,7 @@ trait GearmanCommand {
 			return;
 		}
 		$count = 0;//运行成功50次后重启
+		gc_enable();
 		while (!$this->shutdown && $count < 50) {
 			try {
 				@$worker->work();

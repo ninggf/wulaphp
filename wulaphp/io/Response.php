@@ -154,19 +154,25 @@ class Response {
 				$location .= '?' . $args;
 			}
 		}
-		if (Request::isAjaxRequest()) {
-			status_header(401);
+
+		if ($is_IIS) {
+			@header("Refresh: 0;url=$location");
 		} else {
-			if ($is_IIS) {
-				@header("Refresh: 0;url=$location");
-			} else {
-				if (php_sapi_name() != 'cgi-fcgi') {
-					status_header($status); // This causes problems on IIS and some
-				}
-				@header("Location: $location", true, $status);
+			if (php_sapi_name() != 'cgi-fcgi') {
+				status_header($status); // This causes problems on IIS and some
 			}
+			@header("Location: $location", true, $status);
 		}
 		exit ();
+	}
+
+	/**
+	 * 错误提示.
+	 *
+	 * @param string $message
+	 */
+	public static function error($message) {
+		self::respond(400, $message);
 	}
 
 	/**
@@ -177,26 +183,31 @@ class Response {
 	 */
 	public static function respond($status = 404, $message = '') {
 		status_header($status);
-		if ($status == 404) {
-			$data ['message'] = $message;
-			$view             = template('404.tpl', $data);
-		} else if ($status == 403) {
-			$data ['message'] = $message;
-			$view             = template('403.tpl', $data);
-		} else if ($status == 500) {
-			$data ['message'] = $message;
-			$view             = template('500.tpl', $data);
-		} else if ($message) {
-			if (is_array($message)) {
-				$view = new JsonView($message);
-			} else {
-				$view = new SimpleView($message);
-			}
+		if (Request::isAjaxRequest()) {
+			@header('ajax: 1');
+			Response::getInstance()->output(['message' => $message ? $message : __('error occurred')]);
 		} else {
-			$view = null;
-		}
-		if ($view) {
-			Response::getInstance()->output($view);
+			if ($status == 404) {
+				$data ['message'] = $message;
+				$view             = template('404.tpl', $data);
+			} else if ($status == 403) {
+				$data ['message'] = $message;
+				$view             = template('403.tpl', $data);
+			} else if ($status == 500) {
+				$data ['message'] = $message;
+				$view             = template('500.tpl', $data);
+			} else if ($message) {
+				if (is_array($message)) {
+					$view = new JsonView($message);
+				} else {
+					$view = new SimpleView($message);
+				}
+			} else {
+				$view = null;
+			}
+			if ($view) {
+				Response::getInstance()->output($view);
+			}
 		}
 		exit ();
 	}

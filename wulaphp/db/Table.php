@@ -5,7 +5,6 @@ namespace wulaphp\db;
 use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\UpdateSQL;
-use wulaphp\wulaphp\db\ILock;
 
 /**
  * 表基类,提供与表相关的简单操作。
@@ -35,8 +34,8 @@ abstract class Table extends View {
 	/**
 	 * 在事务中运行.
 	 *
-	 * @param \Closure                       $fun
-	 * @param \wulaphp\wulaphp\db\ILock|null $lock
+	 * @param \Closure               $fun
+	 * @param \wulaphp\db\ILock|null $lock
 	 *
 	 * @return mixed|null
 	 */

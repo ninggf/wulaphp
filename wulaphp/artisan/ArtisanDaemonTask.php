@@ -1,5 +1,5 @@
 <?php
-declare(ticks=5);
+declare(ticks=10);
 
 namespace wulaphp\artisan;
 /**
@@ -18,6 +18,11 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 
 	const WORK_DONE_EXIT_CODE = 42;
 
+	public function __construct() {
+		parent::__construct();
+		define('ARTISAN_TASK_PID', 1);
+	}
+
 	public final function run() {
 		if (!function_exists('pcntl_fork')) {
 			$this->error('miss pcntl extension, install it first!');
@@ -33,7 +38,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 		if ($pid > 0) {
 			//主程序退出
 			exit(0);
-		} elseif (0 === $pid) {
+		} else if (0 === $pid) {
 			umask(0);
 			$sid = posix_setsid();
 			if ($sid < 0) {
@@ -67,9 +72,9 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 		while (count($this->workers) < $parallel) {
 			$pid = pcntl_fork();
 			if (0 === $pid) {
-				define('ARTISAN_TASK_PID', posix_getpid());
+				$myid           = posix_getpid();
 				$this->isParent = false;
-				$this->pid      = '[' . ARTISAN_TASK_PID . '] ';
+				$this->pid      = '[' . $myid . '] ';
 				$this->taskId   = $i;
 				$this->initSignal();
 				$this->init($options);
@@ -118,9 +123,9 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 	}
 
 	private function initSignal() {
-		$signals = array(SIGTERM, SIGINT, SIGHUP, SIGUSR1, SIGTSTP, SIGTTOU);
+		$signals = [SIGTERM, SIGINT, SIGHUP, SIGUSR1, SIGTSTP, SIGTTOU];
 		foreach (array_unique($signals) as $signal) {
-			pcntl_signal($signal, array($this, 'signal'));
+			pcntl_signal($signal, [$this, 'signal']);
 		}
 	}
 

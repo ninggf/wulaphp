@@ -1,5 +1,5 @@
 <?php
-declare(ticks=5);
+declare(ticks=10);
 /*
  * This file is part of wulacms.
  *
@@ -12,56 +12,67 @@ declare(ticks=5);
 namespace wulaphp\artisan;
 
 abstract class ArtisanMonitoredTask extends ArtisanCommand {
-	protected $workerCount = 1;
+	protected $workerCount = 2;
 	protected $shutdown    = false;
 	private   $isParent    = true;
 	private   $workers     = [];
 	public    $returnPid   = false;
+	private   $pidfile     = null;
+
+	public function __construct() {
+		parent::__construct();
+		define('ARTISAN_TASK_PID', 1);
+	}
 
 	protected function argDesc() {
-		return '<start|stop|restart|status>';
+		return '<start|stop|restart|status|help>';
 	}
 
 	public final function run() {
-
 		if (!function_exists('pcntl_fork')) {
 			$this->error('miss pcntl extension, install it first!');
 			exit(1);
 		}
-		$cmd     = $this->cmd();
-		$options = $this->getOptions();
-		if (!$this->argValid($options)) {
-			exit(1);
-		}
-
-		$op = $this->opt();
+		$cmd           = $this->cmd();
+		$options       = $this->getOptions();
+		$op            = $this->opt();
+		$this->pidfile = TMP_PATH . '.' . $this->getPidFilename($cmd) . '.pid';
 		switch ($op) {
 			case 'start':
+				if (!$this->argValid($options)) {
+					$this->help();
+					exit(1);
+				}
 				$this->start($options, $cmd);
 				break;
 			case 'stop':
 				$this->stop($cmd);
 				break;
 			case 'restart':
+				if (!$this->argValid($options)) {
+					$this->help();
+					exit(1);
+				}
 				$this->stop($cmd);
 				$this->start($options, $cmd);
 				break;
+			case 'help':
+				$this->help();
+				break;
 			case 'status':
+			default:
 				$this->status($cmd);
 				break;
-			default:
-				$this->help();
 		}
 
 		return 0;
 	}
 
 	private function start($options, $cmd) {
-		$pidf = $this->getPidFilename($cmd);
-		$pid  = pcntl_fork();
+		$pid = pcntl_fork();
 		if ($pid > 0) {
 			//主程序退出
-			$pidfile = TMP_PATH . '.' . $pidf . '.pid';
+			$pidfile = $this->pidfile;
 			$opids   = @file_get_contents($pidfile);
 			if ($opids) {
 				$pid = $opids . ',' . $pid;
@@ -89,13 +100,13 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 
 			@fclose($STDIN);
 			@fclose($STDOUT);
+			@fclose($STDERR);
 			exit(0);
 		}
 	}
 
 	private function stop($cmd) {
-		$pidf    = $this->getPidFilename($cmd);
-		$pidfile = TMP_PATH . '.' . $pidf . '.pid';
+		$pidfile = $this->pidfile;
 		$opids   = @file_get_contents($pidfile);
 		if ($opids) {
 			@unlink($pidfile);
@@ -111,12 +122,13 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 					}
 				}
 			}
+		} else {
+			$this->error($cmd . ' is not running');
 		}
 	}
 
 	private function status($cmd) {
-		$pidf    = $this->getPidFilename($cmd);
-		$pidfile = TMP_PATH . '.' . $pidf . '.pid';
+		$pidfile = $this->pidfile;
 		$opids   = @file_get_contents($pidfile);
 		if ($opids) {
 			$pids = explode(',', $opids);
@@ -132,7 +144,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 				echo implode("\n", $text), "\n";
 			}
 		} else {
-			echo "$cmd is not run\n";
+			echo "$cmd is not running\n";
 		}
 	}
 
@@ -150,16 +162,20 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	}
 
 	// 准备任务
-	protected function setUp(&$options) {
+	protected function setUp(/** @noinspection PhpUnusedParameterInspection */
+		&$options) {
 		$this->workerCount = 2;
 	}
 
 	/**
+	 * 校验参数.
+	 *
 	 * @param array $options
 	 *
 	 * @return bool
 	 */
-	protected function argValid($options) {
+	protected function argValid(/** @noinspection PhpUnusedParameterInspection */
+		$options) {
 		return true;
 	}
 
@@ -216,27 +232,41 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		}
 		$pid = pcntl_fork();
 		if (0 === $pid) {
-			@define('ARTISAN_TASK_PID', posix_getpid());
+			$myid           = posix_getpid();
 			$this->isParent = false;
-			$this->pid      = '[' . ARTISAN_TASK_PID . '] ';
+			$this->pid      = '[' . $myid . '] ';
 			$this->initSignal();
 			$this->init($options);
 			$this->execute($options);
-			usleep(5000);
+			usleep(1000);
 			exit(0);
 		} else {
 			$this->workers[ $pid ] = $pid;
 		}
 	}
 
+	/**
+	 * 子进程初始化（任务初始化）
+	 *
+	 * @param array $options
+	 */
 	protected function init($options) {
 
 	}
 
 	protected function execute($options) {
 		while (!$this->shutdown) {
-			$this->loop($options);
-			usleep(10);
+			try {
+				$rst = $this->loop($options);
+			} catch (\Exception $e) {
+				$this->loge($e->getMessage());
+				$rst = false;
+				sleep(1);
+			}
+			if ($rst === false) {
+				break;
+			}
+			usleep(500);
 		}
 	}
 
@@ -248,8 +278,13 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	 * @return string
 	 */
 	protected function getPidFilename($cmd) {
-		return $cmd;
+		return str_replace(':', '-', $cmd);
 	}
 
+	/**
+	 * @param array $options
+	 *
+	 * @return bool 如果返回false,将终止当前子进程
+	 */
 	protected abstract function loop($options);
 }

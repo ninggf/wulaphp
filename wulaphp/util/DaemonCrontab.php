@@ -51,7 +51,6 @@ abstract class DaemonCrontab implements ICrontabJob {
 				if ($sid >= 0) {
 					$pid = pcntl_fork();
 					if (0 === $pid) {// work process
-						@define('ARTISAN_TASK_PID', posix_getpid());
 						$this->execute();
 						// 执行完毕删除lock文件
 						isset($lock) && @unlink($lock);

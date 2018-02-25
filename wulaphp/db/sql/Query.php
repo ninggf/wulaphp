@@ -4,6 +4,7 @@ namespace wulaphp\db\sql;
 
 use wulaphp\db\DialectException;
 use wulaphp\db\Orm;
+use wulaphp\db\TableLocker;
 
 /**
  * Class Query
@@ -271,13 +272,22 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			return false;
 		}
 		$this->forupdate = true;
-		$data            = $this->get(0);
+		$data            = $this->get();
 		// 成功
 		if ($data) {
 			return $data;
 		}
 
 		return false;
+	}
+
+	/**
+	 * 基于此查询获取一个锁.
+	 *
+	 * @return \wulaphp\db\TableLocker
+	 */
+	public function locker() {
+		return new TableLocker($this);
 	}
 
 	/**
@@ -363,15 +373,14 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	/**
 	 * 将结果集变为array或map
 	 *
-	 * @param string $var
-	 *            值字段.
-	 * @param string $key
-	 *            键字段.
-	 * @param array  $rows
+	 * @param string   $var  值字段.
+	 * @param string   $key  键字段.
+	 * @param array    $rows 初始数据
+	 * @param \Closure $cb   过滤函数（仅当指定$val或$key时有用）
 	 *
 	 * @return array
 	 */
-	public function toArray($var = null, $key = null, $rows = []) {
+	public function toArray($var = null, $key = null, $rows = [], $cb = null) {
 		if (!$this->performed) {
 			$this->select();
 		}
@@ -391,21 +400,40 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 
 			return $this->resultSets;
 		} else if ($var != null) {
-			foreach ($this->resultSets as $row) {
-				$value = $row [ $var ];
-				if ($key != null && isset ($row [ $key ])) {
-					$id           = $row [ $key ];
-					$rows [ $id ] = $value;
-				} else {
-					$rows [] = $value;
+			if ($cb) {
+				foreach ($this->resultSets as $row) {
+					$value = $row [ $var ];
+					if ($key != null && isset ($row [ $key ])) {
+						$id           = $row [ $key ];
+						$rows [ $id ] = $cb($value);
+					} else {
+						$rows [] = $cb($value);
+					}
+				}
+			} else {
+				foreach ($this->resultSets as $row) {
+					$value = $row [ $var ];
+					if ($key != null && isset ($row [ $key ])) {
+						$id           = $row [ $key ];
+						$rows [ $id ] = $value;
+					} else {
+						$rows [] = $value;
+					}
 				}
 			}
 
 			return $rows;
 		} else if ($key != null) {
-			foreach ($this->resultSets as $row) {
-				$id           = $row [ $key ];
-				$rows [ $id ] = $row;
+			if ($cb) {
+				foreach ($this->resultSets as $row) {
+					$id           = $row [ $key ];
+					$rows [ $id ] = $row;
+				}
+			} else {
+				foreach ($this->resultSets as $row) {
+					$id           = $row [ $key ];
+					$rows [ $id ] = $cb($row);
+				}
 			}
 
 			return $rows;

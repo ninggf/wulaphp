@@ -25,7 +25,7 @@ class RedisLock {
 	 * 非阻塞锁.
 	 *
 	 * @param string   $lock     锁名
-	 * @param \Closure $callback 成功获取到锁后要执行的代码.
+	 * @param \Closure $callback 成功获取到锁后要执行的回调函数，它的参数为redis实例.
 	 * @param int      $timeout  锁多久会自动释放(默认120秒).
 	 *
 	 * @return bool|mixed  无法获取锁时返回false，成功获取锁后返回$callback的返回值.
@@ -40,11 +40,9 @@ class RedisLock {
 				}
 				$redis->setTimeout($lock, $timeout);
 				try {
-					return $callback();
+					return $callback($redis);
 				} catch (\Exception $e) {
 					log_warn($e->getMessage(), 'redis_lock');
-
-					return false;
 				} finally {
 					$redis->decr($lock);
 				}
@@ -60,7 +58,7 @@ class RedisLock {
 	 * 阻塞锁.
 	 *
 	 * @param string   $lock     锁名
-	 * @param \Closure $callback 成功获取到锁后要执行的代码,它有一个bool类型的参数用以标识是否是等待了其它锁。
+	 * @param \Closure $callback 成功获取到锁后要执行的代码,它的第一个bool类型的参数用以标识是否是等待了其它锁,第二个参数为redis实例。
 	 * @param int      $timeout  获取锁超时
 	 *
 	 * @return bool|mixed 无法获取锁时返回false，成功获取锁后返回$callback的返回值.
@@ -87,7 +85,7 @@ class RedisLock {
 				}
 				$redis->setTimeout($lock, $timeout * 2);//防止死锁
 				try {
-					return $callback($wait);
+					return $callback($wait, $redis);
 				} catch (\Exception $e) {
 					log_warn($e->getMessage(), 'redis_lock');
 

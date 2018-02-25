@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace wulaphp\wulaphp\db;
+namespace wulaphp\db;
 
 use wulaphp\db\sql\Query;
 
@@ -19,7 +19,7 @@ class TableLocker implements ILock {
 	protected $query;
 
 	public function __construct(Query $query) {
-		$this->query;
+		$this->query = $query;
 	}
 
 	/**
@@ -27,6 +27,10 @@ class TableLocker implements ILock {
 	 * @return array|bool
 	 */
 	public function lock() {
-		return $this->query->forupdate();
+		if ($this->query) {
+			return $this->query->forupdate();
+		} else {
+			return false;
+		}
 	}
 }

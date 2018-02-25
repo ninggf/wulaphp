@@ -44,7 +44,7 @@ abstract class DatabaseDialect extends \PDO {
 				$options = new DatabaseConfiguration('', $options);
 			}
 			if (defined('ARTISAN_TASK_PID')) {
-				$pid = ARTISAN_TASK_PID;
+				$pid = @posix_getpid();
 			} else {
 				$pid = 0;
 			}
@@ -78,10 +78,11 @@ abstract class DatabaseDialect extends \PDO {
 	 * @param string $name
 	 *
 	 * @return DatabaseDialect
+	 * @throws
 	 */
 	public function reset($name = null) {
 		if (defined('ARTISAN_TASK_PID')) {
-			$pid = ARTISAN_TASK_PID;
+			$pid = @posix_getpid();
 		} else {
 			$pid = 0;
 		}
@@ -103,6 +104,20 @@ abstract class DatabaseDialect extends \PDO {
 		return self::getDialect(self::$cfgOptions[ $name ]);
 	}
 
+	public function close($name = null) {
+		if (defined('ARTISAN_TASK_PID')) {
+			$pid = @posix_getpid();
+		} else {
+			$pid = 0;
+		}
+		if (!$name) {
+			$name = $this->cfGname;
+		}
+		if (isset(self::$INSTANCE[ $pid ][ $name ])) {
+			unset(self::$INSTANCE[ $pid ][ $name ]);
+		}
+	}
+
 	/**
 	 * get the full table name( prepend the prefix to the $table)
 	 *
@@ -112,7 +127,7 @@ abstract class DatabaseDialect extends \PDO {
 	 */
 	public function getTableName($table) {
 		if (preg_match('#^\{[^\}]+\}.*$#', $table)) {
-			return str_replace(array('{', '}'), array($this->tablePrefix, ''), $table);
+			return str_replace(['{', '}'], [$this->tablePrefix, ''], $table);
 		} else {
 			return $table;
 		}
@@ -131,8 +146,8 @@ abstract class DatabaseDialect extends \PDO {
 	 */
 	public function getTablesFromSQL($sql) {
 		$p      = '/CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?([^\(]+)/mi';
-		$tables = array();
-		$views  = array();
+		$tables = [];
+		$views  = [];
 		if (preg_match_all($p, $sql, $ms, PREG_SET_ORDER)) {
 			foreach ($ms as $m) {
 				if (count($m) == 3) {
@@ -161,7 +176,7 @@ abstract class DatabaseDialect extends \PDO {
 			}
 		}
 
-		return array('tables' => $tables, 'views' => $views);
+		return ['tables' => $tables, 'views' => $views];
 	}
 
 	protected function onConnected() {
@@ -231,12 +246,12 @@ abstract class DatabaseDialect extends \PDO {
 	/**
 	 * get the delete SQL
 	 *
-	 * @param string|array     $from
-	 * @param array      $joins
-	 * @param Condition  $where
-	 * @param BindValues $values
-	 * @param array      $order
-	 * @param array      $limit
+	 * @param string|array $from
+	 * @param array        $joins
+	 * @param Condition    $where
+	 * @param BindValues   $values
+	 * @param array        $order
+	 * @param array        $limit
 	 *
 	 * @return string
 	 */

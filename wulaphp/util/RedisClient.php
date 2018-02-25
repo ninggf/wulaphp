@@ -5,6 +5,8 @@ namespace wulaphp\util;
 use wulaphp\conf\ConfigurationLoader;
 
 class RedisClient {
+	private static $instances = [];
+
 	/**
 	 * 获取一个Redis实例.
 	 *
@@ -32,7 +34,7 @@ class RedisClient {
 	 * @throws \Exception when the redis extension is not installed.
 	 */
 	public static function getRedis($cnf = null, $db = null, $prefix = '') {
-		static $instances = [];
+
 		if (!extension_loaded('redis')) {
 			throw new \Exception(__('The redis extension is not installed'));
 		}
@@ -63,14 +65,14 @@ class RedisClient {
 			$cnf[4] = intval($db);
 		}
 		if (defined('ARTISAN_TASK_PID')) {
-			$pid = ARTISAN_TASK_PID;
+			$pid = @posix_getpid();
 		} else {
 			$pid = 0;
 		}
 		$rid = @"$pid:{$cnf[0]},$cnf[1],$cnf[4]";
-		if (isset($instances[ $rid ])) {
+		if (isset(self::$instances[ $rid ])) {
 
-			return $instances[ $rid ];
+			return self::$instances[ $rid ];
 		}
 		$redis = new \Redis ();
 		if (count($cnf) > 2) {
@@ -101,11 +103,19 @@ class RedisClient {
 			if ($prefix) {
 				@$redis->setOption(\Redis::OPT_PREFIX, $prefix . ':');
 			}
-			$instances[ $rid ] = $redis;
+			$redis->rid              = $rid;
+			self::$instances[ $rid ] = $redis;
 
-			return $instances[ $rid ];
+			return self::$instances[ $rid ];
 		}
 
 		return null;
+	}
+
+	public static function close(\Redis $redis) {
+		if ($redis && $redis->rid) {
+			$redis->close();
+			unset(self::$instances[ $redis->rid ]);
+		}
 	}
 }

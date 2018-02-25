@@ -101,7 +101,7 @@ abstract class ArtisanCommand {
 						if ($v == '=') {
 							$argv[ $j ] = null;
 							continue;
-						} elseif (strpos('-', $v) === 0) {
+						} else if (strpos('-', $v) === 0) {
 							break;
 						} else {
 							$argv[ $j ]      = null;
@@ -162,7 +162,7 @@ abstract class ArtisanCommand {
 
 	protected final function logd($message = '', $nl = true) {
 		if (DEBUG < DEBUG_INFO) {
-			$msg = ($nl ? '[' . date('Y-m-d H:i:s') . '] ' . $this->pid.' [DEBUG] ' : '') . $message . ($nl ? "\n" : '');
+			$msg = ($nl ? '[' . date('Y-m-d H:i:s') . '] ' . $this->pid . ' [DEBUG] ' : '') . $message . ($nl ? "\n" : '');
 			echo $msg;
 			flush();
 		}

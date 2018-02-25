@@ -142,8 +142,19 @@ class Condition implements \ArrayAccess, \Countable {
 			foreach ($expressions as $exp) {
 				if (preg_match("#^'([^']+)'\s+([^\s]+)\s+(.*)#", trim($exp), $ms)) {
 					if (isset($defines[ $ms[1] ])) {
-						$field           = $defines[ $ms[1] ] . ($ms[2] == '=' ? '' : ' ' . $ms[2]);
-						$where[ $field ] = $ms[3];
+						if ($defines[ $ms[1] ]{0} == '@') {
+							$t     = true;
+							$field = substr($defines[ $ms[1] ], 1) . ($ms[2] == '=' ? '' : ' ' . $ms[2]);
+						} else {
+							$t     = false;
+							$field = $defines[ $ms[1] ] . ($ms[2] == '=' ? '' : ' ' . $ms[2]);
+						}
+						if ($t) {
+							//转换为时间戳
+							$where[ $field ] = @strtotime($ms[3]);
+						} else {
+							$where[ $field ] = $ms[3];
+						}
 					}
 				}
 			}

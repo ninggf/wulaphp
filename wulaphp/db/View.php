@@ -6,8 +6,6 @@ use wulaphp\app\App;
 use wulaphp\db\sql\Query;
 use wulaphp\db\sql\QueryBuilder;
 use wulaphp\util\ObjectCaller;
-use wulaphp\wulaphp\db\ILock;
-use wulaphp\wulaphp\db\TableLocker;
 
 /**
  * View 提供查询等与修改无关的操作.

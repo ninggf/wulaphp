@@ -6,7 +6,6 @@ use wulaphp\conf\Configuration;
 use wulaphp\conf\ConfigurationLoader;
 use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\DatabaseConnection;
-use wulaphp\db\dialect\DatabaseDialect;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
 use wulaphp\io\Response;
@@ -48,6 +47,7 @@ class App {
 	private static $extensions     = [];//扩展
 	private static $enabledModules = [];//启用的模块
 	public static  $prefix         = [];//URL前缀
+
 	/**
 	 * @var App
 	 */
@@ -154,8 +154,8 @@ class App {
 			new App ();
 		}
 		$debug = App::icfg('debug', DEBUG_ERROR);
-		if ($debug > 400 || $debug < 0) {
-			$debug = DEBUG_WARN;
+		if ($debug > 1000 || $debug < 0) {
+			$debug = DEBUG_OFF;
 		}
 		define('DEBUG', $debug);
 		if (DEBUG == DEBUG_OFF) {
@@ -241,38 +241,8 @@ class App {
 	 * @throws \Exception
 	 */
 	public static function db($name = 'default') {
-		static $dbs = [];
-		if ($name instanceof DatabaseConnection) {
-			return $name;
-		}
-		$config = false;
-		if (is_array($name)) {
-			$tmpname = implode('_', $name);
-			if (isset ($dbs [ $tmpname ])) {
-				return $dbs [ $tmpname ];
-			}
-			$config = $name;
-			$name   = $tmpname;
-		} else if (is_string($name)) {
-			if (isset ($dbs [ $name ])) {
-				return $dbs [ $name ];
-			}
-			$config = self::$app->configLoader->loadDatabaseConfig($name);
-		} else if ($name instanceof DatabaseConfiguration) {
-			$config = $name;
-			$name   = $config->__toString();
-		}
-		if ($config) {
-			$dialect = DatabaseDialect::getDialect($config);
-			if ($dialect) {
-				$db            = new DatabaseConnection ($dialect);
-				$dbs [ $name ] = $db;
 
-				return $db;
-			}
-		}
-
-		return null;
+		return DatabaseConnection::connect($name);
 	}
 
 	/**
@@ -578,10 +548,10 @@ class App {
 	/**
 	 * 重定向.
 	 *
-	 * @param string $url
-	 * @param array  $args
+	 * @param string     $url
+	 * @param array|null $args [optional]
 	 */
-	public static function redirect($url, $args = []) {
+	public static function redirect($url, $args = null) {
 		if (strpos($url, '\\') !== false) {
 			$url = self::action($url);
 		} else {
@@ -590,7 +560,7 @@ class App {
 		if (!empty($args)) {
 			$url .= '?' . http_build_query($args);
 		}
-		Response::redirect($url);
+		Response::redirect($url, '');
 	}
 
 	public static function base($url) {

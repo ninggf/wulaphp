@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\io;
 
 use ci\XssCleaner;
@@ -43,11 +44,12 @@ class Request implements \ArrayAccess {
 	 */
 	public static function getInstance() {
 		if (defined('ARTISAN_TASK_PID')) {
-			if (!isset(self::$INSTANCE[ ARTISAN_TASK_PID ])) {
-				self::$INSTANCE[ ARTISAN_TASK_PID ] = new self ();
+			$pid = @posix_getpid();
+			if (!isset(self::$INSTANCE[ $pid ])) {
+				self::$INSTANCE[ $pid ] = new self ();
 			}
 
-			return self::$INSTANCE[ ARTISAN_TASK_PID ];
+			return self::$INSTANCE[ $pid ];
 		} else {
 			if (self::$INSTANCE == null) {
 				self::$INSTANCE = new self ();
@@ -108,7 +110,7 @@ class Request implements \ArrayAccess {
 		return $ary [ $name ];
 	}
 
-	public function addUserData($data = array(), $reset = false) {
+	public function addUserData($data = [], $reset = false) {
 		if (is_array($data) && $data) {
 			if ($reset) {
 				$this->userData = $data;
@@ -125,9 +127,9 @@ class Request implements \ArrayAccess {
 	public static function getIp() {
 		if (!empty ($_SERVER ["HTTP_CLIENT_IP"])) {
 			$cip = $_SERVER ["HTTP_CLIENT_IP"];
-		} elseif (!empty ($_SERVER ["HTTP_X_FORWARDED_FOR"])) {
+		} else if (!empty ($_SERVER ["HTTP_X_FORWARDED_FOR"])) {
 			$cip = $_SERVER ["HTTP_X_FORWARDED_FOR"];
-		} elseif (!empty ($_SERVER ["REMOTE_ADDR"])) {
+		} else if (!empty ($_SERVER ["REMOTE_ADDR"])) {
 			$cip = $_SERVER ["REMOTE_ADDR"];
 		} else {
 			$cip = "";
@@ -192,7 +194,7 @@ class Request implements \ArrayAccess {
 	 */
 	private function cleanInputData($str) {
 		if (is_array($str)) {
-			$new_array = array();
+			$new_array = [];
 			foreach ($str as $key => $val) {
 				$new_array [ $this->cleanInputKeys($key) ] = $this->cleanInputData($val);
 			}
@@ -202,7 +204,7 @@ class Request implements \ArrayAccess {
 		$str = self::$xss_cleaner->xss_clean($str);
 		// Standardize newlines
 		if (strpos($str, "\r") !== false) {
-			$str = str_replace(array("\r\n", "\r"), "\n", $str);
+			$str = str_replace(["\r\n", "\r"], "\n", $str);
 		}
 
 		return $str;

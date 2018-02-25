@@ -2,12 +2,13 @@
 
 namespace wulaphp\db;
 
+use wulaphp\app\App;
+use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\dialect\DatabaseDialect;
 use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
 use wulaphp\db\sql\Query;
 use wulaphp\db\sql\UpdateSQL;
-use wulaphp\wulaphp\db\ILock;
 
 /**
  * 数据库连接.
@@ -19,9 +20,10 @@ class DatabaseConnection {
 	/**
 	 * @var \wulaphp\db\dialect\DatabaseDialect
 	 */
-	private $dialect = null;
-
-	public $error = null;
+	private        $dialect = null;
+	public         $error   = null;
+	private        $name;
+	private static $dbs     = [];
 
 	/**
 	 * DatabaseConnection constructor.
@@ -35,6 +37,55 @@ class DatabaseConnection {
 			throw new \Exception('the dialect is not instance of DatabaseDialect');
 		}
 		$this->dialect = $dialect;
+	}
+
+	/**
+	 * 获取数据库连接实例.
+	 *
+	 * @param string|array|DatabaseConfiguration $name 数据库配置名/配置数组/配置实例.
+	 *
+	 * @return DatabaseConnection
+	 * @throws \Exception
+	 */
+	public static function connect($name = null) {
+		if ($name instanceof DatabaseConnection) {
+			return $name;
+		}
+		if (defined('ARTISAN_TASK_PID')) {
+			$pid = '@' . @posix_getpid();
+		} else {
+			$pid = '';
+		}
+		$config = $pname = false;
+		if (is_array($name)) {
+			$tmpname = implode('_', $name) . $pid;
+			if (isset (self::$dbs [ $tmpname ])) {
+				return self::$dbs [ $tmpname ];
+			}
+			$config = $name;
+			$pname  = $tmpname;
+		} else if (is_string($name)) {
+			$pname = $name . $pid;
+			if (isset (self::$dbs [ $pname ])) {
+				return self::$dbs [ $pname ];
+			}
+			$config = App::cfgLoader()->loadDatabaseConfig($name);
+		} else if ($name instanceof DatabaseConfiguration) {
+			$config = $name;
+			$pname  = $config->__toString() . $pid;
+		}
+		if ($config) {
+			$dialect = DatabaseDialect::getDialect($config);
+			if ($dialect) {
+				$db                   = new DatabaseConnection($dialect);
+				$db->name             = $pname;
+				self::$dbs [ $pname ] = $db;
+
+				return $db;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -54,6 +105,18 @@ class DatabaseConnection {
 		$this->dialect = $this->dialect->reset();
 		if (!$this->dialect instanceof DatabaseDialect) {
 			throw new \Exception('cannot reconnect to the database.');
+		}
+	}
+
+	/**
+	 * 关闭连接.
+	 */
+	public function close() {
+		if ($this->dialect) {
+			$this->dialect->close();
+		}
+		if ($this->name && isset(self::$dbs[ $this->name ])) {
+			unset(self::$dbs[ $this->name ]);
 		}
 	}
 
@@ -134,8 +197,11 @@ class DatabaseConnection {
 			if ($rst) {
 				try {
 					$data = false;
-					if ($lock && ($data = $lock->lock()) !== false) {
-						throw new \Exception('Cannot get lock from ' . get_class($lock));
+					if ($lock) {
+						$data = $lock->lock();
+						if ($data === false) {
+							throw new \Exception('Cannot lock');
+						}
 					}
 					if ($lock) {
 						$rst = $trans($this, $data);
