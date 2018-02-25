@@ -40,7 +40,9 @@ class FieldDataProvidor {
 	public function __construct($form, $field, $option = '') {
 		$this->option = $option;
 		if (!is_array($option)) {
-			$this->optionAry = @json_decode($this->option, true);
+			$ops             = @json_decode($this->option, true);
+			$this->optionAry = $ops === false ? [] : $ops;
+
 		} else {
 			$this->optionAry = $this->option;
 		}
@@ -65,6 +67,10 @@ class FieldDataProvidor {
 	 * @return mixed
 	 */
 	public function getData($search = false) {
+		if ($this->option && method_exists($this->form, $this->option)) {
+			return $this->form->{$this->option}(...[$search]);
+		}
+
 		return [];
 	}
 

@@ -11,6 +11,10 @@
 namespace wulaphp\form;
 
 use wulaphp\form\providor\FieldDataProvidor;
+use wulaphp\form\providor\JsonDataProvidor;
+use wulaphp\form\providor\LineDataProvidor;
+use wulaphp\form\providor\ParamDataProvidor;
+use wulaphp\form\providor\TableDataProvidor;
 
 /**
  * Class FormField
@@ -46,8 +50,8 @@ abstract class FormField implements \ArrayAccess {
 			$opts ['render']     = $ann->getString('render');
 			$opts ['wrapper']    = $ann->getString('wrapper');
 			$opts ['layout']     = $ann->getString('layout');
-			$opts ['dataSource'] = $ann->getString('dataSource', $ann->getString('see', null));
-			$opts ['dsCfg']      = $ann->getString('dsCfg');
+			$opts ['dataSource'] = $ann->getString('see', $ann->getString('dataSource', null));
+			$opts ['dsCfg']      = $ann->getString('dsCfg', $ann->getString('data'));
 			$opts ['note']       = $ann->getString('note');
 			$opts1               = $ann->getJsonArray('option', []);
 			$this->options       = array_merge($this->options, $opts, $opts1);
@@ -138,16 +142,39 @@ abstract class FormField implements \ArrayAccess {
 	 */
 	public function getDataProvidor() {
 		$option = $this->options;
+		$cfg    = trim(isset($this->options['dsCfg']) ? $this->options['dsCfg'] : '');
+
 		if (!isset($option['dataSource'])) {
+			$cfg1 = ltrim($cfg, ':');
+			if (strlen($cfg) - strlen($cfg1) == 2) {
+				return new FieldDataProvidor($this->form, $this, $cfg1);
+			}
+
 			return FieldDataProvidor::emptyDatasource();
 		}
 
-		$dsp = $option['dataSource'];
+		$dsp = trim($option['dataSource'], '()\\');
+		if ($dsp == 'json') {
+			return new JsonDataProvidor($this->form, $this, $cfg);
+		}
+
+		if ($dsp == 'table') {
+			return new TableDataProvidor($this->form, $this, $cfg);
+		}
+
+		if ($dsp == 'text') {
+			return new LineDataProvidor($this->form, $this, $cfg);
+		}
+
+		if ($dsp == 'param' || $dsp == 'parse_str') {
+			return new ParamDataProvidor($this->form, $this, $cfg);
+		}
+
 		if (!is_subclass_of($dsp, FieldDataProvidor::class)) {
 			return FieldDataProvidor::emptyDatasource();
 		}
 
-		return new $dsp($this->form, $this, isset($this->options['dsCfg']) ? $this->options['dsCfg'] : '');
+		return new $dsp($this->form, $this, $cfg);
 	}
 
 	public function offsetExists($offset) {

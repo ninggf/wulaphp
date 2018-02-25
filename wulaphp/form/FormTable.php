@@ -189,7 +189,9 @@ abstract class FormTable extends Table {
 				return floatval($value);
 			case 'array':
 			case 'json':
-				return @json_decode($value, true);
+				$value = @json_decode($value, true);
+
+				return $value ? $value : [];
 			case 'date':
 				return $value ? date('Y-m-d', $value) : '';
 			case 'datetime':
@@ -221,7 +223,9 @@ abstract class FormTable extends Table {
 				return in_array(strtolower($value), ['on', 'yes', '1', 'enabled']) ? 1 : 0;
 			case 'datetime':
 			case 'date':
-				return strtotime($value);
+				$time = $value ? @strtotime($value) : 0;
+
+				return $time === false ? 0 : $time;
 			case 'number':
 				if ($options['typef']) {
 					$typef = intval(trim($options['typef']));
