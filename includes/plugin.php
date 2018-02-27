@@ -46,7 +46,7 @@ function bind($hook, $hook_func, $priority = 10, $accepted_args = 1) {
 	$priority = $priority ? $priority : 10;
 	if (is_string($hook_func) && $hook_func{0} == '&') {
 		$hook_func = ltrim($hook_func, '&');
-		$hook_func = [$hook_func, $hook];
+		$hook_func = [$hook_func, str_replace(['.', '\\', '/', '-'], '_', $hook)];
 	}
 	if (empty ($hook_func)) {
 		log_error('the hook function must not be empty!', 'plugin');
