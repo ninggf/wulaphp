@@ -2,6 +2,7 @@
 
 namespace wulaphp\app;
 
+use wulaphp\db\DatabaseConnection;
 use wulaphp\i18n\I18n;
 use wulaphp\util\Annotation;
 
@@ -18,6 +19,7 @@ abstract class Module {
 	public    $upgradable       = false;
 	public    $installedVersion = '0.0.0';
 	public    $group            = '';
+	public    $isKernel         = true;
 	protected $namespace;
 	protected $path;
 	protected $dirname;
@@ -30,7 +32,7 @@ abstract class Module {
 		$this->clzName = get_class($this);
 		$ns            = explode('\\', $this->clzName);
 		$ann           = new Annotation($this->reflection);
-		$this->group   = $ann->getString('group','Unknown');
+		$this->group   = $ann->getString('group', 'Unknown');
 		array_pop($ns);
 		$this->namespace      = implode('\\', $ns);
 		$this->path           = dirname($ref->getFileName());
@@ -166,10 +168,150 @@ abstract class Module {
 	}
 
 	/**
+	 * 依赖.
+	 * @deprecated 使用composer.json定义
+	 * @return array|null
+	 */
+	public function getDependences() {
+		return null;
+	}
+
+	/**
+	 * 安装.
+	 *
+	 * @param DatabaseConnection $con
+	 * @param int                $kernel 1代表安装的是内核模块.
+	 *
+	 * @return bool
+	 */
+	public function install(DatabaseConnection $con, $kernel = 0) {
+		return true;
+	}
+
+	/**
+	 * 卸载.
+	 * @return bool
+	 */
+	public function uninstall() {
+		return true;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function stop() {
+		return true;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function start() {
+		return true;
+	}
+
+	/**
+	 * @param DatabaseConnection $db
+	 * @param string             $toVer
+	 * @param string             $fromVer
+	 *
+	 * @return bool
+	 */
+	public function upgrade($db, $toVer, $fromVer = '0.0.0') {
+		return true;
+	}
+
+	public function envCheck(&$envs) {
+
+	}
+
+	/**
+	 * 取当前模板所定义的表.
+	 *
+	 * @param \wulaphp\db\dialect\DatabaseDialect $dialect
+	 *
+	 * @return array
+	 */
+	public function getDefinedTables($dialect) {
+		return [];
+	}
+
+	/**
 	 * 批量事件处理器注册.
 	 */
 	protected function bind() {
 
+	}
+
+	/**
+	 * 检测文件权限.
+	 *
+	 * @param string $f 文件路径.
+	 * @param bool   $r 读
+	 * @param bool   $w 写
+	 *
+	 * @return array ['required'=>'','checked'=>'','pass'=>'']
+	 */
+	public final static function checkFile($f, $r = true, $w = true) {
+		$rst     = [];
+		$checked = $required = '';
+		if ($r) {
+			$required .= '可读';
+		}
+		if ($w) {
+			$required .= '可写';
+		}
+		if (file_exists($f)) {
+			if ($r) {
+				$checked = is_readable($f) ? '可读' : '不可读';
+			}
+			if ($w) {
+				if (is_dir($f)) {
+					$len = @file_put_contents($f . '/test.dat', 'test');
+					if ($len > 0) {
+						@unlink($f . '/test.dat');
+						$checked .= '可写';
+					} else {
+						$checked .= '不可写';
+					}
+				} else {
+					$checked .= is_writable($f) ? '可写' : '不可写';
+				}
+			}
+		} else {
+			$checked = '不存在';
+		}
+		$rst ['required'] = $required;
+		$rst ['checked']  = $checked;
+		$rst ['pass']     = $checked == $required;
+		$rst ['optional'] = false;
+
+		return $rst;
+	}
+
+	/**
+	 * 检测ini配置是否开启.
+	 *
+	 * @param string $key
+	 * @param int    $r
+	 * @param bool   $optional
+	 *
+	 * @return array ['required'=>'','checked'=>'','pass'=>'']
+	 */
+	public final static function checkEnv($key, $r, $optional = false) {
+		$rst = [];
+		$rel = strtolower(ini_get($key));
+		$rel = ($rel == '0' || $rel == 'off' || $rel == '') ? 0 : 1;
+		if ($rel == $r) {
+			$rst['pass'] = true;
+		} else {
+			$rst['pass'] = false;
+		}
+		$rst['required'] = $r ? '开' : '关';
+		$rst['checked']  = $rel ? '开' : '关';
+		$rst['optional'] = $optional;
+
+		return $rst;
 	}
 
 	/**
