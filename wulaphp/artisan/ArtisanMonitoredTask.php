@@ -41,7 +41,12 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			case 'start':
 				if (!$this->argValid($options)) {
 					$this->help();
-					exit(1);
+
+					return 1;
+				}
+				if (is_file($this->pidfile)) {
+					$this->status($cmd);
+					break;
 				}
 				$this->start($options, $cmd);
 				break;
@@ -54,6 +59,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 					exit(1);
 				}
 				$this->stop($cmd);
+				sleep(3);
 				$this->start($options, $cmd);
 				break;
 			case 'help':
@@ -199,7 +205,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			if ($pid > 0) {
 				unset($this->workers[ $pid ]);
 			}
-			usleep(1000);
+			sleep(1);
 		} while (!$this->shutdown);
 
 		do {
@@ -208,7 +214,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			if ($pid > 0) {
 				unset($this->workers[ $pid ]);
 			} else {
-				usleep(1000);
+				sleep(1);
 			}
 		} while (count($this->workers) > 0);
 	}
