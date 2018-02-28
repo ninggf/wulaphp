@@ -142,9 +142,11 @@ abstract class FormField implements \ArrayAccess {
 	 */
 	public function getDataProvidor() {
 		$option = $this->options;
-		$cfg    = trim(isset($this->options['dsCfg']) ? $this->options['dsCfg'] : '');
-
-		if (!isset($option['dataSource'])) {
+		$cfg    = isset($this->options['dsCfg']) ? $this->options['dsCfg'] : '';
+		if (!is_array($cfg)) {
+			$cfg = trim($cfg);
+		}
+		if (!isset($option['dataSource']) && is_string($cfg)) {
 			$cfg1 = ltrim($cfg, ':');
 			if (strlen($cfg) - strlen($cfg1) == 2) {
 				return new FieldDataProvidor($this->form, $this, $cfg1);

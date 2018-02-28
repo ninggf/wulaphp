@@ -39,6 +39,9 @@ abstract class View {
 	 * @var \wulaphp\db\dialect\DatabaseDialect 数据库链接（PDO）
 	 */
 	protected $dialect = null;
+	/**
+	 * @var \wulaphp\db\DatabaseConnection
+	 */
 	protected $dbconnection;
 	/**
 	 * @var string 查询字段

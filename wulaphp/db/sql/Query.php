@@ -405,9 +405,9 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 					$value = $row [ $var ];
 					if ($key != null && isset ($row [ $key ])) {
 						$id           = $row [ $key ];
-						$rows [ $id ] = $cb($value);
+						$rows [ $id ] = @$cb($value);
 					} else {
-						$rows [] = $cb($value);
+						$rows [] = @$cb($value);
 					}
 				}
 			} else {
@@ -427,12 +427,12 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 			if ($cb) {
 				foreach ($this->resultSets as $row) {
 					$id           = $row [ $key ];
-					$rows [ $id ] = $row;
+					$rows [ $id ] = @$cb($row);
 				}
 			} else {
 				foreach ($this->resultSets as $row) {
 					$id           = $row [ $key ];
-					$rows [ $id ] = $cb($row);
+					$rows [ $id ] = $row;
 				}
 			}
 
