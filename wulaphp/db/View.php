@@ -217,8 +217,8 @@ abstract class View {
 	/**
 	 * 符合条件的记录总数.
 	 *
-	 * @param array  $con 条件.
-	 * @param string $id  字段用于count的字段,默认为*.
+	 * @param array|string|int $con 条件.
+	 * @param string           $id  字段用于count的字段,默认为*.
 	 *
 	 * @return int 记数.
 	 */
@@ -240,7 +240,7 @@ abstract class View {
 	/**
 	 * 是否存在满足条件的记录.
 	 *
-	 * @param array  $con 条件.
+	 * @param array|string|int  $con 条件.
 	 * @param string $id  字段.
 	 *
 	 * @return boolean 有记数返回true,反之返回false.
