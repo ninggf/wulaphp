@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\conf;
 
 /**
@@ -30,7 +31,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 				if ($cfg instanceof Configuration) {
 					$cfg->setName($name);
 					$config = $cfg;
-				} elseif (is_array($cfg)) {
+				} else if (is_array($cfg)) {
 					$config->setConfigs($cfg);
 				}
 				break;
@@ -39,6 +40,29 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 		unset ($_wula_config_file, $wula_cfg_fiels);
 
 		return $config;
+	}
+
+	/**
+	 * 从配置文件加载.
+	 *
+	 * @param string $name
+	 *
+	 * @return \wulaphp\conf\Configuration
+	 */
+	public static function loadFromFile($name) {
+		/**@var \wulaphp\conf\Configuration[] $cfgs */
+		static $cfgs = [];
+
+		if (!isset($cfgs[ $name ])) {
+			if (!$name) {
+				$cfgs[ $name ] = new Configuration('');
+			} else {
+				$loader        = new ConfigurationLoader();
+				$cfgs[ $name ] = $loader->loadConfig($name);
+			}
+		}
+
+		return $cfgs[ $name ];
 	}
 
 	/**
@@ -63,7 +87,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 				if ($cfg instanceof Configuration) {
 					$cfg->setName($name);
 					$config = $cfg;
-				} elseif (is_array($cfg)) {
+				} else if (is_array($cfg)) {
 					$config->setConfigs($cfg);
 				}
 				break;
