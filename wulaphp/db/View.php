@@ -223,6 +223,9 @@ abstract class View {
 	 * @return int 记数.
 	 */
 	public function count($con, $id = null) {
+		if ($con && !is_array($con)) {
+			$con = [$this->primaryKeys[0] => $con];
+		}
 		$sql = $this->select();
 		$sql->where($con);
 		if ($id) {

@@ -8,8 +8,7 @@ use wulaphp\db\DialectException;
 /**
  * 查询基类
  *
- * @package wulaphp\db\sql
- * @method toArray()
+ * @method toArray($var = null, $key = null, $rows = [], $cb = null)
  * @method get($index = 0, $field = null)
  * @method first()
  * @method exist($filed = null)
