@@ -13,6 +13,10 @@ namespace wulaphp\cache;
 class YacCache extends Cache {
 	private $yac = null;
 
+	public function getName() {
+		return 'Yac';
+	}
+
 	public function __construct($prefix = '') {
 		$this->yac = new \Yac($prefix);
 	}

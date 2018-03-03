@@ -15,10 +15,15 @@ class RedisCache extends Cache {
 		$this->redis = $redis;
 	}
 
+	public function getName() {
+		return 'Redis';
+	}
+
 	/**
 	 * @param \wulaphp\conf\Configuration $cfg
 	 *
 	 * @return \wulaphp\cache\Cache
+	 * @throws
 	 */
 	public static function getInstance(Configuration $cfg) {
 		$cache = null;

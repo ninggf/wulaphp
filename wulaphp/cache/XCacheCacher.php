@@ -3,6 +3,9 @@
 namespace wulaphp\cache;
 
 class XCacheCacher extends Cache {
+	public function getName() {
+		return 'XCache';
+	}
 
 	public function add($key, $data, $expire = 0) {
 		@xcache_set($key, $data);

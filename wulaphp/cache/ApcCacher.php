@@ -10,6 +10,10 @@ namespace wulaphp\cache;
  */
 class ApcCacher extends Cache {
 
+	public function getName() {
+		return 'Apc';
+	}
+
 	public function add($key, $data, $expire = 0) {
 		apcu_store($key, $data);
 

@@ -19,6 +19,10 @@ class MemcachedCache extends Cache {
 
 	}
 
+	public function getName() {
+		return 'Memcached';
+	}
+
 	/**
 	 * @param Configuration $cfg
 	 *

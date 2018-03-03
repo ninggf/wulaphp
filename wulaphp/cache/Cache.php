@@ -8,6 +8,10 @@ class Cache implements \ArrayAccess {
 
 	public $expire = 0;
 
+	public function getName() {
+		return '未启用';
+	}
+
 	/**
 	 * 取系统缓存管理器.
 	 *
