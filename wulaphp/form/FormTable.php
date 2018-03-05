@@ -288,13 +288,16 @@ abstract class FormTable extends Table {
 	/**
 	 * 添加字段.
 	 *
-	 * @param string                   $fname
-	 * @param \wulaphp\util\Annotation $ann
-	 * @param string                   $default
+	 * @param string                         $fname
+	 * @param \wulaphp\util\Annotation|array $ann
+	 * @param string                         $default
 	 *
 	 * @return string 字段名
 	 */
-	protected function addField($fname, Annotation $ann, $default = '') {
+	public function addField($fname, $ann, $default = '') {
+		if (is_array($ann)) {
+			$ann = new Annotation($ann);
+		}
 		if ($ann->has('type')) {
 			//字段名
 			$fieldName = $ann->getString('name', $fname);

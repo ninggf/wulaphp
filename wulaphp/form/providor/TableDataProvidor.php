@@ -28,6 +28,7 @@ class TableDataProvidor extends FieldDataProvidor {
 		$field  = isset($options['fields']) ? $options['fields'] : 'name';
 		$eval   = isset($options['eval']);
 		$sort   = isset($options['orderBy']) ? $options['orderBy'] : '';
+		$option = isset($options['option']) ? $options['option'] : [];
 		$format = method_exists($this->form, 'formatData');
 		if ($where && $eval) {
 			$tableData = $this->form->tableData();
@@ -53,6 +54,15 @@ class TableDataProvidor extends FieldDataProvidor {
 			}
 
 			return $datas;
+		} else if ($option) {
+			$datas = $table->select($keyId . ',' . $field);
+			if ($sort) {
+				$datas->sort($sort);
+			}
+			$opts = $option;
+			$datas->treeKey('id')->tree($opts, 'id', 'pid');
+
+			return $opts;
 		} else {
 			$datas = $table->select($keyId . ',' . $field);
 			if ($sort) {

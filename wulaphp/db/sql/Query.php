@@ -95,9 +95,9 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	/**
-	 * 设置tree option的主键.
+	 * 用$key字段做select option的value.
 	 *
-	 * @param string $key 主键字段.
+	 * @param string $key 字段名.
 	 *
 	 * @return \wulaphp\db\sql\Query
 	 */
@@ -134,6 +134,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	public function tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0) {
 		if ($level == 0) {
 			$con = new Condition ([$upfield => $from]);
+			$this->field($upfield)->field($varfield);
 			$this->where($con);
 		} else {
 			//更新查询条件，重新查询
@@ -143,8 +144,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		$rows = $this->toArray();
 
 		if ($rows) {
-			if ($this->treePad) {
-				$pad = str_pad('&nbsp;&nbsp;|--', ($level * 24 + 15), '&nbsp;', STR_PAD_LEFT);
+			if ($this->treePad && $level > 0) {
+				$pad = str_replace('~', '&nbsp;', str_pad('~', ($level * 2), '~', STR_PAD_LEFT));
 			} else {
 				$pad = '';
 			}
