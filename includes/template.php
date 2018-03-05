@@ -214,6 +214,14 @@ function smarty_modifiercompiler_timeread($params, $compiler) {
 	return "readable_date({$params[0]})";
 }
 
+function smarty_modifiercompiler_readable_size($params, $compiler) {
+	return "readable_size({$params[0]})";
+}
+
+function smarty_modifiercompiler_readable_num($params, $compiler) {
+	return "readable_num({$params[0]})";
+}
+
 /**
  * Smarty checked modifier plugin.
  *
@@ -293,6 +301,7 @@ function smarty_modifiercompiler_render($ary, $compiler) {
  * @param array        $headers
  *
  * @return \wulaphp\mvc\view\SmartyView
+ * @throws
  */
 function view($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
 	if (is_string($data)) {
