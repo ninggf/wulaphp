@@ -366,6 +366,8 @@ class App {
 	}
 
 	/**
+	 * 取整数配置.
+	 *
 	 * @param string $name    配置项名与组名,例abc@def表示从def配置中读取abc,如果不指定组,则默认为default.
 	 * @param int    $default 默认值为0.
 	 *
@@ -373,12 +375,29 @@ class App {
 	 */
 	public static function icfg($name, $default = 0) {
 		if ($name == null) {
-			return 0;
+			return $default;
 		} else {
 			$val = App::cfg($name, $default);
 
 			return intval($val);
 		}
+	}
+
+	/**
+	 * 取整数配置。如果配置为0则返回$default。
+	 *
+	 * @param string $name    配置项名与组名,例abc@def表示从def配置中读取abc,如果不指定组,则默认为default.
+	 * @param int    $default 默认值为0.
+	 *
+	 * @return int
+	 */
+	public static function icfgn($name, $default = 0) {
+		$val = self::icfg($name, $default);
+		if (!$val) {
+			return $default;
+		}
+
+		return $val;
 	}
 
 	/**
