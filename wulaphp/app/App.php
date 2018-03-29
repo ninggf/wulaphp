@@ -700,18 +700,41 @@ class App {
 	 * @return string
 	 */
 	public static function res($res, $min = '') {
+		static $static_url = false;
+		if ($static_url === false) {
+			$static_url = App::cfg('static_base');
+			if ($static_url) {
+				$static_url = trailingslashit($static_url . WWWROOT_DIR);
+			} else {
+				$static_url = WWWROOT_DIR;
+			}
+		}
 		$url     = ltrim($res, '/');
 		$urls    = explode('/', $url);
 		$urls[0] = App::id2dir($urls[0]);
 		$url     = implode('/', $urls);
-		if ($min) {
+		if ($min || APP_MODE == 'pro') {
 			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
 			if (is_file(WWWROOT . $url1)) {
 				$url = $url1;
 			}
 		}
 
-		return WWWROOT_DIR . MODULE_DIR . '/' . $url;
+		return $static_url . MODULE_DIR . '/' . $url;
+	}
+
+	public static function src($src) {
+		static $static_url = false;
+		if ($static_url === false) {
+			$static_url = App::cfg('static_base');
+			if ($static_url) {
+				$static_url = trailingslashit($static_url . WWWROOT_DIR);
+			} else {
+				$static_url = WWWROOT_DIR;
+			}
+		}
+
+		return $static_url . $src;
 	}
 
 	/**
@@ -723,15 +746,24 @@ class App {
 	 * @return string
 	 */
 	public static function assets($res, $min = '') {
+		static $static_url = false;
+		if ($static_url === false) {
+			$static_url = App::cfg('static_base');
+			if ($static_url) {
+				$static_url = trailingslashit($static_url . WWWROOT_DIR);
+			} else {
+				$static_url = WWWROOT_DIR;
+			}
+		}
 		$url = ltrim($res, '/');
-		if ($min) {
+		if ($min || APP_MODE == 'pro') {
 			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
 			if (is_file(WWWROOT . $url1)) {
 				$url = $url1;
 			}
 		}
 
-		return WWWROOT_DIR . ASSETS_DIR . '/' . $url;
+		return $static_url . ASSETS_DIR . '/' . $url;
 	}
 
 	/**
@@ -743,15 +775,24 @@ class App {
 	 * @return string
 	 */
 	public static function vendor($res, $min = '') {
+		static $static_url = false;
+		if ($static_url === false) {
+			$static_url = App::cfg('static_base');
+			if ($static_url) {
+				$static_url = trailingslashit($static_url . WWWROOT_DIR);
+			} else {
+				$static_url = WWWROOT_DIR;
+			}
+		}
 		$url = ltrim($res, '/');
-		if ($min) {
+		if ($min || APP_MODE == 'pro') {
 			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
 			if (is_file(WWWROOT . $url1)) {
 				$url = $url1;
 			}
 		}
 
-		return WWWROOT_DIR . VENDOR_DIR . '/' . $url;
+		return $static_url . VENDOR_DIR . '/' . $url;
 	}
 
 	/**

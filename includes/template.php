@@ -113,7 +113,7 @@ function smarty_modifiercompiler_here($params, $compiler) {
 	$tpl = str_replace($base, '', $tpl);
 	$url = !empty ($tpl) ? trailingslashit($tpl) : '';
 
-	return "WWWROOT_DIR.'{$url}'." . $params [0] . '';
+	return "\wulaphp\app\App::src('{$url}'." . $params [0] . ')';
 }
 
 function smarty_modifiercompiler_cfg($params, $compiler) {
