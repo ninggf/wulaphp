@@ -1,25 +1,4 @@
 <?php
-
-/*!
- * cssmin.php rev ebaf67b 12/06/2013
- * Author: Tubal Martin - http://tubalmartin.me/
- * Repo: https://github.com/tubalmartin/YUI-CSS-compressor-PHP-port
- *
- * This is a PHP port of the CSS minification tool distributed with YUICompressor, 
- * itself a port of the cssmin utility by Isaac Schlueter - http://foohack.com/
- * Permission is hereby granted to use the PHP version under the same
- * conditions as the YUICompressor.
- */
-
-/*!
- * YUI Compressor
- * http://developer.yahoo.com/yui/compressor/
- * Author: Julien Lecomte - http://www.julienlecomte.net/
- * Copyright (c) 2013 Yahoo! Inc. All rights reserved.
- * The copyrights embodied in the content of this file are licensed
- * by Yahoo! Inc. under the BSD (revised) open source license.
- */
-
 class CSSmin
 {
     const NL = '___YUICSSMIN_PRESERVED_NL___';
