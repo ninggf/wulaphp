@@ -33,7 +33,6 @@ class Router {
 	 * @filter router\registerDispatcher Router
 	 */
 	private function __construct() {
-		define('PHP_RUNTIME_NAME', php_sapi_name());
 		$this->xssCleaner = new XssCleaner();
 		$this->register(new DefaultDispatcher (), 0);
 		fire('router\registerDispatcher', $this);
@@ -202,6 +201,7 @@ class Router {
 						if (is_array($view) || $view) {
 							break;
 						}
+						$this->urlParsedInfo->reset();
 					}
 				}
 				if (is_array($view) || $view) {

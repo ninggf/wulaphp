@@ -2,10 +2,12 @@
 
 namespace wulaphp\cache {
 
-	/* 运行时缓存 */
-
 	use wulaphp\conf\ConfigurationLoader;
 
+	/**
+	 * Class RtCache - runtime cache
+	 * @package wulaphp\cache
+	 */
 	class RtCache {
 		/**
 		 * @var Cache
@@ -87,14 +89,13 @@ namespace wulaphp\cache {
 }
 
 namespace {
-
 	/**
 	 * 从.env中取配置.
 	 *
 	 * @param string $key
 	 * @param string $default
 	 *
-	 * @return string
+	 * @return mixed
 	 */
 	function env($key, $default = '') {
 		static $envs = null;

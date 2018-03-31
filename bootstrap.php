@@ -15,13 +15,13 @@
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
-if (version_compare('5.6.0', phpversion(), '>')) {
-	die (sprintf('Your php version is %s,but wulaphp required  PHP 5.6.0 or higher', phpversion()));
+if (version_compare('5.6.9', phpversion(), '>')) {
+	die (sprintf('Your php version is %s,but wulaphp required PHP 5.6.9 or higher', phpversion()));
 }
 define('WULA_STARTTIME', microtime(true));
 defined('APPROOT') or die ('please define APPROOT');
 defined('WWWROOT') or die ('please define WWWROOT');
-define('WULA_VERSION', '1.6.0');
+define('WULA_VERSION', '1.12.0');
 define('WULA_RELEASE', 'rc');
 /* 常用目录定义 */
 define('DS', DIRECTORY_SEPARATOR);
@@ -54,6 +54,7 @@ define('DEBUG_ERROR', 400);
 define('DEBUG_WARN', 300);
 define('DEBUG_INFO', 200);
 define('DEBUG_DEBUG', 100);
+define('PHP_RUNTIME_NAME', php_sapi_name());
 if (!defined('APP_MODE')) {
 	if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {
 		define('APP_MODE', $_SERVER['APPMODE']);
@@ -67,9 +68,7 @@ if (@ini_get('register_globals')) {
 if (defined('MAX_RUNTIME_LIMIT')) {
 	set_time_limit(intval(MAX_RUNTIME_LIMIT));
 }
-if (!defined('RUNTIME_MEMORY_LIMIT')) {
-	define('RUNTIME_MEMORY_LIMIT', '128M');
-}
+defined('RUNTIME_MEMORY_LIMIT') or define('RUNTIME_MEMORY_LIMIT', '128M');
 if (function_exists('memory_get_usage') && (( int )@ini_get('memory_limit') < abs(intval(RUNTIME_MEMORY_LIMIT)))) {
 	@ini_set('memory_limit', RUNTIME_MEMORY_LIMIT);
 }
@@ -86,10 +85,11 @@ if (!function_exists('curl_init')) {
 	die ('curl extension is required!');
 }
 @ob_start();
-mb_internal_encoding('UTF-8');
-mb_regex_encoding('UTF-8');
 @ini_set('session.bug_compat_warn', 0);
 @ini_set('session.bug_compat_42', 0);
+@mb_internal_encoding('UTF-8');
+@mb_regex_encoding('UTF-8');
+define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
 /** @global string[] $_wula_classpath none-namespace classpath. */
 global $_wula_classpath;
 /** @global  string[] $_wula_namespace_classpath psr-4 classpath. */
@@ -162,9 +162,9 @@ spl_autoload_register(function ($clz) {
 		@include $clz_file;
 	}
 });
-require WULA_ROOT . 'includes/common.php';
+include WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
-	require LIBS_PATH . 'common.php';
+	include LIBS_PATH . 'common.php';
 }
 set_exception_handler('wula_exception_handler');
 register_shutdown_function('wula_shutdown_function');

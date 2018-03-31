@@ -346,7 +346,7 @@ abstract class QueryBuilder {
 	public function page($pageNo = null, $size = 20) {
 		if ($pageNo === null) {
 			$pageNo = irqst('pager.page', 1);
-			$size   = irqst('pager.limit', 20);
+			$size   = irqst('pager.size', 20);
 		}
 		$pageNo = intval($pageNo);
 		if ($pageNo <= 0) {

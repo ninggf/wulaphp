@@ -287,25 +287,27 @@ class DatabaseConnection {
 			return null;
 		}
 		try {
-			$params = 0;
+
 			// 表前缀处理
 			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
 				return $dialect->getTableName($r[0]);
 			}, $sql);
-			// 参数处理
-			$sql = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
-				if ($r[0] == '%f') {
-					$v = floatval($args[ $params ]);
-				} else if ($r[0] == '%d') {
-					$v = intval($args[ $params ]);
-				} else {
-					$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
-				}
-				$params++;
+			if ($args) {
+				// 参数处理
+				$params = 0;
+				$sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+					if ($r[0] == '%f') {
+						$v = floatval($args[ $params ]);
+					} else if ($r[0] == '%d') {
+						$v = intval($args[ $params ]);
+					} else {
+						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
+					}
+					$params++;
 
-				return $v;
-			}, $sql);
-
+					return $v;
+				}, $sql);
+			}
 			$rst = $dialect->exec($sql);
 
 			return $rst === false ? null : $rst;
@@ -324,46 +326,88 @@ class DatabaseConnection {
 	 * @param string $sql
 	 * @param array  $args
 	 *
-	 * @return array|null
+	 * @return array
 	 */
 	public function query($sql, ...$args) {
+		$rst = $this->fetch($sql, $args);
+		if ($rst) {
+			$result = $rst->fetchAll(\PDO::FETCH_ASSOC);
+			$rst->closeCursor();
+
+			return $result;
+		}
+
+		return [];
+	}
+
+	/**
+	 * 执行SQL查询,select a from a where a=%s and %d.
+	 *
+	 * @param string $sql
+	 * @param array  $args
+	 *
+	 * @return null|\PDOStatement
+	 */
+	public function fetch($sql, ...$args) {
 		$dialect = $this->dialect;
 		if (is_null($dialect)) {
 			return null;
 		}
 		try {
-			$params = 0;
 			// 表前缀处理
 			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
 				return $dialect->getTableName($r[0]);
 			}, $sql);
-			// 参数处理
-			$sql = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
-				if ($r[0] == '%f') {
-					$v = floatval($args[ $params ]);
-				} else if ($r[0] == '%d') {
-					$v = intval($args[ $params ]);
-				} else {
-					$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
+			if ($args) {
+				$params = 0;
+				// 参数处理
+				if (is_array($args[0])) {
+					$args = $args[0];
 				}
-				$params++;
+				$sql = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+					if ($r[0] == '%f') {
+						$v = floatval($args[ $params ]);
+					} else if ($r[0] == '%d') {
+						$v = intval($args[ $params ]);
+					} else {
+						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
+					}
+					$params++;
 
-				return $v;
-			}, $sql);
-
+					return $v;
+				}, $sql);
+			}
+			//查询
 			$rst = $this->dialect->query($sql);
-
 			if ($rst) {
-				$result = $rst->fetchAll(\PDO::FETCH_ASSOC);
-				$rst->closeCursor();
-
-				return $result;
+				return $rst;
 			}
 		} catch (\Exception $e) {
 			$this->error = $e->getMessage();
 		}
 
 		return null;
+	}
+
+	/**
+	 *
+	 * 执行SQL查询且只取一条记录,select a from a where a=%s and %d.
+	 *
+	 * @param string $sql
+	 * @param array  $args
+	 *
+	 * @return array|null
+	 */
+	public function queryOne($sql, ...$args) {
+		$rst = $this->fetch($sql, $args);
+		if ($rst) {
+			$result = $rst->fetch(\PDO::FETCH_ASSOC);
+			$rst->closeCursor();
+
+			return $result;
+		}
+
+		return [];
 	}
 
 	/**

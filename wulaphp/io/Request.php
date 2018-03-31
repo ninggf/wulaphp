@@ -68,10 +68,28 @@ class Request implements \ArrayAccess {
 		return isset ($_SERVER ["HTTP_X_AJAX_TYPE"]) || (isset ($_SERVER ['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER ['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 	}
 
+	/**
+	 * 是不是https请求.
+	 *
+	 * @return bool
+	 */
+	public static function isHttps() {
+		return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off';
+	}
+
+	/**
+	 * 是不是GET请求
+	 * @return bool
+	 */
 	public static function isGet() {
 		return strtoupper($_SERVER ['REQUEST_METHOD']) == 'GET';
 	}
 
+	/**
+	 * 是不是POST请求.
+	 *
+	 * @return bool
+	 */
 	public static function isPost() {
 		return strtoupper($_SERVER ['REQUEST_METHOD']) == 'POST';
 	}
