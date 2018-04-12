@@ -9,6 +9,9 @@
  */
 
 namespace wulaphp\form\providor;
+
+use wulaphp\form\FormTable;
+
 /**
  * 1. 一行一条数据。用=号分隔Key与Value.如：
  * "1=你好\n2=我好"
@@ -45,4 +48,24 @@ class LineDataProvidor extends FieldDataProvidor {
 
 		return $datas;
 	}
+
+	public function createConfigForm() {
+		$form = new LineDataProvidorForm(true);
+		$form->inflateByData(['dsCfg' => $this->option]);
+
+		return $form;
+	}
+}
+
+class LineDataProvidorForm extends FormTable {
+	public $table = null;
+	/**
+	 * 文本数据源
+	 * @var \backend\form\TextareaField
+	 * @type string
+	 * @layout 2,col-xs-12
+	 * @option {"row":6}
+	 * @note   一行一个，格式: value=文本
+	 */
+	public $dsCfg;
 }

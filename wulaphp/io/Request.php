@@ -230,7 +230,7 @@ class Request implements \ArrayAccess {
 
 	private function cleanInputKeys($str) {
 		if (!preg_match('/^[\.a-z0-9:_\-\/-\\\\*]+$/i', $str)) {
-			log_error('Disallowed Key Characters:' . $str, 'input');
+			log_warn('Disallowed Key Characters:' . $str, 'input');
 			exit ('Disallowed Key Characters:' . $str);
 		}
 

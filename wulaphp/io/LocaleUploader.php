@@ -10,6 +10,8 @@
 
 namespace wulaphp\io;
 
+use wulaphp\app\App;
+
 class LocaleUploader implements IUploader {
 	protected $last_error       = '';
 	protected $upload_root_path = '';
@@ -85,8 +87,18 @@ class LocaleUploader implements IUploader {
 	 */
 	public function getDestDir($path = null) {
 		if (!$path) {
-			$path     = date('/Y/n/');
-			$rand_cnt = 0;
+			$dir = App::icfg('dir@media', 1);
+			switch ($dir) {
+				case 0:
+					$path = date('/Y/');
+					break;
+				case 1:
+					$path = date('/Y/n/');
+					break;
+				default:
+					$path = date('/Y/n/d/');
+			}
+			$rand_cnt = App::icfg('group_num@media', 0);
 			if ($rand_cnt > 1) {
 				$cnt  = rand(0, $rand_cnt - 1);
 				$path .= $cnt . '/';
@@ -95,7 +107,12 @@ class LocaleUploader implements IUploader {
 		if ($path{0} == '@') {
 			return substr($path, 1);
 		} else {
-			return 'files' . $path;
+			$save_path = App::cfg('save_path@media');
+			if (!$save_path) {
+				$save_path = 'files';
+			}
+
+			return $save_path . $path;
 		}
 	}
 }

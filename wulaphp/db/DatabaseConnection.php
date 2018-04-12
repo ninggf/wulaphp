@@ -277,7 +277,7 @@ class DatabaseConnection {
 	 * 执行delete,update, insert SQL.
 	 *
 	 * @param string $sql
-	 * @param array  $args
+	 * @param mixed  ...$args
 	 *
 	 * @return int|null
 	 */
@@ -317,6 +317,23 @@ class DatabaseConnection {
 		}
 
 		return null;
+	}
+
+	/**
+	 * 删除0行也算成功.
+	 *
+	 * @param string $sql
+	 * @param mixed  ...$args
+	 *
+	 * @return bool
+	 */
+	public function cudx($sql, ...$args) {
+		$rst = $this->cud($sql, ...$args);
+		if ($rst === null) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

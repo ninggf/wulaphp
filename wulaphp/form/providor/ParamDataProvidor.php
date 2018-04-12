@@ -10,6 +10,8 @@
 
 namespace wulaphp\form\providor;
 
+use wulaphp\form\FormTable;
+
 class ParamDataProvidor extends FieldDataProvidor {
 	public function getData($search = false) {
 		if ($this->option) {
@@ -20,4 +22,22 @@ class ParamDataProvidor extends FieldDataProvidor {
 
 		return [];
 	}
+
+	public function createConfigForm() {
+		$form = new ParamDataProvidorForm(true);
+		$form->inflateByData(['dsCfg' => $this->option]);
+
+		return $form;
+	}
+}
+
+class ParamDataProvidorForm extends FormTable {
+	public $table = null;
+	/**
+	 * URL参数
+	 * @var \backend\form\TextField
+	 * @type string
+	 * @layout 2,col-xs-12
+	 */
+	public $dsCfg;
 }

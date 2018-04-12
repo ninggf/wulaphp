@@ -32,7 +32,7 @@ trait JQueryValidatorController {
 				return 'false';
 			}
 			$_arg0_form = ltrim(str_replace('.', '\\', $_arg0_form), '\\');
-			if ($_arg0_form && in_array($_arg0_form, $accepts) && is_subclass_of($_arg0_form, FormTable::class)) {
+			if ($_arg0_form && ($accepts[0] == '*' || in_array($_arg0_form, $accepts)) && is_subclass_of($_arg0_form, FormTable::class)) {
 				/**@var \wulaphp\form\FormTable $form */
 				$form = new $_arg0_form(true);
 				$data = $form->formData();

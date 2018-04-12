@@ -40,11 +40,12 @@ abstract class FormTable extends Table {
 	 *
 	 * @param string|bool $excepts    不填充的字段,多个字段以逗号分隔.当其值为true时，$useDefault=true。
 	 * @param bool        $useDefault 是否使用默认值填充数据.
+	 * @param bool        $force      是否强制重新加载
 	 *
 	 * @return array 填充后的数组.
 	 */
-	public final function inflate($excepts = '', $useDefault = false) {
-		if ($this->_tableData) {
+	public final function inflate($excepts = '', $useDefault = false, $force = false) {
+		if ($this->_tableData && !$force) {
 			return $this->_tableData;
 		}
 		$data     = [];
@@ -112,7 +113,7 @@ abstract class FormTable extends Table {
 		$formData = $this->_formData;
 		if ($data) {
 			foreach ($this->_maps_ as $key => $v) {
-				if (isset($data[ $key ])) {
+				if (array_key_exists($key, $data)) {
 					$formData[ $v ] = $rtn[ $key ] = $this->unpack($v, $data[ $key ], $this->_fields[ $v ]);
 					$this->{$key}   = $rtn[ $key ];
 				}
@@ -196,6 +197,8 @@ abstract class FormTable extends Table {
 				return $value ? date('Y-m-d', $value) : '';
 			case 'datetime':
 				return $value ? date('Y-m-d H:i:s', $value) : '';
+			case 'bool':
+				return boolval($value) ? 1 : 0;
 			default:
 				return $value;
 		}
@@ -255,9 +258,9 @@ abstract class FormTable extends Table {
 		$dann            = new Annotation($refobj);
 		$this->_xssClean = $dann->getBool('xssclean', true);
 		unset($dann);
-		$fields = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
+		$fields  = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
+		$sfields = [];
 		if (!empty($fields)) {
-			$sfields = [];
 			/**@var  \ReflectionProperty $field */
 			foreach ($fields as $field) {
 				$ann = new Annotation($field);
@@ -267,11 +270,16 @@ abstract class FormTable extends Table {
 					$sfields[] = $this->addField($fname, $ann, $this->{$fname});
 				}
 			}
-			if ($sfields) {
-				$this->defaultQueryFields = implode(',', $sfields);
-			}
+
+		}
+		if (method_exists($this, 'initialize')) {
+			$this->initialize($sfields);
+		}
+		if ($sfields) {
+			$this->defaultQueryFields = implode(',', $sfields);
 		}
 		fire(get_class($this) . '::onParseFields', $this);
+		unset($refobj);
 	}
 
 	/**

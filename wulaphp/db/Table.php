@@ -200,10 +200,10 @@ abstract class Table extends View {
 			return $sql;
 		}
 		$rst = false;
-		if (is_int($con)) {
+		if ($con && !is_array($con)) {
 			$con = [$this->primaryKeys[0] => $con];
 		}
-		if ($con) {
+		if (is_array($con) && $con) {
 			$sql = new DeleteSQL();
 			$sql->from($this->qualifiedName)->setDialect($this->dialect);
 			$sql->where($con);

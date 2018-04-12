@@ -205,11 +205,12 @@ abstract class FormField implements \ArrayAccess {
 	protected abstract function renderWidget($opts);
 
 	/**
-	 * 字段配置.
+	 * 字段配置表单.
 	 *
-	 * @return array
+	 *
+	 * @return \wulaphp\form\FormTable|null
 	 */
-	protected function config() {
-		return [];
+	public function getOptionForm() {
+		return null;
 	}
 }
