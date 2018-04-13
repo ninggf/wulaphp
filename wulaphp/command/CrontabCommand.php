@@ -1,5 +1,5 @@
 <?php
-declare(ticks=5);
+declare(ticks=1);
 /*
  * This file is part of wulacms.
  *
@@ -13,6 +13,7 @@ namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanMonitoredTask;
 use wulaphp\util\DaemonCrontab;
+use wulaphp\util\ICrontabJob;
 
 class CrontabCommand extends ArtisanMonitoredTask {
 	private $clz = '';
@@ -26,22 +27,32 @@ class CrontabCommand extends ArtisanMonitoredTask {
 	}
 
 	protected function getOpts() {
-		return ['i::interval' => 'the interval in seconds, default is 1 second.', 'f' => 'run in fixed interval.'];
+		return [
+			'i::interval' => 'the interval in seconds, default is 1 second.',
+			's::second'   => 'run at accurate second(0-59)',
+			'f'           => 'run in fixed interval.'
+		];
 	}
 
 	protected function argDesc() {
-		return '<crontab_job_class> [start|stop|status]';
+		return '<crontab> [start|stop|status]';
 	}
 
 	protected function argValid($options) {
 		$this->clz = $this->opt(-2);
-		if (!$this->clz) {
-			$this->error('Please give me a crontab job.');
+
+		if (isset($options['i']) && !preg_match('/^[1-9]\d*$/', $options['i'])) {
+			$this->error('arg i must digit');
 
 			return false;
 		}
-		if (!is_subclass_of($this->clz, '\wulaphp\util\ICrontabJob')) {
-			$this->error($this->color->str($this->clz, 'red') . ' is not a valid crontab job.');
+		if (isset($options['s']) && !preg_match('/^(0|[1-5]\d)$/', $options['s'])) {
+			$this->error('arg s must be 0-59');
+
+			return false;
+		}
+		if (!$this->clz) {
+			$this->error('Please give me a crontab job.');
 
 			return false;
 		}
@@ -54,31 +65,65 @@ class CrontabCommand extends ArtisanMonitoredTask {
 	}
 
 	protected function execute($options) {
-		$interval = isset($options['i']) ? abs(floatval($options['i']) * 1000000) : 1000000;
-		$interval = $interval ? $interval : 1000000;
-		$rtn      = 0;
+		$interval = isset($options['i']) ? intval($options['i']) : 1;
+		$interval = $interval ? $interval : 1;
+		$second   = isset($options['s']) ? intval($options['s']) : null;
+		//睡到具体秒再执行
+		if (!is_null($second)) {
+			$cs = ltrim(date('s'), '0');
+			if ($cs != $second) {//秒不同
+				if ($cs > $second) {
+					$sleep = $second + 60 - $cs;
+				} else {
+					$sleep = $second - $cs;
+				}
+				sleep($sleep);
+			}
+		}
+		$rtn = 0;
 		/**@var \wulaphp\util\ICrontabJob $clz */
-		$clz = new $this->clz();
+		$clz = null;
+		if (is_subclass_of($this->clz, '\wulaphp\util\ICrontabJob')) {
+			$clz = new $this->clz();
+		} else {
+			$clz = new ScriptCrontab($this->clz);
+		}
+
 		if ($clz instanceof DaemonCrontab) {
 			$clz->fork = false;//不能在fork了.
 		}
+
 		$fixed = isset($options['f']);//是否是以固定间隔执行.
 		gc_enable();
+		$run = true;
 		while (!$this->shutdown) {
-			$s   = microtime(true);
-			$rtn = $clz->run();
-			gc_collect_cycles();
-			$e    = microtime(true);
+			$s = time();
+			if ($run) {
+				try {
+					$rtn = $clz->run();
+					if ($rtn && is_string($rtn)) {
+						$this->logi($rtn);
+					}
+				} catch (\Exception $e) {
+					$run = false;
+					$rtn = 1;
+					$this->loge($e->getMessage());
+					@posix_kill(@posix_getppid(), SIGTERM);
+					@pcntl_signal_dispatch();
+				}
+				gc_collect_cycles();
+			}
+			$e    = time();
 			$intv = $interval;
 			if ($fixed) {
-				$intv = $interval - ($e - $s) * 1000000;
-				$s    = microtime(true);
+				$intv = $interval - ($e - $s);
+				$s    = time();
 			}
 			$i = $intv;
 			while ($i > 0) {
-				usleep(500);
-				$e = microtime(true);
-				$i = $intv - ($e - $s) * 1000000;
+				sleep(1);
+				$e = time();
+				$i = $intv - ($e - $s);
 			}
 		}
 
@@ -90,6 +135,38 @@ class CrontabCommand extends ArtisanMonitoredTask {
 	}
 
 	protected function getPidFilename($cmd) {
-		return $cmd . '-' . str_replace('\\', '-', trim($this->clz, '\\'));
+		if (empty($this->clz)) {
+			exit(1);
+		}
+
+		return $cmd . '-' . str_replace(['\\', DS], '-', trim($this->clz, '\\'));
+	}
+}
+
+class ScriptCrontab implements ICrontabJob {
+	private $file;
+	private $canRun;
+
+	public function __construct($script) {
+		$this->file   = APPROOT . 'crontab' . DS . $script . '.php';
+		$this->canRun = is_file($this->file);
+	}
+
+	/**
+	 * @return bool
+	 * @throws \Exception
+	 */
+	public function run() {
+		if ($this->canRun) {
+			//执行命令
+			$cmd = escapeshellcmd(PHP_BINARY) . ' ' . escapeshellarg($this->file);
+			$rst = @exec($cmd, $output, $rtn);
+
+			return $rtn === 0 ? 0 : ($rst ? $rst : 0);
+		} else {
+			throw_exception($this->file . ' not found!');
+		}
+
+		return 1;
 	}
 }

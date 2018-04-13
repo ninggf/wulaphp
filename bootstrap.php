@@ -168,6 +168,14 @@ if (is_file(LIBS_PATH . 'common.php')) {
 }
 set_exception_handler('wula_exception_handler');
 register_shutdown_function('wula_shutdown_function');
+//BIND CMDS
+bind('artisan\getCommands', function ($cmds) {
+	if (extension_loaded('gearman')) {
+		$cmds['gearman'] = new \wulaphp\command\GearmanWorkerCommand();
+	}
+
+	return $cmds;
+});
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
 fire('wula\bootstrapped');

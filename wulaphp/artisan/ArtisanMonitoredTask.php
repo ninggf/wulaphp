@@ -1,5 +1,5 @@
 <?php
-declare(ticks=10);
+declare(ticks=1);
 /*
  * This file is part of wulacms.
  *
@@ -36,10 +36,11 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		$cmd           = $this->cmd();
 		$options       = $this->getOptions();
 		$op            = $this->opt();
+		$argOk         = $this->argValid($options);
 		$this->pidfile = TMP_PATH . '.' . $this->getPidFilename($cmd) . '.pid';
 		switch ($op) {
 			case 'start':
-				if (!$this->argValid($options)) {
+				if (!$argOk) {
 					$this->help();
 
 					return 1;
@@ -54,7 +55,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 				$this->stop($cmd);
 				break;
 			case 'restart':
-				if (!$this->argValid($options)) {
+				if (!$argOk) {
 					$this->help();
 					exit(1);
 				}
@@ -157,6 +158,8 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	public final function signal($signal) {
 		$this->shutdown = true;
 		if ($this->isParent) {
+			$pidfile = $this->pidfile;
+			@unlink($pidfile);
 			$wks = array_merge([], $this->workers);
 			if ($wks) {
 				foreach ($wks as $pid) {

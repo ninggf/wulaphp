@@ -1,5 +1,5 @@
 <?php
-declare(ticks=10);
+declare(ticks=1);
 /*
  * This file is part of wulacms.
  *
@@ -21,6 +21,7 @@ trait GearmanCommand {
 	protected $timeout;
 	protected $host;
 	protected $port;
+	protected $count;
 
 	protected function execute(/** @noinspection PhpUnusedParameterInspection */
 		$options) {
@@ -30,24 +31,44 @@ trait GearmanCommand {
 
 			return;
 		}
-		$count = 0;//运行成功50次后重启
-		gc_enable();
-		while (!$this->shutdown && $count < 50) {
+		$count = 0;//运行成功多少次后重启
+
+		while (!$this->shutdown && $count < $this->count) {
 			try {
-				@$worker->work();
+				log_debug('getting job...', 'aaaaa');
+				$rst    = @$worker->work();
 				$status = $worker->returnCode();
-				gc_collect_cycles();
 				switch ($status) {
 					case GEARMAN_SUCCESS:
+						log_debug('su::::' . $rst, 'aaaaa');
 						$count++;
-						continue;
+						break;
+					case GEARMAN_IO_WAIT:
+						log_debug('iw::::' . $rst, 'aaaaa');
+						sleep(10);
+						break;
+					case GEARMAN_WORK_FAIL:
+						log_debug($worker->error() . '::::' . $rst, 'aaaaa');
+						sleep(1);
+						break;
 					case GEARMAN_NO_JOBS:
+						log_debug('nj::::' . $rst, 'aaaaa');
 						sleep(1);
 						break;
 					case GEARMAN_NO_ACTIVE_FDS:
+						log_debug('na::::' . $rst, 'aaaaa');
+						sleep(5);
+						break;
+					case GEARMAN_WORKER_WAIT_TIMEOUT:
+						log_debug('wwt::::' . $rst, 'aaaaa');
+						sleep(1);
+						break;
+					case GEARMAN_WORKER_TIMEOUT_RETURN:
+						log_debug('wttr::::' . $rst, 'aaaaa');
 						sleep(1);
 						break;
 					default:
+						log_debug($worker->error() . '::::' . $status, 'aaaaa');
 						sleep(1);
 				}
 			} catch (\Exception $e) {
@@ -76,6 +97,7 @@ trait GearmanCommand {
 	protected function initWorker($func, $cb = null) {
 		try {
 			$worker = new \GearmanWorker();
+			$worker->setId($this->port . '@' . posix_getpid());
 			$worker->setTimeout($this->timeout * 1000);
 			// Add Gearman Job Servers to Worker
 			$connected = $worker->addServer($this->host, $this->port);

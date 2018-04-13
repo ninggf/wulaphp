@@ -88,7 +88,7 @@ abstract class ArtisanCommand {
 						break;
 					}
 					$v = str_replace($o, '', $ov);
-					if ($v) {
+					if ($v || is_numeric($v)) {
 						if ($r < 10) {
 							$options[ $key ] = $v;
 							break;
