@@ -23,7 +23,7 @@ class CreateModuleCommand extends ArtisanCommand {
 			return 1;
 		}
 		$namespace = isset($options['n']) ? $options['n'] : $dir;
-
+		$name      = aryget('name', $options, $dir);
 		if (!preg_match('#^[a-z][a-z_\-\d]*$#', $dir)) {
 			$this->error('illegal module name: ' . $this->color->str($dir, 'white', 'red'));
 
@@ -66,7 +66,11 @@ class CreateModuleCommand extends ArtisanCommand {
 			$module = ucfirst($ns[0]);
 			// 创建引导文件
 			$bootstrap = file_get_contents(__DIR__ . '/tpl/bootstrap.tpl');
-			$bootstrap = str_replace(['{$namespace}', '{$module}'], [$namespace, $module], $bootstrap);
+			$bootstrap = str_replace(['{$namespace}', '{$module}', '{$name}'], [
+				$namespace,
+				$module,
+				$name
+			], $bootstrap);
 			file_put_contents($modulePath . 'bootstrap.php', $bootstrap);
 
 			// 创建默认控制器.
@@ -91,7 +95,7 @@ class CreateModuleCommand extends ArtisanCommand {
 
 			// 添加.gitattributes
 			file_put_contents($modulePath . '.gitattributes', "tests/ export-ignore\nphpunit.xml export-ignore\n");
-			file_put_contents($modulePath . 'schema.sql.php', '');
+			file_put_contents($modulePath . 'schema.sql.php', "<?php\n@defined('APPROOT') or header('Page Not Found', true, 404) || die();\n\n//table DDL\n//" . '$tables [\'1.0.0\'] [] = "";' . "\n");
 			$this->success('The module ' . $this->color->str($dir, 'blue') . ' is created successfully.');
 			break;
 		}
@@ -101,6 +105,10 @@ class CreateModuleCommand extends ArtisanCommand {
 
 	protected function getOpts() {
 		return ['n::namespace' => 'the namespace of the module', 'c' => 'create composer.json for module'];
+	}
+
+	protected function getLongOpts() {
+		return ['name::' => 'the name of module'];
 	}
 
 	protected function argDesc() {

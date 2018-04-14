@@ -9,10 +9,10 @@ namespace wulaphp\artisan;
  * @since   1.0
  */
 abstract class ArtisanCommand {
-	protected $pid = '';
+	protected $pid  = '';
 	protected $color;
-	protected $argv;
-	protected $arvc;
+	protected $argv = [];
+	protected $arvc = 0;
 
 	public function __construct() {
 		$this->color = new Colors();
@@ -136,10 +136,10 @@ abstract class ArtisanCommand {
 	}
 
 	protected final function opt($index = -1, $default = '') {
-		$argv = $this->argv;
-		$argc = $this->arvc;
+		$argvv = $this->argv;
+		$argcc = $this->arvc;
 		if ($index < 0) {
-			$index = $argc + $index;
+			$index = $argcc + $index;
 			if ($index < 2) {
 				return $default;
 			}
@@ -147,8 +147,8 @@ abstract class ArtisanCommand {
 			$index += 2;
 		}
 
-		if ($argc > 2 && isset($argv[ $index ])) {
-			return $argv[ $index ];
+		if ($argcc > 2 && isset($argvv[ $index ])) {
+			return $argvv[ $index ];
 		}
 
 		return $default;
@@ -200,6 +200,12 @@ abstract class ArtisanCommand {
 		flush();
 	}
 
+	protected final function output($message, $rtn = true) {
+		echo $message, $rtn ? "\n" : '';
+
+		flush();
+	}
+
 	protected final function success($message) {
 		$color = $this->color;
 		$msg   = $this->pid . $color->str("SUCCESS:\n", 'green') . $message . "\n";
@@ -209,12 +215,40 @@ abstract class ArtisanCommand {
 
 	public function run() {
 		$options = $this->getOptions();
+		$argOk   = $this->argValid($options) && $this->paramValid($options);
+		if (!$argOk) {
+			exit(1);
+		}
 
 		return $this->execute($options);
 	}
 
 	protected function argDesc() {
 		return '';
+	}
+
+	/**
+	 * 校验参数.
+	 *
+	 * @param array $options
+	 *
+	 * @return bool
+	 */
+	protected function argValid(/** @noinspection PhpUnusedParameterInspection */
+		$options) {
+		return true;
+	}
+
+	/**
+	 * 校验param
+	 *
+	 * @param array $options
+	 *
+	 * @return bool
+	 */
+	protected function paramValid(/** @noinspection PhpUnusedParameterInspection */
+		$options) {
+		return true;
 	}
 
 	public abstract function cmd();

@@ -35,40 +35,31 @@ trait GearmanCommand {
 
 		while (!$this->shutdown && $count < $this->count) {
 			try {
-				log_debug('getting job...', 'aaaaa');
-				$rst    = @$worker->work();
+				@$worker->work();
 				$status = $worker->returnCode();
 				switch ($status) {
 					case GEARMAN_SUCCESS:
-						log_debug('su::::' . $rst, 'aaaaa');
 						$count++;
 						break;
 					case GEARMAN_IO_WAIT:
-						log_debug('iw::::' . $rst, 'aaaaa');
 						sleep(10);
 						break;
 					case GEARMAN_WORK_FAIL:
-						log_debug($worker->error() . '::::' . $rst, 'aaaaa');
 						sleep(1);
 						break;
 					case GEARMAN_NO_JOBS:
-						log_debug('nj::::' . $rst, 'aaaaa');
 						sleep(1);
 						break;
 					case GEARMAN_NO_ACTIVE_FDS:
-						log_debug('na::::' . $rst, 'aaaaa');
 						sleep(5);
 						break;
 					case GEARMAN_WORKER_WAIT_TIMEOUT:
-						log_debug('wwt::::' . $rst, 'aaaaa');
 						sleep(1);
 						break;
 					case GEARMAN_WORKER_TIMEOUT_RETURN:
-						log_debug('wttr::::' . $rst, 'aaaaa');
 						sleep(1);
 						break;
 					default:
-						log_debug($worker->error() . '::::' . $status, 'aaaaa');
 						sleep(1);
 				}
 			} catch (\Exception $e) {
@@ -97,10 +88,14 @@ trait GearmanCommand {
 	protected function initWorker($func, $cb = null) {
 		try {
 			$worker = new \GearmanWorker();
-			$worker->setId($this->port . '@' . posix_getpid());
-			$worker->setTimeout($this->timeout * 1000);
+			$worker->setId($this->func . '@' . posix_getpid());
+			$worker->setTimeout($this->timeout ? $this->timeout * 1000 : 5000);
 			// Add Gearman Job Servers to Worker
-			$connected = $worker->addServer($this->host, $this->port);
+			if (strpos($this->host, ',') > 0) {
+				$connected = $worker->addServers($this->host);
+			} else {
+				$connected = $worker->addServer($this->host, $this->port);
+			}
 			if ($connected) {
 				if (is_array($func)) {
 					foreach ($func as $f) {
@@ -119,7 +114,6 @@ trait GearmanCommand {
 				log_error('Cannot connect to Gearmand Server: ' . $worker->error(), 'gearman.err');
 			}
 		} catch (\Exception $exception) {
-			sleep(3);
 			log_error($exception->getMessage(), 'gearman.err');
 		}
 

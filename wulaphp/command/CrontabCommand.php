@@ -35,12 +35,21 @@ class CrontabCommand extends ArtisanMonitoredTask {
 	}
 
 	protected function argDesc() {
-		return '<crontab> [start|stop|status]';
+		return '<crontab> [start|stop|status|help]';
 	}
 
 	protected function argValid($options) {
 		$this->clz = $this->opt(-2);
+		if (is_subclass_of($this->clz, '\wulaphp\util\ICrontabJob')) {
+			$rst = true;
+		} else {
+			$rst = is_file(APPROOT . 'crontab' . DS . $this->clz . '.php');
+		}
+		if (!$rst) {
+			$this->error('invalid crontab class or script');
 
+			return false;
+		}
 		if (isset($options['i']) && !preg_match('/^[1-9]\d*$/', $options['i'])) {
 			$this->error('arg i must digit');
 
@@ -48,11 +57,6 @@ class CrontabCommand extends ArtisanMonitoredTask {
 		}
 		if (isset($options['s']) && !preg_match('/^(0|[1-5]\d)$/', $options['s'])) {
 			$this->error('arg s must be 0-59');
-
-			return false;
-		}
-		if (!$this->clz) {
-			$this->error('Please give me a crontab job.');
 
 			return false;
 		}
@@ -134,10 +138,21 @@ class CrontabCommand extends ArtisanMonitoredTask {
 		// NOTHING TO DO.
 	}
 
-	protected function getPidFilename($cmd) {
-		if (empty($this->clz)) {
+	protected function getOperate() {
+		if ($this->arvc < 3) {
+			$this->help();
 			exit(1);
 		}
+		if ($this->arvc < 4) {
+			$this->arvc   = 4;
+			$this->argv[] = 'status';
+		}
+
+		return parent::getOperate();
+	}
+
+	protected function getPidFilename($cmd) {
+		$this->clz = $this->opt(-2);
 
 		return $cmd . '-' . str_replace(['\\', DS], '-', trim($this->clz, '\\'));
 	}
@@ -145,7 +160,7 @@ class CrontabCommand extends ArtisanMonitoredTask {
 
 class ScriptCrontab implements ICrontabJob {
 	private $file;
-	private $canRun;
+	public  $canRun;
 
 	public function __construct($script) {
 		$this->file   = APPROOT . 'crontab' . DS . $script . '.php';

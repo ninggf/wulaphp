@@ -29,20 +29,22 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	}
 
 	public final function run() {
-		if (!function_exists('pcntl_fork')) {
+		if (!function_exists('pcntl_fork') || !function_exists('posix_getpid')) {
 			$this->error('miss pcntl extension, install it first!');
 			exit(1);
 		}
-		$cmd           = $this->cmd();
-		$options       = $this->getOptions();
-		$op            = $this->opt();
-		$argOk         = $this->argValid($options);
+		$cmd     = $this->cmd();
+		$options = $this->getOptions();
+		$op      = $this->getOperate();
+		if (!in_array($op, ['start', 'status', 'stop', 'help', 'restart'])) {
+			$this->error('unkown command: ' . $this->color->str($op, 'red'));
+			exit(1);
+		}
 		$this->pidfile = TMP_PATH . '.' . $this->getPidFilename($cmd) . '.pid';
 		switch ($op) {
 			case 'start':
+				$argOk = $this->argValid($options);
 				if (!$argOk) {
-					$this->help();
-
 					return 1;
 				}
 				if (is_file($this->pidfile)) {
@@ -52,15 +54,15 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 				$this->start($options, $cmd);
 				break;
 			case 'stop':
-				$this->stop($cmd);
+				$this->stop();
 				break;
 			case 'restart':
+				$argOk = $this->argValid($options);
 				if (!$argOk) {
-					$this->help();
 					exit(1);
 				}
-				$this->stop($cmd);
-				sleep(3);
+				$this->stop();
+				sleep(5);
 				$this->start($options, $cmd);
 				break;
 			case 'help':
@@ -80,11 +82,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		if ($pid > 0) {
 			//主程序退出
 			$pidfile = $this->pidfile;
-			$opids   = @file_get_contents($pidfile);
-			if ($opids) {
-				$pid = $opids . ',' . $pid;
-			}
-			@file_put_contents($pidfile, $pid);
+			@file_put_contents($pidfile, $pid . ',', FILE_APPEND);
 			exit(0);
 		} else if (0 === $pid) {
 			umask(0);
@@ -112,26 +110,33 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		}
 	}
 
-	private function stop($cmd) {
+	private function stop() {
 		$pidfile = $this->pidfile;
 		$opids   = @file_get_contents($pidfile);
+		$this->output('Stopping ...');
 		if ($opids) {
 			@unlink($pidfile);
 			$pids = explode(',', $opids);
 			foreach ($pids as $pid) {
 				$pid = trim($pid);
 				if ($pid) {
+					$this->output('stop process: ' . $pid . ' ... ', false);
 					if (@posix_kill($pid, SIGTERM)) {
 						@pcntl_signal_dispatch();
 						@pcntl_waitpid($pid, $status);
+						if (@pcntl_wifexited($status)) {
+							$rtn = @pcntl_wexitstatus($status);
+							$this->output($this->color->str($rtn ? 'fail' : 'done', $rtn ? 'red' : 'green'));
+						} else {
+							$this->output($this->color->str('unexpected exit', 'red'));
+						}
 					} else {
-						$this->error('Cannot stop it, please kill it manually.');
+						$this->output($this->color->str('fail', 'red'));
 					}
 				}
 			}
-		} else {
-			$this->error($cmd . ' is not running');
 		}
+		$this->output('done!!');
 	}
 
 	private function status($cmd) {
@@ -151,7 +156,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 				echo implode("\n", $text), "\n";
 			}
 		} else {
-			echo "$cmd is not running\n";
+			$this->output($this->color->str('Stopped', 'red'));
 		}
 	}
 
@@ -174,18 +179,6 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	protected function setUp(/** @noinspection PhpUnusedParameterInspection */
 		&$options) {
 		$this->workerCount = 2;
-	}
-
-	/**
-	 * 校验参数.
-	 *
-	 * @param array $options
-	 *
-	 * @return bool
-	 */
-	protected function argValid(/** @noinspection PhpUnusedParameterInspection */
-		$options) {
-		return true;
 	}
 
 	protected function setMaxMemory($size) {
@@ -288,6 +281,10 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	 */
 	protected function getPidFilename($cmd) {
 		return str_replace(':', '-', $cmd);
+	}
+
+	protected function getOperate() {
+		return $this->opt();
 	}
 
 	/**

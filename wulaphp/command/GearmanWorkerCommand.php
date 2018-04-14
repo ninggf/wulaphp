@@ -12,11 +12,18 @@ namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanMonitoredTask;
 use wulaphp\artisan\GearmanCommand;
+use wulaphp\artisan\GearmJob;
 
 class GearmanWorkerCommand extends ArtisanMonitoredTask {
 	use GearmanCommand;
 	private $func;
 	private $file;
+	private $isScript = false;
+	private $isJson   = false;
+	/**
+	 * @var GearmJob
+	 */
+	private $cls;
 
 	public function cmd() {
 		return 'gearman';
@@ -28,30 +35,60 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
 
 	protected function getOpts() {
 		return [
-			'h::host'    => 'Job server host',
+			'h::hosts'   => 'Job server hosts',
 			'p::port'    => 'Job server port',
 			't::timeout' => 'Timeout in seconds',
 			'n::number'  => 'Number of worker to do job(1)',
-			'c::count'   => 'Number of jobs for worker to run before exiting(100)'
+			'c::count'   => 'Number of jobs for worker to run before exiting(100)',
+			's'          => 'run script to do the job',
+			'j'          => 'convert the workload to json'
 		];
 	}
 
 	protected function argDesc() {
-		return '<function> <start|stop|help|status>';
+		return '<function> <start|stop|restart|help|status>';
 	}
 
 	protected function argValid($options) {
 		$this->func = $this->opt(-2);
-		if (empty($this->func)) {
-			$this->error('give me a function please!');
 
-			return false;
-		}
-		$this->file = APPROOT . 'gearman' . DS . $this->func . '.php';
-		if (!is_file($this->file)) {
-			$this->error($this->file . ' not found!');
+		if (isset($options['s'])) {
+			if (!preg_match('#^[a-z][a-z0-9_]+$#i', $this->func)) {
+				$this->error($this->func . ' is invalid function name!');
 
-			return false;
+				return false;
+			}
+			$this->file = APPROOT . 'gearman' . DS . $this->func . '.php';
+			if (!is_file($this->file)) {
+				$this->error($this->file . ' not found!');
+
+				return false;
+			}
+			$this->isScript = true;
+		} else {
+			if (!preg_match('#^[a-z]+(\.[a-z0-9_]+)*$#i', $this->func)) {
+				$this->error($this->func . ' is invalid class name!');
+
+				return false;
+			}
+			$this->file = str_replace('.', '\\', $this->func);
+			if (!class_exists($this->file)) {
+				$this->error($this->color->str($this->file, 'red') . ' class not found!');
+
+				return false;
+			}
+			if (!is_subclass_of($this->file, GearmJob::class)) {
+				$this->error($this->file . ' is not subclass of ' . GearmJob::class);
+
+				return false;
+			}
+			$this->cls = new $this->file('1');
+			$name      = $this->cls->getFuncName();
+			if (!$name || !preg_match('#^[a-z][a-z_\-\d]+$#', $name)) {
+				$this->error('Function name "' . $this->color->str($name, 'red') . '" is invalid!');
+
+				return false;
+			}
 		}
 		if (isset($options['p']) && !preg_match('/^([1-9]\d+)$/', $options['p'])) {
 			$this->error('port must be digits');
@@ -78,6 +115,7 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
 		$this->port    = aryget('p', $options, 4730);
 		$this->timeout = aryget('t', $options, 5);
 		$this->count   = aryget('c', $options, 100);
+		$this->isJson  = isset($options['j']);
 
 		return true;
 	}
@@ -87,7 +125,12 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
 	}
 
 	protected function worker() {
-		$worker = $this->initWorker($this->func, [$this, 'doJob']);
+		if ($this->isScript) {
+			$worker = $this->initWorker($this->func, [$this, 'doJob']);
+		} else {
+			$func   = $this->cls->getFuncName();
+			$worker = $this->initWorker($func, [$this, 'doJob']);
+		}
 
 		return $worker;
 	}
@@ -98,15 +141,19 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
 		} else {
 			$wk = $job;
 		}
-		$cmd  = PHP_BINARY;
-		$args = escapeshellarg($this->file) . ' ' . escapeshellarg($wk);
-		@exec($cmd . ' ' . $args, $output, $rtn);
-
+		if ($this->isScript) {
+			$cmd  = PHP_BINARY;
+			$args = escapeshellarg($this->file) . ' ' . escapeshellarg($wk);
+			@exec($cmd . ' ' . $args, $output, $rtn);
+		} else {
+			/**@var GearmJob $cls */
+			$cls    = new $this->file($wk);
+			$rtn    = $cls->run($this->isJson, false);
+			$output = $cls->getOutput();
+		}
 		if ($job instanceof \GearmanJob) {
 			if ($rtn) {
 				$job->sendFail();
-
-				return false;
 			}
 		}
 
@@ -121,15 +168,22 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
 		// NOTHING TO DO.
 	}
 
-	protected function getPidFilename($cmd) {
-		if (empty($this->func)) {
+	protected function getOperate() {
+		if ($this->arvc < 3) {
 			$this->help();
 			exit(1);
 		}
-		if (!is_file($this->file)) {
-			exit(1);
+		if ($this->arvc < 4) {
+			$this->arvc   = 4;
+			$this->argv[] = 'status';
 		}
 
-		return $cmd . '-id-' . $this->func;
+		return parent::getOperate();
+	}
+
+	protected function getPidFilename($cmd) {
+		$this->func = $this->opt(-2);
+
+		return $cmd . '-f-' . $this->func;
 	}
 }
