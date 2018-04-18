@@ -246,7 +246,7 @@ class MySQLDialect extends DatabaseDialect {
 			$sql .= ' DEFAULT CHARACTER SET UTF8MB4';
 		}
 		try {
-			$rst = $this->exec($sql);
+			$rst = @$this->exec($sql);
 
 			return $rst;
 		} catch (\PDOException $e) {
@@ -261,7 +261,7 @@ class MySQLDialect extends DatabaseDialect {
 	 */
 	public function listDatabases() {
 		$dbs = [];
-		$rst = $this->query('SHOW DATABASES');
+		$rst = @$this->query('SHOW DATABASES');
 		if ($rst) {
 			$db = $rst->fetchAll(\PDO::FETCH_ASSOC);
 			foreach ($db as $d) {

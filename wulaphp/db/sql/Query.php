@@ -444,6 +444,30 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	/**
+	 * 根据key字段过滤。
+	 *
+	 * @param string   $key 键字段.
+	 * @param \Closure $cb  过滤函数.
+	 *
+	 * @return array
+	 */
+	public function alterArrayByKey($key, $cb) {
+		return $this->toArray(null, $key, null, $cb);
+	}
+
+	/**
+	 * 修改.
+	 *
+	 * @param string   $valueField 键字段.
+	 * @param \Closure $cb         过滤函数.
+	 *
+	 * @return array
+	 */
+	public function alterArray($valueField, $cb) {
+		return $this->toArray($valueField, null, null, $cb);
+	}
+
+	/**
 	 * 将结果转换为普通数组.
 	 *
 	 * @return array
