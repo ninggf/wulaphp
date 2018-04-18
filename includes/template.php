@@ -442,3 +442,55 @@ function minify_resources($content, $type) {
 		return $cm->run($content);
 	}
 }
+
+/**
+ * 从数据源取数据.
+ *
+ * @param string $name    数据源名称
+ * @param array  $args    条件
+ * @param string $dialect 数据库配置
+ * @param array  $tplvars 模板数据
+ *
+ * @return \wulaphp\mvc\model\CtsData
+ */
+function get_cts_from_datasource($name, $args, $dialect = null, $tplvars = []) {
+	static $urlInfo = null, $providers = null;
+	//获取当前解析后的URL信息
+	if ($urlInfo === null) {
+		$urlInfo = \wulaphp\router\Router::getRouter()->getParsedInfo();
+	}
+	if ($providers === null) {
+		$providers = get_cts_datasource();
+	}
+	//从数据源获取的数据.
+	$data = null;
+	if ($providers && isset ($providers [ $name ])) {
+		$provider = $providers [ $name ];
+		if ($provider instanceof \wulaphp\mvc\model\CtsDataSource) {
+			$data = $provider->getList($args, $dialect, $urlInfo, $tplvars);
+		}
+	}
+	if (is_array($data)) {
+		return new \wulaphp\mvc\model\CtsData ($data, count(0));
+	} else if ($data instanceof \wulaphp\mvc\model\CtsData) {
+		return $data;
+	} else {
+		return new \wulaphp\mvc\model\CtsData ([], 0);
+	}
+}
+
+/**
+ * 获取cts数据源.
+ *
+ * @return \wulaphp\mvc\model\CtsDataSource[]
+ */
+function get_cts_datasource() {
+	static $providers = null;
+	if ($providers === null) {
+		$providers = apply_filter('tpl\regCtsDatasource', [
+			'split' => new \wulaphp\mvc\model\SplitDataSource()
+		]);
+	}
+
+	return $providers;
+}

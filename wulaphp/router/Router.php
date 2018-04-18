@@ -122,6 +122,15 @@ class Router {
 	}
 
 	/**
+	 * 解析后的URL信息.
+	 *
+	 * @return \wulaphp\router\UrlParsedInfo
+	 */
+	public function getParsedInfo() {
+		return $this->urlParsedInfo;
+	}
+
+	/**
 	 * 注册分发器.
 	 *
 	 * @param IURLDispatcher $dispatcher
