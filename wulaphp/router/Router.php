@@ -35,6 +35,8 @@ class Router {
 	private function __construct() {
 		$this->xssCleaner = new XssCleaner();
 		$this->register(new DefaultDispatcher (), 0);
+		//路由表分发器
+		$this->register(new RouteTableDispatcher (), 1);
 		fire('router\registerDispatcher', $this);
 	}
 
