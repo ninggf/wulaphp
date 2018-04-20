@@ -80,7 +80,7 @@ abstract class CtsDataSource {
 	 * @return string 变量名.
 	 */
 	public function getVarName() {
-		return 'items';
+		return 'item';
 	}
 
 	/**

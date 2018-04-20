@@ -31,7 +31,7 @@ class SplitDataSource extends CtsDataSource {
 	 * @return \wulaphp\mvc\model\CtsData
 	 */
 	protected function getData($con, $db, $pageInfo, $tplvar) {
-		$content = isset($con['content']) ? $con['content'] : '';
+		$content = aryget('content',$con);
 		if (!$content) {
 			return new CtsData([], 0);
 		}
