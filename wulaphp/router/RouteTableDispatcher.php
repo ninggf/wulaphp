@@ -50,9 +50,10 @@ class RouteTableDispatcher implements IURLDispatcher {
 					if ($expire > 0) {
 						define('EXPIRE', $expire);
 					}
-					$headers = ['Content-Type' => 'text/html'];
 					if (isset($route['Content-Type'])) {
 						$headers['Content-Type'] = $route['Content-Type'];
+					} else {
+						$headers = ['Content-Type' => Router::mimeContentType($url)];
 					}
 					unset($routes);
 
