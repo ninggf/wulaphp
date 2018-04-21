@@ -18,6 +18,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	private   $workers     = [];
 	public    $returnPid   = false;
 	private   $pidfile     = null;
+	protected $logging     = false;
 
 	public function __construct() {
 		parent::__construct();
@@ -35,8 +36,14 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 		}
 		$cmd     = $this->cmd();
 		$options = $this->getOptions();
-		$op      = $this->getOperate();
-		if (!in_array($op, ['start', 'status', 'stop', 'help', 'restart'])) {
+		if (!$this->paramValid($options)) {
+			exit(1);
+		}
+		$op = $this->getOperate();
+		if (empty($op)) {
+			$op = 'help';
+		}
+		if (!in_array($op, ['start', 'status', 'stop', 'help', 'restart']) && $op != $cmd) {
 			$this->error('unkown command: ' . $this->color->str($op, 'red'));
 			exit(1);
 		}
@@ -97,8 +104,16 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			@fclose(STDOUT);
 			@fclose(STDERR);
 
-			$STDIN  = @fopen('/dev/null', 'r');
-			$logf   = LOGS_PATH . str_replace(':', '.', $cmd) . '.log';
+			$STDIN = @fopen('/dev/null', 'r');
+			if ($this->logging) {
+				if ($this->logging !== true) {
+					$logf = LOGS_PATH . $this->logging;
+				} else {
+					$logf = LOGS_PATH . str_replace(':', '.', $cmd) . '.log';
+				}
+			} else {
+				$logf = '/dev/null';
+			}
 			$STDERR = $STDOUT = @fopen($logf, is_file($logf) ? 'ab' : 'wb');
 
 			$this->doStartLoop($options);
@@ -113,8 +128,8 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	private function stop() {
 		$pidfile = $this->pidfile;
 		$opids   = @file_get_contents($pidfile);
-		$this->output('Stopping ...');
 		if ($opids) {
+			$this->output('Stopping ...');
 			@unlink($pidfile);
 			$pids = explode(',', $opids);
 			foreach ($pids as $pid) {
@@ -135,8 +150,8 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 					}
 				}
 			}
+			$this->output('done!!');
 		}
-		$this->output('done!!');
 	}
 
 	private function status($cmd) {

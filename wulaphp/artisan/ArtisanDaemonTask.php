@@ -1,5 +1,5 @@
 <?php
-declare(ticks=10);
+declare(ticks=1);
 
 namespace wulaphp\artisan;
 /**
@@ -15,7 +15,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 	private   $isParent    = true;
 	protected $shutdown    = false;
 	private   $workers     = [];
-
+	protected $logging     = false;
 	const WORK_DONE_EXIT_CODE = 42;
 
 	public function __construct() {
@@ -50,8 +50,16 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 			fclose(STDOUT);
 			fclose(STDERR);
 
-			$STDIN  = @fopen('/dev/null', 'r');
-			$logf   = LOGS_PATH . str_replace(':', '.', $cmd) . '.log';
+			$STDIN = @fopen('/dev/null', 'r');
+			if ($this->logging) {
+				if ($this->logging !== true) {
+					$logf = LOGS_PATH . $this->logging;
+				} else {
+					$logf = LOGS_PATH . str_replace(':', '.', $cmd) . '.log';
+				}
+			} else {
+				$logf = '/dev/null';
+			}
 			$STDERR = $STDOUT = @fopen($logf, is_file($logf) ? 'ab' : 'wb');
 
 			$this->doStartLoop($options);
@@ -59,6 +67,7 @@ abstract class ArtisanDaemonTask extends ArtisanCommand {
 
 			@fclose($STDIN);
 			@fclose($STDOUT);
+			@fclose($STDERR);
 			exit(0);
 		}
 
