@@ -188,6 +188,12 @@ abstract class FormTable extends Table {
 				return intval($value);
 			case 'float':
 				return floatval($value);
+			case 'list':
+				if ($value) {
+					return @explode(',', $value);
+				} else {
+					return [];
+				}
 			case 'array':
 			case 'json':
 				$value = @json_decode($value, true);
@@ -219,6 +225,8 @@ abstract class FormTable extends Table {
 				return intval($value);
 			case 'float':
 				return floatval($value);
+			case 'list':
+				return implode(',', $value);
 			case 'array':
 			case 'json':
 				return @json_encode($value);
@@ -244,7 +252,7 @@ abstract class FormTable extends Table {
 
 	/**
 	 * 解析字段.可解析以下注解:
-	 * 1. type 数据类型, int,float,number,string,bool,array,json,date,datetime等.
+	 * 1. type 数据类型, int,float,number,string,bool,list,array,json,date,datetime等.
 	 * 2. skip 不更新到数据表字段
 	 * 3. name 字段名,如果不指定则与属性同名.
 	 * 4. 验证注解，见Validator.
