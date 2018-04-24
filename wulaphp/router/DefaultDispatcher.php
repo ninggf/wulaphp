@@ -5,6 +5,7 @@ namespace wulaphp\router;
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 use wulaphp\mvc\controller\Controller;
+use wulaphp\mvc\controller\SubModuleRouter;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\SmartyView;
@@ -207,7 +208,7 @@ class DefaultDispatcher implements IURLDispatcher {
 							return $clz->afterRun($action, $view, $method);
 						}
 					}
-				} catch (\ReflectionException $e) {
+				} catch (\Exception $e) {
 					if (DEBUG == DEBUG_DEBUG) {
 						throw $e;
 					}
@@ -243,6 +244,14 @@ class DefaultDispatcher implements IURLDispatcher {
 			$controllerClz   = str_replace('-', '', ucwords($action, '-')) . 'Controller';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action];
+
+			//子模块
+			if (!$subnamespace) {
+				$controller_file = MODULES_PATH . $module . DS . 'Router.php';
+				if (is_file($controller_file)) {
+					$files [] = [$controller_file, $namespace . '\Router', $action, 'index'];
+				}
+			}
 			// 默认controller的action方法
 			$controllerClz   = 'IndexController';
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
@@ -251,10 +260,14 @@ class DefaultDispatcher implements IURLDispatcher {
 			foreach ($files as $file) {
 				list ($controller_file, $controllerClz, $action, $controller) = $file;
 				if (is_file($controller_file)) {
-					include $controller_file;
+					@include $controller_file;
 					if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
 						if ($action == 'index' && count($params) > 0) {
 							$action = array_shift($params);
+						} else if (is_subclass_of($controllerClz, SubModuleRouter::class)) {
+							//子模块
+							array_unshift($params, $action);
+							$action = 'index';
 						}
 
 						return [
@@ -274,7 +287,7 @@ class DefaultDispatcher implements IURLDispatcher {
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$controllerClz   = $namespace . '\controllers\\' . $controllerClz;
 			if (is_file($controller_file)) {
-				include $controller_file;
+				@include $controller_file;
 				if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
 					return [
 						$controllerClz,
@@ -287,13 +300,13 @@ class DefaultDispatcher implements IURLDispatcher {
 				}
 			}
 		}
-
+		//查找子模块
 		if (!$subnamespace) {
 			//子模块路由
 			$controller_file = MODULES_PATH . $module . DS . 'Router.php';
 			if (is_file($controller_file)) {
 				$controllerClz = $namespace . '\\Router';
-				include $controller_file;
+				@include $controller_file;
 				if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\SubModuleRouter')) {
 					array_unshift($params, $action);
 
