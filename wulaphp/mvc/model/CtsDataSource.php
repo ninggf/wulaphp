@@ -36,8 +36,6 @@ abstract class CtsDataSource {
 
 			$data = $this->getData($con, $dbx, $pageInfo, $tplvars);
 			if ($data instanceof CtsData) {
-				$pageInfo->total = $data->getCountTotal();
-
 				return $data;
 			}
 		} catch (\Exception $e) {
