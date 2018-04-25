@@ -310,6 +310,29 @@ function wula_exception_handler($e) {
 }
 
 /**
+ * 根据宽高生成缩略图文件名.
+ *
+ * @param string $filename
+ *                    原始文件名.
+ * @param int    $w
+ * @param int    $h
+ * @param string $sep 分隔符.
+ *
+ * @return string
+ */
+function get_thumbnail_filename($filename, $w, $h, $sep = '-') {
+	$finfo = pathinfo($filename);
+
+	$shortname = $finfo['dirname'] . '/' . $finfo['filename'];
+	$ext       = $finfo['extension'] ? '.' . $finfo['extension'] : '';
+	if ($h > 0) {
+		return $shortname . "{$sep}{$w}x{$h}{$ext}";
+	} else {
+		return $shortname . "{$sep}{$w}{$ext}";
+	}
+}
+
+/**
  * 不要调用它.
  * @deprecated
  */

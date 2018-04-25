@@ -37,14 +37,14 @@ class RouteTableDispatcher implements IURLDispatcher {
 			$routes = @include $rtable;
 			$uk     = implode('/', $controllers);
 			if ($routes && isset($routes[ $uk ])) {
-				//['template' => 'abc.tpl', 'expire' => 100, 'func' => '','Content-Type'=>'text/html']
+				//['template' => 'abc.tpl', 'expire' => 100, 'func' => '','Content-Type'=>'text/html','data'=>[]]
 				$route = $routes[ $uk ];
 				if (isset($route['template']) && $route['template']) {
 					$expire = intval(aryget('expire', $route), 0);
 					$func   = aryget('func', $route);
-					$data   = [];
+					$data   = isset($route['data']) ? (array)$route['data'] : [];
 					if ($func && is_callable($func)) {
-						$data = $func();
+						$data = $func($data);
 					}
 					$data = is_array($data) ? $data : ['result' => $data];
 					if ($expire > 0) {
