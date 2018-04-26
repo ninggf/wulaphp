@@ -48,6 +48,10 @@ class Smarty_Internal_Compile_Ctsp extends Smarty_Internal_CompileBase {
 		if (isset ($_attr ['render']) && !empty ($_attr ['render'])) {
 			$render = $_attr ['render'];
 		}
+		$loop = true;
+		if (isset ($_attr ['loop']) && empty ($_attr ['loop'])) {
+			$loop = false;
+		}
 		if ($name == '__this') {
 			$pname = "";
 		} else {
@@ -58,16 +62,20 @@ class Smarty_Internal_Compile_Ctsp extends Smarty_Internal_CompileBase {
 		$compiler->nocache = $compiler->nocache | $compiler->tag_nocache;
 		unset ($_attr ['for'], $_attr ['render'], $_attr['item'], $_attr['nocache'], $_attr['var']);
 		$argstr = smarty_argstr($_attr);
-		$this->openTag($compiler, 'ctsp', ['ctsp', $compiler->nocache, $pitem]);
-		$output = "<?php\n";
+		$this->openTag($compiler, 'ctsp', ['ctsp', $compiler->nocache, $pitem, $loop]);
+		$output = "<?php ";
 		if (!$pname) {
 			$pname  = '_cts_cur_page_data';
 			$output .= '$_cts_cur_page_data = new wulaphp\mvc\model\CtsData();';
 		}
-		$output .= "if(isset(\${$pname})){ \$_smarty_tpl->tpl_vars[$pitem] = new Smarty_Variable();\n";
-		$output .= "\$_ctsp_from_pages = \${$pname}->getPageList($render, $argstr);\n";
-		$output .= "if (is_string(\$_ctsp_from_pages)){ echo \$_ctsp_from_pages; } else {\n";
-		$output .= "foreach (\$_ctsp_from_pages as \$_smarty_tpl->tpl_vars[$pitem]->key => \$_smarty_tpl->tpl_vars[$pitem]->value){?>\n";
+		$output .= "if(isset(\${$pname})){";
+		$output .= "\$_smarty_tpl->tpl_vars[$pitem] = new Smarty_Variable();\$_ctsp_from_pages = \${$pname}->getPageList($render, $argstr);\n";
+		if ($loop) {
+			$output .= "if (is_string(\$_ctsp_from_pages)){ echo \$_ctsp_from_pages; } else {\n";
+			$output .= "foreach (\$_ctsp_from_pages as \$_smarty_tpl->tpl_vars[$pitem]->key => \$_smarty_tpl->tpl_vars[$pitem]->value){?>\n";
+		} else {
+			$output .= "\$_smarty_tpl->tpl_vars[$pitem]->value = \$_ctsp_from_pages;?>\n";
+		}
 
 		return $output;
 	}
@@ -94,8 +102,11 @@ class Smarty_Internal_Compile_Ctspclose extends Smarty_Internal_CompileBase {
 		if ($compiler->nocache) {
 			$compiler->tag_nocache = true;
 		}
-		list (, $compiler->nocache,) = $this->closeTag($compiler, ['ctsp']);
-
-		return "<?php }}} ?>";
+		list (, $compiler->nocache, , $loop) = $this->closeTag($compiler, ['ctsp']);
+		if ($loop) {
+			return "<?php }}} ?>";
+		} else {
+			return "<?php } ?>";
+		}
 	}
 }

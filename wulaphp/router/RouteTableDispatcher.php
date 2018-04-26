@@ -19,7 +19,12 @@ use wulaphp\app\App;
  */
 class RouteTableDispatcher implements IURLDispatcher {
 	public function dispatch($url, $router, $parsedInfo) {
-		$controllers = explode('/', $url);
+		$route = RouteTableDispatcher::parseURL($parsedInfo);
+		//解析不了
+		if (!$route) {
+			return null;
+		}
+		$controllers = explode('/', $route);
 		$len         = count($controllers);
 		if ($len < 2) {//无法路由
 			return null;
@@ -30,7 +35,6 @@ class RouteTableDispatcher implements IURLDispatcher {
 		if (!$namespace) {
 			return null;
 		}
-
 		//加载路由表
 		$rtable = MODULE_ROOT . $module . DS . 'route.php';
 		if (is_file($rtable)) {
@@ -46,14 +50,15 @@ class RouteTableDispatcher implements IURLDispatcher {
 					if ($func && is_callable($func)) {
 						$data = $func($data);
 					}
-					$data = is_array($data) ? $data : ['result' => $data];
+					$data            = is_array($data) ? $data : ['result' => $data];
+					$data['urlInfo'] = $parsedInfo;
 					if ($expire > 0) {
 						define('EXPIRE', $expire);
 					}
 					if (isset($route['Content-Type'])) {
 						$headers['Content-Type'] = $route['Content-Type'];
 					} else {
-						$headers = ['Content-Type' => Router::mimeContentType($url)];
+						$headers = ['Content-Type' => $parsedInfo->contentType];
 					}
 					unset($routes);
 
@@ -64,5 +69,56 @@ class RouteTableDispatcher implements IURLDispatcher {
 		}
 
 		return null;
+	}
+
+	/**
+	 * 解析URL.
+	 *
+	 * @param UrlParsedInfo $parsedInfo
+	 *
+	 * @return string
+	 */
+	public static function parseURL($parsedInfo) {
+		$pageSet = false;
+		if (preg_match('#.+?\.$#', $parsedInfo->url)) {
+			return false;
+		}
+		if (rqset('_cpn')) {
+			$parsedInfo->page = irqst('_cpn');
+			$pageSet          = true;
+		}
+		if (preg_match('#(.+?)(_([\d]+|all))?$#', $parsedInfo->name, $ms)) {
+			$parsedInfo->name   = $ms[1];
+			$parsedInfo->ogname = urlencode($ms[1]);
+			if (isset($ms[3])) {
+				if ($ms[3] === '1') {
+					return false;
+				}
+				if ($ms[3] == 'all') {
+					$ms[3] = PHP_INT_MAX;
+				} else {
+					$ms[3] = intval($ms[3]);
+				}
+				if (!$pageSet) {
+					$parsedInfo->page = $ms[3];
+				}
+			}
+		}
+		if (!preg_match('#.+?(\..+)$#', $parsedInfo->url)) {
+			if ($parsedInfo->page > 1 && !$pageSet) {
+				return false;
+			}
+			$parsedInfo->name   .= '/index';
+			$parsedInfo->ogname .= '/index';
+			if (!$parsedInfo->ext) {
+				$parsedInfo->ext = 'html';
+			}
+		}
+		if (!$parsedInfo->ext) {
+			return false;
+		}
+		$parsedInfo->contentType = Router::mimeContentType('a.' . $parsedInfo->ext);
+
+		return ltrim(implode('', [$parsedInfo->path, '/', $parsedInfo->name, '.' . $parsedInfo->ext]), '/');
 	}
 }

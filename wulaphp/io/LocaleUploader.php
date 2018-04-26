@@ -15,13 +15,25 @@ use wulaphp\app\App;
 class LocaleUploader implements IUploader {
 	protected $last_error       = '';
 	protected $upload_root_path = '';
+	protected $filename;
 
-	public function __construct($path = null) {
+	/**
+	 * LocaleUploader constructor.
+	 *
+	 * @param string|null $path     存储路径,不指定时存储到WWWROOT目录
+	 * @param string|null $filename 存储为固定文件
+	 */
+	public function __construct($path = null, $filename = null) {
 		if (empty ($path)) {
 			$this->upload_root_path = WEB_ROOT;
 		} else {
 			$this->upload_root_path = $path;
 		}
+		$this->filename = $filename;
+	}
+
+	public function getName() {
+		return '本地文件上传器';
 	}
 
 	/**
@@ -33,9 +45,9 @@ class LocaleUploader implements IUploader {
 	 * @return array|bool
 	 */
 	public function save($filepath, $path = null) {
-		$path = $this->getDestDir($path);
+		$path = trailingslashit($this->getDestDir($path));
 
-		$destdir  = trailingslashit(trailingslashit($this->upload_root_path) . $path);
+		$destdir  = trailingslashit($this->upload_root_path) . $path;
 		$tmp_file = $filepath;
 
 		if (!is_dir($destdir) && !@mkdir($destdir, 0777, true)) { // 目的目录不存在，且创建也失败
@@ -45,8 +57,12 @@ class LocaleUploader implements IUploader {
 		}
 		$pathinfo = pathinfo($tmp_file);
 		$fext     = '.' . strtolower($pathinfo ['extension']);
-		$name     = $pathinfo ['filename'] . $fext;
-		$name     = unique_filename($destdir, $name);
+		if ($this->filename) {
+			$name = $this->filename . $fext;
+		} else {
+			$name = $pathinfo ['filename'] . $fext;
+			$name = unique_filename($destdir, $name);
+		}
 		$fileName = $path . $name;
 		$destfile = $destdir . $name;
 		$result   = @copy($tmp_file, $destfile);
@@ -106,6 +122,13 @@ class LocaleUploader implements IUploader {
 		}
 		if ($path{0} == '@') {
 			return substr($path, 1);
+		} else if ($path{0} == '~') {
+			$save_path = App::cfg('save_path@media');
+			if (!$save_path) {
+				$save_path = 'files';
+			}
+
+			return trailingslashit($save_path) . substr($path, 1);
 		} else {
 			$save_path = App::cfg('save_path@media');
 			if (!$save_path) {

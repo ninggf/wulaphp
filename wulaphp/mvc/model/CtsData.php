@@ -24,6 +24,12 @@ class CtsData implements \IteratorAggregate, \Countable, \ArrayAccess {
 	protected $dataType;
 	protected $hasMore    = false;
 
+	/**
+	 * CtsData constructor.
+	 *
+	 * @param array           $data
+	 * @param null|int|string $countTotal 总数
+	 */
 	public function __construct($data = [], $countTotal = null) {
 		$this->initData($data, $countTotal);
 	}
@@ -141,7 +147,7 @@ class CtsData implements \IteratorAggregate, \Countable, \ArrayAccess {
 		if ($this->countTotal > 0) {
 			$paging_data = apply_filter('on_render_paging_by_' . $render, [], $info, $options);
 			if (empty ($paging_data)) {
-				$paging_data = $this->getPageInfo($info, $options);
+				$paging_data = $this->getPageInfo($info, $this->countTotal, $options);
 			}
 
 			return $paging_data;
@@ -154,14 +160,14 @@ class CtsData implements \IteratorAggregate, \Countable, \ArrayAccess {
 	 * 取分页数据.
 	 *
 	 * @param \wulaphp\router\UrlParsedInfo $paging
+	 * @param string|int                    $total
 	 * @param array                         $args
 	 *
 	 * @return array
 	 */
-	private function getPageInfo($paging, $args) {
-		$cur   = $paging->page;
-		$total = $paging->total;
-		$per   = isset ($args ['limit']) ? intval($args ['limit']) : 10;
+	private function getPageInfo($paging, $total, $args) {
+		$cur = $paging->page;
+		$per = isset ($args ['limit']) ? intval($args ['limit']) : 10;
 		if (!$per) {
 			$per = 10;
 		}

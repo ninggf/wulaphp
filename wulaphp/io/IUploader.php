@@ -12,6 +12,10 @@ namespace wulaphp\io;
 
 interface IUploader {
 	/**
+	 * @return string
+	 */
+	public function getName();
+	/**
 	 * 上传文件.
 	 *
 	 * @param string $filepath 要上传的文件路径.
