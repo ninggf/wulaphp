@@ -322,7 +322,7 @@ class Router {
 		$ext = strtolower(array_pop(explode('.', $filename)));
 		if (array_key_exists($ext, $mime_types)) {
 			return $mime_types[ $ext ];
-		} else if (function_exists('finfo_open')) {
+		} else if (is_file($filename) && function_exists('finfo_open')) {
 			$finfo    = finfo_open(FILEINFO_MIME);
 			$mimetype = finfo_file($finfo, $filename);
 			finfo_close($finfo);
