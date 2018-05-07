@@ -192,6 +192,15 @@ function smarty_modifiercompiler_res($params, $compiler) {
 	return "wulaphp\\app\\App::res({$params[0]},$min)";
 }
 
+function smarty_modifiercompiler_cdn($params, $compiler) {
+	$min = "''";
+	if (isset($params[1])) {
+		$min = $params[1];
+	}
+
+	return "wulaphp\\app\\App::cdn({$params[0]},$min)";
+}
+
 function smarty_modifiercompiler_assets($params, $compiler) {
 	$min = "''";
 	if (isset($params[1])) {
