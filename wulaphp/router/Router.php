@@ -318,10 +318,8 @@ class Router {
 			'odt'  => 'application/vnd.oasis.opendocument.text',
 			'ods'  => 'application/vnd.oasis.opendocument.spreadsheet',
 		];
-		if (!$filename) {
-			return 'application/octet-stream';
-		}
-		$ext = strtolower(array_pop(explode('.', $filename)));
+		$chks = explode('.', $filename);
+		$ext  = strtolower(array_pop($chks));
 		if (array_key_exists($ext, $mime_types)) {
 			return $mime_types[ $ext ];
 		} else if (is_file($filename) && function_exists('finfo_open')) {
