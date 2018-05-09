@@ -260,7 +260,7 @@ class DefaultDispatcher implements IURLDispatcher {
 			foreach ($files as $file) {
 				list ($controller_file, $controllerClz, $action, $controller) = $file;
 				if (is_file($controller_file)) {
-					@include $controller_file;
+					include $controller_file;
 					if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
 						if ($action == 'index' && count($params) > 0) {
 							$action = array_shift($params);
@@ -287,7 +287,7 @@ class DefaultDispatcher implements IURLDispatcher {
 			$controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
 			$controllerClz   = $namespace . '\controllers\\' . $controllerClz;
 			if (is_file($controller_file)) {
-				@include $controller_file;
+				include $controller_file;
 				if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
 					return [
 						$controllerClz,
@@ -306,7 +306,7 @@ class DefaultDispatcher implements IURLDispatcher {
 			$controller_file = MODULES_PATH . $module . DS . 'Router.php';
 			if (is_file($controller_file)) {
 				$controllerClz = $namespace . '\\Router';
-				@include $controller_file;
+				include $controller_file;
 				if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\SubModuleRouter')) {
 					array_unshift($params, $action);
 
