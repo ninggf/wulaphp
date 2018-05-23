@@ -700,22 +700,14 @@ class App {
 	 * @return string
 	 */
 	public static function res($res, $min = '') {
-		static $static_url = false;
-		if ($static_url === false) {
-			$static_url = App::cfg('static_base');
-			if ($static_url) {
-				$static_url = trailingslashit($static_url . WWWROOT_DIR);
-			} else {
-				$static_url = WWWROOT_DIR;
-			}
-		}
-		$url     = ltrim($res, '/');
-		$urls    = explode('/', $url);
-		$urls[0] = App::id2dir($urls[0]);
-		$url     = implode('/', $urls);
+		$static_url = WWWROOT_DIR;
+		$url        = ltrim($res, '/');
+		$urls       = explode('/', $url);
+		$urls[0]    = App::id2dir($urls[0]);
+		$url        = implode('/', $urls);
 		if ($min || APP_MODE == 'pro') {
 			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
-			if (is_file(WWWROOT . $url1)) {
+			if (is_file(WWWROOT . MODULE_DIR . '/' . $url1)) {
 				$url = $url1;
 			}
 		}
@@ -758,7 +750,7 @@ class App {
 		$url = ltrim($res, '/');
 		if ($min || APP_MODE == 'pro') {
 			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
-			if (is_file(WWWROOT . $url1)) {
+			if (is_file(WWWROOT . ASSETS_DIR . '/' . $url1)) {
 				$url = $url1;
 			}
 		}
@@ -816,7 +808,7 @@ class App {
 		$url = ltrim($res, '/');
 		if ($min || APP_MODE == 'pro') {
 			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
-			if (is_file(WWWROOT . $url1)) {
+			if (is_file(WWWROOT . VENDOR_DIR . '/' . $url1)) {
 				$url = $url1;
 			}
 		}
