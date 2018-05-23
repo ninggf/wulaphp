@@ -99,9 +99,6 @@ namespace {
 	 */
 	function env($key, $default = '') {
 		static $envs = null;
-		if (APP_MODE == 'pro') {
-			return $default;
-		}
 		if ($envs === null) {
 			if (is_file(CONFIG_PATH . '.env')) {
 				$envs = @parse_ini_file(CONFIG_PATH . '.env');
