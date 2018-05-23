@@ -296,9 +296,9 @@ class DatabaseConnection {
 				// 参数处理
 				$params = 0;
 				$sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
-					if ($r[0] == '%f') {
+					if ($r[1] == 'f') {
 						$v = floatval($args[ $params ]);
-					} else if ($r[0] == '%d') {
+					} else if ($r[1] == 'd') {
 						$v = intval($args[ $params ]);
 					} else {
 						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
@@ -382,9 +382,9 @@ class DatabaseConnection {
 					$args = $args[0];
 				}
 				$sql = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
-					if ($r[0] == '%f') {
+					if ($r[1] == 'f') {
 						$v = floatval($args[ $params ]);
-					} else if ($r[0] == '%d') {
+					} else if ($r[1] == 'd') {
 						$v = intval($args[ $params ]);
 					} else {
 						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);

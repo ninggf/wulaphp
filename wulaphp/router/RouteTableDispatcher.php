@@ -119,6 +119,13 @@ class RouteTableDispatcher implements IURLDispatcher {
 		}
 		$parsedInfo->contentType = Router::mimeContentType('a.' . $parsedInfo->ext);
 
-		return ltrim(implode('', [$parsedInfo->path, '/', $parsedInfo->name, '.' . $parsedInfo->ext]), '/');
+		$parsedInfo->parsedUrl = ltrim(implode('', [
+			$parsedInfo->path,
+			'/',
+			$parsedInfo->name,
+			'.' . $parsedInfo->ext
+		]), '/');
+
+		return $parsedInfo->parsedUrl;
 	}
 }

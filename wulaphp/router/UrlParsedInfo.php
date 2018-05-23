@@ -18,6 +18,7 @@ class UrlParsedInfo implements \ArrayAccess {
 	public  $page        = 1;//当前数码
 	public  $total       = 1;//总页数
 	public  $contentType = 'text/html';//
+	public  $parsedUrl   = null;//解析后的URL
 	private $params; //请求参数
 	private $ogs         = [];
 	private $urls        = [];
