@@ -12,46 +12,51 @@ use Psr\Log\LoggerInterface;
  * @author  Leo Ning <windywany@gmail.com>
  */
 class CommonLogger implements LoggerInterface {
-	private static $log_name = array(DEBUG_INFO => 'INFO', DEBUG_WARN => 'WARN', DEBUG_DEBUG => 'DEBUG', DEBUG_ERROR => 'ERROR');
+	private static $log_name = [
+		DEBUG_INFO  => 'INFO',
+		DEBUG_WARN  => 'WARN',
+		DEBUG_DEBUG => 'DEBUG',
+		DEBUG_ERROR => 'ERROR'
+	];
 	private        $file     = '';
 
 	public function __construct($file = 'wula') {
 		$this->file = $file;
 	}
 
-	public function emergency($message, array $context = array()) {
+	public function emergency($message, array $context = []) {
 		$this->log(DEBUG_ERROR, $message, $context);
 	}
 
-	public function alert($message, array $context = array()) {
+	public function alert($message, array $context = []) {
 		$this->log(DEBUG_ERROR, $message, $context);
 	}
 
-	public function critical($message, array $context = array()) {
+	public function critical($message, array $context = []) {
 		$this->log(DEBUG_ERROR, $message, $context);
 	}
 
-	public function error($message, array $context = array()) {
+	public function error($message, array $context = []) {
 		$this->log(DEBUG_ERROR, $message, $context);
 	}
 
-	public function warning($message, array $context = array()) {
+	public function warning($message, array $context = []) {
 		$this->log(DEBUG_WARN, $message, $context);
 	}
 
-	public function notice($message, array $context = array()) {
+	public function notice($message, array $context = []) {
 		$this->log(DEBUG_INFO, $message, $context);
 	}
 
-	public function info($message, array $context = array()) {
+	public function info($message, array $context = []) {
 		$this->log(DEBUG_INFO, $message, $context);
 	}
 
-	public function debug($message, array $context = array()) {
+	public function debug($message, array $context = []) {
 		$this->log(DEBUG_DEBUG, $message, $context);
 	}
 
-	public function log($level, $message, array $trace_info = array()) {
+	public function log($level, $message, array $trace_info = []) {
 		$file = $this->file;
 
 		$ln  = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
@@ -80,6 +85,8 @@ class CommonLogger implements LoggerInterface {
 
 		if (isset ($_SERVER ['REQUEST_URI'])) {
 			$msg .= "\turi: " . $_SERVER ['REQUEST_URI'] . "\n";
+		} else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
+			$msg .= "\tscript: " . implode(' ', $_SERVER ['argv']) . "\n";
 		}
 
 		$dest_file = $file ? $file . '.log' : 'wula.log';
