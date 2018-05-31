@@ -75,7 +75,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 */
 	public function field($field, $alias = null) {
 		if (is_string($field)) {
-			$fields = explode(',', $field);
+			$fields = explode(',', trim($field));
 			foreach ($fields as $field) {
 				$this->fields [] = Condition::cleanField($field . ($alias ? ' AS ' . $alias : ''));
 			}

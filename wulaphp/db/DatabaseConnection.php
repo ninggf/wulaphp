@@ -346,7 +346,7 @@ class DatabaseConnection {
 	 * @return array
 	 */
 	public function query($sql, ...$args) {
-		$rst = $this->fetch($sql, $args);
+		$rst = $this->fetch($sql, ...$args);
 		if ($rst) {
 			$result = $rst->fetchAll(\PDO::FETCH_ASSOC);
 			$rst->closeCursor();
@@ -377,11 +377,7 @@ class DatabaseConnection {
 			}, $sql);
 			if ($args) {
 				$params = 0;
-				// 参数处理
-				if (is_array($args[0])) {
-					$args = $args[0];
-				}
-				$sql = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+				$sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
 					if ($r[1] == 'f') {
 						$v = floatval($args[ $params ]);
 					} else if ($r[1] == 'd') {
@@ -416,7 +412,7 @@ class DatabaseConnection {
 	 * @return array|null
 	 */
 	public function queryOne($sql, ...$args) {
-		$rst = $this->fetch($sql, $args);
+		$rst = $this->fetch($sql, ...$args);
 		if ($rst) {
 			$result = $rst->fetch(\PDO::FETCH_ASSOC);
 			$rst->closeCursor();
@@ -435,7 +431,7 @@ class DatabaseConnection {
 	 * @return \wulaphp\db\sql\Query
 	 */
 	public function select(...$fields) {
-		$sql = new Query($fields);
+		$sql = new Query(...$fields);
 		$sql->setDialect($this->dialect);
 
 		return $sql;
