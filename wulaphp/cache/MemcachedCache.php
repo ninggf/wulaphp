@@ -70,6 +70,11 @@ class MemcachedCache extends Cache {
 	}
 
 	public function get($key) {
-		return $this->cache->get($key);
+		$value = $this->cache->get($key);
+		if ($value === false && $this->cache->getResultCode() == \Memcached::RES_NOTFOUND) {
+			return null;
+		}
+
+		return $value;
 	}
 }
