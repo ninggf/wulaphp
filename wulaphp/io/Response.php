@@ -39,7 +39,7 @@ class Response {
 				if (!$gzip) {
 					@ini_set('zlib.output_compression', 1);
 				}
-				@ini_set('zlib.output_compression_level', 9);
+				@ini_set('zlib.output_compression_level', 5);
 			} else {
 				@ini_set('zlib.output_compression', 0);
 				@ini_set('zlib.output_compression_level', -1);
