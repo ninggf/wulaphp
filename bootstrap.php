@@ -122,7 +122,7 @@ spl_autoload_register(function ($clz) {
 	global $_wula_classpath, $_wula_namespace_classpath;
 	$key      = $clz . '.class';
 	$clz_file = RtCache::get($key);
-	if (is_file($clz_file)) {
+	if ($clz_file && is_file($clz_file)) {
 		include $clz_file;
 
 		return;
