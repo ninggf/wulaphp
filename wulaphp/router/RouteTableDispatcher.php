@@ -38,7 +38,7 @@ class RouteTableDispatcher implements IURLDispatcher {
 		//加载路由表
 		$rtable = MODULE_ROOT . $module . DS . 'route.php';
 		if (is_file($rtable)) {
-			$routes = @include $rtable;
+			$routes = include $rtable;
 			$uk     = implode('/', $controllers);
 			if ($routes && isset($routes[ $uk ])) {
 				//['template' => 'abc.tpl', 'expire' => 100, 'func' => '','Content-Type'=>'text/html','data'=>[]]
@@ -53,7 +53,7 @@ class RouteTableDispatcher implements IURLDispatcher {
 					$data            = is_array($data) ? $data : ['result' => $data];
 					$data['urlInfo'] = $parsedInfo;
 					if ($expire > 0) {
-						define('EXPIRE', $expire);
+						define('CACHE_EXPIRE', $expire);
 					}
 					if (isset($route['Content-Type'])) {
 						$headers['Content-Type'] = $route['Content-Type'];
