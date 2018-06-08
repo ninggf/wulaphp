@@ -266,13 +266,11 @@ class Response {
 			$this->view = new JsonView ($view);
 		}
 		if ($this->view instanceof View) {
-			if (!$return) {
-				$this->view->echoHeader();
-			}
 			$content = $this->view->render();
 			if ($return) {
 				return $content;
 			} else {
+				$this->view->echoHeader();
 				$content = apply_filter('before_output_content', $content, $this->view);
 				echo str_replace('<!-- benchmark -->', (microtime(true) - WULA_STARTTIME), $content);
 			}

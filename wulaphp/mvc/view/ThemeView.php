@@ -70,7 +70,7 @@ class ThemeView extends View {
 		$this->__smarty->assign('_css_files', $this->sytles);
 		$this->__smarty->assign('_js_files', $this->scripts);
 		$this->__smarty->assign('_current_template_file', $this->tpl);
-		@ob_start(PHP_OUTPUT_HANDLER_CLEANABLE);
+		@ob_start();
 		if ($this->__mustache) {
 			$filter  = new MustacheFilter();
 			$filters = apply_filter('smarty\getFilters', ['pre' => [[$filter, 'pre']], 'post' => [[$filter, 'post']]]);
