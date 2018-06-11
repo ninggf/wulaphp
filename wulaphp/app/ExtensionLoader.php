@@ -18,7 +18,10 @@ class ExtensionLoader {
 	 */
 	public function scanExtensions() {
 		$extensions = RtCache::get('loader@extensions');
-		if (!$extensions && is_dir(EXTENSIONS_PATH)) {
+		if (is_array($extensions)) {
+			return $extensions;
+		}
+		if (is_dir(EXTENSIONS_PATH)) {
 			$it         = new \DirectoryIterator (EXTENSIONS_PATH);
 			$extensions = [];
 			foreach ($it as $dir) {
