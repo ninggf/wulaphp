@@ -89,6 +89,7 @@ if (!function_exists('curl_init')) {
 @ini_set('session.bug_compat_42', 0);
 @mb_internal_encoding('UTF-8');
 @mb_regex_encoding('UTF-8');
+@mb_http_output('UTF-8');
 define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
 /** @global string[] $_wula_classpath none-namespace classpath. */
 global $_wula_classpath;
