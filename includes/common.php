@@ -246,13 +246,30 @@ function whoami($type = 'default') {
 }
 
 /**
- * 不要调用它.
+ * 根据宽高生成缩略图文件名.
  *
- * @param Throwable $e
+ * @param string $filename
+ *                    原始文件名.
+ * @param int    $w
+ * @param int    $h
+ * @param string $sep 分隔符.
  *
- * @deprecated
+ * @return string
  */
-function wula_exception_handler($e) {
+function get_thumbnail_filename($filename, $w, $h, $sep = '-') {
+	$finfo = pathinfo($filename);
+
+	$shortname = $finfo['dirname'] . '/' . $finfo['filename'];
+	$ext       = $finfo['extension'] ? '.' . $finfo['extension'] : '';
+	if ($h > 0) {
+		return $shortname . "{$sep}{$w}x{$h}{$ext}";
+	} else {
+		return $shortname . "{$sep}{$w}{$ext}";
+	}
+}
+
+//异常处理
+set_exception_handler(function (\Throwable $e) {
 	global $argv;
 	if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
 		if ($argv) {
@@ -307,40 +324,12 @@ function wula_exception_handler($e) {
 			\wulaphp\io\Response::respond(500, $e->getMessage());
 		}
 	}
-}
-
-/**
- * 根据宽高生成缩略图文件名.
- *
- * @param string $filename
- *                    原始文件名.
- * @param int    $w
- * @param int    $h
- * @param string $sep 分隔符.
- *
- * @return string
- */
-function get_thumbnail_filename($filename, $w, $h, $sep = '-') {
-	$finfo = pathinfo($filename);
-
-	$shortname = $finfo['dirname'] . '/' . $finfo['filename'];
-	$ext       = $finfo['extension'] ? '.' . $finfo['extension'] : '';
-	if ($h > 0) {
-		return $shortname . "{$sep}{$w}x{$h}{$ext}";
-	} else {
-		return $shortname . "{$sep}{$w}{$ext}";
-	}
-}
-
-/**
- * 不要调用它.
- * @deprecated
- */
-function wula_shutdown_function() {
+});
+//脚本结束回调
+register_shutdown_function(function () {
 	define('WULA_STOPTIME', microtime(true));
 	fire('wula\stop');
-}
-
+});
 include WULA_ROOT . 'includes/plugin.php';
 include WULA_ROOT . 'includes/kernelimpl.php';
 include WULA_ROOT . 'includes/template.php';

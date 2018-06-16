@@ -438,7 +438,7 @@ function combinate_resources($content, $type, $ver) {
  */
 function minify_resources($content, $type) {
 	static $cm = false;
-	if (APP_MODE == 'dev' || !\wulaphp\app\App::bcfg('resource.minify')) {
+	if (!\wulaphp\app\App::bcfg('resource.minify')) {
 		return $content;
 	}
 	if ($type == 'js') {

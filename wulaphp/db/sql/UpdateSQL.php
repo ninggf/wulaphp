@@ -10,7 +10,7 @@ namespace wulaphp\db\sql;
  */
 class UpdateSQL extends QueryBuilder {
 
-	private $data  = array();
+	private $data  = [];
 	private $batch = false;
 
 	public function __construct($table) {

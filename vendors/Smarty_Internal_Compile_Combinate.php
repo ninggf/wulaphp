@@ -6,14 +6,14 @@ class Smarty_Internal_Compile_Combinate extends Smarty_Internal_CompileBase {
 	 *
 	 * @var array
 	 */
-	public $shorttag_order      = array('type');
-	public $required_attributes = array('type');
+	public $shorttag_order      = ['type'];
+	public $required_attributes = ['type'];
 	/**
 	 * Attribute definition: Overwrites base class.
 	 *
 	 * @var array
 	 */
-	public $optional_attributes = array('ver');
+	public $optional_attributes = ['ver'];
 
 	/**
 	 * Compiles code for the {combinate} tag
@@ -32,7 +32,7 @@ class Smarty_Internal_Compile_Combinate extends Smarty_Internal_CompileBase {
 		$ver   = isset($_attr['ver']) ? $_attr['ver'] : "'1'";
 		// maybe nocache because of nocache variables
 		$compiler->nocache = $compiler->nocache | $compiler->tag_nocache;
-		$this->openTag($compiler, 'combinate', array($file, $ver, $compiler->nocache));
+		$this->openTag($compiler, 'combinate', [$file, $ver, $compiler->nocache]);
 		$_output = "<?php @ob_start(); ?>";
 
 		return $_output;

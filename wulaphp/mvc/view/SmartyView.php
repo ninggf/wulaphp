@@ -55,14 +55,9 @@ class SmartyView extends View {
 			$this->__smarty->setDebugTemplate(SMARTY_DIR . 'debug.tpl');
 			fire('init_smarty_engine', $this->__smarty);
 			fire('init_view_smarty_engine', $this->__smarty);
-			$this->__smarty->compile_check = true;
+			$this->__smarty->compile_check = 1;
 			if ($devMod) {
-				$this->__smarty->compile_check   = true;
-				$this->__smarty->caching         = false;
-				$this->__smarty->debugging_ctrl  = 'URL';
-				$this->__smarty->smarty_debug_id = '_debug_wula';
-			} else {
-				$this->__smarty->compile_check = false;
+				$this->__smarty->caching = false;
 			}
 			$this->__smarty->error_reporting = KS_ERROR_REPORT_LEVEL;
 		} else {

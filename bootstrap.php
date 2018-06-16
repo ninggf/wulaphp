@@ -1,6 +1,6 @@
 <?php
 /**
- * Project:     Wulaphp: another mvc framework of php based on php 5.6.0+ .
+ * Project:     Wulaphp: another mvc framework of php based on php 7.1.0+
  * File:        bootstrap.php
  *
  * 此文件用于引导wulaphp framework.
@@ -8,21 +8,23 @@
  * @link      https://www.wulaphp.com/
  * @author    leo <windywany@163.com>
  * @package   wulaphp
- * @version   1.6.0
+ * @version   2.0.0
  * @since     1.0.0
  */
 
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
-if (version_compare('5.6.9', phpversion(), '>')) {
-	die (sprintf('Your php version is %s,but wulaphp required PHP 5.6.9 or higher', phpversion()));
+@error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+if (version_compare('7.1.0', phpversion(), '>')) {
+	die (sprintf('Your php version is %s,but wulaphp required PHP 7.1.0 or higher', phpversion()));
 }
 define('WULA_STARTTIME', microtime(true));
 defined('APPROOT') or die ('please define APPROOT');
 defined('WWWROOT') or die ('please define WWWROOT');
-define('WULA_VERSION', '1.13.0');
+define('WULA_VERSION', '2.0.0');
 define('WULA_RELEASE', 'rc');
+defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 /* 常用目录定义 */
 define('DS', DIRECTORY_SEPARATOR);
 define('WULA_ROOT', __DIR__ . DS);
@@ -35,17 +37,18 @@ defined('WWWROOT_DIR') or define('WWWROOT_DIR', '/');
 defined('PUBLIC_DIR') or define('PUBLIC_DIR', 'wwwroot');
 defined('ASSETS_DIR') or define('ASSETS_DIR', 'assets');
 defined('VENDOR_DIR') or define('VENDOR_DIR', 'assets');
+defined('STORAGE_DIR') or define('STORAGE_DIR', 'storage');
 defined('TMP_DIR') or define('TMP_DIR', 'tmp');
 defined('LOGS_DIR') or define('LOGS_DIR', 'logs');
 define('WEB_ROOT', WWWROOT);//alias of WWWROOT
 define('EXTENSIONS_PATH', APPROOT . EXTENSION_DIR . DS);
 define('LIBS_PATH', APPROOT . LIBS_DIR . DS);
-define('TMP_PATH', APPROOT . TMP_DIR . DS);
+define('TMP_PATH', APPROOT . STORAGE_DIR . DS . TMP_DIR . DS);
 define('CONFIG_PATH', APPROOT . CONF_DIR . DS);
 define('MODULES_PATH', WWWROOT . MODULE_DIR . DS);
 define('MODULE_ROOT', MODULES_PATH);
 define('THEME_PATH', WWWROOT . THEME_DIR . DS);
-define('LOGS_PATH', APPROOT . LOGS_DIR . DS);
+define('LOGS_PATH', APPROOT . STORAGE_DIR . DS . LOGS_DIR . DS);
 defined('MODULE_LOADER_CLASS') or define('MODULE_LOADER_CLASS', 'wulaphp\app\ModuleLoader');
 defined('EXTENSION_LOADER_CLASS') or define('EXTENSION_LOADER_CLASS', 'wulaphp\app\ExtensionLoader');
 defined('CONFIG_LOADER_CLASS') or define('CONFIG_LOADER_CLASS', 'wulaphp\conf\ConfigurationLoader ');
@@ -90,7 +93,11 @@ if (!function_exists('curl_init')) {
 @mb_internal_encoding('UTF-8');
 @mb_regex_encoding('UTF-8');
 @mb_http_output('UTF-8');
-define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
+if (isset($_SERVER['HTTP_HOST'])) {
+	define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
+} else {
+	define('VISITING_DOMAIN', '');
+}
 /** @global string[] $_wula_classpath none-namespace classpath. */
 global $_wula_classpath;
 /** @global  string[] $_wula_namespace_classpath psr-4 classpath. */
@@ -112,13 +119,20 @@ include WULA_ROOT . 'wulaphp/conf/RedisConfiguration.php';
 include WULA_ROOT . 'wulaphp/conf/BaseConfigurationLoader.php';
 include WULA_ROOT . 'wulaphp/conf/ConfigurationLoader.php';
 include WULA_ROOT . 'wulaphp/cache/Cache.php';
-include WULA_ROOT . 'wulaphp/cache/ApcCacher.php';
-include WULA_ROOT . 'wulaphp/cache/YacCache.php';
-include WULA_ROOT . 'wulaphp/cache/XCacheCacher.php';
+if (function_exists('apcu_store')) {
+	include WULA_ROOT . 'wulaphp/cache/ApcCacher.php';
+}
+if (extension_loaded('yac')) {
+	include WULA_ROOT . 'wulaphp/cache/YacCache.php';
+}
+if (extension_loaded('xcache')) {
+	include WULA_ROOT . 'wulaphp/cache/XCacheCacher.php';
+}
 include WULA_ROOT . 'wulaphp/cache/RedisCache.php';
 include WULA_ROOT . 'wulaphp/cache/MemcachedCache.php';
 include WULA_ROOT . 'wulaphp/cache/RtCache.php';
 include WULA_ROOT . 'wulaphp/util/ObjectCaller.php';
+//注册类自动加载
 spl_autoload_register(function ($clz) {
 	global $_wula_classpath, $_wula_namespace_classpath;
 	$key      = $clz . '.class';
@@ -167,16 +181,6 @@ include WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
 	include LIBS_PATH . 'common.php';
 }
-set_exception_handler('wula_exception_handler');
-register_shutdown_function('wula_shutdown_function');
-//BIND CMDS
-bind('artisan\getCommands', function ($cmds) {
-	if (extension_loaded('gearman')) {
-		$cmds['gearman'] = new \wulaphp\command\GearmanWorkerCommand();
-	}
-
-	return $cmds;
-});
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
 fire('wula\bootstrapped');

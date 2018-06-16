@@ -90,7 +90,7 @@ class CrontabHelper {
 	 * @throws Exception
 	 */
 	protected static function parse_cron_part($part, $f_min, $f_max) {
-		$list = array();
+		$list = [];
 
 		//处理"," -- 列表
 		if (false !== strpos($part, ',')) {
@@ -106,7 +106,7 @@ class CrontabHelper {
 		//处理"/" -- 间隔
 		$tmp  = explode('/', $part);
 		$part = $tmp[0];
-		$step = isset($tmp[1]) ? $tmp[1] : 1;
+		$step = $tmp[1] ?? 1;
 
 		//处理"-" -- 范围
 		if (false !== strpos($part, '-')) {
@@ -114,7 +114,7 @@ class CrontabHelper {
 			if ($min > $max) {
 				throw new Exception('使用"-"设置范围时，左不能大于右');
 			}
-		} elseif ('*' == $part) {
+		} else if ('*' == $part) {
 			$min = $f_min;
 			$max = $f_max;
 		} else {//数字
@@ -131,6 +131,6 @@ class CrontabHelper {
 			throw new Exception('数值越界。应该：分0-59，时0-59，日1-31，月1-12，周0-6');
 		}
 
-		return $max - $min > $step ? range($min, $max, $step) : array((int)$min);
+		return $max - $min > $step ? range($min, $max, $step) : [(int)$min];
 	}
 }
