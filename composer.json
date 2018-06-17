@@ -17,9 +17,7 @@
   "keywords": [
 	"PHP",
 	"MVC",
-	"WEB FRAMEWORK",
-	"plugin",
-	"extension"
+	"PHP FRAMEWORK"
   ],
   "time": "2016-07-21",
   "authors": [
@@ -41,5 +39,6 @@
   "support": {
 	"issues": "https://github.com/ninggf/wulaphp/issues"
   },
-  "homepage": "http://www.wulaphp.com/"
+  "homepage": "http://www.wulaphp.com/",
+  "minimum-stability": "dev"
 }
