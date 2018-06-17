@@ -39,6 +39,5 @@
   "support": {
 	"issues": "https://github.com/ninggf/wulaphp/issues"
   },
-  "homepage": "http://www.wulaphp.com/",
-  "minimum-stability": "dev"
+  "homepage": "http://www.wulaphp.com/"
 }
