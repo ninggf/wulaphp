@@ -20,7 +20,6 @@ use wulaphp\util\ObjectCaller;
  * @since   1.0.0
  */
 class App {
-
 	private $configs = [];//配置组
 	/**
 	 * @var Router
@@ -582,8 +581,15 @@ class App {
 		Response::redirect($url, '');
 	}
 
-	public static function base($url) {
-		if (preg_match('#^(/|https?://).+#', $url)) {
+	/**
+	 * 生成美丽的URL.
+	 *
+	 * @param string $url
+	 *
+	 * @return string
+	 */
+	public static function base(string $url) {
+		if (preg_match('#^(/|(ht|f)tps?://).+#', $url)) {
 			return $url;
 		}
 		$url = preg_replace('#/?index\.html?$#', '', $url);
@@ -600,7 +606,12 @@ class App {
 	 * @return string
 	 */
 	public static function url($url, $replace = true) {
-		$url = ltrim($url, '/');
+		static $alias = false;
+		if ($alias === false) {
+			$aliasFile = MODULES_PATH . 'alias.php';
+			$alias     = (array)include $aliasFile;
+		}
+		$url = trim($url, '/');
 
 		$urls = explode('/', $url);
 		if ($replace) {
@@ -613,8 +624,16 @@ class App {
 		if (self::$prefix) {
 			$urls[0] = str_replace(self::$prefix['char'], self::$prefix['prefix'], $urls[0]);
 		}
+		$rurl = implode('/', $urls);
+		//检测别名
+		if ($rurl) {
+			$key = array_search($rurl, $alias);
+			if ($key) {
+				$rurl = trim($key, '/');
+			}
+		}
 
-		return WWWROOT_DIR . implode('/', $urls);
+		return WWWROOT_DIR . $rurl;
 	}
 
 	/**
@@ -692,29 +711,10 @@ class App {
 	}
 
 	/**
-	 * 模块资源url.
-	 *
-	 * @param string $res
-	 * @param string $min
+	 * @param string $src src
 	 *
 	 * @return string
 	 */
-	public static function res($res, $min = '') {
-		$static_url = WWWROOT_DIR;
-		$url        = ltrim($res, '/');
-		$urls       = explode('/', $url);
-		$urls[0]    = App::id2dir($urls[0]);
-		$url        = implode('/', $urls);
-		if ($min || APP_MODE == 'pro') {
-			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
-			if (is_file(WWWROOT . MODULE_DIR . '/' . $url1)) {
-				$url = $url1;
-			}
-		}
-
-		return $static_url . MODULE_DIR . '/' . $url;
-	}
-
 	public static function src($src) {
 		static $static_url = false;
 		if ($static_url === false) {
@@ -857,9 +857,8 @@ class App {
 		if (!self::$app->router) {
 			self::$app->router = Router::getRouter();
 		}
-		$uri = Router::getURI();
 		try {
-			return self::$app->router->route($uri);
+			return self::$app->router->route();
 		} catch (\Exception $e) {
 			Response::respond(500, $e->getMessage());
 		}

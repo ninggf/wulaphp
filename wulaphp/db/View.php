@@ -240,8 +240,8 @@ abstract class View {
 	/**
 	 * 是否存在满足条件的记录.
 	 *
-	 * @param array|string|int  $con 条件.
-	 * @param string $id  字段.
+	 * @param array|string|int $con 条件.
+	 * @param string           $id  字段.
 	 *
 	 * @return boolean 有记数返回true,反之返回false.
 	 */

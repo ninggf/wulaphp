@@ -47,22 +47,50 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	}
 
 	public function __destruct() {
-		$this->fields     = null;
-		$this->resultSet  = null;
-		$this->resultSets = null;
-		$this->treeKey    = null;
-		$this->close();
+		parent::__destruct();
+		$this->fields      = null;
+		$this->resultSet   = null;
+		$this->resultSets  = null;
+		$this->treeKey     = null;
+		$this->eagerFields = null;
 	}
 
 	/**
-	 * 关闭statement
+	 * @param string $table
+	 * @param string $alias
+	 *
+	 * @return $this
 	 */
-	public function close() {
-		parent::close();
-		if ($this->statement) {
-			$this->statement->closeCursor();
-			$this->statement = null;
+	public function from($table, $alias = null) {
+		$this->from [] = self::parseAs($table, $alias);
+
+		return $this;
+	}
+
+	/**
+	 * @param $fields
+	 *
+	 * @return \wulaphp\db\sql\Query
+	 */
+	public function groupBy($fields) {
+		if (!empty ($fields)) {
+			$this->group [] = $fields;
 		}
+
+		return $this;
+	}
+
+	/**
+	 * @param $having
+	 *
+	 * @return \wulaphp\db\sql\Query
+	 */
+	public function having($having) {
+		if (!empty ($having)) {
+			$this->having [] = $having;
+		}
+
+		return $this;
 	}
 
 	/**
@@ -71,7 +99,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 * @param string|Query $field
 	 * @param string       $alias
 	 *
-	 * @return Query
+	 * @return \wulaphp\db\sql\Query
 	 */
 	public function field($field, $alias = null) {
 		if (is_string($field)) {
@@ -112,7 +140,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 *
 	 * @param bool $pad
 	 *
-	 * @return Query
+	 * @return \wulaphp\db\sql\Query
 	 */
 	public function treepad($pad = true) {
 		$this->treePad = $pad;
@@ -208,7 +236,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 *
 	 * @param string $id
 	 *
-	 * @return integer the number of result set.
+	 * @return int|false the number of result set.
 	 */
 	public function count($id = '*') {
 		if (!$this->countperformed) {
@@ -808,6 +836,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		}
 	}
 
+	/**
+	 * 生成一个空的查询.
+	 *
+	 * @return \wulaphp\db\sql\Query
+	 */
 	protected function emptyQuery() {
 		$q                 = new Query();
 		$q->resultSets     = [];

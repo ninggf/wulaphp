@@ -9,11 +9,25 @@ namespace wulaphp\db\sql;
  *
  */
 class DeleteSQL extends QueryBuilder {
+	use CudTrait;
+
+	/**
+	 * @param string $table
+	 * @param string $alias
+	 *
+	 * @return \wulaphp\db\sql\DeleteSQL
+	 */
+	public function from($table, $alias = null) {
+		$this->from [] = self::parseAs($table, $alias);
+
+		return $this;
+	}
+
 	/**
 	 * perform the delete sql, false for deleting failed.
 	 * Just call count() function for short.
 	 *
-	 * @return int
+	 * @return int|bool
 	 */
 	public function count() {
 		if (empty ($this->from)) {
@@ -21,7 +35,13 @@ class DeleteSQL extends QueryBuilder {
 
 			return false;
 		}
-		$this->checkDialect();
+		try {
+			$this->checkDialect();
+		} catch (\Exception $e) {
+			$this->error = $e->getMessage();
+
+			return false;
+		}
 		$values    = new BindValues ();
 		$from      = $this->prepareFrom($this->sanitize($this->from));
 		$order     = $this->sanitize($this->order);
@@ -70,9 +90,5 @@ class DeleteSQL extends QueryBuilder {
 		}
 
 		return false;
-	}
-
-	public function getSqlString() {
-		return $this->sql;
 	}
 }

@@ -7,15 +7,6 @@ use wulaphp\db\DialectException;
 
 /**
  * 查询基类
- *
- * @method toArray($var = null, $key = null, $rows = [], $cb = null)
- * @method get($index = 0, $field = null)
- * @method first()
- * @method exist($filed = null)
- * @method field($field, $alias = null)
- * @method tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0)
- * @method total($field)
- * @method recurse(&$crumbs, $idkey = 'id', $upkey = 'upid')
  */
 abstract class QueryBuilder {
 	const LEFT  = 'LEFT';
@@ -72,12 +63,16 @@ abstract class QueryBuilder {
 		$this->limit   = null;
 		$this->group   = null;
 		$this->order   = null;
+		if ($this->statement) {
+			$this->statement->closeCursor();
+			$this->statement = null;
+		}
 	}
 
 	/**
 	 * @param DatabaseDialect $dialect
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function setDialect(DatabaseDialect $dialect) {
 		$this->dialect = $dialect;
@@ -87,22 +82,10 @@ abstract class QueryBuilder {
 
 	/**
 	 * @param string $table
-	 * @param string $alias
-	 *
-	 * @return QueryBuilder
-	 */
-	public function from($table, $alias = null) {
-		$this->from [] = self::parseAs($table, $alias);
-
-		return $this;
-	}
-
-	/**
-	 * @param string $table
 	 * @param string $on
 	 * @param string $type
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function join($table, $on, $type = QueryBuilder::LEFT) {
 		$table          = self::parseAs($table);
@@ -118,7 +101,7 @@ abstract class QueryBuilder {
 	 * @param string $table
 	 * @param array  ...$on
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function left($table, ...$on) {
 		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::LEFT);
@@ -132,7 +115,7 @@ abstract class QueryBuilder {
 	 * @param string $table
 	 * @param array  ...$on
 	 *
-	 * @return  QueryBuilder
+	 * @return $this
 	 */
 	public function right($table, ...$on) {
 		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::RIGHT);
@@ -146,7 +129,7 @@ abstract class QueryBuilder {
 	 * @param string $table
 	 * @param array  ...$on
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function inner($table, ...$on) {
 		$this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::INNER);
@@ -160,7 +143,7 @@ abstract class QueryBuilder {
 	 * @param array|Condition $con
 	 * @param bool            $append
 	 *
-	 * @return \wulaphp\db\sql\QueryBuilder
+	 * @return $this
 	 */
 	public function where($con, $append = true) {
 		if (is_array($con) && !empty ($con)) {
@@ -184,7 +167,7 @@ abstract class QueryBuilder {
 	 *
 	 * @param $data
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function updateWhereData($data) {
 		$this->performed = false;
@@ -196,7 +179,7 @@ abstract class QueryBuilder {
 	/**
 	 * get the where condition.
 	 *
-	 * @return Condition
+	 * @return \wulaphp\db\sql\Condition
 	 */
 	public function getCondition() {
 		return $this->where;
@@ -208,39 +191,13 @@ abstract class QueryBuilder {
 	 * @return \wulaphp\db\sql\Condition
 	 */
 	public function getWhere() {
-		return $this->getCondition();
-	}
-
-	/**
-	 * @param $having
-	 *
-	 * @return QueryBuilder
-	 */
-	public function having($having) {
-		if (!empty ($having)) {
-			$this->having [] = $having;
-		}
-
-		return $this;
-	}
-
-	/**
-	 * @param $fields
-	 *
-	 * @return QueryBuilder
-	 */
-	public function groupBy($fields) {
-		if (!empty ($fields)) {
-			$this->group [] = $fields;
-		}
-
-		return $this;
+		return $this->where;
 	}
 
 	/**
 	 * @param $field
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function asc($field) {
 		$this->order [] = [$field, 'a'];
@@ -251,7 +208,7 @@ abstract class QueryBuilder {
 	/**
 	 * @param $field
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function desc($field) {
 		$this->order [] = [$field, 'd'];
@@ -264,7 +221,7 @@ abstract class QueryBuilder {
 	 *
 	 * @param string $rand
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function rand($rand = 'RAND') {
 		$this->order [] = [imv($rand), '()'];
@@ -280,7 +237,7 @@ abstract class QueryBuilder {
 	 * @param string|array $field 排序字段，多个字段使用,分隔.
 	 * @param string       $order a or d
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function sort($field = null, $order = 'a') {
 		if ($field === null) {
@@ -308,7 +265,7 @@ abstract class QueryBuilder {
 	 * @param int      $start start position or limit.
 	 * @param int|null $limit
 	 *
-	 * @return \wulaphp\db\sql\QueryBuilder
+	 * @return $this
 	 */
 	public function limit($start, $limit = null) {
 		if ($limit === null) {
@@ -341,7 +298,7 @@ abstract class QueryBuilder {
 	 * @param int|null $pageNo 页数,从1开始.
 	 * @param int      $size   默认每页20条
 	 *
-	 * @return \wulaphp\db\sql\QueryBuilder
+	 * @return $this
 	 */
 	public function page($pageNo = null, $size = 20) {
 		if ($pageNo === null) {
@@ -359,7 +316,7 @@ abstract class QueryBuilder {
 	/**
 	 * @param $alias
 	 *
-	 * @return QueryBuilder
+	 * @return $this
 	 */
 	public function alias($alias) {
 		$this->alias = $alias;
@@ -368,6 +325,7 @@ abstract class QueryBuilder {
 	}
 
 	/**
+	 * 获取别名.
 	 *
 	 * @return string the alias of the table this query used.
 	 */
@@ -378,7 +336,7 @@ abstract class QueryBuilder {
 	/**
 	 * get the dialect binding with this query.
 	 *
-	 * @return DatabaseDialect
+	 * @return \wulaphp\db\dialect\DatabaseDialect
 	 */
 	public function getDialect() {
 		try {
@@ -424,18 +382,37 @@ abstract class QueryBuilder {
 		$this->options = $options;
 	}
 
+	/**
+	 * 最后错误信息
+	 * @return string
+	 */
 	public function lastError() {
 		return $this->error;
 	}
 
+	/**
+	 * 最后错误信息
+	 * @see \wulaphp\db\sql\QueryBuilder::lastError()
+	 * @return string
+	 */
 	public function error() {
 		return $this->error;
 	}
 
+	/**
+	 * 最后出错的SQL.
+	 *
+	 * @return string
+	 */
 	public function lastSQL() {
 		return $this->errorSQL;
 	}
 
+	/**
+	 * 最后出错时的数据.
+	 *
+	 * @return array
+	 */
 	public function lastValues() {
 		return $this->errorValues;
 	}
@@ -458,83 +435,46 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * 上次执行是否成功.
-	 *
-	 * @return bool
+	 * 添加执行SQL记数
+	 * @deprecated
 	 */
-	public function success() {
-		return empty ($this->error) ? true : false;
-	}
-
-	/**
-	 * 获取 insert 语句生成的自增型ID.
-	 * @return int
-	 */
-	public function newId() {
-		$ids = [];
-		$cnt = $this->count();
-		if ($cnt === false) {
-			if ($this->exception instanceof \PDOException) {
-				throw $this->exception;
-			}
-		} else if ($this instanceof InsertSQL) {
-			$ids = $this->lastInsertIds();
-		}
-
-		return $ids ? $ids[0] : 0;
-	}
-
-	/**
-	 * 执行update,insert,delete语句.
-	 *
-	 * @param boolean $checkNum false 不检测,null直接返回影响的数量
-	 *                          是否检测影响的条数.
-	 *
-	 * @return boolean|int|mixed
-	 * @throws \PDOException
-	 */
-	public function exec($checkNum = false) {
-		$cnt = $this->count();
-		if ($cnt === false) {
-			if ($this->exception instanceof \PDOException) {
-				throw $this->exception;
-			}
-
-			return is_null($checkNum) ? 0 : false;
-		} else if ($this instanceof InsertSQL) {
-			if ($checkNum || is_null($checkNum)) {
-				return $cnt > 0;
-			} else {
-				$ids = $this->lastInsertIds();
-
-				return $ids;
-			}
-		} else if (is_null($checkNum)) {
-			return $cnt;
-		} else if ($checkNum) {
-			return $cnt > 0;
-		} else {
-			return true;
-		}
-	}
-
-	/**
-	 * 返回影响的行数.
-	 *
-	 * @return int
-	 */
-	public function affected() {
-		return $this->exec(null);
-	}
-
 	public static function addSqlCount() {
 		self::$sqlCount++;
 	}
 
+	/**
+	 * 获取执行的SQL语句数量.
+	 *
+	 * @return int
+	 * @deprecated
+	 */
 	public static function getSqlCount() {
 		return self::$sqlCount;
 	}
 
+	/**
+	 * work through an array to sanitize it, do not call this function directly.
+	 * it is used internally.
+	 *
+	 * @see        sanitize()
+	 *
+	 * @param mixed $item
+	 *
+	 * @deprecated
+	 */
+	public function sanitizeAry(&$item) {
+		if (is_string($item)) {
+			$item = $this->dialect->sanitize($item);
+		}
+	}
+
+	/**
+	 * 清洗数据.
+	 *
+	 * @param array|string $var
+	 *
+	 * @return array|string
+	 */
 	protected function sanitize($var) {
 		try {
 			$this->checkDialect();
@@ -554,22 +494,14 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * work through an array to sanitize it, do not call this function directly.
-	 * it is used internally.
+	 * 解析AS语句.
 	 *
-	 * @see        sanitize()
+	 * @param string      $str
+	 * @param null|string $alias1
 	 *
-	 * @param mixed $item
-	 *
-	 * @deprecated
+	 * @return array
 	 */
-	public function sanitizeAry(&$item) {
-		if (is_string($item)) {
-			$item = $this->dialect->sanitize($item);
-		}
-	}
-
-	protected static function parseAs($str, $alias1 = null) {
+	protected static function parseAs(string $str, ?string $alias1 = null) {
 		$table = preg_split('#\b(as|\s+)\b#i', trim($str));
 		if (count($table) == 1) {
 			$name  = $table [0];
@@ -582,6 +514,13 @@ abstract class QueryBuilder {
 		return [trim($name), $alias];
 	}
 
+	/**
+	 * 解析表.
+	 *
+	 * @param array $froms
+	 *
+	 * @return array
+	 */
 	protected function prepareFrom($froms) {
 		$_froms = [];
 		if ($froms) {
@@ -595,6 +534,13 @@ abstract class QueryBuilder {
 		return $_froms;
 	}
 
+	/**
+	 * 解析连接查询.
+	 *
+	 * @param array $joins
+	 *
+	 * @return array
+	 */
 	protected function prepareJoins($joins) {
 		$_joins = [];
 		if ($joins) {
@@ -646,7 +592,7 @@ abstract class QueryBuilder {
 	public abstract function count();
 
 	/**
-	 *
+	 * 最后执行的SQL语句.
 	 * @return string
 	 */
 	public abstract function getSqlString();

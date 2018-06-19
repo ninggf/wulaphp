@@ -3,7 +3,7 @@
 namespace wulaphp\db\sql;
 
 class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate {
-
+	use CudTrait;
 	private $intoTable;
 
 	private $datas;
@@ -49,7 +49,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 * just use count() function to perform this SQL and get the affected rows(inserted)
 	 *
 	 * @see Countable::count()
-	 * @return int
+	 * @return int|false
 	 */
 	public function count() {
 		if (empty ($this->intoTable)) {
@@ -62,7 +62,13 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 
 			return false;
 		}
-		$this->checkDialect();
+		try {
+			$this->checkDialect();
+		} catch (\Exception $e) {
+			$this->error = $e->getMessage();
+
+			return false;
+		}
 		$values    = new BindValues ();
 		$ids       = array_keys($this->datas);
 		$data      = $this->batch ? $this->datas [ $ids [0] ] : $this->datas;
@@ -111,7 +117,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 				if ($rst) {
 					$this->ids [] = $this->dialect->lastInsertId($this->keyField);
 
-					return 1;
+					return $statement->rowCount();
 				} else {
 					$this->dumpSQL($statement);
 				}
@@ -137,6 +143,26 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 		return false;
 	}
 
+	/**
+	 * 获取 insert 语句生成的自增型ID.
+	 * @return int
+	 */
+	public function newId() {
+		$ids = [];
+		$cnt = $this->count();
+		if ($cnt === false) {
+			if ($this->exception instanceof \PDOException) {
+				$this->error = $this->exception->getMessage();
+
+				return 0;
+			}
+		} else if ($this instanceof InsertSQL) {
+			$ids = $this->lastInsertIds();
+		}
+
+		return $ids ? $ids[0] : 0;
+	}
+
 	public function offsetExists($offset) {
 		return isset ($this->ids [ $offset ]);
 	}
@@ -158,21 +184,23 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	/**
 	 * get the last inserted id
 	 *
-	 * @param string $name
+	 * @param string $field
 	 *
 	 * @return int
 	 */
-	public function lastId($name = null) {
-		$this->checkDialect();
+	public function lastId($field = null) {
+		try {
+			$this->checkDialect();
+		} catch (\Exception $e) {
+			$this->error = $e->getMessage();
 
-		return $this->dialect->lastInsertId($name);
+			return 0;
+		}
+
+		return $this->dialect->lastInsertId($field);
 	}
 
 	public function getIterator() {
 		return new \ArrayIterator ($this->ids);
-	}
-
-	public function getSqlString() {
-		return $this->sql;
 	}
 }

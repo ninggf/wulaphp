@@ -183,15 +183,6 @@ function smarty_modifiercompiler_action($params, $compiler) {
 	return "wulaphp\\app\\App::action({$params[0]})";
 }
 
-function smarty_modifiercompiler_res($params, $compiler) {
-	$min = "''";
-	if (isset($params[1])) {
-		$min = $params[1];
-	}
-
-	return "wulaphp\\app\\App::res({$params[0]},$min)";
-}
-
 function smarty_modifiercompiler_cdn($params, $compiler) {
 	$min = "''";
 	if (isset($params[1])) {
@@ -347,7 +338,7 @@ function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/htm
  */
 function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) {
 	$theme   = apply_filter('get_theme', 'default', $data);
-	$tpl     = apply_filter(('get_tpl'), $tpl, $data);
+	$tpl     = apply_filter('get_tpl', $tpl, $data);
 	$tplname = str_replace(['/', '.'], '_', basename($tpl, '.tpl'));
 	$tplfile = $_tpl = $theme . DS . $tpl;
 	if (!is_file(THEME_PATH . $_tpl) && $theme != 'default') {

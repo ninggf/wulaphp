@@ -9,17 +9,22 @@ namespace wulaphp\db\sql;
  *
  */
 class UpdateSQL extends QueryBuilder {
-
+	use CudTrait;
 	private $data  = [];
 	private $batch = false;
 
+	/**
+	 * 创建一个更新语句.
+	 *
+	 * @param string|array $table
+	 */
 	public function __construct($table) {
 		if (is_array($table)) {
 			foreach ($table as $t) {
-				$this->from($t);
+				$this->from [] = self::parseAs($t);
 			}
 		} else {
-			$this->from($table);
+			$this->from [] = self::parseAs($table);
 		}
 	}
 
@@ -38,13 +43,23 @@ class UpdateSQL extends QueryBuilder {
 		return $this;
 	}
 
+	/**
+	 * 执行
+	 * @return bool|int
+	 */
 	public function count() {
 		if (empty ($this->from)) {
 			$this->error = 'no table specified!';
 
 			return false;
 		}
-		$this->checkDialect();
+		try {
+			$this->checkDialect();
+		} catch (\Exception $e) {
+			$this->error = $e->getMessage();
+
+			return false;
+		}
 		$values = new BindValues ();
 		$froms  = $this->prepareFrom($this->sanitize($this->from));
 		$order  = $this->sanitize($this->order);
@@ -127,9 +142,5 @@ class UpdateSQL extends QueryBuilder {
 		}
 
 		return false;
-	}
-
-	public function getSqlString() {
-		return $this->sql;
 	}
 }

@@ -21,6 +21,7 @@ class Router {
 	private $requestURL    = null;//解析后的URL
 	private $queryParams   = [];//URL的请求参数
 
+	public $requestURI;//请求URI
 	/**
 	 * @var Router
 	 */
@@ -168,22 +169,22 @@ class Router {
 	/**
 	 * 将URL解析后分发给分发器处理.
 	 *
-	 * @param string $uri
-	 *
 	 * @filter router\parse_url url
 	 * @throws \Exception when no router
 	 * @return mixed when run in cli-server return false for assets.
 	 */
-	public function route($uri = '') {
+	public function route() {
 		$response = Response::getInstance();
+		$uri      = self::getURI();
 		if ($uri == '/' || !$uri) {
 			$uri = '/index.html';
 		}
 		//解析url
-		$url              = apply_filter('router\parse_url', trim(parse_url($uri, PHP_URL_PATH), '/'));
+		$this->requestURI = parse_url($uri, PHP_URL_PATH);
+		$url              = apply_filter('router\parse_url', trim($this->requestURI, '/'));
 		$this->requestURL = $url;
 		//从原生的URL中解析出参数
-		$query = parse_url($uri, PHP_URL_QUERY);
+		$query = @parse_url($uri, PHP_URL_QUERY);
 		$args  = [];
 		if ($query) {
 			parse_str($query, $args);
@@ -228,8 +229,6 @@ class Router {
 			}
 			if (is_array($view) || $view) {
 				$response->output($view);
-			} else if (PHP_RUNTIME_NAME == 'cli-server' && is_file(WWWROOT . $url)) {
-				return false;
 			} else if (DEBUG < DEBUG_ERROR) {
 				throw new \Exception(__('No route for %s', $uri));
 			} else {
@@ -288,7 +287,6 @@ class Router {
 			'xml'  => 'application/xml',
 			'swf'  => 'application/x-shockwave-flash',
 			'flv'  => 'video/x-flv',
-			// images
 			'png'  => 'image/png',
 			'jpe'  => 'image/jpeg',
 			'jpeg' => 'image/jpeg',
@@ -300,30 +298,25 @@ class Router {
 			'tif'  => 'image/tiff',
 			'svg'  => 'image/svg+xml',
 			'svgz' => 'image/svg+xml',
-			// archives
 			'zip'  => 'application/zip',
 			'rar'  => 'application/x-rar-compressed',
 			'exe'  => 'application/x-msdownload',
 			'msi'  => 'application/x-msdownload',
 			'cab'  => 'application/vnd.ms-cab-compressed',
-			// audio/video
 			'mp3'  => 'audio/mpeg',
 			'qt'   => 'video/quicktime',
 			'mov'  => 'video/quicktime',
-			// adobe
 			'pdf'  => 'application/pdf',
 			'psd'  => 'image/vnd.adobe.photoshop',
 			'ai'   => 'application/postscript',
 			'eps'  => 'application/postscript',
 			'ps'   => 'application/postscript',
-			// ms office
 			'doc'  => 'application/msword',
 			'rtf'  => 'application/rtf',
 			'xls'  => 'application/vnd.ms-excel',
 			'ppt'  => 'application/vnd.ms-powerpoint',
-			// open office
 			'odt'  => 'application/vnd.oasis.opendocument.text',
-			'ods'  => 'application/vnd.oasis.opendocument.spreadsheet',
+			'ods'  => 'application/vnd.oasis.opendocument.spreadsheet'
 		];
 		$chks = explode('.', $filename);
 		$ext  = strtolower(array_pop($chks));

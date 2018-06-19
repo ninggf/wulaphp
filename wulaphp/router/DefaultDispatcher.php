@@ -30,7 +30,19 @@ class DefaultDispatcher implements IURLDispatcher {
 	 * @return \wulaphp\mvc\view\View
 	 * @throws \Exception
 	 */
-	public function dispatch($url, $router, $parsedInfo) {
+	public function dispatch($url, $router, $parsedInfo): ?View {
+		//检测请求是否合法
+		if ($router->requestURI[ -1 ] == '/') {
+			return null;
+		}
+		$aliasFile = MODULES_PATH . 'alias.php';
+		if ($url && is_file($aliasFile)) {
+			$alias = include $aliasFile;
+			$alias = (array)$alias;
+			if (isset($alias[ $url ]) && $alias[ $url ]) {
+				$url = $alias[ $url ];
+			}
+		}
 		$controllers = explode('/', $url);
 		$pms         = [];
 		$len         = count($controllers);
@@ -326,6 +338,8 @@ class DefaultDispatcher implements IURLDispatcher {
 	}
 
 	/**
+	 * 准备视图.
+	 *
 	 * @param mixed                              $view
 	 * @param string                             $module
 	 * @param \wulaphp\mvc\controller\Controller $clz
@@ -350,5 +364,4 @@ class DefaultDispatcher implements IURLDispatcher {
 			}
 		}
 	}
-
 }
