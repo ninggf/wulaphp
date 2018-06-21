@@ -234,7 +234,7 @@ class DatabaseConnection {
 	 *
 	 * @param string $sql
 	 *
-	 * @return mixed
+	 * @return bool|int
 	 */
 	public function exec($sql) {
 		$dialect = $this->dialect;
@@ -246,14 +246,13 @@ class DatabaseConnection {
 			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
 				return $dialect->getTableName($r[0]);
 			}, $sql);
-			$dialect->exec($sql);
+
+			return $dialect->exec($sql);
 		} catch (\Exception $e) {
 			$this->error = $e->getMessage();
 
 			return false;
 		}
-
-		return true;
 	}
 
 	/**

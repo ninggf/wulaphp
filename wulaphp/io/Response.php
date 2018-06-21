@@ -30,10 +30,18 @@ class Response {
 	public function __construct() {
 		if (self::$INSTANCE == null) {
 			if (!@ini_get('zlib.output_compression') && @ob_get_status()) {
-				$this->before_out = @ob_get_contents();
-				@ob_end_clean();
+				$this->before_out = @ob_get_clean();
 			}
-			@ob_start([$this, 'ob_out_handler']);
+			if (!ob_start(function ($content) {
+				$this->content = apply_filter('filter_output_content', $content);
+				if ($this->before_out && DEBUG == DEBUG_DEBUG) {
+					log_warn($this->before_out, 'bootstrap');
+				}
+
+				return $this->content;
+			})) {
+				die('cannot open response');
+			}
 			if (defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib')) {
 				$gzip = @ini_get('zlib.output_compression');
 				if (!$gzip) {
@@ -279,23 +287,6 @@ class Response {
 		}
 
 		return null;
-	}
-
-	/**
-	 * 此方法不应该直接调用，用于ob_start处理output buffer中的内容。
-	 *
-	 * @param string $content
-	 *
-	 * @filter filter_output_conten $content
-	 * @return string
-	 */
-	public function ob_out_handler($content) {
-		$this->content = apply_filter('filter_output_conten', $content);
-		if ($this->before_out && DEBUG == DEBUG_DEBUG) {
-			log_warn($this->before_out);
-		}
-
-		return $this->content;
 	}
 
 	/**

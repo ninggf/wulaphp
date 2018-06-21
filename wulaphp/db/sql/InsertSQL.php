@@ -24,9 +24,22 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 *
 	 * @param string $key
 	 *
-	 * @return InsertSQL
+	 * @return \wulaphp\db\sql\InsertSQL
 	 */
 	public function autoKey($key) {
+		$this->keyField = $key;
+
+		return $this;
+	}
+
+	/**
+	 * alias of autoKey
+	 *
+	 * @param string $field
+	 *
+	 * @return $this
+	 */
+	public function autoField($field) {
 		$this->keyField = $key;
 
 		return $this;
@@ -37,7 +50,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 *
 	 * @param string $table
 	 *
-	 * @return QueryBuilder
+	 * @return  \wulaphp\db\sql\InsertSQL
 	 */
 	public function into($table) {
 		$this->intoTable = $table;

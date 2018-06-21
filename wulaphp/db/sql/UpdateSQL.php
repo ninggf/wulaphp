@@ -34,7 +34,7 @@ class UpdateSQL extends QueryBuilder {
 	 * @param array $data
 	 * @param bool  $batch
 	 *
-	 * @return UpdateSQL
+	 * @return $this
 	 */
 	public function set($data, $batch = false) {
 		$this->data  = $data;

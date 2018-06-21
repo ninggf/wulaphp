@@ -609,7 +609,11 @@ class App {
 		static $alias = false;
 		if ($alias === false) {
 			$aliasFile = MODULES_PATH . 'alias.php';
-			$alias     = (array)include $aliasFile;
+			if (is_file($aliasFile)) {
+				$alias = (array)include $aliasFile;
+			} else {
+				$alias = [];
+			}
 		}
 		$url = trim($url, '/');
 
