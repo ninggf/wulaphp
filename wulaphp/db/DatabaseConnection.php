@@ -247,12 +247,14 @@ class DatabaseConnection {
 				return $dialect->getTableName($r[0]);
 			}, $sql);
 
-			return $dialect->exec($sql);
+			$dialect->exec($sql);
 		} catch (\Exception $e) {
 			$this->error = $e->getMessage();
 
 			return false;
 		}
+
+		return true;
 	}
 
 	/**
