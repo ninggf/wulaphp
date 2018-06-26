@@ -715,6 +715,27 @@ class App {
 	}
 
 	/**
+	 * 模块资源url.
+	 *
+	 * @param string $res
+	 * @param string $min
+	 *
+	 * @return string
+	 */
+	public static function res($res, $min = '') {
+		$static_url = WWWROOT_DIR;
+		$url        = ltrim($res, '/');
+		if ($min || APP_MODE == 'pro') {
+			$url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
+			if (is_file(WWWROOT . ASSETS_DIR . '/' . $url1)) {
+				$url = $url1;
+			}
+		}
+
+		return $static_url . ASSETS_DIR . '/' . $url;
+	}
+
+	/**
 	 * @param string $src src
 	 *
 	 * @return string
