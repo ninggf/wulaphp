@@ -287,7 +287,6 @@ class DatabaseConnection {
 			return null;
 		}
 		try {
-
 			// 表前缀处理
 			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
 				return $dialect->getTableName($r[0]);
@@ -295,7 +294,7 @@ class DatabaseConnection {
 			if ($args) {
 				// 参数处理
 				$params = 0;
-				$sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+				$sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect, $sql) {
 					if ($r[1] == 'f') {
 						$v = floatval($args[ $params ]);
 					} else if ($r[1] == 'd') {
@@ -303,6 +302,11 @@ class DatabaseConnection {
 					} else {
 						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
 					}
+
+					if (is_array($args[ $params ]) || is_object($args[ $params ])) {
+						log_warn('wrong sql arg --' . $sql . ' args: ' . var_export($args, true));
+					}
+
 					$params++;
 
 					return $v;
@@ -377,13 +381,16 @@ class DatabaseConnection {
 			}, $sql);
 			if ($args) {
 				$params = 0;
-				$sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+				$sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect, $sql) {
 					if ($r[1] == 'f') {
 						$v = floatval($args[ $params ]);
 					} else if ($r[1] == 'd') {
 						$v = intval($args[ $params ]);
 					} else {
 						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
+					}
+					if (is_array($args[ $params ]) || is_object($args[ $params ])) {
+						log_warn('wrong sql arg --' . $sql . ' args: ' . var_export($args, true));
 					}
 					$params++;
 
