@@ -506,15 +506,6 @@ class XssCleaner {
 	 *
 	 * @return string
 	 */
-	/*
-	 * ------------------------------------------------- /* Replacement for html_entity_decode() /* -------------------------------------------------
-	 */
-
-	/*
-	 * NOTE: html_entity_decode() has a bug in some PHP versions when UTF-8 is the
-	 * character set, and the PHP developers said they were not back porting the
-	 * fix to versions other than PHP 5.x.
-	 */
 	private function _html_entity_decode($str, $charset = 'UTF-8') {
 		if (stristr($str, '&') === false) return $str;
 
@@ -526,14 +517,22 @@ class XssCleaner {
 
 		if (function_exists('html_entity_decode') && (strtolower($charset) != 'utf-8' or version_compare(phpversion(), '5.0.0', '>='))) {
 			$str = html_entity_decode($str, ENT_COMPAT, $charset);
-			$str = preg_replace('~&#x(0*[0-9a-f]{2,5})~ei', 'chr(hexdec("\\1"))', $str);
+			$str = preg_replace_callback('~&#x(0*[0-9a-f]{2,5})~i', function ($m) {
+				return 'chr(hexdec("' . $m[1] . '"))';
+			}, $str);
 
-			return preg_replace('~&#([0-9]{2,4})~e', 'chr(\\1)', $str);
+			return preg_replace_callback('~&#([0-9]{2,4})~', function ($m) {
+				return 'chr(' . $m[1] . ')';
+			}, $str);
 		}
 
 		// Numeric Entities
-		$str = preg_replace('~&#x(0*[0-9a-f]{2,5});{0,1}~ei', 'chr(hexdec("\\1"))', $str);
-		$str = preg_replace('~&#([0-9]{2,4});{0,1}~e', 'chr(\\1)', $str);
+		$str = preg_replace('~&#x(0*[0-9a-f]{2,5});{0,1}~i', function ($m) {
+			return 'chr(hexdec("' . $m[1] . '"))';
+		}, $str);
+		$str = preg_replace('~&#([0-9]{2,4});{0,1}~', function ($m) {
+			return 'chr(' . $m[1] . ')';
+		}, $str);
 
 		// Literal Entities - Slightly slow so we do another check
 		if (stristr($str, '&') === false) {

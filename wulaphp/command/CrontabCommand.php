@@ -55,7 +55,7 @@ class CrontabCommand extends ArtisanMonitoredTask {
 
 			return false;
 		}
-		if (isset($options['s']) && !preg_match('/^(0|[1-5]\d)$/', $options['s'])) {
+		if (isset($options['s']) && !preg_match('/^(0|[1-5]\d?)$/', $options['s'])) {
 			$this->error('arg s must be 0-59');
 
 			return false;
