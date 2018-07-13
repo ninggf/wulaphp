@@ -2,6 +2,6 @@
   "name": "{$name}",
   "type": "wula-{$type}",
   "require": {
-	"wula/wula-installer": "^1.0"
+	"wula/wula-installer": "^2.0"
   }
 }
