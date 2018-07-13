@@ -608,9 +608,13 @@ class App {
 	public static function url($url, $replace = true) {
 		static $alias = false;
 		if ($alias === false) {
-			$aliasFile = MODULES_PATH . 'alias.php';
-			if (is_file($aliasFile)) {
-				$alias = (array)include $aliasFile;
+			if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
+				$aliasFile = MODULES_PATH . 'alias.php';
+				if (is_file($aliasFile)) {
+					$alias = (array)include $aliasFile;
+				} else {
+					$alias = [];
+				}
 			} else {
 				$alias = [];
 			}

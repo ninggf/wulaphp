@@ -25,7 +25,7 @@ class ImmutableValue {
 	 * @param string $value
 	 * @param null   $alias
 	 */
-	public function __construct($value, $alias = null) {
+	public function __construct(string $value, string $alias = null) {
 		$this->value = (string)$value;
 		$this->alias = $alias;
 	}
@@ -37,7 +37,7 @@ class ImmutableValue {
 	 *
 	 * @return \wulaphp\db\sql\ImmutableValue
 	 */
-	public function setDialect(DatabaseDialect $dialect) {
+	public function setDialect(DatabaseDialect $dialect): ImmutableValue {
 		$this->dialect = $dialect;
 
 		return $this;
@@ -50,7 +50,7 @@ class ImmutableValue {
 	 *
 	 * @return \wulaphp\db\sql\ImmutableValue
 	 */
-	public function alias($alias) {
+	public function alias(string $alias): ImmutableValue {
 		$this->alias = $alias;
 
 		return $this;
@@ -61,7 +61,7 @@ class ImmutableValue {
 	 *
 	 * @return \wulaphp\db\sql\ImmutableValue
 	 */
-	public function noquote() {
+	public function noquote(): ImmutableValue {
 		$this->nquote = true;
 
 		return $this;
@@ -70,11 +70,11 @@ class ImmutableValue {
 	/**
 	 * @return string
 	 */
-	public function getValue() {
+	public function getValue(): string {
 		return $this->__toString();
 	}
 
-	public function __toString() {
+	public function __toString(): string {
 		$dialect = $this->dialect;
 		if ($dialect == null || $this->nquote) {
 			$value = $this->value;

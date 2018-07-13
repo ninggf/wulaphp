@@ -9,12 +9,18 @@ namespace wulaphp\db\sql;
  *
  */
 class BindValues implements \IteratorAggregate {
+	private $names  = [];
+	private $values = [];
 
-	private $names = array();
-
-	private $values = array();
-
-	public function addValue($field, $value) {
+	/**
+	 * 将值添加到绑定中.
+	 *
+	 * @param string $field
+	 * @param mixed  $value
+	 *
+	 * @return string
+	 */
+	public function addValue(string $field, $value): string {
 		$rfield = str_replace('`', '', $field);
 		$field  = Condition::safeField($field);
 		$index  = isset ($this->names [ $field ]) ? $this->names [ $field ] : 0;
@@ -37,17 +43,25 @@ class BindValues implements \IteratorAggregate {
 		return $key;
 	}
 
-	public function getIterator() {
+	/**
+	 * @return \ArrayIterator
+	 */
+	public function getIterator(): \ArrayIterator {
 		return new \ArrayIterator ($this->values);
 	}
 
-	public function has($name) {
+	/**
+	 * @param string $name
+	 *
+	 * @return bool
+	 */
+	public function has(string $name): bool {
 		$field = Condition::safeField($name);
 
 		return isset ($this->names [ $field ]);
 	}
 
-	public function __toString() {
+	public function __toString(): string {
 		$valString = array();
 		foreach ($this->values as $val) {
 			$valString [] = $val [0] . ' = ' . $val [1] . ' [' . $val [2] . ']';

@@ -61,7 +61,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 *
 	 * @return $this
 	 */
-	public function from($table, $alias = null) {
+	public function from(string $table, string $alias = null) {
 		$this->from [] = self::parseAs($table, $alias);
 
 		return $this;

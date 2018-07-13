@@ -5,13 +5,9 @@ namespace wulaphp\db\sql;
 class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate {
 	use CudTrait;
 	private $intoTable;
-
 	private $datas;
-
 	private $batch;
-
-	private $ids = [];
-
+	private $ids      = [];
 	private $keyField = null;
 
 	public function __construct($datas, $batch = false) {
@@ -26,7 +22,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 *
 	 * @return \wulaphp\db\sql\InsertSQL
 	 */
-	public function autoKey($key) {
+	public function autoKey(string $key): InsertSQL {
 		$this->keyField = $key;
 
 		return $this;
@@ -39,7 +35,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 *
 	 * @return $this
 	 */
-	public function autoField($field) {
+	public function autoField(string $field): InsertSQL {
 		$this->keyField = $key;
 
 		return $this;
@@ -52,7 +48,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 *
 	 * @return  \wulaphp\db\sql\InsertSQL
 	 */
-	public function into($table) {
+	public function into(string $table): InsertSQL {
 		$this->intoTable = $table;
 
 		return $this;
@@ -160,7 +156,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 * 获取 insert 语句生成的自增型ID.
 	 * @return int
 	 */
-	public function newId() {
+	public function newId(): int {
 		$ids = [];
 		$cnt = $this->count();
 		if ($cnt === false) {
@@ -201,7 +197,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 *
 	 * @return int
 	 */
-	public function lastId($field = null) {
+	public function lastId($field = null): int {
 		try {
 			$this->checkDialect();
 		} catch (\Exception $e) {
@@ -213,7 +209,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 		return $this->dialect->lastInsertId($field);
 	}
 
-	public function getIterator() {
+	public function getIterator(): \ArrayIterator {
 		return new \ArrayIterator ($this->ids);
 	}
 }

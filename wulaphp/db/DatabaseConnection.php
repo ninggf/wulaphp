@@ -20,10 +20,11 @@ class DatabaseConnection {
 	/**
 	 * @var \wulaphp\db\dialect\DatabaseDialect
 	 */
-	private        $dialect = null;
-	public         $error   = null;
-	private        $name;
-	private static $dbs     = [];
+	private        $dialect    = null;
+	public         $error      = null;
+	private        $name       = '';
+	private        $transLevel = 0;
+	private static $dbs        = [];
 
 	/**
 	 * DatabaseConnection constructor.
@@ -32,7 +33,7 @@ class DatabaseConnection {
 	 *
 	 * @throws
 	 */
-	public function __construct($dialect) {
+	public function __construct(DatabaseDialect $dialect) {
 		if (!$dialect instanceof DatabaseDialect) {
 			throw new \Exception('the dialect is not instance of DatabaseDialect');
 		}
@@ -47,7 +48,7 @@ class DatabaseConnection {
 	 * @return DatabaseConnection
 	 * @throws \Exception
 	 */
-	public static function connect($name = null) {
+	public static function connect($name = null): DatabaseConnection {
 		if ($name instanceof DatabaseConnection) {
 			return $name;
 		}
@@ -89,10 +90,11 @@ class DatabaseConnection {
 	}
 
 	/**
+	 * 获取数据库驱动.
 	 *
 	 * @return \wulaphp\db\dialect\DatabaseDialect
 	 */
-	public function getDialect() {
+	public function getDialect(): DatabaseDialect {
 		return $this->dialect;
 	}
 
@@ -125,15 +127,19 @@ class DatabaseConnection {
 	 *
 	 * @return boolean
 	 */
-	public function start() {
+	public function start(): bool {
 		if ($this->dialect) {
-			$dialect = $this->dialect;
+			//允许事务嵌套
+			$this->transLevel += 1;
+			$dialect          = $this->dialect;
 			if ($dialect->inTransaction()) {
 				return true;
 			}
 			$rst = $dialect->beginTransaction();
 			if ($rst) {
 				return true;
+			} else {
+				$this->transLevel -= 1;
 			}
 		}
 
@@ -144,11 +150,17 @@ class DatabaseConnection {
 	 * commit a transaction
 	 * @return bool
 	 */
-	public function commit() {
+	public function commit(): bool {
 		if ($this->dialect) {
 			$dialect = $this->dialect;
 			if ($dialect->inTransaction()) {
+				$this->transLevel -= 1;
+				if ($this->transLevel > 0) {
+					return true;
+				}
 				try {
+					$this->transLevel = 0;
+
 					return $dialect->commit();
 				} catch (\PDOException $e) {
 					$this->error = $e->getMessage();
@@ -167,12 +179,31 @@ class DatabaseConnection {
 		if ($this->dialect) {
 			$dialect = $this->dialect;
 			if ($dialect->inTransaction()) {
+				$this->transLevel -= 1;
+				if ($this->transLevel > 0) {
+					return true;
+				}
 				try {
+					$this->transLevel = 0;
+
 					return $dialect->rollBack();
 				} catch (\PDOException $e) {
 					$this->error = $e->getMessage();
 				}
 			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * 是否在事务里.
+	 *
+	 * @return bool
+	 */
+	public function inTrans(): bool {
+		if ($this->dialect) {
+			return $this->dialect->inTransaction();
 		}
 
 		return false;
@@ -191,7 +222,7 @@ class DatabaseConnection {
 	 *
 	 * @return mixed|null  事务过程函数的返回值或null
 	 */
-	public function trans(\Closure $trans, &$error = null, ILock $lock = null) {
+	public function trans(\Closure $trans, string &$error = null, ILock $lock = null) {
 		try {
 			$rst = $this->start();
 			if ($rst) {
@@ -236,7 +267,7 @@ class DatabaseConnection {
 	 *
 	 * @return bool|int
 	 */
-	public function exec($sql) {
+	public function exec(string $sql) {
 		$dialect = $this->dialect;
 		if (is_null($dialect)) {
 			return false;
@@ -264,7 +295,7 @@ class DatabaseConnection {
 	 *
 	 * @return null|string
 	 */
-	public function lastInsertId($name = null) {
+	public function lastInsertId(string $name = null): ?string {
 		$dialect = $this->dialect;
 		if (is_null($dialect)) {
 			return null;
@@ -277,16 +308,16 @@ class DatabaseConnection {
 	 *
 	 * 执行delete,update, insert SQL.
 	 *
-	 * @param string $sql
-	 * @param mixed  ...$args
+	 * @param string   $sql
+	 * @param string[] ...$args
 	 *
 	 * @return int|null
 	 */
-	public function cud($sql, ...$args) {
-		$dialect = $this->dialect;
-		if (is_null($dialect)) {
+	public function cud(string $sql, string ...$args): ?int {
+		if (is_null($this->dialect)) {
 			return null;
 		}
+		$dialect = $this->dialect;
 		try {
 			// 表前缀处理
 			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
@@ -303,11 +334,6 @@ class DatabaseConnection {
 					} else {
 						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
 					}
-
-					if (is_array($args[ $params ]) || is_object($args[ $params ])) {
-						log_warn('wrong sql arg --' . $sql . ' args: ' . var_export($args, true));
-					}
-
 					$params++;
 
 					return $v;
@@ -327,12 +353,12 @@ class DatabaseConnection {
 	/**
 	 * 删除0行也算成功.
 	 *
-	 * @param string $sql
-	 * @param mixed  ...$args
+	 * @param string   $sql
+	 * @param string[] ...$args
 	 *
 	 * @return bool
 	 */
-	public function cudx($sql, ...$args) {
+	public function cudx(string $sql, string ...$args): bool {
 		$rst = $this->cud($sql, ...$args);
 		if ($rst === null) {
 			return false;
@@ -345,12 +371,12 @@ class DatabaseConnection {
 	 *
 	 * 执行SQL查询,select a from a where a=%s and %d.
 	 *
-	 * @param string $sql
-	 * @param array  $args
+	 * @param string   $sql
+	 * @param string[] $args
 	 *
 	 * @return array
 	 */
-	public function query($sql, ...$args) {
+	public function query(string $sql, string ...$args): array {
 		$rst = $this->fetch($sql, ...$args);
 		if ($rst) {
 			$result = $rst->fetchAll(\PDO::FETCH_ASSOC);
@@ -365,16 +391,16 @@ class DatabaseConnection {
 	/**
 	 * 执行SQL查询,select a from a where a=%s and %d.
 	 *
-	 * @param string $sql
-	 * @param array  $args
+	 * @param string   $sql
+	 * @param string[] $args
 	 *
 	 * @return null|\PDOStatement
 	 */
-	public function fetch($sql, ...$args) {
-		$dialect = $this->dialect;
-		if (is_null($dialect)) {
+	public function fetch(string $sql, string ...$args): ?\PDOStatement {
+		if (is_null($this->dialect)) {
 			return null;
 		}
+		$dialect = $this->dialect;
 		try {
 			// 表前缀处理
 			$sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
@@ -389,9 +415,6 @@ class DatabaseConnection {
 						$v = intval($args[ $params ]);
 					} else {
 						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
-					}
-					if (is_array($args[ $params ]) || is_object($args[ $params ])) {
-						log_warn('wrong sql arg --' . $sql . ' args: ' . var_export($args, true));
 					}
 					$params++;
 
@@ -419,7 +442,7 @@ class DatabaseConnection {
 	 *
 	 * @return array|null
 	 */
-	public function queryOne($sql, ...$args) {
+	public function queryOne(string $sql, string ...$args): ?array {
 		$rst = $this->fetch($sql, ...$args);
 		if ($rst) {
 			$result = $rst->fetch(\PDO::FETCH_ASSOC);
@@ -438,7 +461,7 @@ class DatabaseConnection {
 	 *
 	 * @return \wulaphp\db\sql\Query
 	 */
-	public function select(...$fields) {
+	public function select(string ...$fields): Query {
 		$sql = new Query(...$fields);
 		$sql->setDialect($this->dialect);
 
@@ -452,7 +475,7 @@ class DatabaseConnection {
 	 *
 	 * @return \wulaphp\db\sql\UpdateSQL
 	 */
-	public function update(...$table) {
+	public function update(string ...$table): UpdateSQL {
 		$sql = new UpdateSQL($table);
 		$sql->setDialect($this->dialect);
 
@@ -464,7 +487,7 @@ class DatabaseConnection {
 	 *
 	 * @return \wulaphp\db\sql\DeleteSQL
 	 */
-	public function delete() {
+	public function delete(): DeleteSQL {
 		$sql = new DeleteSQL();
 		$sql->setDialect($this->dialect);
 
@@ -479,7 +502,7 @@ class DatabaseConnection {
 	 *
 	 * @return \wulaphp\db\sql\InsertSQL
 	 */
-	public function insert($data, $batch = false) {
+	public function insert($data, bool $batch = false): InsertSQL {
 		$sql = new InsertSQL($data, $batch);
 		$sql->setDialect($this->dialect);
 
@@ -493,7 +516,7 @@ class DatabaseConnection {
 	 *
 	 * @return \wulaphp\db\sql\InsertSQL
 	 */
-	public function inserts($datas) {
+	public function inserts(array $datas): InsertSQL {
 		return $this->insert($datas, true);
 	}
 
@@ -504,7 +527,7 @@ class DatabaseConnection {
 	 *
 	 * @return string
 	 */
-	public function getTableName($name) {
+	public function getTableName(string $name): string {
 		if ($this->dialect) {
 			return $this->dialect->getTableName($name);
 		}

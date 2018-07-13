@@ -25,7 +25,7 @@ class DefaultDispatcher implements IURLDispatcher {
 	 *
 	 * @param string        $url
 	 * @param Router        $router
-	 * @param UrlParsedInfo $parsedInfo ;
+	 * @param UrlParsedInfo $parsedInfo
 	 *
 	 * @return \wulaphp\mvc\view\View
 	 * @throws \Exception
@@ -35,12 +35,14 @@ class DefaultDispatcher implements IURLDispatcher {
 		if ($router->requestURI[ -1 ] == '/') {
 			return null;
 		}
-		$aliasFile = MODULES_PATH . 'alias.php';
-		if ($url && is_file($aliasFile)) {
-			$alias = include $aliasFile;
-			$alias = (array)$alias;
-			if (isset($alias[ $url ]) && $alias[ $url ]) {
-				$url = $alias[ $url ];
+		if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
+			$aliasFile = MODULES_PATH . 'alias.php';
+			if ($url && is_file($aliasFile)) {
+				$alias = include $aliasFile;
+				$alias = (array)$alias;
+				if (isset($alias[ $url ]) && $alias[ $url ]) {
+					$url = $alias[ $url ];
+				}
 			}
 		}
 		$controllers = explode('/', $url);

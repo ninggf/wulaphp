@@ -9,14 +9,17 @@
  */
 
 namespace wulaphp\db\sql;
-
+/**
+ * Trait CudTrait
+ * @package wulaphp\db\sql
+ */
 trait CudTrait {
 	/**
 	 * 上次执行是否成功.
 	 *
 	 * @return bool
 	 */
-	public function success() {
+	public function success(): bool {
 
 		return empty ($this->error) ? true : false;
 	}
@@ -24,7 +27,7 @@ trait CudTrait {
 	/**
 	 * @return bool
 	 */
-	public function go() {
+	public function go(): bool {
 		return $this->exec();
 	}
 
@@ -71,11 +74,14 @@ trait CudTrait {
 	 *
 	 * @return int
 	 */
-	public function affected() {
+	public function affected(): int {
 		return $this->exec(null);
 	}
 
-	public function getSqlString() {
-		return $this->sql;
+	/**
+	 * @return string
+	 */
+	public function getSqlString(): string {
+		return $this->sql ?? '';
 	}
 }

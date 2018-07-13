@@ -17,11 +17,9 @@ use wulaphp\db\dialect\DatabaseDialect;
  *
  */
 class Condition implements \ArrayAccess, \Countable {
-
 	private $conditions = [];
-
-	private $uniques = [];
-	private $alias   = null;
+	private $uniques    = [];
+	private $alias      = null;
 
 	public function __construct($con = [], $alias = null) {
 		$this->alias = $alias;
