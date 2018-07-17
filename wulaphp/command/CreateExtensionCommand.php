@@ -6,7 +6,7 @@ use wulaphp\artisan\ArtisanCommand;
 
 class CreateExtensionCommand extends ArtisanCommand {
 	public function cmd() {
-		return 'create:ext';
+		return 'create:extension';
 	}
 
 	public function desc() {

@@ -62,9 +62,14 @@ abstract class ArtisanCommand {
 	}
 
 	protected final function getOptions() {
+		static $options = null;
 		global $argv, $argc;
-		$op   = [];
-		$opts = $this->getOpts();
+		if ($options !== null) {
+			return $options;
+		}
+		$options = [];
+		$op      = [];
+		$opts    = $this->getOpts();
 		foreach ($opts as $opt => $msg) {
 			$opss                 = explode(':', $opt);
 			$l                    = count($opss);
@@ -76,7 +81,6 @@ abstract class ArtisanCommand {
 			$l                     = 10 + count($opss);
 			$op[ '--' . $opss[0] ] = $l;
 		}
-		$options = [];
 		foreach ($op as $o => $r) {
 			$key = trim($o, '-');
 			for ($i = 2; $i < $argc; $i++) {

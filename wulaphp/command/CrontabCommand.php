@@ -43,7 +43,7 @@ class CrontabCommand extends ArtisanMonitoredTask {
 		if (is_subclass_of($this->clz, '\wulaphp\util\ICrontabJob')) {
 			$rst = true;
 		} else {
-			$rst = is_file(APPROOT . 'crontab' . DS . $this->clz . '.php');
+			$rst = is_file(APPROOT . $this->clz);
 		}
 		if (!$rst) {
 			$this->error('invalid crontab class or script');
@@ -154,7 +154,7 @@ class CrontabCommand extends ArtisanMonitoredTask {
 	protected function getPidFilename($cmd) {
 		$this->clz = $this->opt(-2);
 
-		return $cmd . '-' . str_replace(['\\', DS], '-', trim($this->clz, '\\'));
+		return $cmd . '-' . md5($this->clz);
 	}
 }
 
@@ -163,7 +163,7 @@ class ScriptCrontab implements ICrontabJob {
 	public  $canRun;
 
 	public function __construct($script) {
-		$this->file   = APPROOT . 'crontab' . DS . $script . '.php';
+		$this->file   = APPROOT . $script;
 		$this->canRun = is_file($this->file);
 	}
 

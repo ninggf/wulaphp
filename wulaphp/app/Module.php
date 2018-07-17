@@ -46,7 +46,7 @@ abstract class Module {
 	/**
 	 * @return string 命名空间.
 	 */
-	public final function getNamespace() {
+	public final function getNamespace(): string {
 		return $this->namespace;
 	}
 
@@ -55,14 +55,14 @@ abstract class Module {
 	 *
 	 * @return string 路径
 	 */
-	public final function getPath($file = null) {
+	public final function getPath(string $file = null): string {
 		return $this->path . ($file ? DS . $file : '');
 	}
 
 	/**
 	 * @return string 目录名
 	 */
-	public final function getDirname() {
+	public final function getDirname(): string {
 		return $this->dirname;
 	}
 
@@ -71,7 +71,7 @@ abstract class Module {
 	 *
 	 * @return string
 	 */
-	public final function getCurrentVersion() {
+	public final function getCurrentVersion(): string {
 		return $this->currentVersion;
 	}
 

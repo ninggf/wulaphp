@@ -79,9 +79,11 @@ trait CudTrait {
 	}
 
 	/**
+	 * 获取SQL语句.
+	 *
 	 * @return string
 	 */
-	public function getSqlString(): string {
+	public function getSqlString() {
 		return $this->sql ?? '';
 	}
 }

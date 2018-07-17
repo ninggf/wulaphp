@@ -36,7 +36,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 	 * @return $this
 	 */
 	public function autoField(string $field): InsertSQL {
-		$this->keyField = $key;
+		$this->keyField = $field;
 
 		return $this;
 	}

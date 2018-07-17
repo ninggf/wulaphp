@@ -28,11 +28,12 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 
 	/**
 	 * Query constructor.
+	 *
+	 * @param string|\wulaphp\db\sql\ImmutableValue|\wulaphp\db\sql\Query ...$fields
 	 */
-	public function __construct() {
-		$args = func_get_args();
-		if ($args) {
-			foreach ($args as $a) {
+	public function __construct(...$fields) {
+		if ($fields) {
+			foreach ($fields as $a) {
 				if (is_array($a)) {
 					foreach ($a as $f) {
 						$this->field($f);
@@ -46,13 +47,16 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		}
 	}
 
+	/**
+	 * 销毁
+	 */
 	public function __destruct() {
-		parent::__destruct();
 		$this->fields      = null;
 		$this->resultSet   = null;
 		$this->resultSets  = null;
 		$this->treeKey     = null;
 		$this->eagerFields = null;
+		parent::__destruct();
 	}
 
 	/**
@@ -96,12 +100,12 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	/**
 	 * append a field to result set.
 	 *
-	 * @param string|Query $field
-	 * @param string       $alias
+	 * @param string|Query|\wulaphp\db\sql\ImmutableValue $field
+	 * @param string                                      $alias
 	 *
 	 * @return \wulaphp\db\sql\Query
 	 */
-	public function field($field, $alias = null) {
+	public function field($field, string $alias = null): Query {
 		if (is_string($field)) {
 			$fields = explode(',', trim($field));
 			foreach ($fields as $field) {

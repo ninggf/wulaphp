@@ -24,6 +24,7 @@ class DatabaseConnection {
 	public         $error      = null;
 	private        $name       = '';
 	private        $transLevel = 0;
+	private        $commitType = null;//提交类型
 	private static $dbs        = [];
 
 	/**
@@ -148,22 +149,28 @@ class DatabaseConnection {
 
 	/**
 	 * commit a transaction
+	 *
+	 *
 	 * @return bool
 	 */
 	public function commit(): bool {
 		if ($this->dialect) {
 			$dialect = $this->dialect;
 			if ($dialect->inTransaction()) {
+				if (!$this->commitType) {
+					$this->commitType = 'commit';
+				}
 				$this->transLevel -= 1;
 				if ($this->transLevel > 0) {
 					return true;
 				}
 				try {
-					$this->transLevel = 0;
-
-					return $dialect->commit();
+					return $this->commitType == 'commit' ? $dialect->commit() : $dialect->rollBack();
 				} catch (\PDOException $e) {
 					$this->error = $e->getMessage();
+				} finally {
+					$this->transLevel = 0;
+					$this->commitType = null;
 				}
 			}
 		}
@@ -179,16 +186,20 @@ class DatabaseConnection {
 		if ($this->dialect) {
 			$dialect = $this->dialect;
 			if ($dialect->inTransaction()) {
+				if (!$this->commitType) {
+					$this->commitType = 'rollback';
+				}
 				$this->transLevel -= 1;
 				if ($this->transLevel > 0) {
 					return true;
 				}
 				try {
-					$this->transLevel = 0;
-
 					return $dialect->rollBack();
 				} catch (\PDOException $e) {
 					$this->error = $e->getMessage();
+				} finally {
+					$this->transLevel = 0;
+					$this->commitType = null;
 				}
 			}
 		}
@@ -265,9 +276,9 @@ class DatabaseConnection {
 	 *
 	 * @param string $sql
 	 *
-	 * @return bool|int
+	 * @return bool
 	 */
-	public function exec(string $sql) {
+	public function exec(string $sql): bool {
 		$dialect = $this->dialect;
 		if (is_null($dialect)) {
 			return false;
@@ -308,8 +319,8 @@ class DatabaseConnection {
 	 *
 	 * 执行delete,update, insert SQL.
 	 *
-	 * @param string   $sql
-	 * @param string[] ...$args
+	 * @param string $sql
+	 * @param string ...$args
 	 *
 	 * @return int|null
 	 */
@@ -345,6 +356,7 @@ class DatabaseConnection {
 
 		} catch (\Exception $e) {
 			$this->error = $e->getMessage();
+			log_error($e->getMessage(), 'sql.err');
 		}
 
 		return null;
@@ -353,8 +365,8 @@ class DatabaseConnection {
 	/**
 	 * 删除0行也算成功.
 	 *
-	 * @param string   $sql
-	 * @param string[] ...$args
+	 * @param string $sql
+	 * @param string ...$args
 	 *
 	 * @return bool
 	 */
@@ -428,6 +440,7 @@ class DatabaseConnection {
 			}
 		} catch (\Exception $e) {
 			$this->error = $e->getMessage();
+			log_error($e->getMessage(), 'sql.err');
 		}
 
 		return null;
@@ -438,7 +451,7 @@ class DatabaseConnection {
 	 * 执行SQL查询且只取一条记录,select a from a where a=%s and %d.
 	 *
 	 * @param string $sql
-	 * @param array  $args
+	 * @param string ...$args
 	 *
 	 * @return array|null
 	 */
@@ -448,7 +461,7 @@ class DatabaseConnection {
 			$result = $rst->fetch(\PDO::FETCH_ASSOC);
 			$rst->closeCursor();
 
-			return $result;
+			return $result ? $result : [];
 		}
 
 		return [];
@@ -457,11 +470,11 @@ class DatabaseConnection {
 	/**
 	 * 查询.
 	 *
-	 * @param array ...$fields
+	 * @param string|\wulaphp\db\sql\ImmutableValue|Query ...$fields
 	 *
 	 * @return \wulaphp\db\sql\Query
 	 */
-	public function select(string ...$fields): Query {
+	public function select(...$fields): Query {
 		$sql = new Query(...$fields);
 		$sql->setDialect($this->dialect);
 
@@ -471,7 +484,7 @@ class DatabaseConnection {
 	/**
 	 * 更新.
 	 *
-	 * @param array $table
+	 * @param string ...$table
 	 *
 	 * @return \wulaphp\db\sql\UpdateSQL
 	 */

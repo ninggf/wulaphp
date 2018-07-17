@@ -22,11 +22,11 @@ class ImmutableValue {
 	/**
 	 * ImmutableValue constructor.
 	 *
-	 * @param string $value
-	 * @param null   $alias
+	 * @param string      $value
+	 * @param string|null $alias
 	 */
 	public function __construct(string $value, string $alias = null) {
-		$this->value = (string)$value;
+		$this->value = $value;
 		$this->alias = $alias;
 	}
 
