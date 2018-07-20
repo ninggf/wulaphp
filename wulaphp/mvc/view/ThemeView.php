@@ -40,6 +40,20 @@ class ThemeView extends View {
 	 * @throws \Exception
 	 */
 	public function render() {
+		if (defined('LANGUAGE')) {
+			$tplInfo  = pathinfo($this->tpl);
+			$lang_tpl = $tplInfo['dirname'] . DS . $tplInfo['filename'] . '_' . LANGUAGE . '.' . $tplInfo['extension'];
+			$tpl      = THEME_PATH . $lang_tpl;
+			if (is_file($tpl)) {
+				$this->tpl = $lang_tpl;
+			} else if (($pos = strpos(LANGUAGE, '-', 1))) {
+				$lang_tpl = $tplInfo['dirname'] . DS . $tplInfo['filename'] . '_' . substr(LANGUAGE, 0, $pos) . '.' . $tplInfo['extension'];
+				$tpl      = THEME_PATH . $lang_tpl;
+				if (is_file($tpl)) {
+					$this->tpl = $lang_tpl;
+				}
+			}
+		}
 		$tpl    = THEME_PATH . $this->tpl;
 		$devMod = APP_MODE != 'pro';
 		if (is_file($tpl)) {

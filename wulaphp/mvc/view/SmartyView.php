@@ -41,6 +41,18 @@ class SmartyView extends View {
 	 * @throws \Exception
 	 */
 	public function render() {
+		if (defined('LANGUAGE')) {
+			$tpl = MODULES_PATH . $this->tpl . '_' . LANGUAGE . '.tpl';
+			if (is_file($tpl)) {
+				$this->tpl .= '_' . LANGUAGE;
+			} else if (($pos = strpos(LANGUAGE, '-', 1))) {
+				$lang = substr(LANGUAGE, 0, $pos);
+				$tpl  = MODULES_PATH . $this->tpl . '_' . $lang . '.tpl';
+				if (is_file($tpl)) {
+					$this->tpl .= '_' . $lang;
+				}
+			}
+		}
 		$tpl    = MODULES_PATH . $this->tpl . '.tpl';
 		$devMod = APP_MODE != 'pro';
 		if (is_file($tpl)) {

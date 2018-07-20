@@ -76,9 +76,14 @@ class App {
 			throw new \Exception('no ConfigurationLoader found!');
 		}
 		fire('wula\configLoaded');//配置加载完成
-
-		if (!defined('LANGUAGE') && isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-			define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
+		//检测语言
+		if (!defined('LANGUAGE')) {
+			$lang = $_COOKIE['language'] ?? null;
+			if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,6})?$/', $lang)) {
+				define('LANGUAGE', $lang);
+			} else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+				define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
+			}
 		}
 		I18n::addLang(WULA_ROOT . 'lang');
 
