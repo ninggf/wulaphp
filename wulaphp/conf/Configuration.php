@@ -52,24 +52,46 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 	 * 获取设置.
 	 *
 	 * @param string $name
-	 * @param string $default
+	 * @param mixed  $default
 	 *
-	 * @return string
+	 * @return mixed
 	 */
-	public function get($name, $default = '') {
-		return isset ($this->settings [ $name ]) ? $this->settings [ $name ] : $default;
+	public function get(string $name, $default = '') {
+		return $this->settings [ $name ] ?? $default;
 	}
 
-	public function getb($name, $default = false) {
+	/**
+	 * @param string $name
+	 * @param bool   $default
+	 *
+	 * @return bool
+	 */
+	public function getb(string $name, bool $default = false): bool {
 		$v = $this->get($name, $default);
 
 		return (bool)$v;
 	}
 
-	public function geti($name, $default = 0) {
+	/**
+	 * @param string $name
+	 * @param int    $default
+	 *
+	 * @return int
+	 */
+	public function geti(string $name, int $default = 0): int {
 		$v = $this->get($name, $default);
 
 		return (int)$v;
+	}
+
+	/**
+	 * @param string $name
+	 * @param array  $default
+	 *
+	 * @return array
+	 */
+	public function geta(string $name, array $default = []): array {
+		return (array)$this->get($name, $default);
 	}
 
 	/**

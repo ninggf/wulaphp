@@ -15,6 +15,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 	 * {@inheritDoc}
 	 *
 	 * @see \wulaphp\conf\BaseConfigurationLoader::loadConfig()
+	 * @return \wulaphp\conf\Configuration
 	 */
 	public function loadConfig($name = 'default') {
 		$config = new Configuration($name);
