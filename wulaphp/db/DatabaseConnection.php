@@ -319,12 +319,12 @@ class DatabaseConnection {
 	 *
 	 * 执行delete,update, insert SQL.
 	 *
-	 * @param string $sql
-	 * @param string ...$args
+	 * @param string      $sql
+	 * @param string|null ...$args
 	 *
 	 * @return int|null
 	 */
-	public function cud(string $sql, string ...$args): ?int {
+	public function cud(string $sql, ?string ...$args): ?int {
 		if (is_null($this->dialect)) {
 			return null;
 		}
@@ -342,6 +342,8 @@ class DatabaseConnection {
 						$v = floatval($args[ $params ]);
 					} else if ($r[1] == 'd') {
 						$v = intval($args[ $params ]);
+					} else if (is_null($args[ $params ])) {
+						$v = null;
 					} else {
 						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
 					}
@@ -365,12 +367,12 @@ class DatabaseConnection {
 	/**
 	 * 删除0行也算成功.
 	 *
-	 * @param string $sql
-	 * @param string ...$args
+	 * @param string      $sql
+	 * @param string|null ...$args
 	 *
-	 * @return bool
+	 * @return bool 只要不报错，即使只一行数据未删除也算成功.
 	 */
-	public function cudx(string $sql, string ...$args): bool {
+	public function cudx(string $sql, ?string ...$args): bool {
 		$rst = $this->cud($sql, ...$args);
 		if ($rst === null) {
 			return false;
@@ -383,12 +385,12 @@ class DatabaseConnection {
 	 *
 	 * 执行SQL查询,select a from a where a=%s and %d.
 	 *
-	 * @param string   $sql
-	 * @param string[] $args
+	 * @param string      $sql
+	 * @param string|null ...$args
 	 *
 	 * @return array
 	 */
-	public function query(string $sql, string ...$args): array {
+	public function query(string $sql, ?string ...$args): array {
 		$rst = $this->fetch($sql, ...$args);
 		if ($rst) {
 			$result = $rst->fetchAll(\PDO::FETCH_ASSOC);
@@ -403,12 +405,12 @@ class DatabaseConnection {
 	/**
 	 * 执行SQL查询,select a from a where a=%s and %d.
 	 *
-	 * @param string   $sql
-	 * @param string[] $args
+	 * @param string      $sql
+	 * @param string|null ...$args
 	 *
 	 * @return null|\PDOStatement
 	 */
-	public function fetch(string $sql, string ...$args): ?\PDOStatement {
+	public function fetch(string $sql, ?string ...$args): ?\PDOStatement {
 		if (is_null($this->dialect)) {
 			return null;
 		}
@@ -425,6 +427,8 @@ class DatabaseConnection {
 						$v = floatval($args[ $params ]);
 					} else if ($r[1] == 'd') {
 						$v = intval($args[ $params ]);
+					} else if (is_null($args[ $params ])) {
+						$v = null;
 					} else {
 						$v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
 					}
@@ -450,12 +454,15 @@ class DatabaseConnection {
 	 *
 	 * 执行SQL查询且只取一条记录,select a from a where a=%s and %d.
 	 *
-	 * @param string $sql
-	 * @param string ...$args
+	 * @param string      $sql
+	 * @param string|null ...$args
 	 *
-	 * @return array|null
+	 * @return array
 	 */
-	public function queryOne(string $sql, string ...$args): ?array {
+	public function queryOne(string $sql, ?string ...$args): array {
+		if (!preg_match('/.+\s+LIMIT\s+((%[ds]|0|[1-9]\d*)\s*,\s*)?1\s*$/i', $sql)) {
+			$sql = $sql . ' LIMIT 0,1';
+		}
 		$rst = $this->fetch($sql, ...$args);
 		if ($rst) {
 			$result = $rst->fetch(\PDO::FETCH_ASSOC);
@@ -515,7 +522,7 @@ class DatabaseConnection {
 	 *
 	 * @return \wulaphp\db\sql\InsertSQL
 	 */
-	public function insert($data, bool $batch = false): InsertSQL {
+	public function insert(array $data, bool $batch = false): InsertSQL {
 		$sql = new InsertSQL($data, $batch);
 		$sql->setDialect($this->dialect);
 
