@@ -94,16 +94,16 @@ SQL;
 		$db->start();//1
 		$db->start();//2
 		$db->start();//3
-		$affected = $db->cudx("INSERT INTO `{test_user}` (username,nickname,`hash`) VALUES (%s,%s,%s)", 'Leo1', 'user100', md5('123321'));
+		$affected = $db->cudx("INSERT INTO `{test_user}` (username,nickname,`hash`) VALUES (%s,%s,%s)", 'Leo2', 'user100', md5('123321'));
 		self::assertTrue($affected, $db->error ?? '');
 		$db->rollback();//3
-		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo1');
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo2');
 		self::assertNotEmpty($rst);
 		$db->rollback();//2
-		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo1');
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo2');
 		self::assertNotEmpty($rst);
 		$db->rollback();//1,此处真的回滚
-		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo1');
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo2');
 		self::assertEmpty($rst);
 	}
 
@@ -119,17 +119,94 @@ SQL;
 		$db->start();//1
 		$db->start();//2
 		$db->start();//3
-		$affected = $db->cudx("INSERT INTO `{test_user}` (username,nickname,`hash`) VALUES (%s,%s,%s)", 'Leo1', 'user100', md5('123321'));
+		$affected = $db->cudx("INSERT INTO `{test_user}` (username,nickname,`hash`) VALUES (%s,%s,%s)", 'Leo3', 'user100', md5('123321'));
 		self::assertTrue($affected, $db->error ?? '');
 		$db->commit();//3
-		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo1');
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo3');
 		self::assertNotEmpty($rst);
 		$db->commit();//2
-		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo1');
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo3');
 		self::assertNotEmpty($rst);
 		$db->commit();//1,此处真的提交
-		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo1');
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo3');
 		self::assertNotEmpty($rst);
+	}
+
+	/**
+	 * 测试事务的透明性
+	 *
+	 * @param $db
+	 *
+	 * @depends testConnect
+	 * @depends testTransparentTrans2
+	 */
+	public function testTransparentTrans3(DatabaseConnection $db) {
+		$db->start();//1
+		$db->start();//2
+		$db->start();//3
+		$affected = $db->cudx("INSERT INTO `{test_user}` (username,nickname,`hash`) VALUES (%s,%s,%s)", 'Leo4', 'user100', md5('123321'));
+		self::assertTrue($affected, $db->error ?? '');
+		$db->commit();//3
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo4');
+		self::assertNotEmpty($rst);
+		$db->commit();//2
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo4');
+		self::assertNotEmpty($rst);
+		$db->rollback();//1,此处回滚（之前的提交都不算数）
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo4');
+		self::assertEmpty($rst);
+	}
+
+	/**
+	 * 测试事务的透明性
+	 *
+	 * @param $db
+	 *
+	 * @depends testConnect
+	 * @depends testTransparentTrans3
+	 */
+	public function testTransparentTrans4(DatabaseConnection $db) {
+		$db->start();//1
+		$db->start();//2
+		$db->start();//3
+		$affected = $db->cudx("INSERT INTO `{test_user}` (username,nickname,`hash`) VALUES (%s,%s,%s)", 'Leo5', 'user100', md5('123321'));
+		self::assertTrue($affected, $db->error ?? '');
+		$db->rollback();//3
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo5');
+		self::assertNotEmpty($rst);
+		$db->commit();//2
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo5');
+		self::assertNotEmpty($rst);
+		$rst = $db->commit();//1,此处提交（提交会失败，因为在提交之前有回滚）
+		self::assertFalse($rst);
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo5');
+		self::assertEmpty($rst);
+	}
+
+	/**
+	 * 测试事务的透明性
+	 *
+	 * @param $db
+	 *
+	 * @depends testConnect
+	 * @depends testTransparentTrans4
+	 */
+	public function testTransparentTrans5(DatabaseConnection $db) {
+		$db->start();//1
+		$db->start();//2
+		$db->start();//3
+		$affected = $db->cudx("INSERT INTO `{test_user}` (username,nickname,`hash`) VALUES (%s,%s,%s)", 'Leo6', 'user100', md5('123321'));
+		self::assertTrue($affected, $db->error ?? '');
+		$db->commit();//3
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo6');
+		self::assertNotEmpty($rst);
+		$db->rollback();//2
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo6');
+		self::assertNotEmpty($rst);
+		$rst = $db->commit();//1,此处提交（提交会失败，因为在提交之前有回滚）
+		self::assertFalse($rst);
+		$rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo6');
+		self::assertEmpty($rst);
 	}
 
 	public static function tearDownAfterClass() {

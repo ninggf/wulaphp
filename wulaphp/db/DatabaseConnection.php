@@ -157,15 +157,19 @@ class DatabaseConnection {
 		if ($this->dialect) {
 			$dialect = $this->dialect;
 			if ($dialect->inTransaction()) {
-				if (!$this->commitType) {
-					$this->commitType = 'commit';
-				}
 				$this->transLevel -= 1;
 				if ($this->transLevel > 0) {
 					return true;
 				}
 				try {
-					return $this->commitType == 'commit' ? $dialect->commit() : $dialect->rollBack();
+					if ($this->commitType == 'rollback') {
+						$dialect->rollBack();
+
+						//提交失败，因为在提交之前有人要回滚.
+						return false;
+					} else {
+						return $dialect->commit();
+					}
 				} catch (\PDOException $e) {
 					$this->error = $e->getMessage();
 				} finally {
