@@ -166,7 +166,7 @@ class Request implements \ArrayAccess {
 	 * 从php://input读取json格式的数据并添加到请求中.
 	 */
 	public function addJsonPostBody() {
-		$rqMethod = strtolower($_SERVER ['REQUEST_METHOD']);
+		$rqMethod = strtolower($_SERVER ['REQUEST_METHOD'] ?? 'get');
 		if ($rqMethod == 'post' || $rqMethod == 'put') {
 			//检测请求头
 			$contentType = '';
