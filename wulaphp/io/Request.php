@@ -95,7 +95,25 @@ class Request implements \ArrayAccess {
 	}
 
 	/**
-	 * 获取客户端传过来的值无论是通过GET方式还是POST方式
+	 * POST过来的数据的格式.
+	 *
+	 * @return string
+	 */
+	public static function contentType(): string {
+		//检测请求头
+		$contentType = '';
+		// Look for the content type header
+		if (isset ($_SERVER ["HTTP_CONTENT_TYPE"])) {
+			$contentType = $_SERVER ["HTTP_CONTENT_TYPE"];
+		} else if (isset ($_SERVER ["CONTENT_TYPE"])) {
+			$contentType = $_SERVER ["CONTENT_TYPE"];
+		}
+
+		return $contentType;
+	}
+
+	/**
+	 * 获取客户端传过来的值无论是通过GET方式还是POST方式.
 	 *
 	 * @param string  $name
 	 * @param mixed   $default
@@ -128,8 +146,14 @@ class Request implements \ArrayAccess {
 		return $ary [ $name ];
 	}
 
-	public function addUserData($data = [], $reset = false) {
-		if (is_array($data) && $data) {
+	/**
+	 * 添加用户数据供下次使用.
+	 *
+	 * @param array $data
+	 * @param bool  $reset
+	 */
+	public function addUserData(array $data = [], $reset = false) {
+		if ($data && is_array($data)) {
 			if ($reset) {
 				$this->userData = $data;
 			} else {
@@ -138,11 +162,46 @@ class Request implements \ArrayAccess {
 		}
 	}
 
-	public function getUserData() {
+	/**
+	 * 从php://input读取json格式的数据并添加到请求中.
+	 */
+	public function addJsonPostBody() {
+		$rqMethod = strtolower($_SERVER ['REQUEST_METHOD']);
+		if ($rqMethod == 'post' || $rqMethod == 'put') {
+			//检测请求头
+			$contentType = '';
+			// Look for the content type header
+			if (isset ($_SERVER ["HTTP_CONTENT_TYPE"])) {
+				$contentType = $_SERVER ["HTTP_CONTENT_TYPE"];
+			} else if (isset ($_SERVER ["CONTENT_TYPE"])) {
+				$contentType = $_SERVER ["CONTENT_TYPE"];
+			}
+			if (strpos($contentType, '/json') > 0) {
+				$postData = @file_get_contents('php://input');
+				if ($postData) {
+					$postData = @json_decode($postData, true);
+					if ($postData) {
+						$this->addUserData($postData);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * 运行时添加的用户数据.
+	 *
+	 * @return array
+	 */
+	public function getUserData(): array {
 		return $this->userData;
 	}
 
-	public static function getIp() {
+	/**
+	 * IP
+	 * @return string
+	 */
+	public static function getIp(): string {
 		if (!empty ($_SERVER ["HTTP_CLIENT_IP"])) {
 			$cip = $_SERVER ["HTTP_CLIENT_IP"];
 		} else if (!empty ($_SERVER ["HTTP_X_FORWARDED_FOR"])) {
@@ -194,6 +253,7 @@ class Request implements \ArrayAccess {
 
 	// 处理全局输入
 	private function sanitizeGlobals() {
+		//原始数据
 		$this->requestData = array_merge([], $_REQUEST);
 		//以下为cleaned数据
 		$_GET     = $this->cleanInputData($_GET);
