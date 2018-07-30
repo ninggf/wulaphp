@@ -30,7 +30,7 @@ class RedisLock {
 	 *
 	 * @return bool|mixed  无法获取锁时返回false，成功获取锁后返回$callback的返回值.
 	 */
-	public static function nblock($lock, \Closure $callback, $timeout = 120) {
+	public static function nblock(string $lock, \Closure $callback, int $timeout = 120) {
 		try {
 			$redis = RedisClient::getRedis();
 			if ($redis) {
@@ -63,7 +63,7 @@ class RedisLock {
 	 *
 	 * @return bool|mixed 无法获取锁时返回false，成功获取锁后返回$callback的返回值.
 	 */
-	public static function lock($lock, \Closure $callback, $timeout = 30) {
+	public static function lock(string $lock, \Closure $callback, int $timeout = 30) {
 		try {
 			$redis = RedisClient::getRedis();
 			if ($redis) {
@@ -110,7 +110,7 @@ class RedisLock {
 	 *
 	 * @return bool
 	 */
-	public static function ulock($lock, $timeout = 30, &$wait = null) {
+	public static function ulock(string $lock, int $timeout = 30, ?bool &$wait = null): bool {
 		try {
 			$redis = RedisClient::getRedis();
 			if ($redis) {
@@ -140,11 +140,37 @@ class RedisLock {
 	}
 
 	/**
+	 * 用户非阻塞锁，需要用户手动释放.
+	 *
+	 * @param string $lock
+	 * @param int    $timeout
+	 *
+	 * @return bool
+	 */
+	public static function unblock(string $lock, int $timeout = 5): bool {
+		try {
+			$redis = RedisClient::getRedis();
+			if ($redis) {
+				$cnt = $redis->incr($lock);
+				if ($cnt == 1) {
+					$redis->setTimeout($lock, $timeout);//设置超时，防止死锁
+
+					return true;
+				}
+			}
+		} catch (\Exception $e) {
+			log_warn($e->getMessage(), 'redis_lock');
+		}
+
+		return false;
+	}
+
+	/**
 	 * 释放锁.
 	 *
 	 * @param string $lock
 	 */
-	public static function uunlock($lock) {
+	public static function uunlock(string $lock) {
 		try {
 			$redis = RedisClient::getRedis();
 			if ($redis) {
