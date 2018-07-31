@@ -3,12 +3,15 @@
 namespace wulaphp\io;
 // use cookie for session id
 class Session {
-
 	private $session_id;
-
 	private $expire = 0;
 
-	public function __construct($expire = 0) {
+	/**
+	 * Session constructor.
+	 *
+	 * @param int $expire
+	 */
+	public function __construct(int $expire = 0) {
 		$this->expire = intval($expire);
 	}
 
@@ -19,7 +22,7 @@ class Session {
 	 *
 	 * @return string session_id
 	 */
-	public function start($session_id = null) {
+	public function start(?string $session_id = null): string {
 		if ($this->session_id) {
 			return $this->session_id;
 		}

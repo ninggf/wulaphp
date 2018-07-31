@@ -37,10 +37,10 @@ class SubModuleRouter extends Controller {
 	/**
 	 * @param array ...$args
 	 *
-	 * @return null|\wulaphp\mvc\view\JsonView|\wulaphp\mvc\view\SimpleView|\wulaphp\mvc\view\View
-	 * @throws \ReflectionException
+	 * @return null|\wulaphp\mvc\view\View
+	 * @throws \Exception
 	 */
-	public final function index(...$args) {
+	public final function index(...$args): ?View {
 		$len = count($args);
 		switch ($len) {
 			case 0:
@@ -64,7 +64,6 @@ class SubModuleRouter extends Controller {
 				return null;
 			}
 			try {
-
 				$clz = new $controllerClz ($this->module);
 
 				if ($clz instanceof Controller && $clz->slag == $controllerSlag) {
@@ -142,7 +141,7 @@ class SubModuleRouter extends Controller {
 						return $clz->afterRun($action, $view, $method);
 					}
 				}
-			} catch (\ReflectionException $e) {
+			} catch (\Exception $e) {
 				if (DEBUG == DEBUG_DEBUG) {
 					throw $e;
 				}

@@ -3,6 +3,7 @@
 namespace wulaphp\mvc\controller;
 
 use wulaphp\app\App;
+use wulaphp\mvc\view\View;
 
 /**
  * Class LayoutSupport
@@ -16,7 +17,7 @@ trait LayoutSupport {
 	 *
 	 * @return \wulaphp\mvc\view\View
 	 */
-	protected function render($tpl = null, $data = []) {
+	protected function render($tpl = null, array $data = []): ?View {
 		if ($this instanceof Controller) {
 			if (is_array($tpl)) {
 				$data = $tpl;
@@ -57,11 +58,18 @@ trait LayoutSupport {
 	 *
 	 * @return array
 	 */
-	protected function onInitLayoutData($data) {
+	protected function onInitLayoutData(array $data): array {
 		return $data;
 	}
 
-	private function realPath($path) {
+	/**
+	 * 真实路径
+	 *
+	 * @param string $path
+	 *
+	 * @return string
+	 */
+	private function realPath(string $path): string {
 		$tpls    = explode('/', $path);
 		$tpls[0] = App::id2dir($tpls[0]);
 		$tpl     = implode('/', $tpls);
