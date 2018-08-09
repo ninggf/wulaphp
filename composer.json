@@ -13,6 +13,10 @@
 	"psr/log": "^1.0",
 	"wula/common": "~1.0"
   },
+  "suggest": {
+	"ext-posix": "many artisan commands depend on it",
+	"ext-pcntl": "many artisan commands depend on it"
+  },
   "license": "MIT",
   "keywords": [
 	"PHP",
@@ -33,7 +37,7 @@
   },
   "extra": {
 	"branch-alias": {
-	  "dev-master": "1.1-dev"
+	  "dev-master": "2.0-dev"
 	}
   },
   "support": {

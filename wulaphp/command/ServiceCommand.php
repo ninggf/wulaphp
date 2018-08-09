@@ -10,9 +10,9 @@
 
 namespace wulaphp\command;
 
-use wulaphp\artisan\ArtisanMonitoredTask;
+use wulaphp\artisan\ArtisanCommand;
 
-class ServiceCommand extends ArtisanMonitoredTask {
+class ServiceCommand extends ArtisanCommand {
 	public function cmd() {
 		return 'service';
 	}
@@ -21,7 +21,7 @@ class ServiceCommand extends ArtisanMonitoredTask {
 		return 'service run in background';
 	}
 
-	protected function loop($options) {
-
+	protected function execute($options) {
+		$this->success('haha');
 	}
 }
