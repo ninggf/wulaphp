@@ -86,16 +86,15 @@ class DatabaseConnection {
 				return $db;
 			}
 		}
-
-		return null;
+		throw new DialectException('cannot connect the database server!');
 	}
 
 	/**
 	 * 获取数据库驱动.
 	 *
-	 * @return \wulaphp\db\dialect\DatabaseDialect
+	 * @return \wulaphp\db\dialect\DatabaseDialect|null
 	 */
-	public function getDialect(): DatabaseDialect {
+	public function getDialect(): ?DatabaseDialect {
 		return $this->dialect;
 	}
 
@@ -323,12 +322,12 @@ class DatabaseConnection {
 	 *
 	 * 执行delete,update, insert SQL.
 	 *
-	 * @param string      $sql
-	 * @param string|null ...$args
+	 * @param string $sql
+	 * @param string ...$args
 	 *
 	 * @return int|null
 	 */
-	public function cud(string $sql, ?string ...$args): ?int {
+	public function cud(string $sql, string ...$args): ?int {
 		if (is_null($this->dialect)) {
 			return null;
 		}

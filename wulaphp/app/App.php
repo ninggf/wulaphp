@@ -284,15 +284,16 @@ class App {
 	 * 获取配置.
 	 *
 	 * @param string $config 配置组.
+	 * @param bool   $file   仅从配置文件读取.
 	 *
 	 * @return \wulaphp\conf\Configuration
 	 */
-	public static function config($config) {
+	public static function config($config, bool $file = false) {
 		$app = self::$app;
 		if (isset ($app->configs [ $config ])) {
 			$confObj = $app->configs [ $config ];
 		} else {
-			$confObj = $app->configLoader->loadConfig($config);
+			$confObj = $file ? ConfigurationLoader::loadFromFile($config) : $app->configLoader->loadConfig($config);
 			if (!$confObj) {
 				$confObj = new Configuration ($config);
 			}
@@ -620,7 +621,7 @@ class App {
 	 * @return string
 	 */
 	public static function url($url, $replace = true) {
-		static $alias = false;
+		static $alias = false, $defaultModule = false;
 		if ($alias === false) {
 			if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
 				$aliasFile = MODULES_PATH . 'alias.php';
@@ -631,6 +632,13 @@ class App {
 				}
 			} else {
 				$alias = [];
+			}
+		}
+		if ($defaultModule === false) {
+			if (defined('DEFAULT_MODULE')) {
+				$defaultModule = self::id2dir(DEFAULT_MODULE);
+			} else {
+				$defaultModule = '';
 			}
 		}
 		$url = trim($url, '/');
@@ -653,6 +661,12 @@ class App {
 			if ($key) {
 				$rurl = trim($key, '/');
 			}
+		}
+
+		//检测默认模块
+		if ($defaultModule && preg_match("#^$defaultModule#", $rurl)) {
+			//去掉默认模块路径
+			$rurl = trim(substr($rurl, strlen($defaultModule)), '/');
 		}
 
 		return WWWROOT_DIR . $rurl;

@@ -49,10 +49,10 @@ abstract class DatabaseDialect extends \PDO {
 				$pid = 0;
 			}
 			$name = $options->__toString();
-
-			if (!isset (self::$INSTANCE[ $pid ] [ $name ])) {
-				$driver    = isset ($options ['driver']) && !empty ($options ['driver']) ? $options ['driver'] : 'MySQL';
-				$driverClz = 'wulaphp\db\dialect\\' . $driver . 'Dialect';
+			if (!isset(self::$INSTANCE[ $pid ]) || !array_key_exists($name, self::$INSTANCE[ $pid ])) {
+				self::$INSTANCE [ $pid ][ $name ] = null;
+				$driver                           = isset ($options ['driver']) && !empty ($options ['driver']) ? $options ['driver'] : 'MySQL';
+				$driverClz                        = 'wulaphp\db\dialect\\' . $driver . 'Dialect';
 				if (!is_subclass_of($driverClz, 'wulaphp\db\dialect\DatabaseDialect')) {
 					throw new DialectException('the dialect ' . $driverClz . ' is not found!');
 				}
@@ -60,15 +60,19 @@ abstract class DatabaseDialect extends \PDO {
 				$dr = new $driverClz ($options);
 				$dr->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 				$dr->onConnected();
-				$dr->cfGname                      = $name;
-				self::$cfgOptions[ $name ]        = $options;
-				self::$lastErrorMassge            = false;
-				self::$INSTANCE [ $pid ][ $name ] = $dr;
+				$dr->cfGname                     = $name;
+				self::$cfgOptions[ $name ]       = $options;
+				self::$lastErrorMassge           = false;
+				self::$INSTANCE[ $pid ][ $name ] = $dr;
 			}
 
-			return self::$INSTANCE[ $pid ] [ $name ];
+			return self::$INSTANCE [ $pid ][ $name ];
 		} catch (\PDOException $e) {
+			log_error($e->getMessage(), 'database');
 			throw new DialectException($e->getMessage());
+		} catch (DialectException $de) {
+			log_error($de->getMessage(), 'database');
+			throw $de;
 		}
 	}
 

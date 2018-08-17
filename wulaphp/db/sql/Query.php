@@ -671,6 +671,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 		try {
 			$this->checkDialect();
 		} catch (DialectException $e) {
+			$this->error = $e->getMessage();
+
 			return;
 		}
 		//生成SQL

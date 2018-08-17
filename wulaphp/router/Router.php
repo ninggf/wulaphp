@@ -35,9 +35,14 @@ class Router {
 	 */
 	private function __construct() {
 		$this->xssCleaner = new XssCleaner();
-		$this->register(new DefaultDispatcher (), 0);
+		$dd               = new DefaultDispatcher ();
+		$this->register($dd, 0);
+		//默认模块分发器
+		if (defined('DEFAULT_MODULE') && DEFAULT_MODULE) {
+			$this->register(new DefaultModuleDispatcher($dd, DEFAULT_MODULE), 1);
+		}
 		//路由表分发器
-		$this->register(new RouteTableDispatcher (), 1);
+		$this->register(new RouteTableDispatcher (), 2);
 		fire('router\registerDispatcher', $this);
 	}
 
@@ -229,8 +234,8 @@ class Router {
 			}
 			if (is_array($view) || $view) {
 				$response->output($view);
-			} else if (DEBUG < DEBUG_ERROR) {
-				throw new \Exception(__('No route for %s', $uri));
+			} else if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
+				throw new \Exception(__('no route for %s', $uri));
 			} else {
 				Response::respond(404);
 			}

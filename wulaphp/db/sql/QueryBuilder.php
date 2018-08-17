@@ -70,11 +70,11 @@ abstract class QueryBuilder {
 	}
 
 	/**
-	 * @param DatabaseDialect $dialect
+	 * @param DatabaseDialect|null $dialect
 	 *
 	 * @return $this
 	 */
-	public function setDialect(DatabaseDialect $dialect) {
+	public function setDialect(?DatabaseDialect $dialect) {
 		$this->dialect = $dialect;
 
 		return $this;

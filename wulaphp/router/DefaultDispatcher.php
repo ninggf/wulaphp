@@ -31,18 +31,20 @@ class DefaultDispatcher implements IURLDispatcher {
 	 * @throws \Exception
 	 */
 	public function dispatch($url, $router, $parsedInfo): ?View {
+		static $alias = false;
 		//检测请求是否合法
 		if ($router->requestURI[ -1 ] == '/') {
 			return null;
 		}
 		if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
 			$aliasFile = MODULES_PATH . 'alias.php';
-			if ($url && is_file($aliasFile)) {
-				$alias = include $aliasFile;
-				$alias = (array)$alias;
-				if (isset($alias[ $url ]) && $alias[ $url ]) {
-					$url = $alias[ $url ];
-				}
+			if ($alias === false && is_file($aliasFile)) {
+				$alias = (array)include $aliasFile;
+			} else {
+				$alias = [];
+			}
+			if ($url && isset($alias[ $url ]) && $alias[ $url ]) {
+				$url = $alias[ $url ];
 			}
 		}
 		$controllers = explode('/', $url);

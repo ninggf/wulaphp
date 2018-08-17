@@ -183,6 +183,11 @@ function log_message(string $message, array $trace_info, int $level, string $fil
 	/**@var \Psr\Log\LoggerInterface[][] $loggers */
 	static $loggers = [];
 	$_wula_last_msg = $message;
+	if (!defined('DEBUG')) {
+		@file_put_contents(LOGS_PATH . 'core_dump.log', '[' . gmdate('Y-m-d H:i:s') . ' GMT]' . $message . "\n", FILE_APPEND);
+
+		return;
+	}
 	//记录关闭.
 	if (DEBUG == DEBUG_OFF || empty ($trace_info)) {
 		return;

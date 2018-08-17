@@ -77,9 +77,6 @@ abstract class View {
 				try {
 					$this->dbconnection = App::db($db === null ? 'default' : $db);
 				} catch (\Exception $e) {
-					//无法连接数据库
-					log_error($e->getMessage(), 'sql');
-
 					return;
 				}
 			} else {
