@@ -11,15 +11,15 @@ class CrontabHelper {
 	 * 检查某时间($time)是否符合某个corntab时间计划($str_cron)
 	 *
 	 * @param int    $time     时间戳
-	 * @param string $str_cron corntab的时间计划，如，"30 2 * * 1-5"
+	 * @param string $str_cron corntab的时间计划，如，"* 30 2 * * 1-5"
 	 *
-	 * @return bool/string 出错返回string（错误信息）
+	 * @return bool 出错返回string（错误信息）
 	 */
-	public static function check($time, $str_cron) {
+	public static function check(int $time, string $str_cron): bool {
 		$format_time = self::format_timestamp($time);
 		$format_cron = self::format_crontab($str_cron);
 		if (!is_array($format_cron)) {
-			return $format_cron;
+			return false;
 		}
 
 		return self::format_check($format_time, $format_cron);
@@ -34,7 +34,7 @@ class CrontabHelper {
 	 * @return bool
 	 */
 	private static function format_check(array $format_time, array $format_cron) {
-		return (!$format_cron[0] || in_array($format_time[0], $format_cron[0])) && (!$format_cron[1] || in_array($format_time[1], $format_cron[1])) && (!$format_cron[2] || in_array($format_time[2], $format_cron[2])) && (!$format_cron[3] || in_array($format_time[3], $format_cron[3])) && (!$format_cron[4] || in_array($format_time[4], $format_cron[4]));
+		return (!$format_cron[0] || in_array($format_time[0], $format_cron[0])) && (!$format_cron[1] || in_array($format_time[1], $format_cron[1])) && (!$format_cron[2] || in_array($format_time[2], $format_cron[2])) && (!$format_cron[3] || in_array($format_time[3], $format_cron[3])) && (!$format_cron[4] || in_array($format_time[4], $format_cron[4])) && (!$format_cron[5] || in_array($format_time[5], $format_cron[5]));
 	}
 
 	/**
@@ -45,33 +45,40 @@ class CrontabHelper {
 	 * @return array
 	 */
 	public static function format_timestamp($time) {
-		return explode('-', date('i-G-j-n-w', $time));
+		$chunk    = explode('-', date('s-i-G-j-n-w', $time));
+		$chunk[0] = intval(ltrim($chunk[0], '0'));
+
+		return $chunk;
 	}
 
 	/**
 	 * 格式化crontab时间设置字符串,用于比较
 	 *
-	 * @param string $str_cron crontab的时间计划字符串，如"15 3 * * *"
+	 * @param string $str_cron crontab的时间计划字符串，如"0 15 3 * * *"
 	 *
 	 * @return array|string 正确返回数组，出错返回字符串（错误信息）
 	 */
 	public static function format_crontab($str_cron) {
 		//格式检查
 		$str_cron = trim($str_cron);
-		$reg      = '#^((\*(/\d+)?|((\d+(-\d+)?)(?3)?)(,(?4))*))( (?2)){4}$#';
+		$reg      = '#^((\*(/\d+)?|((\d+(-\d+)?)(?3)?)(,(?4))*))( (?2)){5}$#';
 		if (!preg_match($reg, $str_cron)) {
 			return '格式错误';
 		}
 
 		try {
 			//分别解析分、时、日、月、周
-			$arr_cron    = [];
-			$parts       = explode(' ', $str_cron);
-			$arr_cron[0] = self::parse_cron_part($parts[0], 0, 59);//分
-			$arr_cron[1] = self::parse_cron_part($parts[1], 0, 59);//时
-			$arr_cron[2] = self::parse_cron_part($parts[2], 1, 31);//日
-			$arr_cron[3] = self::parse_cron_part($parts[3], 1, 12);//月
-			$arr_cron[4] = self::parse_cron_part($parts[4], 0, 6);//周（0周日）
+			$arr_cron = [];
+			$parts    = explode(' ', $str_cron);
+			if (count($parts) != 6) {
+				return null;
+			}
+			$arr_cron[0] = self::parse_cron_part($parts[0], 0, 59);//秒
+			$arr_cron[1] = self::parse_cron_part($parts[1], 0, 59);//分
+			$arr_cron[2] = self::parse_cron_part($parts[2], 0, 59);//时
+			$arr_cron[3] = self::parse_cron_part($parts[3], 1, 31);//日
+			$arr_cron[4] = self::parse_cron_part($parts[4], 1, 12);//月
+			$arr_cron[5] = self::parse_cron_part($parts[5], 0, 6);//周（0周日）
 		} catch (Exception $e) {
 			return $e->getMessage();
 		}
@@ -80,7 +87,7 @@ class CrontabHelper {
 	}
 
 	/**
-	 * 解析crontab时间计划里一个部分(分、时、日、月、周)的取值列表
+	 * 解析crontab时间计划里一个部分(秒、分、时、日、月、周)的取值列表
 	 *
 	 * @param string $part  时间计划里的一个部分，被空格分隔后的一个部分
 	 * @param int    $f_min 此部分的最小取值

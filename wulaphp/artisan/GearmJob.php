@@ -48,7 +48,7 @@ abstract class GearmJob {
 				$rst = $this->doJob($workload);
 			}
 		} catch (\Exception $e) {
-			log_error($e->getMessage(), 'gearmjob');
+			log_error($e->getMessage(), 'gearman.job.log');
 			$this->output($e->getMessage());
 		}
 		if ($rst === false) {
@@ -79,7 +79,9 @@ abstract class GearmJob {
 	 * 函数名
 	 * @return string
 	 */
-	public abstract function getFuncName();
+	public function getFuncName() {
+		return '';
+	}
 
 	/**
 	 * @param array|string $workload

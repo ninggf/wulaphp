@@ -27,9 +27,7 @@ trait GearmanCommand {
 		$options) {
 		$worker = $this->worker();
 		if (!$worker) {
-			sleep(1);
-
-			return;
+			return false;
 		}
 		$count = 0;//运行成功多少次后重启
 
@@ -42,7 +40,11 @@ trait GearmanCommand {
 						$count++;
 						break;
 					case GEARMAN_IO_WAIT:
-						sleep(10);
+						$i = 10;
+						while ($i > 0 && !$this->shutdown) {
+							sleep(1);
+							$i--;
+						}
 						break;
 					case GEARMAN_WORK_FAIL:
 						sleep(1);
@@ -51,7 +53,11 @@ trait GearmanCommand {
 						sleep(1);
 						break;
 					case GEARMAN_NO_ACTIVE_FDS:
-						sleep(5);
+						$i = 5;
+						while ($i > 0 && !$this->shutdown) {
+							sleep(1);
+							$i--;
+						}
 						break;
 					case GEARMAN_WORKER_WAIT_TIMEOUT:
 						sleep(1);
@@ -70,6 +76,8 @@ trait GearmanCommand {
 
 		$worker->unregisterAll();
 		$worker = null;
+
+		return true;
 	}
 
 	/**

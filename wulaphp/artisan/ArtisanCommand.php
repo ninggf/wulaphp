@@ -217,6 +217,18 @@ abstract class ArtisanCommand {
 		flush();
 	}
 
+	protected final function redText(string $message) {
+		return $this->color->str($message, 'red');
+	}
+
+	protected final function greenText(string $message) {
+		return $this->color->str($message, 'green');
+	}
+
+	protected final function blueText(string $message) {
+		return $this->color->str($message, 'blue');
+	}
+
 	public function run() {
 		$options = $this->getOptions();
 		$argOk   = $this->argValid($options) && $this->paramValid($options);

@@ -30,10 +30,15 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	}
 
 	public final function run() {
-		if (!function_exists('pcntl_fork') || !function_exists('posix_getpid')) {
+		if (!function_exists('pcntl_fork')) {
 			$this->error('miss pcntl extension, install it first!');
 			exit(1);
 		}
+		if (!function_exists('posix_getpid')) {
+			$this->error('miss posix extension, install it first!');
+			exit(1);
+		}
+
 		$cmd     = $this->cmd();
 		$options = $this->getOptions();
 		if (!$this->paramValid($options)) {
@@ -85,7 +90,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 	}
 
 	private function start($options, $cmd) {
-		$pid = pcntl_fork();
+		$pid = @pcntl_fork();
 		if ($pid > 0) {
 			//主程序退出
 			$pidfile = $this->pidfile;
@@ -93,7 +98,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
 			exit(0);
 		} else if (0 === $pid) {
 			umask(0);
-			$sid = posix_setsid();
+			$sid = @posix_setsid();
 			if ($sid < 0) {
 				$this->error('[' . $cmd . '] Could not detach session id.');
 				exit(1);
