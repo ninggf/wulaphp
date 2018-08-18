@@ -501,7 +501,10 @@ class MonitorService extends Service {
 		}
 		if ($type == 'script') {
 			$type = 'parallel';
+		} else if ($type == 'gearman' && !extension_loaded('gearman')) {
+			return false;
 		}
+
 		$typeCls = 'wulaphp\command\service\\' . ucfirst($type) . 'Service';
 		if (!class_exists($typeCls)) {
 			return false;

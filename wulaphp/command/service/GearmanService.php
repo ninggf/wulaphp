@@ -29,6 +29,7 @@ class GearmanService extends Service {
 	protected $funcName;
 	protected $jobClass;
 	protected $isJson;
+	private   $jobFile;
 
 	public function run() {
 		$this->host     = $this->getOption('host', 'localhost');
@@ -39,17 +40,19 @@ class GearmanService extends Service {
 		$this->funcName = $this->getOption('job');
 
 		if (empty($this->funcName)) {
-			$this->loge('no func specified!');
+			$this->loge('no job specified!');
 
 			return false;
 		}
 		$this->jobClass = $this->getOption('jobClass');
 		if (empty($this->jobClass)) {
-			$this->loge('no func specified!');
+			$this->loge('no jobClass specified!');
 
 			return false;
 		}
-		if (!is_subclass_of($this->jobClass, GearmJob::class)) {
+		if (is_file(APPROOT . $this->jobClass)) {
+			$this->jobFile = $this->jobClass;
+		} else if (!is_subclass_of($this->jobClass, GearmJob::class)) {
 			$this->loge($this->jobClass . ' is not subclass of ' . GearmJob::class);
 
 			return false;
@@ -69,11 +72,17 @@ class GearmanService extends Service {
 			$wk = $job;
 		}
 		$this->logd('[workload] ' . $wk);
-		/**@var \wulaphp\artisan\GearmJob $cls */
-		$cls    = new $this->jobClass($wk);
-		$rtn    = $cls->run($this->isJson, false);
-		$output = $cls->getOutput();
-
+		if ($this->jobFile) {
+			$cmd  = escapeshellcmd(PHP_BINARY);
+			$args = escapeshellarg($this->jobFile) . ' ' . escapeshellarg($wk);
+			chdir(APPROOT);
+			@exec($cmd . ' ' . $args, $output, $rtn);
+		} else {
+			/**@var \wulaphp\artisan\GearmJob $cls */
+			$cls    = new $this->jobClass($wk);
+			$rtn    = $cls->run($this->isJson, false);
+			$output = $cls->getOutput();
+		}
 		if ($job instanceof \GearmanJob) {
 			if ($rtn) {
 				$job->sendFail();
