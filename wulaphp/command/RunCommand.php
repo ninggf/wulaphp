@@ -17,7 +17,7 @@ class RunCommand extends ArtisanMonitoredTask {
 	private $logfile;
 
 	public function cmd() {
-		return 'parallel:run';
+		return 'run';
 	}
 
 	public function desc() {
