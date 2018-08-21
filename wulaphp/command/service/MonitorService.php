@@ -99,20 +99,23 @@ class MonitorService extends Service {
 		while (!$this->shutdown) {
 			$this->checkServices();
 			$this->select();
-			if ($this->changed) {
+			if ($this->changed && !$this->shutdown) {
 				$this->accept();
 				$this->recieved();
 			}
 		}
+		$this->logi('stopping ...');
 		if ($this->clients) {//关链接
 			foreach ($this->clients as $c) {
 				@socket_close($c);
 			}
 			$this->clients = [];
+			$this->logd('close connections done');
 		}
 		if ($this->sock) {//关sock
 			@socket_close($this->sock);
 			$this->sock = null;
+			$this->logd('close socket done');
 		}
 		if ($this->rSignal) {//收到信号了，将信号转发给子进程
 			$wks = $this->pids;
@@ -121,6 +124,7 @@ class MonitorService extends Service {
 					@posix_kill($pid, $this->rSignal);
 					@pcntl_signal_dispatch();
 				}
+				$this->logd('send kill signal done');
 			}
 		}
 		while (count($this->pids) > 0) {
@@ -133,7 +137,7 @@ class MonitorService extends Service {
 					unset($this->services[ $sid ]['pids'][ $pid ]);
 				}
 			}
-			usleep(500);
+			usleep(100);
 		}
 		$this->logi('stopped');
 		@fclose($STDIN);
@@ -185,16 +189,19 @@ class MonitorService extends Service {
 					$service = $payload['args']['service'] ?? '';
 					if ($service) {
 						if (isset($this->services[ $service ])) {
-							$this->response($socket, ['ps' => [$service => $this->services[ $service ]['pids'] ?? []]]);
+							$this->response($socket, [
+								'ps'   => [$service => $this->services[ $service ]['pids'] ?? []],
+								'ssid' => posix_getpid()
+							]);
 						} else {
-							$this->response($socket, ['ps' => []]);
+							$this->response($socket, ['ps' => [], 'ssid' => posix_getpid()]);
 						}
 					} else {
 						$ps = [];
 						foreach ($this->services as $s => $ser) {
 							$ps[ $s ] = $ser['pids'] ?? [];
 						}
-						$this->response($socket, ['ps' => $ps]);
+						$this->response($socket, ['ps' => $ps, 'ssid' => posix_getpid()]);
 					}
 					break;
 				case 'status':
@@ -202,15 +209,18 @@ class MonitorService extends Service {
 					$service = $payload['args']['service'] ?? '';
 					if ($service) {
 						if (isset($this->services[ $service ])) {
-							$this->response($socket, ['status' => $this->services[ $service ]['status']]);
+							$this->response($socket, [
+								'status' => $this->services[ $service ]['status'],
+								'detail' => $this->services[ $service ]
+							]);
 						} else {
-							$this->response($socket, ['status' => 'unknown']);
+							$this->response($socket, ['status' => 'unknown', 'detail' => []]);
 						}
 					} else {
 						$this->response($socket, ['status' => 'running', 'services' => $this->services]);
 					}
 			}
-		} catch (\Error $e) {
+		} catch (\Throwable $e) {
 			$this->response($socket, ['error' => 500, 'msg' => $e->getMessage()]);
 		}
 	}
@@ -230,10 +240,14 @@ class MonitorService extends Service {
 						$this->logd('service ' . $sid . ', pid ' . $pid . ' exits with code: ' . $rtn);
 						if ($rtn == 1) {//子进程出错了
 							$this->services[ $sid ]['status'] = 'error';
+							$this->services[ $sid ]['msg']    = 'process exit 1';
 						}
 					} else if (@pcntl_wifsignaled($status)) {
 						$this->logd('service ' . $sid . ', pid ' . $pid . ' exits with code: -1');
 						$this->services[ $sid ]['status'] = 'error';
+						$this->services[ $sid ]['msg']    = 'process exit -1';
+					} else {
+						$this->logd('service ' . $sid . ', pid ' . $pid . ' exits with code: -2');
 					}
 					unset($this->services[ $sid ]['pids'][ $pid ]);
 				}
@@ -247,6 +261,9 @@ class MonitorService extends Service {
 			$status = $service['status'];
 			if (!isset($this->services[ $id ]['pids'])) {
 				$this->services[ $id ]['pids'] = [];
+			}
+			if ($this->services[ $id ]['status'] != 'error') {
+				unset($this->services[ $id ]['msg']);
 			}
 			switch ($status) {
 				case 'new':
@@ -463,6 +480,9 @@ class MonitorService extends Service {
 		if (!in_array($this->sock, $this->changed)) {
 			return;
 		}
+		if ($this->shutdown) {
+			return;
+		}
 		$socket_new = @socket_accept($this->sock); //accept new socket
 
 		if ($socket_new) {
@@ -480,6 +500,9 @@ class MonitorService extends Service {
 	 * 读取数据
 	 */
 	private function recieved() {
+		if ($this->shutdown) {
+			return;
+		}
 		foreach ($this->changed as $key => $socket) {
 			$socketId = array_search($socket, $this->clients);
 			if (!$socketId) continue;

@@ -2,7 +2,7 @@
 
 namespace wulaphp\mvc\view;
 
-class HtmlView extends View {
+class HtmlView extends View implements IModuleView {
 
 	/**
 	 * 绘制
@@ -11,7 +11,7 @@ class HtmlView extends View {
 	 * @throws
 	 */
 	public function render() {
-		$this->tpl = MODULES_PATH . $this->tpl;
+		$this->tpl = MODULES_PATH . $this->tpl . '.php';
 		if (is_file($this->tpl)) {
 			extract($this->data);
 			@ob_start();
@@ -23,6 +23,8 @@ class HtmlView extends View {
 		} else {
 			throw_exception('tpl is not found:' . $this->tpl);
 		}
+
+		return '';
 	}
 
 	public function setHeader() {

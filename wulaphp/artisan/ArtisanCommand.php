@@ -210,6 +210,25 @@ abstract class ArtisanCommand {
 		flush();
 	}
 
+	protected final function cell($messages, int $len = 0, string $pad = ' ') {
+		if (!is_array($messages)) {
+			$messages = [[$messages, $len]];
+		}
+		$msgs = [];
+		foreach ($messages as $message) {
+			$l = strlen($message[0]);
+			if ($l < $message[1]) {
+				$msgs[] = str_pad($message[0], $message[1], $pad);
+			} else if ($l > $message[1]) {
+				$msgs[] = substr($message[0], 0, $message[1]);
+			} else {
+				$msgs[] = $message[0];
+			}
+		}
+
+		return implode('', $msgs);
+	}
+
 	protected final function success($message) {
 		$color = $this->color;
 		$msg   = $this->pid . $color->str("SUCCESS:\n", 'green') . $message . "\n";

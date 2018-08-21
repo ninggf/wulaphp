@@ -47,6 +47,10 @@ class ServiceCommand extends ArtisanCommand {
 			$this->error('miss posix extension, install it first!');
 			exit(1);
 		}
+		if (!function_exists('socket_create')) {
+			$this->error('miss sockets extension, install it first!');
+			exit(1);
+		}
 		$cmd = $this->opt(0);
 		if (empty($cmd)) {
 			$cmd = 'help';
@@ -91,8 +95,11 @@ class ServiceCommand extends ArtisanCommand {
 	 */
 	private function start(string $service) {
 		if ($service) {
+			$this->output('Starting ...', false);
 			$rtn = $this->sendCommand('start', ['service' => $service]);
-			$this->output($rtn);
+			if ($rtn) {
+				$this->output($this->getStatus($rtn['status']));
+			}
 		} else {
 			//启动service monitor process
 			$pid = @pcntl_fork();
@@ -125,9 +132,11 @@ class ServiceCommand extends ArtisanCommand {
 	 * @param bool   $restart
 	 */
 	private function stop(string $service, bool $restart = false) {
+		$this->output('Stopping ...', false);
 		$rtn = $this->sendCommand('stop', ['service' => $service, 'restart' => $restart]);
-
-		$this->output($rtn);
+		if ($rtn) {
+			$this->output($this->getStatus($rtn['status']));
+		}
 	}
 
 	/**
@@ -136,9 +145,12 @@ class ServiceCommand extends ArtisanCommand {
 	 * @param string $service
 	 */
 	private function reload(string $service) {
+		$this->output('Reloading ...', false);
 		$rtn = $this->sendCommand('reload', ['service' => $service]);
 
-		$this->output($rtn);
+		if ($rtn) {
+			$this->output($this->getStatus($rtn['status']));
+		}
 	}
 
 	/**
@@ -148,8 +160,24 @@ class ServiceCommand extends ArtisanCommand {
 	 */
 	private function ps(string $service) {
 		$rtn = $this->sendCommand('ps', ['service' => $service]);
+		if ($rtn) {
 
-		$this->output($rtn);
+			$this->output('monitor');
+			$pcnt = count($rtn['ps']);
+			$this->output(($pcnt ? '├── ' : '└── ') . $this->color->str($rtn['ssid'], 'green'));
+			foreach ($rtn['ps'] as $s => $ids) {
+				$pcnt--;
+				if ($ids) {
+					$this->output(($pcnt ? '├── ' : '└── ') . $s);
+					$pids = array_keys($ids);
+					$cnt  = count($pids);
+					for ($i = 0; $i < $cnt - 1; $i++) {
+						$this->output(($pcnt ? '│   ├── ' : '    ├── ') . $pids[ $i ]);
+					}
+					$this->output(($pcnt ? '│   └── ' : '    └── ') . $pids[ $cnt - 1 ]);
+				}
+			}
+		}
 	}
 
 	/**
@@ -159,8 +187,85 @@ class ServiceCommand extends ArtisanCommand {
 	 */
 	private function status(string $service) {
 		$rtn = $this->sendCommand('status', ['service' => $service]);
+		if ($rtn) {
+			$status = $this->getStatus($rtn['status']);
+			if ($service) {
+				if (isset($rtn['detail']) && $rtn['detail']) {
+					foreach ($rtn['detail'] as $item => $v) {
+						$this->output($this->cell($item, 20), false);
+						if ($item == 'pids') {
+							$this->output(implode(',', array_keys($v)));
+						} else if ($item == 'status') {
+							$this->output($this->getStatus($v));
+						} else if ($item == 'env') {
+							$this->output($this->cell([['key', 20], ['value', 6]]));
+							foreach ($v as $vk => $vv) {
+								$this->output($this->cell([['', 20], [$vk, 20]]) . $vv);
+							}
+						} else if (is_array($v)) {
+							$this->output(json_encode($v));
+						} else {
+							$this->output($v);
+						}
+					}
+				} else {
+					$this->output($service . ' is ' . $status);
+				}
+			} else {
+				$services = $rtn['services'];
+				$this->output($this->cell([
+					['Service', 20],
+					['Type', 16],
+					['Worker', 10],
+					['Status', 20],
+					['Message', 44]
+				]));
+				$this->output($this->cell('-', 120, '-'));
+				foreach ($services as $id => $ser) {
+					$this->output($this->cell([
+						[$id, 20],
+						[$ser['type'], 16],
+						[$ser['worker'] ?? 1, 10],
+						[$this->getStatus($ser['status']), 20],
+						[$ser['msg'] ?? '', 44]
+					]));
+				}
+			}
+		}
+	}
 
-		$this->output($rtn);
+	private function getStatus($status) {
+		switch ($status) {
+			case 'running':
+			case 'new':
+			case 'starting':
+			case 'reloading':
+			case 'reload':
+				$status = $this->color->str($status, 'green');
+				break;
+			case 'stop':
+				$status = $this->color->str('stopped', 'yellow');
+				break;
+			case 'stopping':
+				$status = $this->color->str('stopping', 'yellow');
+				break;
+			case 'error':
+				$status = $this->color->str('error', 'red');
+				break;
+			case 'disabled':
+				$status = $this->color->str('disabled', 'cyan');
+				break;
+			case 'done':
+				$status = $this->color->str('Done', 'green');
+				break;
+			case 'fail':
+				$status = $this->color->str('Fail', 'red');
+				break;
+			default:
+				$status = $this->color->str($status, 'light_gray');
+		}
+
+		return $status;
 	}
 
 	/**
@@ -181,7 +286,7 @@ class ServiceCommand extends ArtisanCommand {
 		if ($binds[0] == 'unix') {
 			$sock = @socket_create(AF_UNIX, SOCK_STREAM, SOL_TCP);
 			if (!$sock) {
-				$this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
+				$this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
 				exit(-1);
 			}
 			$rtn = @socket_connect($sock, substr($bind, 7));
@@ -190,7 +295,7 @@ class ServiceCommand extends ArtisanCommand {
 			$port = $binds[1] ?? '5858';
 			$sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 			if (!$sock) {
-				$this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
+				$this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
 				exit(-1);
 			}
 			@socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
@@ -198,13 +303,13 @@ class ServiceCommand extends ArtisanCommand {
 		}
 
 		if (!$rtn) {
-			$this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
+			$this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
 			exit(-1);
 		}
 
 		$rtn = @socket_write($sock, $payload, strlen($payload));
 		if (!$rtn) {
-			$this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
+			$this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
 			exit(-1);
 		}
 		$msgs = '';
@@ -218,12 +323,21 @@ class ServiceCommand extends ArtisanCommand {
 					break;
 				}
 			} else {
-				$this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
+				$this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
 				exit(-1);
 			}
 		}
 
-		return explode("\r\n\r\n", $msgs)[0];
+		$rst = explode("\r\n\r\n", $msgs)[0];
+		$rst = @json_decode($rst, true);
+		if ($rst && isset($rst['error']) && $rst['error']) {
+			$this->output('');
+			$this->error($rst['msg']);
+
+			return null;
+		} else {
+			return $rst;
+		}
 	}
 }
 

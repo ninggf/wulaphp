@@ -6,9 +6,9 @@ use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 use wulaphp\mvc\controller\Controller;
 use wulaphp\mvc\controller\SubModuleRouter;
+use wulaphp\mvc\view\IModuleView;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
-use wulaphp\mvc\view\SmartyView;
 use wulaphp\mvc\view\View;
 use wulaphp\util\ObjectCaller;
 
@@ -178,8 +178,9 @@ class DefaultDispatcher implements IURLDispatcher {
 							}
 							/* @var \ReflectionParameter[] $params */
 							$params      = $method->getParameters();
-							$paramsCount = count($params);
-							if ($paramsCount < count($pms)) {
+							$paramsCount = count($params);// 方法参数个数
+							$argsCount   = count($pms);// 用户通过url传递过来的参数个数
+							if ($paramsCount < $argsCount) {
 								if ($paramsCount == 0 || ($paramsCount == 1 && !$params[0]->isVariadic())) {
 									return null;
 								}
@@ -201,7 +202,8 @@ class DefaultDispatcher implements IURLDispatcher {
 									$idx = 0;
 									foreach ($params as $p) {
 										$name    = $p->getName();
-										$def     = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
+										$da      = $p->isDefaultValueAvailable();
+										$def     = $pms [ $idx ] ?? (($da ? $p->getDefaultValue() : null));
 										$value   = rqst($name, $def, true);
 										$args [] = is_array($value) ? array_map(function ($v) {
 											return is_array($v) ? $v : urldecode($v);
@@ -350,7 +352,7 @@ class DefaultDispatcher implements IURLDispatcher {
 	 * @param string                             $action
 	 */
 	public static function prepareView($view, $module, $clz, $action) {
-		if ($view instanceof SmartyView) {
+		if ($view instanceof IModuleView) {
 			$tpl = $view->getTemplate();
 			if ($tpl) {
 				if ($tpl{0} == '~') {

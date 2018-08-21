@@ -20,7 +20,7 @@ class XmlView extends View {
 	 * @param array        $headers
 	 * @param int          $status
 	 */
-	public function __construct($data, $root, $headers = [], $status = 200) {
+	public function __construct($data, $root = 'root', $headers = [], $status = 200) {
 		parent::__construct($data, '', $headers, $status);
 		$this->root = $root;
 	}
@@ -37,15 +37,24 @@ class XmlView extends View {
 
 			return $xml->asXML();
 		} else {
-			return '<?xml version="1.0"><error>xml extension is not installed</error>';
+			return '<?xml version="1.0" encoding="UTF-8"><error>xml extension is not installed</error>';
 		}
 	}
 
 	private function addNode(\SimpleXMLElement &$node, $data) {
 		foreach ($data as $k => $v) {
 			if (is_array($v)) {
-				$nn = $node->addChild($k);
-				$this->addNode($nn, $v);
+				if (is_numeric($k)) {
+					$this->addNode($node, $v);
+				} else {
+					if (array_key_exists('#', $v)) {
+						$nn = $node->addChild($k, $v['#']);
+						unset($v['#']);
+					} else {
+						$nn = $node->addChild($k);
+					}
+					$this->addNode($nn, $v);
+				}
 			} else if ($k{0} == '@') {
 				$node->addAttribute(substr($k, 1), $v);
 			} else {

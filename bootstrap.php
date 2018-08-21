@@ -57,6 +57,9 @@ define('DEBUG_ERROR', 400);
 define('DEBUG_WARN', 300);
 define('DEBUG_INFO', 200);
 define('DEBUG_DEBUG', 100);
+define('EXIT_SUCCESS', 0);
+define('EXIT_ERROR', 1);
+define('EXIT_CONTINUE', 2);
 define('PHP_RUNTIME_NAME', php_sapi_name());
 if (!defined('APP_MODE')) {
 	if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {

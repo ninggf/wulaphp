@@ -9,7 +9,7 @@ namespace wulaphp\mvc\view;
  *
  * @package view
  */
-class SmartyView extends View {
+class SmartyView extends View implements IModuleView {
 
 	/**
 	 *

@@ -303,7 +303,7 @@ function smarty_modifiercompiler_render($ary, $compiler) {
 }
 
 /**
- * the views in modules.
+ * the Smarty view in modules.
  *
  * @param array|string $data
  * @param string|array $tpl
@@ -312,7 +312,7 @@ function smarty_modifiercompiler_render($ary, $compiler) {
  * @return \wulaphp\mvc\view\SmartyView
  * @throws
  */
-function view($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
+function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/html']): \wulaphp\mvc\view\View {
 	if (is_string($data)) {
 		return new \wulaphp\mvc\view\SmartyView($tpl, $data, $headers);
 	} else if (is_array($data) && is_array($tpl)) {
@@ -320,6 +320,37 @@ function view($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html'])
 	}
 
 	return new \wulaphp\mvc\view\SmartyView($data, $tpl, $headers);
+}
+
+/**
+ * the PHP view in modules.
+ *
+ * @param array|string $data
+ * @param string|array $tpl
+ * @param array        $headers
+ *
+ * @return \wulaphp\mvc\view\View
+ */
+function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']): \wulaphp\mvc\view\View {
+	if (is_string($data)) {
+		return new \wulaphp\mvc\view\HtmlView($tpl, $data, $headers);
+	} else if (is_array($data) && is_array($tpl)) {
+		return new \wulaphp\mvc\view\HtmlView('', $data, $tpl);
+	}
+
+	return new \wulaphp\mvc\view\HtmlView($data, $tpl, $headers);
+}
+
+/**
+ * XML View
+ *
+ * @param array  $data
+ * @param string $root
+ *
+ * @return \wulaphp\mvc\view\View
+ */
+function xmlview(array $data, string $root = 'data'): \wulaphp\mvc\view\View {
+	return new \wulaphp\mvc\view\XmlView($data, $root);
 }
 
 /**
