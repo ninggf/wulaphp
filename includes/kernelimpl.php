@@ -21,9 +21,8 @@ bind('get_memcached_cache', function ($cache, $cfg) {
 }, 100, 2);
 
 bind('artisan\getCommands', function ($cmds) {
-	$cmds['cron']         = new \wulaphp\command\CrontabCommand();
-	$cmds['parallel:run'] = new \wulaphp\command\RunCommand();
-	$cmds['service']      = new \wulaphp\command\ServiceCommand();
+	$cmds['cron']    = new \wulaphp\command\CrontabCommand();
+	$cmds['service'] = new \wulaphp\command\ServiceCommand();
 
 	return $cmds;
 });
