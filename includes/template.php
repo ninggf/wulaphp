@@ -10,19 +10,19 @@ $global_tpl_vars = [];
  * @return array the merged arguments array
  */
 function merge_args($args, $default) {
-	$_args = [];
-	foreach ($args as $key => $val) {
-		if (is_numeric($val) || is_bool($val) || !empty ($val)) {
-			$_args [ $key ] = $val;
-		}
-	}
-	foreach ($default as $key => $val) {
-		if (!isset ($_args [ $key ])) {
-			$_args [ $key ] = $val;
-		}
-	}
+    $_args = [];
+    foreach ($args as $key => $val) {
+        if (is_numeric($val) || is_bool($val) || !empty ($val)) {
+            $_args [ $key ] = $val;
+        }
+    }
+    foreach ($default as $key => $val) {
+        if (!isset ($_args [ $key ])) {
+            $_args [ $key ] = $val;
+        }
+    }
 
-	return $_args;
+    return $_args;
 }
 
 /**
@@ -35,13 +35,13 @@ function merge_args($args, $default) {
  * @return array 解析后的参数
  */
 function smarty_parse_args($args) {
-	foreach ($args as $key => $value) {
-		if (strpos($value, '_smarty_tpl->tpl_vars') !== false) {
-			$args [ $key ] = trim($value, '\'"');
-		}
-	}
+    foreach ($args as $key => $value) {
+        if (strpos($value, '_smarty_tpl->tpl_vars') !== false) {
+            $args [ $key ] = trim($value, '\'"');
+        }
+    }
 
-	return $args;
+    return $args;
 }
 
 /**
@@ -52,37 +52,37 @@ function smarty_parse_args($args) {
  * @return string
  */
 function smarty_argstr($args) {
-	$a = [];
-	foreach ($args as $k => $v) {
-		$v1 = trim($v);
-		if (empty ($v1) && $v1 != '0' && $v1 != 0) {
-			continue;
-		}
-		if ($v == false) {
-			$a [] = "'$k'=>false";
-		} else {
-			$a [] = "'$k'=>$v";
-		}
-	}
+    $a = [];
+    foreach ($args as $k => $v) {
+        $v1 = trim($v);
+        if (empty ($v1) && $v1 != '0' && $v1 != 0) {
+            continue;
+        }
+        if ($v == false) {
+            $a [] = "'$k'=>false";
+        } else {
+            $a [] = "'$k'=>$v";
+        }
+    }
 
-	return '[' . implode(',', $a) . ']';
+    return '[' . implode(',', $a) . ']';
 }
 
 function smarty_vargs($args) {
-	$a = [];
-	foreach ($args as $k => $v) {
-		$v1 = trim($v);
-		if (empty ($v1) && $v1 != '0' && $v1 != 0) {
-			$a[] = '';
-		}
-		if ($v == false) {
-			$a [] = 'false';
-		} else {
-			$a [] = "$v";
-		}
-	}
+    $a = [];
+    foreach ($args as $k => $v) {
+        $v1 = trim($v);
+        if (empty ($v1) && $v1 != '0' && $v1 != 0) {
+            $a[] = '';
+        }
+        if ($v == false) {
+            $a [] = 'false';
+        } else {
+            $a [] = "$v";
+        }
+    }
 
-	return implode(',', $a);
+    return implode(',', $a);
 }
 
 /**
@@ -105,130 +105,130 @@ function smarty_vargs($args) {
  * @return string with compiled code
  */
 function smarty_modifiercompiler_here($params, $compiler) {
-	static $base = null;
-	if ($base == null) {
-		$base = str_replace(DS, '/', WWWROOT);
-	}
-	$tpl = str_replace(DS, '/', dirname($compiler->template->source->filepath));
-	$tpl = str_replace($base, '', $tpl);
-	$url = !empty ($tpl) ? trailingslashit($tpl) : '';
+    static $base = null;
+    if ($base == null) {
+        $base = str_replace(DS, '/', WWWROOT);
+    }
+    $tpl = str_replace(DS, '/', dirname($compiler->template->source->filepath));
+    $tpl = str_replace($base, '', $tpl);
+    $url = !empty ($tpl) ? trailingslashit($tpl) : '';
 
-	return "\wulaphp\app\App::src('{$url}'." . $params [0] . ')';
+    return "\wulaphp\app\App::src('{$url}'." . $params [0] . ')';
 }
 
 function smarty_modifiercompiler_cfg($params, $compiler) {
-	if (isset($params[1])) {
-		$default = $params[1];
-	} else {
-		$default = "''";
-	}
+    if (isset($params[1])) {
+        $default = $params[1];
+    } else {
+        $default = "''";
+    }
 
-	return '\wulaphp\app\App::cfg(' . $params [0] . ',' . $default . ')';
+    return '\wulaphp\app\App::cfg(' . $params [0] . ',' . $default . ')';
 }
 
 function smarty_modifiercompiler_clean($params, $compiler) {
-	return 'cleanhtml2simple(' . $params [0] . ')';
+    return 'cleanhtml2simple(' . $params [0] . ')';
 }
 
 function smarty_modifiercompiler_rstr($params, $compiler) {
-	$str = array_shift($params);
-	$cnt = 10;
-	if (!empty ($params)) {
-		$cnt = intval(array_shift($params));
-	}
-	$append = "''";
-	if (!empty ($params)) {
-		$append = array_shift($params);
-	}
+    $str = array_shift($params);
+    $cnt = 10;
+    if (!empty ($params)) {
+        $cnt = intval(array_shift($params));
+    }
+    $append = "''";
+    if (!empty ($params)) {
+        $append = array_shift($params);
+    }
 
-	return "{$str}.{$append}.rand_str({$cnt}, 'a-z,A-Z')";
+    return "{$str}.{$append}.rand_str({$cnt}, 'a-z,A-Z')";
 }
 
 function smarty_modifiercompiler_rnum($params, $compiler) {
-	$str = array_shift($params);
-	$cnt = 10;
-	if (!empty ($params)) {
-		$cnt = intval(array_shift($params));
-	}
-	$append = "''";
-	if (!empty ($params)) {
-		$append = array_shift($params);
-	}
+    $str = array_shift($params);
+    $cnt = 10;
+    if (!empty ($params)) {
+        $cnt = intval(array_shift($params));
+    }
+    $append = "''";
+    if (!empty ($params)) {
+        $append = array_shift($params);
+    }
 
-	return "{$str}.{$append}.rand_str({$cnt}, '0-9')";
+    return "{$str}.{$append}.rand_str({$cnt}, '0-9')";
 }
 
 function smarty_modifiercompiler_timediff($params, $compiler) {
-	$cnt = time();
-	if (!empty ($params)) {
-		$cnt = array_shift($params);
-	}
+    $cnt = time();
+    if (!empty ($params)) {
+        $cnt = array_shift($params);
+    }
 
-	return "timediff({$cnt})";
+    return "timediff({$cnt})";
 }
 
 function smarty_modifiercompiler_media($params, $compiler) {
-	return 'the_media_src(' . $params [0] . ')';
+    return 'the_media_src(' . $params [0] . ')';
 }
 
 function smarty_modifiercompiler_app($params, $compiler) {
-	return "wulaphp\\app\\App::url({$params[0]})";
+    return "wulaphp\\app\\App::url({$params[0]})";
 }
 
 function smarty_modifiercompiler_url($params, $compiler) {
-	return "wulaphp\\app\\App::base({$params[0]})";
+    return "wulaphp\\app\\App::base({$params[0]})";
 }
 
 function smarty_modifiercompiler_action($params, $compiler) {
-	return "wulaphp\\app\\App::action({$params[0]})";
+    return "wulaphp\\app\\App::action({$params[0]})";
 }
 
 function smarty_modifiercompiler_res($params, $compiler) {
-	$min = "''";
-	if (isset($params[1])) {
-		$min = $params[1];
-	}
+    $min = "''";
+    if (isset($params[1])) {
+        $min = $params[1];
+    }
 
-	return "wulaphp\\app\\App::res({$params[0]},$min)";
+    return "wulaphp\\app\\App::res({$params[0]},$min)";
 }
 
 function smarty_modifiercompiler_cdn($params, $compiler) {
-	$min = "''";
-	if (isset($params[1])) {
-		$min = $params[1];
-	}
+    $min = "''";
+    if (isset($params[1])) {
+        $min = $params[1];
+    }
 
-	return "wulaphp\\app\\App::cdn({$params[0]},$min)";
+    return "wulaphp\\app\\App::cdn({$params[0]},$min)";
 }
 
 function smarty_modifiercompiler_assets($params, $compiler) {
-	$min = "''";
-	if (isset($params[1])) {
-		$min = $params[1];
-	}
+    $min = "''";
+    if (isset($params[1])) {
+        $min = $params[1];
+    }
 
-	return "wulaphp\\app\\App::assets({$params[0]},$min)";
+    return "wulaphp\\app\\App::assets({$params[0]},$min)";
 }
 
 function smarty_modifiercompiler_vendor($params, $compiler) {
-	$min = "''";
-	if (isset($params[1])) {
-		$min = $params[1];
-	}
+    $min = "''";
+    if (isset($params[1])) {
+        $min = $params[1];
+    }
 
-	return "wulaphp\\app\\App::vendor({$params[0]},$min)";
+    return "wulaphp\\app\\App::vendor({$params[0]},$min)";
 }
 
 function smarty_modifiercompiler_timeread($params, $compiler) {
-	return "readable_date({$params[0]})";
+    return "readable_date({$params[0]})";
 }
 
 function smarty_modifiercompiler_readable_size($params, $compiler) {
-	return "readable_size({$params[0]})";
+    return "readable_size({$params[0]})";
 }
 
 function smarty_modifiercompiler_readable_num($params, $compiler) {
-	return "readable_num({$params[0]})";
+    return "readable_num({$params[0]})";
 }
 
 /**
@@ -249,7 +249,7 @@ function smarty_modifiercompiler_readable_num($params, $compiler) {
  * @return string with compiled code
  */
 function smarty_modifiercompiler_checked($value, $compiler) {
-	return "((is_array($value[1]) && in_array($value[0],$value[1]) ) || $value[0] == $value[1])?'checked = \"checked\"' : ''";
+    return "((is_array($value[1]) && in_array($value[0],$value[1]) ) || $value[0] == $value[1])?'checked = \"checked\"' : ''";
 }
 
 /**
@@ -270,36 +270,36 @@ function smarty_modifiercompiler_checked($value, $compiler) {
  * @return string with compiled code
  */
 function smarty_modifiercompiler_status($status, $compiler) {
-	if (count($status) < 2) {
-		trigger_error('error usage of status', E_USER_WARNING);
+    if (count($status) < 2) {
+        trigger_error('error usage of status', E_USER_WARNING);
 
-		return "''";
-	}
-	$key        = "$status[0]";
-	$status_str = "$status[1]";
-	$output     = "$status_str" . "[$key]";
+        return "''";
+    }
+    $key        = "$status[0]";
+    $status_str = "$status[1]";
+    $output     = "$status_str" . "[$key]";
 
-	return $output;
+    return $output;
 }
 
 function smarty_modifiercompiler_random($ary, $compiler) {
-	if (count($ary) < 1) {
-		return "''";
-	}
-	$output = "is_array({$ary[0]})?{$ary[0]}[array_rand({$ary[0]})]:''";
+    if (count($ary) < 1) {
+        return "''";
+    }
+    $output = "is_array({$ary[0]})?{$ary[0]}[array_rand({$ary[0]})]:''";
 
-	return $output;
+    return $output;
 }
 
 function smarty_modifiercompiler_render($ary, $compiler) {
-	if (count($ary) < 1) {
-		trigger_error('error usage of render', E_USER_WARNING);
+    if (count($ary) < 1) {
+        trigger_error('error usage of render', E_USER_WARNING);
 
-		return "''";
-	}
-	$render = $ary [0];
+        return "''";
+    }
+    $render = $ary [0];
 
-	return "{$render} instanceof \\wulaphp\\mvc\\view\\Renderable?{$render}->render():{$render}";
+    return "{$render} instanceof \\wulaphp\\mvc\\view\\Renderable?{$render}->render():{$render}";
 }
 
 /**
@@ -313,13 +313,13 @@ function smarty_modifiercompiler_render($ary, $compiler) {
  * @throws
  */
 function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/html']): \wulaphp\mvc\view\View {
-	if (is_string($data)) {
-		return new \wulaphp\mvc\view\SmartyView($tpl, $data, $headers);
-	} else if (is_array($data) && is_array($tpl)) {
-		return new \wulaphp\mvc\view\SmartyView('', $data, $tpl);
-	}
+    if (is_string($data)) {
+        return new \wulaphp\mvc\view\SmartyView($tpl, $data, $headers);
+    } else if (is_array($data) && is_array($tpl)) {
+        return new \wulaphp\mvc\view\SmartyView('', $data, $tpl);
+    }
 
-	return new \wulaphp\mvc\view\SmartyView($data, $tpl, $headers);
+    return new \wulaphp\mvc\view\SmartyView($data, $tpl, $headers);
 }
 
 /**
@@ -332,13 +332,13 @@ function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/h
  * @return \wulaphp\mvc\view\View
  */
 function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']): \wulaphp\mvc\view\View {
-	if (is_string($data)) {
-		return new \wulaphp\mvc\view\HtmlView($tpl, $data, $headers);
-	} else if (is_array($data) && is_array($tpl)) {
-		return new \wulaphp\mvc\view\HtmlView('', $data, $tpl);
-	}
+    if (is_string($data)) {
+        return new \wulaphp\mvc\view\HtmlView($tpl, $data, $headers);
+    } else if (is_array($data) && is_array($tpl)) {
+        return new \wulaphp\mvc\view\HtmlView('', $data, $tpl);
+    }
 
-	return new \wulaphp\mvc\view\HtmlView($data, $tpl, $headers);
+    return new \wulaphp\mvc\view\HtmlView($data, $tpl, $headers);
 }
 
 /**
@@ -350,7 +350,7 @@ function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']
  * @return \wulaphp\mvc\view\View
  */
 function xmlview(array $data, string $root = 'data'): \wulaphp\mvc\view\View {
-	return new \wulaphp\mvc\view\XmlView($data, $root);
+    return new \wulaphp\mvc\view\XmlView($data, $root);
 }
 
 /**
@@ -363,7 +363,7 @@ function xmlview(array $data, string $root = 'data'): \wulaphp\mvc\view\View {
  * @return \wulaphp\mvc\view\SmartyView
  */
 function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
-	return view($data, $tpl, $headers)->mustache();
+    return view($data, $tpl, $headers)->mustache();
 }
 
 /**
@@ -377,30 +377,30 @@ function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/htm
  * @throws
  */
 function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) {
-	$theme   = apply_filter('get_theme', 'default', $data);
-	$tpl     = apply_filter('get_tpl', $tpl, $data);
-	$tplname = str_replace(['/', '.'], '_', basename($tpl, '.tpl'));
-	$tplfile = $_tpl = $theme . DS . $tpl;
-	if (!is_file(THEME_PATH . $_tpl) && $theme != 'default') {
-		$tplfile = 'default' . DS . $tpl;
-		$theme   = 'default';
-	}
-	$template_func_file = THEME_PATH . $theme . DS . 'template.php';
-	if (is_file($template_func_file)) {
-		include_once $template_func_file;
-		$func = $theme . '_template_data';
-		if (function_exists($func)) {
-			$func ($data);
-		}
-		$func = $theme . '_' . $tplname . '_template_data';
-		if (function_exists($func)) {
-			$func ($data);
-		}
-	}
-	$data ['_current_template'] = $tplfile;
-	$data ['_theme_name']       = $theme;
+    $theme   = apply_filter('get_theme', 'default', $data);
+    $tpl     = apply_filter('get_tpl', $tpl, $data);
+    $tplname = str_replace(['/', '.'], '_', basename($tpl, '.tpl'));
+    $tplfile = $_tpl = $theme . DS . $tpl;
+    if (!is_file(THEME_PATH . $_tpl) && $theme != 'default') {
+        $tplfile = 'default' . DS . $tpl;
+        $theme   = 'default';
+    }
+    $template_func_file = THEME_PATH . $theme . DS . 'template.php';
+    if (is_file($template_func_file)) {
+        include_once $template_func_file;
+        $func = $theme . '_template_data';
+        if (function_exists($func)) {
+            $func ($data);
+        }
+        $func = $theme . '_' . $tplname . '_template_data';
+        if (function_exists($func)) {
+            $func ($data);
+        }
+    }
+    $data ['_current_template'] = $tplfile;
+    $data ['_theme_name']       = $theme;
 
-	return new \wulaphp\mvc\view\ThemeView($data, $tplfile, $headers);
+    return new \wulaphp\mvc\view\ThemeView($data, $tplfile, $headers);
 }
 
 /**
@@ -415,48 +415,48 @@ function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) 
  * @return string
  */
 function combinate_resources($content, $type, $ver) {
-	if (APP_MODE == 'dev' || !\wulaphp\app\App::bcfg('resource.combinate')) {
-		return $content;
-	}
-	if (!$content) {
-		return '';
-	}
-	$md5      = md5($content . $ver);
-	$file     = $type . DS . $md5 . '.' . $type;
-	$path     = apply_filter('combinater\getPath', 'files');
-	$url      = trailingslashit(apply_filter('combinater\getURL', WWWROOT_DIR) . $path) . $file . '?ver=' . $ver;
-	$destFile = WWWROOT . $path . DS . $file;
-	$dir      = dirname($destFile);
-	if (!is_dir($dir)) {
-		@mkdir($dir, 0755, true);
-	}
+    if (APP_MODE == 'dev' || !\wulaphp\app\App::bcfg('resource.combinate')) {
+        return $content;
+    }
+    if (!$content) {
+        return '';
+    }
+    $md5      = md5($content . $ver);
+    $file     = $type . DS . $md5 . '.' . $type;
+    $path     = apply_filter('combinater\getPath', 'files');
+    $url      = trailingslashit(apply_filter('combinater\getURL', WWWROOT_DIR) . $path) . $file . '?ver=' . $ver;
+    $destFile = WWWROOT . $path . DS . $file;
+    $dir      = dirname($destFile);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
 
-	if (!is_dir($dir)) {
-		return $content;
-	}
+    if (!is_dir($dir)) {
+        return $content;
+    }
 
-	if ($type == 'css') {
-		$reg = '#href\s*=\s*"([^"]+)"#i';
-	} else {
-		$reg = '#src\s*=\s*"([^"]+)"#i';
-	}
+    if ($type == 'css') {
+        $reg = '#href\s*=\s*"([^"]+)"#i';
+    } else {
+        $reg = '#src\s*=\s*"([^"]+)"#i';
+    }
 
-	$files = [];
-	if (preg_match_all($reg, $content, $ms)) {
-		foreach ($ms[1] as $res) {
-			$files[] = WWWROOT . substr($res, strlen(WWWROOT_DIR));
-		}
-	}
+    $files = [];
+    if (preg_match_all($reg, $content, $ms)) {
+        foreach ($ms[1] as $res) {
+            $files[] = WWWROOT . substr($res, strlen(WWWROOT_DIR));
+        }
+    }
 
-	if ($type == 'js') {
-		\wulaphp\util\ResourceCombinater::combinateJS($files, $destFile);
-		$tag = '<script type="text/javascript" src="' . $url . '"></script>';
-	} else {
-		\wulaphp\util\ResourceCombinater::combinateCSS($files, $destFile);
-		$tag = '<link rel="stylesheet" type="text/css" href="' . $url . '">';
-	}
+    if ($type == 'js') {
+        \wulaphp\util\ResourceCombinater::combinateJS($files, $destFile);
+        $tag = '<script type="text/javascript" src="' . $url . '"></script>';
+    } else {
+        \wulaphp\util\ResourceCombinater::combinateCSS($files, $destFile);
+        $tag = '<link rel="stylesheet" type="text/css" href="' . $url . '">';
+    }
 
-	return $tag;
+    return $tag;
 }
 
 /**
@@ -468,19 +468,19 @@ function combinate_resources($content, $type, $ver) {
  * @return string
  */
 function minify_resources($content, $type) {
-	static $cm = false;
-	if (!\wulaphp\app\App::bcfg('resource.minify')) {
-		return $content;
-	}
-	if ($type == 'js') {
-		return JSMin::minify($content);
-	} else {
-		if ($cm === false) {
-			$cm = new CSSmin ();
-		}
+    static $cm = false;
+    if (!\wulaphp\app\App::bcfg('resource.minify')) {
+        return $content;
+    }
+    if ($type == 'js') {
+        return JSMin::minify($content);
+    } else {
+        if ($cm === false) {
+            $cm = new CSSmin ();
+        }
 
-		return $cm->run($content);
-	}
+        return $cm->run($content);
+    }
 }
 
 /**
@@ -493,30 +493,30 @@ function minify_resources($content, $type) {
  *
  * @return \wulaphp\mvc\model\CtsData
  */
-function get_cts_from_datasource($name, $args, $dialect = null, $tplvars = []) {
-	static $urlInfo = null, $providers = null;
-	//获取当前解析后的URL信息
-	if ($urlInfo === null) {
-		$urlInfo = \wulaphp\router\Router::getRouter()->getParsedInfo();
-	}
-	if ($providers === null) {
-		$providers = get_cts_datasource();
-	}
-	//从数据源获取的数据.
-	$data = null;
-	if ($providers && isset ($providers [ $name ])) {
-		$provider = $providers [ $name ];
-		if ($provider instanceof \wulaphp\mvc\model\CtsDataSource) {
-			$data = $provider->getList($args, $dialect, $urlInfo, $tplvars);
-		}
-	}
-	if (is_array($data)) {
-		return new \wulaphp\mvc\model\CtsData ($data, count(0));
-	} else if ($data instanceof \wulaphp\mvc\model\CtsData) {
-		return $data;
-	} else {
-		return new \wulaphp\mvc\model\CtsData ([], 0);
-	}
+function get_cts_from_datasource(string $name, ?array $args = [], ?string $dialect = null, ?array $tplvars = []) {
+    static $urlInfo = null, $providers = null;
+    //获取当前解析后的URL信息
+    if ($urlInfo === null) {
+        $urlInfo = \wulaphp\router\Router::getRouter()->getParsedInfo();
+    }
+    if ($providers === null) {
+        $providers = get_cts_datasource();
+    }
+    //从数据源获取的数据.
+    $data = null;
+    if ($providers && isset ($providers [ $name ])) {
+        $provider = $providers [ $name ];
+        if ($provider instanceof \wulaphp\mvc\model\CtsDataSource) {
+            $data = $provider->getList($args, $dialect, $urlInfo, $tplvars);
+        }
+    }
+    if (is_array($data)) {
+        return new \wulaphp\mvc\model\CtsData ($data, count($data));
+    } else if ($data instanceof \wulaphp\mvc\model\CtsData) {
+        return $data;
+    } else {
+        return new \wulaphp\mvc\model\CtsData ([], 0);
+    }
 }
 
 /**
@@ -525,12 +525,12 @@ function get_cts_from_datasource($name, $args, $dialect = null, $tplvars = []) {
  * @return \wulaphp\mvc\model\CtsDataSource[]
  */
 function get_cts_datasource() {
-	static $providers = null;
-	if ($providers === null) {
-		$providers = apply_filter('tpl\regCtsDatasource', [
-			'split' => new \wulaphp\mvc\model\SplitDataSource()
-		]);
-	}
+    static $providers = null;
+    if ($providers === null) {
+        $providers = apply_filter('tpl\regCtsDatasource', [
+            'split' => new \wulaphp\mvc\model\SplitDataSource()
+        ]);
+    }
 
-	return $providers;
+    return $providers;
 }
