@@ -49,7 +49,7 @@ class DatabaseConnection {
      * @return DatabaseConnection
      * @throws \Exception
      */
-    public static function connect(?string $name = 'default'): DatabaseConnection {
+    public static function connect($name = 'default'): DatabaseConnection {
         if ($name instanceof DatabaseConnection) {
             return $name;
         }
