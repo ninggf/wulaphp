@@ -538,7 +538,7 @@ class App {
      *
      * @return string|string[]
      */
-    public static function id2dir(string $id) {
+    public static function id2dir(?string $id = null) {
         if ($id === null) {
             return self::$maps ['id2dir'];
         }
