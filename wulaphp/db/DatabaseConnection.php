@@ -242,36 +242,42 @@ class DatabaseConnection {
     public function trans(\Closure $trans, string &$error = null, ILock $lock = null) {
         try {
             $rst = $this->start();
-            if ($rst) {
-                try {
-                    $data = false;
-                    if ($lock) {
-                        $data = $lock->lock();
-                        if ($data === false) {
-                            throw new \Exception('Cannot lock');
-                        }
-                    }
-                    if ($lock) {
-                        $rst = $trans($this, $data);
-                    } else {
-                        $rst = $trans($this);
-                    }
-                    if (empty($rst)) {
-                        $this->rollback();
 
-                        return $rst;
-                    } else if ($this->commit()) {
-                        return $rst;
-                    } else {
-                        $error = $this->error = 'Cannot commit trans.';
-                    }
-                } catch (\Exception $e) {
-                    $error = $this->error = $e->getMessage();
-                    $this->rollback();
-                }
-            }
         } catch (\Exception $e) {
             $error = $this->error = $e->getMessage();
+
+            return null;
+        }
+        if ($rst) {
+            try {
+                $data = false;
+                if ($lock) {
+                    $data = $lock->lock();
+                    if ($data === false) {
+                        throw new \Exception('Cannot lock');
+                    }
+                }
+                if ($lock) {
+                    $rst = $trans($this, $data);
+                } else {
+                    $rst = $trans($this);
+                }
+                if (empty($rst)) {
+                    $this->rollback();
+
+                    return $rst;
+                } else if ($this->commit()) {
+                    return $rst;
+                } else {
+                    $error = $this->error = 'Cannot commit trans.';
+                }
+            } catch (\Exception $e) {
+                $error = $this->error = $e->getMessage();
+                $this->rollback();
+                if ($e instanceof IThrowable) {
+                    throw $e;
+                }
+            }
         }
 
         return null;
