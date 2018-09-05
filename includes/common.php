@@ -199,7 +199,7 @@ function log_message(string $message, array $trace_info, int $level, string $fil
 		if ($log instanceof Psr\Log\LoggerInterface) {
 			$logger = $log;
 		} else {
-			$logger = null;
+			$logger = false;
 		}
 		$loggers[ $level ][ $file ] = $logger;
 	}
