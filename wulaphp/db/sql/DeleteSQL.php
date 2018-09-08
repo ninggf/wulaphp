@@ -17,7 +17,7 @@ class DeleteSQL extends QueryBuilder {
 	 *
 	 * @return \wulaphp\db\sql\DeleteSQL
 	 */
-	public function from(string $table, string $alias = null): DeleteSQL {
+	public function from($table, $alias = null) {
 		$this->from [] = self::parseAs($table, $alias);
 
 		return $this;

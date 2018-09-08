@@ -16,8 +16,8 @@ use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
 @error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
-if (version_compare('7.1.0', phpversion(), '>')) {
-	die (sprintf('Your php version is %s,but wulaphp required PHP 7.1.0 or higher', phpversion()));
+if (version_compare('5.6.9', phpversion(), '>')) {
+	die (sprintf('Your php version is %s,but wulaphp required PHP 5.6.9 or higher', phpversion()));
 }
 define('WULA_STARTTIME', microtime(true));
 defined('APPROOT') or die ('please define APPROOT');

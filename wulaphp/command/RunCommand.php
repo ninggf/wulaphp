@@ -37,7 +37,7 @@ class RunCommand extends ArtisanMonitoredTask {
 		if (!$op || $op == 'help') {
 			return true;
 		}
-		$s = $options['s'] ?? '';
+		$s = isset($options['s'])?$options['s']:0;
 		if (!$s) {
 			$this->error('please give me a script to run!');
 

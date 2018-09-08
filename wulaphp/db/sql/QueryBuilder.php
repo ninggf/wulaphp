@@ -74,7 +74,7 @@ abstract class QueryBuilder {
 	 *
 	 * @return $this
 	 */
-	public function setDialect(?DatabaseDialect $dialect) {
+	public function setDialect($dialect) {
 		$this->dialect = $dialect;
 
 		return $this;
@@ -501,7 +501,7 @@ abstract class QueryBuilder {
 	 *
 	 * @return array
 	 */
-	protected static function parseAs(string $str, ?string $alias1 = null) {
+	protected static function parseAs($str, $alias1 = null) {
 		$table = preg_split('#\b(as|\s+)\b#i', trim($str));
 		if (count($table) == 1) {
 			$name  = $table [0];

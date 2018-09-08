@@ -50,7 +50,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 	 *
 	 * @return \wulaphp\conf\Configuration
 	 */
-	public static function loadFromFile($name): Configuration {
+	public static function loadFromFile($name) {
 		/**@var \wulaphp\conf\Configuration[] $cfgs */
 		static $cfgs = [];
 

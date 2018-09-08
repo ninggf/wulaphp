@@ -78,7 +78,7 @@ class App {
         fire('wula\configLoaded');//配置加载完成
         //检测语言
         if (!defined('LANGUAGE')) {
-            $lang        = $_COOKIE['language'] ?? null;
+            $lang        = isset($_COOKIE['language']) ?$_COOKIE['language'] :null;
             $defaultLang = $this->configs ['default']->get('language');
             if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
                 //用户设置通过cookie设置
@@ -210,7 +210,7 @@ class App {
      *
      * @return \wulaphp\app\Module[]
      */
-    public static function modules(string $status = 'installed'): array {
+    public static function modules($status = 'installed') {
         switch ($status) {
             case 'uninstalled':
                 $modules = array_filter(self::$modules, function (Module $m) {
@@ -253,7 +253,7 @@ class App {
      * @return DatabaseConnection
      * @throws \Exception
      */
-    public static function db($name = 'default'): DatabaseConnection {
+    public static function db($name = 'default') {
 
         return DatabaseConnection::connect($name);
     }
@@ -264,9 +264,9 @@ class App {
      * @param string                    $table 表名.
      * @param string|DatabaseConnection $db    表所在的数据库.
      *
-     * @return \wulaphp\db\SimpleTable
+     * @return \wulaphp\db\SimpleTable|null
      */
-    public static function table(string $table, $db = 'default'): ?SimpleTable {
+    public static function table($table, $db = 'default') {
         static $tables = [];
         try {
             $dbid = get_unique_id($db);
@@ -288,7 +288,7 @@ class App {
      *
      * @return \wulaphp\conf\Configuration
      */
-    public static function config($config, bool $file = false): Configuration {
+    public static function config($config, $file = false) {
         $app = self::$app;
         if (isset ($app->configs [ $config ])) {
             $confObj = $app->configs [ $config ];
@@ -311,7 +311,7 @@ class App {
      *
      * @return mixed 配置值.
      */
-    public static function cfg(string $name = '@default', $default = '') {
+    public static function cfg( $name = '@default', $default = '') {
         $app  = self::$app;
         $keys = null;
         if ($name != null) {
@@ -363,7 +363,7 @@ class App {
      *
      * @return bool
      */
-    public static function bcfg($name, $default = false): bool {
+    public static function bcfg($name, $default = false) {
         if ($name == null) {
             return false;
         } else {
@@ -387,7 +387,7 @@ class App {
      *
      * @return int
      */
-    public static function icfg(string $name, int $default = 0): int {
+    public static function icfg($name, $default = 0) {
         if ($name == null) {
             return $default;
         } else {
@@ -405,7 +405,7 @@ class App {
      *
      * @return int
      */
-    public static function icfgn(string $name, int $default = 0): int {
+    public static function icfgn( $name, $default = 0) {
         $val = self::icfg($name, $default);
         if (!$val) {
             return $default;
@@ -422,7 +422,7 @@ class App {
      *
      * @return array
      */
-    public static function acfg(string $name, array $default = []): array {
+    public static function acfg( $name, array $default = []) {
         $value = self::cfg($name);
         if ($value) {
             $value = @json_decode($value, true);
@@ -476,9 +476,9 @@ class App {
      *
      * @param string $module namespace of the module.
      *
-     * @return Module
+     * @return Module|null 未找到时返回Null
      */
-    public static function getModule(string $module): ?Module {
+    public static function getModule($module) {
         $info = null;
         if (isset (self::$modules [ $module ])) {
             return self::$modules [ $module ];
@@ -492,9 +492,9 @@ class App {
      *
      * @param string $id namespace of the module
      *
-     * @return Module
+     * @return Module|null
      */
-    public static function getModuleById(string $id): ?Module {
+    public static function getModuleById($id) {
         return self::getModule($id);
     }
 
@@ -503,9 +503,9 @@ class App {
      *
      * @param string $dir the dir of the module.
      *
-     * @return Module
+     * @return Module|null
      */
-    public static function getModuleByDir(string $dir): ?Module {
+    public static function getModuleByDir($dir) {
         $id = self::dir2id($dir);
 
         return self::getModule($id);
@@ -517,9 +517,9 @@ class App {
      * @param string $dir
      * @param bool   $check 如果为true,模块未加载或不存在时返回null.
      *
-     * @return string 未找到时返回null.
+     * @return string|null 未找到时返回null.
      */
-    public static function dir2id(string $dir, bool $check = false): ?string {
+    public static function dir2id($dir,$check = false) {
         if (isset (self::$maps ['dir2id'] [ $dir ])) {
             return self::$maps ['dir2id'] [ $dir ];
         } else if (!$check) {
@@ -538,7 +538,7 @@ class App {
      *
      * @return string|string[]
      */
-    public static function id2dir(?string $id = null) {
+    public static function id2dir($id = null) {
         if ($id === null) {
             return self::$maps ['id2dir'];
         }
@@ -553,7 +553,7 @@ class App {
      * @param array  $prefix
      * @param string $namespace
      */
-    private static function registerUrlGroup(array $prefix, string $namespace) {
+    private static function registerUrlGroup(array $prefix, $namespace) {
         if (isset($prefix[0]) && isset($prefix[1])) {
             $char = $prefix[0];
             if (!in_array($char, ['~', '!', '@', '#', '%', '^', '&', '*'])) {
@@ -605,7 +605,7 @@ class App {
      *
      * @return string
      */
-    public static function base(string $url) {
+    public static function base($url) {
         if (preg_match('#^(/|(ht|f)tps?://).+#', $url)) {
             return $url;
         }

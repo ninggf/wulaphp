@@ -15,7 +15,7 @@ class CrontabHelper {
 	 *
 	 * @return bool 出错返回string（错误信息）
 	 */
-	public static function check(int $time, string $str_cron): bool {
+	public static function check($time,$str_cron) {
 		$format_time = self::format_timestamp($time);
 		$format_cron = self::format_crontab($str_cron);
 		if (!is_array($format_cron)) {
@@ -113,7 +113,7 @@ class CrontabHelper {
 		//处理"/" -- 间隔
 		$tmp  = explode('/', $part);
 		$part = $tmp[0];
-		$step = $tmp[1] ?? 1;
+		$step = isset($tmp[1]) ?$tmp[1]: 1;
 
 		//处理"-" -- 范围
 		if (false !== strpos($part, '-')) {

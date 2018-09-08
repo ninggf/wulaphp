@@ -99,7 +99,7 @@ class Request implements \ArrayAccess {
 	 *
 	 * @return string
 	 */
-	public static function contentType(): string {
+	public static function contentType() {
 		//检测请求头
 		$contentType = '';
 		// Look for the content type header
@@ -166,7 +166,7 @@ class Request implements \ArrayAccess {
 	 * 从php://input读取json格式的数据并添加到请求中.
 	 */
 	public function addJsonPostBody() {
-		$rqMethod = strtolower($_SERVER ['REQUEST_METHOD'] ?? 'get');
+		$rqMethod = strtolower(isset($_SERVER ['REQUEST_METHOD']) ?$_SERVER ['REQUEST_METHOD']: 'get');
 		if ($rqMethod == 'post' || $rqMethod == 'put') {
 			//检测请求头
 			$contentType = '';
@@ -193,7 +193,7 @@ class Request implements \ArrayAccess {
 	 *
 	 * @return array
 	 */
-	public function getUserData(): array {
+	public function getUserData() {
 		return $this->userData;
 	}
 
@@ -201,7 +201,7 @@ class Request implements \ArrayAccess {
 	 * IP
 	 * @return string
 	 */
-	public static function getIp(): string {
+	public static function getIp() {
 		if (!empty ($_SERVER ["HTTP_CLIENT_IP"])) {
 			$cip = $_SERVER ["HTTP_CLIENT_IP"];
 		} else if (!empty ($_SERVER ["HTTP_X_FORWARDED_FOR"])) {

@@ -65,7 +65,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 *
 	 * @return $this
 	 */
-	public function from(string $table, string $alias = null) {
+	public function from($table,$alias = null) {
 		$this->from [] = self::parseAs($table, $alias);
 
 		return $this;
@@ -105,7 +105,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 	 *
 	 * @return \wulaphp\db\sql\Query
 	 */
-	public function field($field, string $alias = null): Query {
+	public function field($field, $alias = null) {
 		if (is_string($field)) {
 			$fields = explode(',', trim($field));
 			foreach ($fields as $field) {

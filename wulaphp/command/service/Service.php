@@ -28,7 +28,7 @@ abstract class Service {
 	 * @param string $name
 	 * @param array  $config 配置
 	 */
-	public function __construct(string $name, array $config) {
+	public function __construct($name, array $config) {
 		$this->pid     = '[' . @posix_getpid() . ']';
 		$this->name    = $name;
 		$this->config  = $config;
@@ -61,7 +61,7 @@ abstract class Service {
 	 *
 	 * @return string
 	 */
-	protected function getOption(string $name, $default = '') {
+	protected function getOption($name, $default = '') {
 		if ($this->config && array_key_exists($name, $this->config)) {
 			return $this->config[ $name ];
 		}
@@ -75,7 +75,7 @@ abstract class Service {
 	 * @param string $message
 	 * @param bool   $rtn
 	 */
-	protected final function output(string $message, bool $rtn = true) {
+	protected final function output( $message, $rtn = true) {
 		echo $message, $rtn ? "\n" : '';
 
 		flush();

@@ -312,7 +312,7 @@ function smarty_modifiercompiler_render($ary, $compiler) {
  * @return \wulaphp\mvc\view\SmartyView
  * @throws
  */
-function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/html']): \wulaphp\mvc\view\View {
+function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/html']) {
     if (is_string($data)) {
         return new \wulaphp\mvc\view\SmartyView($tpl, $data, $headers);
     } else if (is_array($data) && is_array($tpl)) {
@@ -331,7 +331,7 @@ function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/h
  *
  * @return \wulaphp\mvc\view\View
  */
-function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']): \wulaphp\mvc\view\View {
+function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
     if (is_string($data)) {
         return new \wulaphp\mvc\view\HtmlView($tpl, $data, $headers);
     } else if (is_array($data) && is_array($tpl)) {
@@ -349,7 +349,7 @@ function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']
  *
  * @return \wulaphp\mvc\view\View
  */
-function xmlview(array $data, string $root = 'data'): \wulaphp\mvc\view\View {
+function xmlview(array $data, $root = 'data'){
     return new \wulaphp\mvc\view\XmlView($data, $root);
 }
 
@@ -493,7 +493,7 @@ function minify_resources($content, $type) {
  *
  * @return \wulaphp\mvc\model\CtsData
  */
-function get_cts_from_datasource(string $name, ?array $args = [], ?string $dialect = null, ?array $tplvars = []) {
+function get_cts_from_datasource( $name, $args = [], $dialect = null, $tplvars = []) {
     static $urlInfo = null, $providers = null;
     //获取当前解析后的URL信息
     if ($urlInfo === null) {

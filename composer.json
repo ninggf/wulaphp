@@ -1,47 +1,54 @@
 {
-  "name": "wula/wulaphp",
-  "description": "一个小巧的PHP MVC框架。它的名来自《异星战场》里那个速度极快的狗狗，它真的很快！",
-  "require": {
-	"php": ">=7.1",
-	"ext-json": "*",
-	"ext-PDO": "*",
-	"ext-pdo_mysql": "*",
-	"ext-mbstring": "*",
-	"ext-curl": "*",
-	"ext-SPL": "*",
-	"smarty/smarty": "^3.1",
-	"psr/log": "^1.0",
-	"wula/common": "~1.0"
-  },
-  "suggest": {
-	"ext-posix": "many artisan commands depend on it",
-	"ext-pcntl": "many artisan commands depend on it"
-  },
-  "license": "MIT",
-  "keywords": [
-	"PHP",
-	"MVC",
-	"PHP FRAMEWORK"
-  ],
-  "time": "2016-07-21",
-  "authors": [
-	{
-	  "name": "Leo Ning",
-	  "email": "windywany@gmail.com"
-	}
-  ],
-  "autoload": {
-	"files": [
-	  "bootstrap.php"
-	]
-  },
-  "extra": {
-	"branch-alias": {
-	  "dev-master": "2.0-dev"
-	}
-  },
-  "support": {
-	"issues": "https://github.com/ninggf/wulaphp/issues"
-  },
-  "homepage": "http://www.wulaphp.com/"
+    "name": "wula/wulaphp",
+    "description": "一个小巧的PHP MVC框架。它的名来自《异星战场》里那个速度极快的狗狗，它真的很快！",
+    "require": {
+        "php": ">= 5.6.3",
+        "ext-json": "*",
+        "ext-pcre": "*",
+        "ext-PDO": "*",
+        "ext-pdo_mysql": "*",
+        "ext-mbstring": "*",
+        "ext-curl": "*",
+        "ext-Reflection": "*",
+        "ext-SPL": "*",
+        "smarty/smarty": "^3.1",
+        "psr/log": "^1.0",
+        "wula/common": "~1.0"
+    },
+    "suggest": {
+        "ext-mysqlnd": "*",
+        "ext-redis": "*",
+        "ext-libxml": "*",
+        "ext-xml": "*",
+        "ext-sockets": "*",
+        "ext-posix": "*",
+        "ext-pcntl": "*"
+    },
+    "license": "MIT",
+    "keywords": [
+        "PHP",
+        "MVC",
+        "PHP FRAMEWORK"
+    ],
+    "time": "2016-07-21",
+    "authors": [
+        {
+            "name": "Leo Ning",
+            "email": "windywany@gmail.com"
+        }
+    ],
+    "autoload": {
+        "files": [
+            "bootstrap.php"
+        ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "2.0-dev"
+        }
+    },
+    "support": {
+        "issues": "https://github.com/ninggf/wulaphp/issues"
+    },
+    "homepage": "http://www.wulaphp.com/"
 }

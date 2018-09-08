@@ -50,7 +50,7 @@ class Router {
 	 * 获取路由器实例.
 	 * @return \wulaphp\router\Router
 	 */
-	public static function getRouter(): Router {
+	public static function getRouter() {
 		if (self::$INSTANCE == null) {
 			self::$INSTANCE = new Router();
 		}
@@ -63,7 +63,7 @@ class Router {
 	 *
 	 * @return string|null
 	 */
-	public static function getURI(): ?string {
+	public static function getURI() {
 		if (isset($_SERVER ['REQUEST_URI'])) {
 			if (WWWROOT_DIR != '/') {
 				$uri = substr($_SERVER ['REQUEST_URI'], strlen(WWWROOT_DIR) - 1);
@@ -81,7 +81,7 @@ class Router {
 	 * 获取本次请求的全URI
 	 * @return null|string
 	 */
-	public static function getFullURI(): ?string {
+	public static function getFullURI() {
 		if (isset($_SERVER ['REQUEST_URI'])) {
 			if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off') {
 				$schema = 'https://';
@@ -104,7 +104,7 @@ class Router {
 	 *
 	 * @return bool
 	 */
-	public static function is(string $url, bool $regexp = false): bool {
+	public static function is( $url, $regexp = false){
 		$r = self::getRouter();
 		if ($regexp) {
 			return preg_match('`^' . $url . '$`', $r->requestURL);
@@ -120,7 +120,7 @@ class Router {
 	 *
 	 * @return bool|array 匹配结果.
 	 */
-	public static function match(string $pattern) {
+	public static function match($pattern) {
 		$r = self::getRouter();
 		if (preg_match($pattern, $r->requestURL, $ms)) {
 			return $ms;
@@ -134,7 +134,7 @@ class Router {
 	 *
 	 * @return \wulaphp\router\UrlParsedInfo
 	 */
-	public function getParsedInfo(): UrlParsedInfo {
+	public function getParsedInfo() {
 		return $this->urlParsedInfo;
 	}
 
@@ -144,7 +144,7 @@ class Router {
 	 * @param IURLDispatcher $dispatcher
 	 * @param int            $index
 	 */
-	public function register(IURLDispatcher $dispatcher, int $index = 10) {
+	public function register(IURLDispatcher $dispatcher, $index = 10) {
 		$this->dispatchers [ $index ] [] = $dispatcher;
 		ksort($this->dispatchers, SORT_NUMERIC);
 	}
@@ -155,7 +155,7 @@ class Router {
 	 * @param IURLPreDispatcher $dispatcher
 	 * @param int               $index
 	 */
-	public function registerPreDispatcher(IURLPreDispatcher $dispatcher, int $index = 10) {
+	public function registerPreDispatcher(IURLPreDispatcher $dispatcher, $index = 10) {
 		$this->preDispatchers [ $index ] [] = $dispatcher;
 		ksort($this->preDispatchers, SORT_NUMERIC);
 	}
@@ -166,7 +166,7 @@ class Router {
 	 * @param IURLPostDispatcher $dispatcher
 	 * @param int                $index
 	 */
-	public function registerPostDispatcher(IURLPostDispatcher $dispatcher, int $index = 10) {
+	public function registerPostDispatcher(IURLPostDispatcher $dispatcher, $index = 10) {
 		$this->postDispatchers [ $index ] [] = $dispatcher;
 		ksort($this->postDispatchers, SORT_NUMERIC);
 	}
@@ -252,7 +252,7 @@ class Router {
 	 *
 	 * @return string 转换后的字符.
 	 */
-	public static function removeSlash(string $string): string {
+	public static function removeSlash($string) {
 		return preg_replace_callback('/-([a-z])/', function ($ms) {
 			return strtoupper($ms[1]);
 		}, $string);
@@ -265,7 +265,7 @@ class Router {
 	 *
 	 * @return string 转换后的字符.
 	 */
-	public static function addSlash(string $string): string {
+	public static function addSlash($string) {
 		$string = lcfirst($string);
 
 		return preg_replace_callback('#[A-Z]#', function ($r) {
@@ -280,7 +280,7 @@ class Router {
 	 *
 	 * @return string
 	 */
-	public static function mimeContentType(string $filename): string {
+	public static function mimeContentType($filename){
 		static $mime_types = [
 			'txt'  => 'text/plain',
 			'htm'  => 'text/html',

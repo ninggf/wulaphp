@@ -40,7 +40,7 @@ class SubModuleRouter extends Controller {
 	 * @return null|\wulaphp\mvc\view\View
 	 * @throws \Exception
 	 */
-	public final function index(...$args): ?View {
+	public final function index(...$args){
 		$len = count($args);
 		switch ($len) {
 			case 0:

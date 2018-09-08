@@ -93,7 +93,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function start(string $service) {
+    private function start($service) {
         if ($service) {
             $this->output('Starting ...', false);
             $rtn = $this->sendCommand('start', ['service' => $service]);
@@ -131,7 +131,7 @@ class ServiceCommand extends ArtisanCommand {
      * @param string $service
      * @param bool   $restart
      */
-    private function stop(string $service, bool $restart = false) {
+    private function stop( $service,  $restart = false) {
         $this->output('Stopping ...', false);
         $rtn = $this->sendCommand('stop', ['service' => $service, 'restart' => $restart]);
         if ($rtn) {
@@ -144,7 +144,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function reload(string $service) {
+    private function reload($service) {
         $this->output('Reloading ...', false);
         $rtn = $this->sendCommand('reload', ['service' => $service]);
 
@@ -158,7 +158,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function ps(string $service) {
+    private function ps($service) {
         $rtn = $this->sendCommand('ps', ['service' => $service]);
         if ($rtn) {
 
@@ -185,7 +185,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function status(string $service) {
+    private function status( $service) {
         $rtn = $this->sendCommand('status', ['service' => $service]);
         if ($rtn) {
             $status = $this->getStatus($rtn['status']);
@@ -225,9 +225,9 @@ class ServiceCommand extends ArtisanCommand {
                     $this->output($this->cell([
                         [$id, 20],
                         [$ser['type'], 16],
-                        [$ser['worker'] ?? 1, 10],
+                        [isset($ser['worker']) ?$ser['worker']: 1, 10],
                         [$this->getStatus($ser['status']), 20],
-                        [$ser['msg'] ?? '', 44]
+                        [isset($ser['msg']) ?$ser['msg']: '', 44]
                     ]));
                 }
             }
@@ -276,7 +276,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @return mixed
      */
-    private function sendCommand(string $command, array $args = []) {
+    private function sendCommand( $command, array $args = []) {
         $data['command'] = $command;
         $data['args']    = $args;
         $payload         = json_encode($data) . "\r\n\r\n";
@@ -296,8 +296,8 @@ class ServiceCommand extends ArtisanCommand {
             }
             $rtn = @socket_connect($sock, $sockFile);
         } else {
-            $addr = $binds[0] ?? '127.0.0.1';
-            $port = $binds[1] ?? '5858';
+            $addr = isset($binds[0]) ?$binds[0]: '127.0.0.1';
+            $port = isset($binds[1]) ?$binds[1]: '5858';
             $sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if (!$sock) {
                 $this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));

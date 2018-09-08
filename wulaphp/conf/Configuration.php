@@ -56,8 +56,8 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 	 *
 	 * @return mixed
 	 */
-	public function get(string $name, $default = '') {
-		return $this->settings [ $name ] ?? $default;
+	public function get($name, $default = '') {
+		return isset($this->settings [ $name ]) ?$this->settings [ $name ]: $default;
 	}
 
 	/**
@@ -66,7 +66,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 	 *
 	 * @return bool
 	 */
-	public function getb(string $name, bool $default = false): bool {
+	public function getb($name, $default = false){
 		$v = $this->get($name, $default);
 
 		return (bool)$v;
@@ -78,7 +78,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 	 *
 	 * @return int
 	 */
-	public function geti(string $name, int $default = 0): int {
+	public function geti( $name,  $default = 0){
 		$v = $this->get($name, $default);
 
 		return (int)$v;
@@ -90,7 +90,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 	 *
 	 * @return array
 	 */
-	public function geta(string $name, array $default = []): array {
+	public function geta($name, array $default = []) {
 		return (array)$this->get($name, $default);
 	}
 

@@ -211,7 +211,7 @@ abstract class ArtisanCommand {
         flush();
     }
 
-    protected final function cell($messages, int $len = 0, string $pad = ' ') {
+    protected final function cell($messages,  $len = 0, $pad = ' ') {
         if (!is_array($messages)) {
             $messages = [[$messages, $len]];
         }
@@ -237,15 +237,15 @@ abstract class ArtisanCommand {
         flush();
     }
 
-    protected final function redText(string $message) {
+    protected final function redText($message) {
         return $this->color->str($message, 'red');
     }
 
-    protected final function greenText(string $message) {
+    protected final function greenText( $message) {
         return $this->color->str($message, 'green');
     }
 
-    protected final function blueText(string $message) {
+    protected final function blueText( $message) {
         return $this->color->str($message, 'blue');
     }
 

@@ -68,7 +68,7 @@ class CronService extends Service {
 	 *
 	 * @return int
 	 */
-	private function cron(string $script, ?array $env = []) {
+	private function cron($script, array $env) {
 		try {
 			if ($script) {
 				if (is_file(APPROOT . $script)) {

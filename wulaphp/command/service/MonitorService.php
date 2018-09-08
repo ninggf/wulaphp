@@ -131,7 +131,7 @@ class MonitorService extends Service {
         while (count($this->pids) > 0) {
             $pid = pcntl_wait($status, WNOHANG);
             if ($pid > 0) {//有进程退出啦
-                $sid = $this->pids[ $pid ] ?? '';
+                $sid = isset($this->pids[ $pid ]) ? $this->pids[ $pid ] : '';
                 unset($this->pids[ $pid ]);
                 $this->logd('service ' . $sid . ', pid ' . $pid . ' exit');
                 if ($sid && isset($this->services[ $sid ])) {
@@ -152,10 +152,10 @@ class MonitorService extends Service {
     /**
      * 处理管理消息
      *
-     * @param string $msg
-     * @param        $socket
+     * @param string   $msg
+     * @param resource $socket
      */
-    private function onMessage(string $msg, $socket) {
+    private function onMessage($msg, $socket) {
         try {
             $payload = @json_decode($msg, true);
             if (!$payload) {
@@ -163,10 +163,10 @@ class MonitorService extends Service {
 
                 return;
             }
-            $command = $payload['command'] ?? 'status';
+            $command = isset($payload['command']) ? $payload['command'] : 'status';
+            $service = isset($payload['args']['service']) ? $payload['args']['service'] : '';
             switch ($command) {
                 case 'stop':
-                    $service = $payload['args']['service'] ?? '';
                     if ($service) {
                         $rst = $this->stopService($service);
                         $this->response($socket, ['status' => $rst ? 'done' : 'fail']);
@@ -177,7 +177,6 @@ class MonitorService extends Service {
                     }
                     break;
                 case 'start':
-                    $service = $payload['args']['service'] ?? '';
                     if ($service) {
                         $rst = $this->startService($service);
                         $this->response($socket, ['status' => $rst ? 'done' : 'fail']);
@@ -186,15 +185,15 @@ class MonitorService extends Service {
                     }
                     break;
                 case 'reload':
-                    $rst = $this->reloadConfig(null, $payload['args']['service'] ?? '');
+                    $rst = $this->reloadConfig(null, $service);
                     $this->response($socket, ['status' => $rst ? 'done' : 'fail']);
                     break;
                 case 'ps':
-                    $service = $payload['args']['service'] ?? '';
                     if ($service) {
                         if (isset($this->services[ $service ])) {
+                            $pids = isset($this->services[ $service ]['pids']) ? $this->services[ $service ]['pids'] : [];
                             $this->response($socket, [
-                                'ps'   => [$service => $this->services[ $service ]['pids'] ?? []],
+                                'ps'   => [$service => $pids],
                                 'ssid' => posix_getpid()
                             ]);
                         } else {
@@ -203,14 +202,13 @@ class MonitorService extends Service {
                     } else {
                         $ps = [];
                         foreach ($this->services as $s => $ser) {
-                            $ps[ $s ] = $ser['pids'] ?? [];
+                            $ps[ $s ] = isset($ser['pids']) ? $ser['pids'] : [];
                         }
                         $this->response($socket, ['ps' => $ps, 'ssid' => posix_getpid()]);
                     }
                     break;
                 case 'status':
                 default:
-                    $service = $payload['args']['service'] ?? '';
                     if ($service) {
                         if (isset($this->services[ $service ])) {
                             $this->response($socket, [
@@ -236,7 +234,7 @@ class MonitorService extends Service {
         do {
             $pid = pcntl_wait($status, WNOHANG);
             if ($pid > 0) {//有进程退出啦
-                $sid = $this->pids[ $pid ] ?? '';
+                $sid = isset($this->pids[ $pid ]) ? $this->pids[ $pid ] : '';
                 unset($this->pids[ $pid ]);
                 if ($sid && isset($this->services[ $sid ])) {
                     if (@pcntl_wifexited($status)) {
@@ -275,7 +273,7 @@ class MonitorService extends Service {
                 case 'reloading':
                 case 'running':
                     //补齐进程
-                    $service['worker'] = intval($service['worker'] ?? 1);
+                    $service['worker'] = intval(isset($service['worker']) ? $service['worker'] : 1);
                     $serOk             = $this->checkSer($service);
                     if ($serOk) {
                         while (count($this->services[ $id ]['pids']) < $service['worker']) {
@@ -340,7 +338,7 @@ class MonitorService extends Service {
         }
     }
 
-    private function reloadConfig(?array $config = null, string $service = ''): bool {
+    private function reloadConfig($config = null, $service = '') {
         if (!$config) {
             $loader       = new ConfigurationLoader();
             $config       = $loader->loadConfig('service')->toArray();
@@ -348,11 +346,11 @@ class MonitorService extends Service {
             $this->setVerbose($this->getOption('verbose'));
         }
         if ($config) {
-            $services = $config['services'] ?? [];
+            $services = isset($config['services']) ? $config['services'] : [];
             if ($service) {
                 if (isset($services[ $service ]) && isset($this->services[ $service ])) {
                     $this->services[ $service ] = array_merge($this->services[ $service ], $services[ $service ]);
-                    $status                     = $services[ $service ]['status'] ?? '';
+                    $status                     = isset($services[ $service ]['status']) ? $services[ $service ]['status'] : '';
                     if (!$status && $this->services[ $service ]['status'] == 'running') {
                         $this->services[ $service ]['status'] = 'reload';
                     }
@@ -370,7 +368,7 @@ class MonitorService extends Service {
                     }
                 } else {
                     $this->services[ $s ] = array_merge($this->services[ $s ], $conf);
-                    $status               = $conf['status'] ?? '';
+                    $status               = isset($conf['status']) ? $conf['status'] : '';
                     if (!$status && $this->services[ $s ]['status'] == 'running') {
                         $this->services[ $s ]['status'] = 'reload';
                     }
@@ -391,7 +389,7 @@ class MonitorService extends Service {
         return false;
     }
 
-    private function stopService(string $service) {
+    private function stopService($service) {
         if ($service) {
             if (isset($this->services[ $service ])) {
                 $this->services[ $service ]['status'] = 'stopping';
@@ -405,14 +403,14 @@ class MonitorService extends Service {
         return false;
     }
 
-    private function startService(string $service) {
+    private function startService($service) {
         if ($service) {
             $loader       = new ConfigurationLoader();
             $config       = $loader->loadConfig('service')->toArray();
             $this->config = $config;
-            $services     = $config['services'] ?? [];
+            $services     = isset($config['services']) ? $config['services'] : [];
             if (isset($services[ $service ])) {
-                $status = $services[ $service ]['status'] ?? '';
+                $status = isset($services[ $service ]['status']) ? $services[ $service ]['status'] : '';
                 if ($status == 'disabled') return false;
 
                 if (isset($this->services[ $service ])) {
@@ -455,8 +453,8 @@ class MonitorService extends Service {
                 exit(-1);
             }
         } else {
-            $addr = $binds[0] ?? '127.0.0.1';
-            $port = $binds[1] ?? '5858';
+            $addr = isset($binds[0]) ? $binds[0] : '127.0.0.1';
+            $port = isset($binds[1]) ? $binds[1] : '5858';
             $sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if (!$sock) {
                 $this->output($fail . "\nCannot create administrator socket:" . socket_strerror(socket_last_error()));
@@ -532,8 +530,8 @@ class MonitorService extends Service {
         }
     }
 
-    private function checkSer(array $config): bool {
-        $type = $config['type'] ?? 'parallel';
+    private function checkSer(array $config) {
+        $type = isset($config['type']) ? $config['type'] : 'parallel';
         if (!$type) {
             $type = 'parallel';
         }
@@ -551,8 +549,8 @@ class MonitorService extends Service {
         return true;
     }
 
-    private function getSerImpl(string $id, array $config): ?Service {
-        $type = $config['type'] ?? 'parallel';
+    private function getSerImpl($id, array $config) {
+        $type = isset($config['type']) ? $config['type'] : 'parallel';
         if (!$type) {
             $type = 'parallel';
         }
@@ -577,7 +575,7 @@ class MonitorService extends Service {
      * @param string $socketId
      * @param        $socket
      */
-    private function unpackMsg(string $socketId, $socket) {
+    private function unpackMsg($socketId, $socket) {
         $msgs = $this->msgs[ $socketId ];
         if ($msgs) {
             $msgs   = implode('', $msgs);

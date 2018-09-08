@@ -17,7 +17,7 @@ trait LayoutSupport {
 	 *
 	 * @return \wulaphp\mvc\view\View
 	 */
-	protected function render($tpl = null, array $data = []): ?View {
+	protected function render($tpl = null, array $data = []) {
 		if ($this instanceof Controller) {
 			if (is_array($tpl)) {
 				$data = $tpl;
@@ -58,7 +58,7 @@ trait LayoutSupport {
 	 *
 	 * @return array
 	 */
-	protected function onInitLayoutData(array $data): array {
+	protected function onInitLayoutData(array $data) {
 		return $data;
 	}
 
@@ -69,7 +69,7 @@ trait LayoutSupport {
 	 *
 	 * @return string
 	 */
-	private function realPath(string $path): string {
+	private function realPath($path) {
 		$tpls    = explode('/', $path);
 		$tpls[0] = App::id2dir($tpls[0]);
 		$tpl     = implode('/', $tpls);

@@ -20,7 +20,7 @@ class BindValues implements \IteratorAggregate {
 	 *
 	 * @return string
 	 */
-	public function addValue(string $field, $value): string {
+	public function addValue($field, $value) {
 		$rfield = str_replace('`', '', $field);
 		$field  = Condition::safeField($field);
 		$index  = isset ($this->names [ $field ]) ? $this->names [ $field ] : 0;
@@ -46,7 +46,7 @@ class BindValues implements \IteratorAggregate {
 	/**
 	 * @return \ArrayIterator
 	 */
-	public function getIterator(): \ArrayIterator {
+	public function getIterator() {
 		return new \ArrayIterator ($this->values);
 	}
 
@@ -55,13 +55,16 @@ class BindValues implements \IteratorAggregate {
 	 *
 	 * @return bool
 	 */
-	public function has(string $name): bool {
+	public function has($name){
 		$field = Condition::safeField($name);
 
 		return isset ($this->names [ $field ]);
 	}
 
-	public function __toString(): string {
+    /**
+     * @return string
+     */
+	public function __toString(){
 		$valString = array();
 		foreach ($this->values as $val) {
 			$valString [] = $val [0] . ' = ' . $val [1] . ' [' . $val [2] . ']';
