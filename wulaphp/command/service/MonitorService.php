@@ -222,7 +222,7 @@ class MonitorService extends Service {
                         $this->response($socket, ['status' => 'running', 'services' => $this->services]);
                     }
             }
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             $this->response($socket, ['error' => 500, 'msg' => $e->getMessage()]);
         }
     }

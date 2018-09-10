@@ -11,6 +11,18 @@ class HtmlView extends View implements IModuleView {
      * @throws
      */
     public function render() {
+        if (defined('LANGUAGE')) {
+            $tpl = MODULES_PATH . $this->tpl . '_' . LANGUAGE . '.php';
+            if (is_file($tpl)) {
+                $this->tpl .= '_' . LANGUAGE;
+            } else if (($pos = strpos(LANGUAGE, '-', 1))) {
+                $lang = substr(LANGUAGE, 0, $pos);
+                $tpl  = MODULES_PATH . $this->tpl . '_' . $lang . '.php';
+                if (is_file($tpl)) {
+                    $this->tpl .= '_' . $lang;
+                }
+            }
+        }
         $tpl = MODULES_PATH . $this->tpl . '.php';
         if (is_file($tpl)) {
             extract($this->data);

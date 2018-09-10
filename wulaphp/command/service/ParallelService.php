@@ -68,7 +68,7 @@ class ParallelService extends Service {
 							return false;
 						}
 
-					} catch (\Error $e) {
+					} catch (\Exception $e) {
 						$this->loge($e->getMessage());
 
 						return false;
