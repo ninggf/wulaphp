@@ -94,9 +94,7 @@ class RedisClient {
                 throw new \Exception(__('redis select database failed'));
             }
             if (extension_loaded('igbinary')) {
-                @$redis->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_IGBINARY);
-            } else {
-                @$redis->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_PHP);
+                @$redis->setOption(\Redis::OPT_SERIALIZER, 2);
             }
             if ($prefix) {
                 @$redis->setOption(\Redis::OPT_PREFIX, $prefix . ':');

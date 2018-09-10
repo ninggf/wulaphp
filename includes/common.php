@@ -283,7 +283,7 @@ function get_thumbnail_filename($filename, $w, $h, $sep = '-'){
 }
 
 //异常处理
-set_exception_handler(function (\Exception $e) {
+set_exception_handler(function ($e) {
 	global $argv;
 	if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
 		if ($argv) {
