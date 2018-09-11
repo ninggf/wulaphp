@@ -1,6 +1,6 @@
 <?php
 /**
- * Project:     Wulaphp: another mvc framework of php based on php 7.1.0+
+ * Project:     Wulaphp: another mvc framework of php based on php 5.6.9+
  * File:        bootstrap.php
  *
  * 此文件用于引导wulaphp framework.
@@ -17,12 +17,12 @@ use wulaphp\cache\RtCache;
 
 @error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 if (version_compare('5.6.9', phpversion(), '>')) {
-	die (sprintf('Your php version is %s,but wulaphp required PHP 5.6.9 or higher', phpversion()));
+    !trigger_error(sprintf('Your php version is %s,but wulaphp required PHP 5.6.9 or higher', phpversion()), E_USER_ERROR) or exit(1);
 }
 define('WULA_STARTTIME', microtime(true));
-defined('APPROOT') or die ('please define APPROOT');
-defined('WWWROOT') or die ('please define WWWROOT');
-define('WULA_VERSION', '2.0.0');
+defined('APPROOT') or !trigger_error('please define APPROOT', E_USER_ERROR) or exit(1);
+defined('WWWROOT') or !trigger_error('please define WWWROOT', E_USER_ERROR) or exit(1);
+define('WULA_VERSION', '2.5.0');
 define('WULA_RELEASE', 'rc');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 /* 常用目录定义 */
@@ -62,33 +62,33 @@ define('EXIT_ERROR', 1);
 define('EXIT_CONTINUE', 2);
 define('PHP_RUNTIME_NAME', php_sapi_name());
 if (!defined('APP_MODE')) {
-	if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {
-		define('APP_MODE', $_SERVER['APPMODE']);
-	} else {
-		define('APP_MODE', 'dev');
-	}
+    if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {
+        define('APP_MODE', $_SERVER['APPMODE']);
+    } else {
+        define('APP_MODE', 'dev');
+    }
 }
 if (@ini_get('register_globals')) {
-	die ('please close "register_globals" in php.ini file.');
+    die ('please close "register_globals" in php.ini file.');
 }
 if (defined('MAX_RUNTIME_LIMIT')) {
-	set_time_limit(intval(MAX_RUNTIME_LIMIT));
+    set_time_limit(intval(MAX_RUNTIME_LIMIT));
 }
 defined('RUNTIME_MEMORY_LIMIT') or define('RUNTIME_MEMORY_LIMIT', '128M');
 if (function_exists('memory_get_usage') && (( int )@ini_get('memory_limit') < abs(intval(RUNTIME_MEMORY_LIMIT)))) {
-	@ini_set('memory_limit', RUNTIME_MEMORY_LIMIT);
+    @ini_set('memory_limit', RUNTIME_MEMORY_LIMIT);
 }
 if (!function_exists('mb_internal_encoding')) {
-	die ('mb_string extension is required!');
+    die ('mb_string extension is required!');
 }
 if (!function_exists('json_decode')) {
-	die ('json extension is required!');
+    die ('json extension is required!');
 }
 if (!function_exists('spl_autoload_register')) {
-	die ('SPL extension is required!');
+    die ('SPL extension is required!');
 }
 if (!function_exists('curl_init')) {
-	die ('curl extension is required!');
+    die ('curl extension is required!');
 }
 @ob_start();
 @ini_set('session.bug_compat_warn', 0);
@@ -97,9 +97,9 @@ if (!function_exists('curl_init')) {
 @mb_regex_encoding('UTF-8');
 @mb_http_output('UTF-8');
 if (isset($_SERVER['HTTP_HOST'])) {
-	define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
+    define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
 } else {
-	define('VISITING_DOMAIN', '');
+    define('VISITING_DOMAIN', '');
 }
 /** @global string[] $_wula_classpath none-namespace classpath. */
 global $_wula_classpath;
@@ -108,10 +108,10 @@ global $_wula_namespace_classpath;
 
 $_wula_namespace_classpath [] = WULA_ROOT;
 if (is_dir(EXTENSIONS_PATH)) {
-	$_wula_namespace_classpath [] = EXTENSIONS_PATH;
+    $_wula_namespace_classpath [] = EXTENSIONS_PATH;
 }
 if (is_dir(WEB_ROOT . VENDOR_DIR)) {
-	$_wula_namespace_classpath [] = WEB_ROOT . VENDOR_DIR . DS;
+    $_wula_namespace_classpath [] = WEB_ROOT . VENDOR_DIR . DS;
 }
 $_wula_namespace_classpath [] = WULA_ROOT . 'vendors' . DS;
 $_wula_classpath []           = WULA_ROOT . 'vendors' . DS;
@@ -123,13 +123,13 @@ include WULA_ROOT . 'wulaphp/conf/BaseConfigurationLoader.php';
 include WULA_ROOT . 'wulaphp/conf/ConfigurationLoader.php';
 include WULA_ROOT . 'wulaphp/cache/Cache.php';
 if (function_exists('apcu_store')) {
-	include WULA_ROOT . 'wulaphp/cache/ApcCacher.php';
+    include WULA_ROOT . 'wulaphp/cache/ApcCacher.php';
 }
 if (extension_loaded('yac')) {
-	include WULA_ROOT . 'wulaphp/cache/YacCache.php';
+    include WULA_ROOT . 'wulaphp/cache/YacCache.php';
 }
 if (extension_loaded('xcache')) {
-	include WULA_ROOT . 'wulaphp/cache/XCacheCacher.php';
+    include WULA_ROOT . 'wulaphp/cache/XCacheCacher.php';
 }
 include WULA_ROOT . 'wulaphp/cache/RedisCache.php';
 include WULA_ROOT . 'wulaphp/cache/MemcachedCache.php';
@@ -137,52 +137,52 @@ include WULA_ROOT . 'wulaphp/cache/RtCache.php';
 include WULA_ROOT . 'wulaphp/util/ObjectCaller.php';
 //注册类自动加载
 spl_autoload_register(function ($clz) {
-	global $_wula_classpath, $_wula_namespace_classpath;
-	$key      = $clz . '.class';
-	$clz_file = RtCache::get($key);
-	if ($clz_file && is_file($clz_file)) {
-		include $clz_file;
+    global $_wula_classpath, $_wula_namespace_classpath;
+    $key      = $clz . '.class';
+    $clz_file = RtCache::get($key);
+    if ($clz_file && is_file($clz_file)) {
+        include $clz_file;
 
-		return;
-	}
-	if (strpos($clz, '\\') > 0) {
-		$clzf = str_replace('\\', DS, $clz);
-		foreach ($_wula_namespace_classpath as $cp) {
-			$clz_file = $cp . $clzf . '.php';
-			if (is_file($clz_file)) {
-				RtCache::add($key, $clz_file);
-				include $clz_file;
+        return;
+    }
+    if (strpos($clz, '\\') > 0) {
+        $clzf = str_replace('\\', DS, $clz);
+        foreach ($_wula_namespace_classpath as $cp) {
+            $clz_file = $cp . $clzf . '.php';
+            if (is_file($clz_file)) {
+                RtCache::add($key, $clz_file);
+                include $clz_file;
 
-				return;
-			}
-		}
-		//从模块加载
-		$clz_file = App::loadClass($clz);
-		if ($clz_file && is_file($clz_file)) {
-			RtCache::add($key, $clz_file);
-			include $clz_file;
+                return;
+            }
+        }
+        //从模块加载
+        $clz_file = App::loadClass($clz);
+        if ($clz_file && is_file($clz_file)) {
+            RtCache::add($key, $clz_file);
+            include $clz_file;
 
-			return;
-		}
-	}
-	foreach ($_wula_classpath as $path) {
-		$clz_file = $path . DS . $clz . '.php';
-		if (is_file($clz_file)) {
-			RtCache::add($key, $clz_file);
-			include $clz_file;
+            return;
+        }
+    }
+    foreach ($_wula_classpath as $path) {
+        $clz_file = $path . DS . $clz . '.php';
+        if (is_file($clz_file)) {
+            RtCache::add($key, $clz_file);
+            include $clz_file;
 
-			return;
-		}
-	}
-	$clz_file = apply_filter('loader\loadClass', null, $clz);
-	if ($clz_file && is_file($clz_file)) {
-		RtCache::add($key, $clz_file);
-		include $clz_file;
-	}
+            return;
+        }
+    }
+    $clz_file = apply_filter('loader\loadClass', null, $clz);
+    if ($clz_file && is_file($clz_file)) {
+        RtCache::add($key, $clz_file);
+        include $clz_file;
+    }
 });
 include WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
-	include LIBS_PATH . 'common.php';
+    include LIBS_PATH . 'common.php';
 }
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
