@@ -1,3 +1,11 @@
+<p align="center"><img src="https://d33wubrfki0l68.cloudfront.net/images/1d83c09b2f0cd8231a54f2a8a6eaee9754b802fb/logo.png" width="140" height="140"></p>
+<p align="center">
+<a href="https://travis-ci.org/wula/wulaphp"><img src="https://travis-ci.org/ninggf/wulaphp.svg?branch=v2.0" alt="Build Status"></a>
+<a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/d/total.svg" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/v/stable.svg" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/license.svg" alt="License"></a>
+</p>
+
 # wulaphp
 
 一个小巧、高效、灵活的`PHP MVC`框架。她的名来自《异星战场》里那个速度极快的狗狗，她真的很快，是的`wulaphp`和这条狗狗一样－－`快`！
