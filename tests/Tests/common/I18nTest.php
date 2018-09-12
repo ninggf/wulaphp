@@ -42,7 +42,7 @@ class I18nTest extends TestCase {
      * @depends testLang
      */
     public function testTranslate1() {
-        $str = __('required::validator');
+        $str = __('required@validator');
         self::assertEquals('This field is required', $str);
         $str1 = I18n::translate1('required', [], '@validator');
         self::assertEquals($str, $str1);
@@ -60,7 +60,7 @@ class I18nTest extends TestCase {
      * @depends testLang
      */
     public function testTranslate3() {
-        $str = __('step::validator', 5);
+        $str = __('step@validator', 5);
         self::assertEquals('Please enter a multiple of 5.', $str);
         $str1 = I18n::translate1('step', [5], '@validator');
         self::assertEquals($str, $str1);

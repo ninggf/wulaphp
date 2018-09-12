@@ -26,4 +26,13 @@ class CommonFuncsTest extends TestCase {
         self::assertArrayHasKey('name', $name);
         self::assertEquals('wula', $name['name']);
     }
+
+    public function testUnique_filename() {
+        $f1 = unique_filename(TMP_PATH, 'test.txt');
+        self::assertEquals('test.txt', $f1);
+        self::assertTrue(@file_put_contents(TMP_PATH . 'test.txt', 'test') > 0);
+        $f2 = unique_filename(TMP_PATH, 'test.txt');
+        self::assertEquals('test1.txt', $f2);
+        @unlink(TMP_PATH . 'test.txt');
+    }
 }

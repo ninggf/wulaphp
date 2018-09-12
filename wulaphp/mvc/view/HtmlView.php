@@ -27,7 +27,7 @@ class HtmlView extends View implements IModuleView {
         if (is_file($tpl)) {
             extract($this->data);
             @ob_start();
-            @include $tpl;
+            include $tpl;
             $content = @ob_get_contents();
             @ob_end_clean();
 

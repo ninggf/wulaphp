@@ -716,7 +716,7 @@ class App {
             if (!is_file($file)) {
                 return '#';
             } else {
-                @include_once $file;
+                include_once $file;
                 if (!class_exists($clz) || !is_subclass_of($clz, 'wulaphp\mvc\controller\Controller')) {
                     return '#';
                 }
