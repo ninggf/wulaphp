@@ -30,7 +30,7 @@ class DefaultDispatcher implements IURLDispatcher {
      * @return \wulaphp\mvc\view\View
      * @throws \Exception
      */
-    public function dispatch($url, $router, $parsedInfo){
+    public function dispatch($url, $router, $parsedInfo) {
         static $alias = false;
         //检测请求是否合法
         if ((!defined('URL_STRICT_MODE') || URL_STRICT_MODE) && $router->requestURI[ -1 ] == '/') {
@@ -144,8 +144,12 @@ class DefaultDispatcher implements IURLDispatcher {
 
                             return null;
                         }
-                        $rqMethod = strtolower($_SERVER ['REQUEST_METHOD']);
-                        $rm       = ucfirst($rqMethod);
+                        if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD']) {
+                            $rqMethod = strtolower($_SERVER ['REQUEST_METHOD']);
+                        } else {
+                            $rqMethod = 'get';
+                        }
+                        $rm = ucfirst($rqMethod);
                         // 存在index_get,index_post,add_get add_post这新的方法.
                         $md          = $action . $rm;
                         $actionFound = false;
@@ -203,7 +207,7 @@ class DefaultDispatcher implements IURLDispatcher {
                                     foreach ($params as $p) {
                                         $name    = $p->getName();
                                         $da      = $p->isDefaultValueAvailable();
-                                        $def     = isset($pms [ $idx ]) ?$pms [ $idx ]: (($da ? $p->getDefaultValue() : null));
+                                        $def     = isset($pms [ $idx ]) ? $pms [ $idx ] : (($da ? $p->getDefaultValue() : null));
                                         $value   = rqst($name, $def, true);
                                         $args [] = is_array($value) ? array_map(function ($v) {
                                             return is_array($v) ? $v : urldecode($v);

@@ -78,7 +78,7 @@ class App {
         fire('wula\configLoaded');//配置加载完成
         //检测语言
         if (!defined('LANGUAGE')) {
-            $lang        = isset($_COOKIE['language']) ?$_COOKIE['language'] :null;
+            $lang        = isset($_COOKIE['language']) ? $_COOKIE['language'] : null;
             $defaultLang = $this->configs ['default']->get('language');
             if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
                 //用户设置通过cookie设置
@@ -311,7 +311,7 @@ class App {
      *
      * @return mixed 配置值.
      */
-    public static function cfg( $name = '@default', $default = '') {
+    public static function cfg($name = '@default', $default = '') {
         $app  = self::$app;
         $keys = null;
         if ($name != null) {
@@ -405,7 +405,7 @@ class App {
      *
      * @return int
      */
-    public static function icfgn( $name, $default = 0) {
+    public static function icfgn($name, $default = 0) {
         $val = self::icfg($name, $default);
         if (!$val) {
             return $default;
@@ -422,7 +422,7 @@ class App {
      *
      * @return array
      */
-    public static function acfg( $name, array $default = []) {
+    public static function acfg($name, array $default = []) {
         $value = self::cfg($name);
         if ($value) {
             $value = @json_decode($value, true);
@@ -519,7 +519,7 @@ class App {
      *
      * @return string|null 未找到时返回null.
      */
-    public static function dir2id($dir,$check = false) {
+    public static function dir2id($dir, $check = false) {
         if (isset (self::$maps ['dir2id'] [ $dir ])) {
             return self::$maps ['dir2id'] [ $dir ];
         } else if (!$check) {
@@ -905,11 +905,18 @@ class App {
     }
 
     /**
-     * 启动APP.
+     * 启动APP处理请求.
+     *
+     * @param string $url    请求URL.
+     * @param string $method 请求方法.
      *
      * @return mixed
      */
-    public static function run() {
+    public static function run($url = '', $method = 'GET') {
+        if ($url) {
+            $_SERVER['REQUEST_URI']    = $url;
+            $_SERVER['REQUEST_METHOD'] = $method;
+        }
         if (!isset ($_SERVER ['REQUEST_URI'])) {
             Response::respond(500, 'Your web server did not provide REQUEST_URI, stop route request.');
         }
