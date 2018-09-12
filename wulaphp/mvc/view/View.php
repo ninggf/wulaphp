@@ -72,7 +72,7 @@ abstract class View implements \ArrayAccess, Renderable {
      */
     public function assign($data, $value = null) {
         if (is_array($data)) {
-            $this->data = array_merge_recursive($this->data, $data);
+            $this->data = array_merge($this->data, $data);
         } else if ($data) {
             $this->data [ $data ] = $value;
         }

@@ -15,18 +15,23 @@
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
+define('WULA_STARTTIME', microtime(true));
+define('WULA_VERSION', '2.5.0');
+define('WULA_RELEASE', 'rc');
+defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
+defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 @error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 if (version_compare('5.6.9', phpversion(), '>')) {
     !trigger_error(sprintf('Your php version is %s,but wulaphp required PHP 5.6.9 or higher', phpversion()), E_USER_ERROR) or exit(1);
 }
-define('WULA_STARTTIME', microtime(true));
-defined('APPROOT') or !trigger_error('please define APPROOT', E_USER_ERROR) or exit(1);
-defined('WWWROOT') or !trigger_error('please define WWWROOT', E_USER_ERROR) or exit(1);
-define('WULA_VERSION', '2.5.0');
-define('WULA_RELEASE', 'rc');
-defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
+# 项目根目录检测
+if (isset($_SERVER['WULAPHP_TEST_MODE']) && $_SERVER['WULAPHP_TEST_MODE']) {
+    //测试wulaphp模式
+    defined('APPROOT') or define('APPROOT', realpath(__DIR__ . '/tests') . DS);
+} else {
+    defined('APPROOT') or define('APPROOT', realpath(__DIR__ . '/../../../') . DS);
+}
 /* 常用目录定义 */
-define('DS', DIRECTORY_SEPARATOR);
 define('WULA_ROOT', __DIR__ . DS);
 defined('MODULE_DIR') or define('MODULE_DIR', 'modules');
 defined('THEME_DIR') or define('THEME_DIR', 'themes');
@@ -40,6 +45,7 @@ defined('VENDOR_DIR') or define('VENDOR_DIR', 'assets');
 defined('STORAGE_DIR') or define('STORAGE_DIR', 'storage');
 defined('TMP_DIR') or define('TMP_DIR', 'tmp');
 defined('LOGS_DIR') or define('LOGS_DIR', 'logs');
+defined('WWWROOT') or define('WWWROOT', APPROOT . PUBLIC_DIR . DIRECTORY_SEPARATOR);
 define('WEB_ROOT', WWWROOT);//alias of WWWROOT
 define('EXTENSIONS_PATH', APPROOT . EXTENSION_DIR . DS);
 define('LIBS_PATH', APPROOT . LIBS_DIR . DS);
@@ -61,15 +67,19 @@ define('EXIT_SUCCESS', 0);
 define('EXIT_ERROR', 1);
 define('EXIT_CONTINUE', 2);
 define('PHP_RUNTIME_NAME', php_sapi_name());
+
 if (!defined('APP_MODE')) {
     if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {
         define('APP_MODE', $_SERVER['APPMODE']);
+    } else if (isset($_ENV['APPMODE']) && $_ENV['APPMODE']) {
+        define('APP_MODE', $_ENV['APPMODE']);
     } else {
         define('APP_MODE', 'dev');
     }
 }
+
 if (@ini_get('register_globals')) {
-    die ('please close "register_globals" in php.ini file.');
+    !trigger_error('please close "register_globals" in php.ini file.') or exit(1);
 }
 if (defined('MAX_RUNTIME_LIMIT')) {
     set_time_limit(intval(MAX_RUNTIME_LIMIT));
@@ -79,16 +89,16 @@ if (function_exists('memory_get_usage') && (( int )@ini_get('memory_limit') < ab
     @ini_set('memory_limit', RUNTIME_MEMORY_LIMIT);
 }
 if (!function_exists('mb_internal_encoding')) {
-    die ('mb_string extension is required!');
+    !trigger_error('mb_string extension is required!') or exit(1);
 }
 if (!function_exists('json_decode')) {
-    die ('json extension is required!');
+    !@trigger_error('json extension is required!') or exit(1);
 }
 if (!function_exists('spl_autoload_register')) {
-    die ('SPL extension is required!');
+    !trigger_error('SPL extension is required!') or exit(1);
 }
 if (!function_exists('curl_init')) {
-    die ('curl extension is required!');
+    !trigger_error('curl extension is required!') or exit(1);
 }
 @ob_start();
 @ini_set('session.bug_compat_warn', 0);

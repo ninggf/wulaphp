@@ -12,3 +12,4 @@ conf/*_dev.php
 # composer
 vendor/
 composer.lock
+tests/storage/

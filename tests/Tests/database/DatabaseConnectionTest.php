@@ -8,12 +8,17 @@
  * file that was distributed with this source code.
  */
 
-namespace wula\tests;
+namespace wula\tests\Tests;
 
 use PHPUnit\Framework\TestCase;
 use wulaphp\app\App;
 use wulaphp\db\DatabaseConnection;
 
+/**
+ * Class DatabaseConnectionTest
+ * @package wula\tests\Tests
+ * @group   mysql
+ */
 class DatabaseConnectionTest extends TestCase {
     /**
      * @var \wulaphp\db\DatabaseConnection

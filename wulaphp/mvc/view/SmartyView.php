@@ -38,6 +38,8 @@ class SmartyView extends View implements IModuleView {
      * 绘制
      * @filter init_smarty_engine $smarty
      * @filter init_view_smarty_engine $smarty
+     * @return string
+     *
      * @throws \Exception
      */
     public function render() {
