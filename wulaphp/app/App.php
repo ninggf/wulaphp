@@ -8,6 +8,7 @@ use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\DatabaseConnection;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
+use wulaphp\io\Request;
 use wulaphp\io\Response;
 use wulaphp\router\Router;
 use wulaphp\util\ObjectCaller;
@@ -909,19 +910,46 @@ class App {
     /**
      * 启动APP处理请求.
      *
-     * @param string $url    请求URL.
-     * @param string $method 请求方法.
+     * @param string       $url    请求URL.
+     * @param array|string $data   请求数据或请求方式
+     * @param string       $method 请求方法.
      *
      * @return mixed
      */
-    public static function run($url = '', $method = 'GET') {
+    public static function run($url = null, $data = null, $method = 'GET') {
         if ($url) {
-            $_SERVER['REQUEST_URI']    = $url;
+            if (is_string($data)) {
+                $method = $data;
+                $data   = null;
+            }
+            $method                 = strtoupper($method);
+            $_SERVER['REQUEST_URI'] = $url;
+            $query                  = @parse_url($url, PHP_URL_QUERY);
+            if ($query) {
+                $args = [];
+                parse_str($query, $args);
+                if ($args) {
+                    if ($data) {
+                        $data = array_merge($data, $args);
+                    } else {
+                        $data = $args;
+                    }
+                }
+            }
             $_SERVER['REQUEST_METHOD'] = $method;
+            if ($data) {
+                if ($method == 'GET') {
+                    $_SERVER['QUERY_STRING'] = http_build_query($data);
+                }
+                Request::getInstance()->addUserData($data);
+            }
+
+            $_SERVER['REQUEST_TIME'] = time();
         }
         if (!isset ($_SERVER ['REQUEST_URI'])) {
             Response::respond(500, 'Your web server did not provide REQUEST_URI, stop route request.');
         }
+
         if (!self::$app->router) {
             self::$app->router = Router::getRouter();
         }

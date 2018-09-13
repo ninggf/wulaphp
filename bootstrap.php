@@ -15,6 +15,14 @@
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
+# 项目根目录检测
+if (!defined('APPROOT')) {
+    if (defined('PHPUNIT_COMPOSER_INSTALL')) {
+        return;
+    } else {
+        !trigger_error('define "APPROOT" first', E_USER_ERROR) or exit(1);
+    }
+}
 @ob_start();
 define('WULA_STARTTIME', microtime(true));
 define('WULA_VERSION', '2.5.0');
@@ -24,13 +32,6 @@ defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 @error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 if (version_compare('5.6.9', phpversion(), '>')) {
     !trigger_error(sprintf('Your php version is %s,but wulaphp required PHP 5.6.9 or higher', phpversion()), E_USER_ERROR) or exit(1);
-}
-# 项目根目录检测
-if (isset($_SERVER['WULAPHP_TEST_MODE']) && $_SERVER['WULAPHP_TEST_MODE']) {
-    //测试wulaphp模式
-    defined('APPROOT') or define('APPROOT', realpath(__DIR__ . '/tests') . DS);
-} else {
-    defined('APPROOT') or define('APPROOT', realpath(__DIR__ . '/../../../') . DS);
 }
 /* 常用目录定义 */
 define('WULA_ROOT', __DIR__ . DS);

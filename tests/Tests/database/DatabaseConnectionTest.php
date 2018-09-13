@@ -26,12 +26,12 @@ class DatabaseConnectionTest extends TestCase {
     protected static $con;
 
     public static function setUpBeforeClass() {
-        self::$con = App::db();
+        self::$con = App::db(['driver' => 'SQLite', 'dbname' => ':memory:']);
         $sql       = <<<'SQL'
 CREATE TABLE `{test_user}` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '用户ID',
     `username` VARCHAR(32) NOT NULL COMMENT '用户名',
-    `nickname` VARCHAR(32) NULL COMMENT '昵称',
+    `nickname` VARCHAR(3e2) NULL COMMENT '昵称',
     `phone` VARCHAR(16) NULL COMMENT '手机号',
     `email` VARCHAR(128) NULL COMMENT '邮箱地址',
     `status` SMALLINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1正常,0禁用,2密码过期',

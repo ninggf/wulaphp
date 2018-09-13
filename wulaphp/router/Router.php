@@ -211,6 +211,7 @@ class Router {
         } else {
             // 真正分发
             $this->urlParsedInfo = new UrlParsedInfo ($uri, $url, $args);
+
             foreach ($this->dispatchers as $dispatchers) {
                 foreach ($dispatchers as $d) {
                     if ($d instanceof IURLDispatcher) {
@@ -225,6 +226,7 @@ class Router {
                     break;
                 }
             }
+
             foreach ($this->postDispatchers as $dispatchers) {
                 foreach ($dispatchers as $d) {
                     if ($d instanceof IURLPostDispatcher) {

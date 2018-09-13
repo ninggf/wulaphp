@@ -8,12 +8,6 @@
  * file that was distributed with this source code.
  */
 
-define('DEBUG', 100);
-
-define('ALIAS_ENABLED', true);
-
-define('PUBLIC_DIR', 'www');
-
-define('APPROOT', __DIR__ . DIRECTORY_SEPARATOR);
-
-require APPROOT . '../bootstrap.php';
+return [
+    'sub' => 'testm/test/sub'
+];

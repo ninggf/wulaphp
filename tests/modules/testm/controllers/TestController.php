@@ -16,4 +16,8 @@ class TestController extends Controller {
     public function add($i, $j = 1) {
         return pview(['i' => $i, 'j' => $j]);
     }
+
+    public function sub($x = 0, $y = 0) {
+        return ['result' => $x - $y];
+    }
 }

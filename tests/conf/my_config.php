@@ -8,12 +8,8 @@
  * file that was distributed with this source code.
  */
 
-define('DEBUG', 100);
-
-define('ALIAS_ENABLED', true);
-
-define('PUBLIC_DIR', 'www');
-
-define('APPROOT', __DIR__ . DIRECTORY_SEPARATOR);
-
-require APPROOT . '../bootstrap.php';
+return [
+    'test1' => 'my value',
+    'test2' => ['key1' => 'hello wula', 'key2' => ['2', '3']],
+    'test3' => 'test3 value'
+];

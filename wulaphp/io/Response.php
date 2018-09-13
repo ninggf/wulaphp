@@ -198,6 +198,7 @@ class Response {
         if (Request::isAjaxRequest()) {
             @header('ajax: 1');
             Response::getInstance()->output(['message' => $message ? $message : __('error occurred')]);
+            Response::getInstance()->close();
         } else {
             if ($status == 404) {
                 $data ['message'] = $message;
@@ -219,9 +220,10 @@ class Response {
             }
             if ($view) {
                 Response::getInstance()->output($view);
+                Response::getInstance()->close();
             }
         }
-        exit ();
+        exit (1);
     }
 
     /**
@@ -305,6 +307,7 @@ class Response {
         if ($buffer && $buffer['type'] && $buffer['name'] == $this->bufferName && $buffer['level'] == $this->bufferLevel) {
             @ob_end_flush();
         }
+        self::$INSTANCE = null;
         if ($exit) {
             exit ();
         } else {
