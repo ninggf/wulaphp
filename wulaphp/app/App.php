@@ -425,7 +425,9 @@ class App {
     public static function acfg($name, array $default = []) {
         $value = self::cfg($name);
         if ($value) {
-            $value = @json_decode($value, true);
+            if (is_string($value)) {
+                $value = @json_decode($value, true);
+            }
             if ($value === false) {
                 $value = [];
             }

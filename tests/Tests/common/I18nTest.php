@@ -23,8 +23,6 @@ class I18nTest extends TestCase {
     public function testLang() {
         self::assertTrue(defined('LANGUAGE'));
         self::assertEquals('en', LANGUAGE);
-        $cnt = I18n::addLang(__DIR__ . '/../../../lang');
-        self::assertTrue($cnt > 0, 'no item added');
     }
 
     /**

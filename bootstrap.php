@@ -15,6 +15,7 @@
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
+@ob_start();
 define('WULA_STARTTIME', microtime(true));
 define('WULA_VERSION', '2.5.0');
 define('WULA_RELEASE', 'rc');
@@ -67,17 +68,11 @@ define('EXIT_SUCCESS', 0);
 define('EXIT_ERROR', 1);
 define('EXIT_CONTINUE', 2);
 define('PHP_RUNTIME_NAME', php_sapi_name());
-
-if (!defined('APP_MODE')) {
-    if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {
-        define('APP_MODE', $_SERVER['APPMODE']);
-    } else if (isset($_ENV['APPMODE']) && $_ENV['APPMODE']) {
-        define('APP_MODE', $_ENV['APPMODE']);
-    } else {
-        define('APP_MODE', 'dev');
-    }
+if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']) {
+    define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
+} else {
+    define('VISITING_DOMAIN', '');
 }
-
 if (@ini_get('register_globals')) {
     !trigger_error('please close "register_globals" in php.ini file.') or exit(1);
 }
@@ -100,22 +95,17 @@ if (!function_exists('spl_autoload_register')) {
 if (!function_exists('curl_init')) {
     !trigger_error('curl extension is required!') or exit(1);
 }
-@ob_start();
+// 全局环境配置
 @ini_set('session.bug_compat_warn', 0);
 @ini_set('session.bug_compat_42', 0);
 @mb_internal_encoding('UTF-8');
 @mb_regex_encoding('UTF-8');
 @mb_http_output('UTF-8');
-if (isset($_SERVER['HTTP_HOST'])) {
-    define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
-} else {
-    define('VISITING_DOMAIN', '');
-}
+// 类路径配置
 /** @global string[] $_wula_classpath none-namespace classpath. */
 global $_wula_classpath;
-/** @global  string[] $_wula_namespace_classpath psr-4 classpath. */
+/** @global string[] $_wula_namespace_classpath psr-4 classpath. */
 global $_wula_namespace_classpath;
-
 $_wula_namespace_classpath [] = WULA_ROOT;
 if (is_dir(EXTENSIONS_PATH)) {
     $_wula_namespace_classpath [] = EXTENSIONS_PATH;
@@ -125,6 +115,7 @@ if (is_dir(WEB_ROOT . VENDOR_DIR)) {
 }
 $_wula_namespace_classpath [] = WULA_ROOT . 'vendors' . DS;
 $_wula_classpath []           = WULA_ROOT . 'vendors' . DS;
+// 基础类文件加载
 include WULA_ROOT . 'wulaphp/conf/Configuration.php';
 include WULA_ROOT . 'wulaphp/conf/CacheConfiguration.php';
 include WULA_ROOT . 'wulaphp/conf/ClusterConfiguration.php';
@@ -132,19 +123,22 @@ include WULA_ROOT . 'wulaphp/conf/RedisConfiguration.php';
 include WULA_ROOT . 'wulaphp/conf/BaseConfigurationLoader.php';
 include WULA_ROOT . 'wulaphp/conf/ConfigurationLoader.php';
 include WULA_ROOT . 'wulaphp/cache/Cache.php';
-if (function_exists('apcu_store')) {
-    include WULA_ROOT . 'wulaphp/cache/ApcCacher.php';
-}
-if (extension_loaded('yac')) {
-    include WULA_ROOT . 'wulaphp/cache/YacCache.php';
-}
-if (extension_loaded('xcache')) {
-    include WULA_ROOT . 'wulaphp/cache/XCacheCacher.php';
-}
 include WULA_ROOT . 'wulaphp/cache/RedisCache.php';
 include WULA_ROOT . 'wulaphp/cache/MemcachedCache.php';
 include WULA_ROOT . 'wulaphp/cache/RtCache.php';
 include WULA_ROOT . 'wulaphp/util/ObjectCaller.php';
+//运行环境检测
+if (!defined('APP_MODE')) {
+    if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {
+        define('APP_MODE', $_SERVER['APPMODE']);
+    } else if (isset($_ENV['APPMODE']) && $_ENV['APPMODE']) {
+        define('APP_MODE', $_ENV['APPMODE']);
+    } else {
+        define('APP_MODE', env('app_mode', 'dev'));
+    }
+}
+//启动运行时缓存
+RtCache::init();
 //注册类自动加载
 spl_autoload_register(function ($clz) {
     global $_wula_classpath, $_wula_namespace_classpath;
