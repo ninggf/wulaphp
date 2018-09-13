@@ -31,7 +31,7 @@ class ServiceCommand extends ArtisanCommand {
     }
 
     public function desc() {
-        return 'service in background';
+        return 'run services in background';
     }
 
     public function argDesc() {

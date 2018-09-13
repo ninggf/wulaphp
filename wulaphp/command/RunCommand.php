@@ -13,75 +13,90 @@ namespace wulaphp\command;
 use wulaphp\artisan\ArtisanMonitoredTask;
 
 class RunCommand extends ArtisanMonitoredTask {
-	private $script;
-	private $logfile;
+    private $script;
+    private $logfile;
 
-	public function cmd() {
-		return 'run';
-	}
+    public function cmd() {
+        return 'run';
+    }
 
-	public function desc() {
-		return 'run a script in parallel mode';
-	}
+    public function desc() {
+        return 'parallel run a script in background';
+    }
 
-	protected function getOpts() {
-		return [
-			'n::number'  => 'Number of worker to run the script(4)',
-			's::script'  => 'the script to run',
-			'l::logfile' => 'log file'
-		];
-	}
+    public function argDesc() {
+        return '<script> [start|stop|status|help]';
+    }
 
-	protected function paramValid($options) {
-		$op = $this->getOperate();
-		if (!$op || $op == 'help') {
-			return true;
-		}
-		$s = isset($options['s'])?$options['s']:0;
-		if (!$s) {
-			$this->error('please give me a script to run!');
+    protected function getOpts() {
+        return [
+            'n::number'  => 'Number of worker to run the script(4)',
+            'l::logfile' => 'log file'
+        ];
+    }
 
-			return false;
-		}
+    protected function paramValid($options) {
+        $s = $this->opt(0);
 
-		$this->script = APPROOT . $s;
-		if (!is_file($this->script)) {
-			$this->error($this->script . ' not found!');
+        if (!$s) {
+            return true;
+        }
+        if (!preg_match('/\.php$/', $s)) {
+            $this->error($s . ' is an invalid script name!');
 
-			return false;
-		}
+            return false;
+        }
+        $this->script = APPROOT . $s;
+        if (!is_file($this->script)) {
+            $this->error($this->script . ' not found!');
 
-		return true;
-	}
+            return false;
+        }
+        $this->defaultOp = 'status';
 
-	protected function setUp(&$options) {
-		$this->workerCount = aryget('n', $options, 4);
-		$this->logfile     = aryget('l', $options);
-	}
+        return true;
+    }
 
-	protected function loop($options) {
-		$cmd = escapeshellcmd(PHP_BINARY);
-		$arg = escapeshellarg($this->script);
-		try {
-			@exec($cmd . ' ' . $arg . '  2>&1', $output, $rtn);
-			if ($rtn === 2) {
-				//直接返回释放资源，让父进程重开子进程
-				return;
-			}
+    protected function argValid($options) {
+        $s = $this->opt(0);
 
-			if ($rtn && $output && $this->logfile) {
-				log_info($cmd . ' ' . $arg . "\n\t" . implode("\n\t", $output), $this->logfile);
-			}
-		} catch (\Exception $e) {
-			log_info($cmd . ' ' . $arg . "\n\t" . $e->getMessage(), $this->logfile);
-		}
-		sleep(1);
-	}
+        if (!$s) {
+            $this->error('no script to run!');
 
-	protected function getPidFilename($cmd) {
-		$fname = parent::getPidFilename($cmd);
-		$file  = $this->script;
+            return false;
+        }
 
-		return $fname . '-' . md5($file);
-	}
+        return true;
+    }
+
+    protected function setUp(&$options) {
+        $this->workerCount = aryget('n', $options, 4);
+        $this->logfile     = aryget('l', $options);
+    }
+
+    protected function loop($options) {
+        $cmd = escapeshellcmd(PHP_BINARY);
+        $arg = escapeshellarg($this->script);
+        try {
+            @exec($cmd . ' ' . $arg . '  2>&1', $output, $rtn);
+            if ($rtn === 2) {
+                //直接返回释放资源，让父进程重开子进程
+                return;
+            }
+
+            if ($rtn && $output && $this->logfile) {
+                log_info($cmd . ' ' . $arg . "\n\t" . implode("\n\t", $output), $this->logfile);
+            }
+        } catch (\Exception $e) {
+            log_info($cmd . ' ' . $arg . "\n\t" . $e->getMessage(), $this->logfile);
+        }
+        sleep(1);
+    }
+
+    protected function getPidFilename($cmd) {
+        $fname = parent::getPidFilename($cmd);
+        $file  = $this->script;
+
+        return $fname . '-' . md5($file);
+    }
 }
