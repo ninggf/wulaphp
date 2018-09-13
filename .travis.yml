@@ -37,6 +37,8 @@ install:
 - flags="--prefer-dist --no-interaction --optimize-autoloader --no-suggest --no-progress"
 # install dependencies using system provided composer binary
 - composer install $flags
+- ./artisan admin create-module testm
+- ./artisan admin create-ext -b myext
 
 script:
 - ls -d tests/Tests/**/* | parallel --gnu --keep-order 'echo "Running {} tests"; ./vendor/bin/phpunit -c tests/phpunit.xml --colors=always {} || (echo -e "\e[41mFAILED\e[0m {}" && exit 1);'
