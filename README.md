@@ -78,11 +78,11 @@
 
 [wulacms](https://packagist.org/packages/wula/wulacms)是一个基于wulaphp开发的微内核内容管理框架,提供:
 * 内置模块:
-    * 内核模块[wulacms/system](https://packagist.org/packages/wulacms/system) - 账户管理,模块管理,权限管理,日志管理,任务管理等功能...
-    * 后台界面[wulacms/backend](https://packagist.org/packages/wulacms/backend) - 基于layui的管理界面
-    * cms模块[wulacms/cms](https://packagist.org/packages/wulacms/cms) - 多模型,版本控制,多站点,主题支持...
-    * RESTFull[wulacms/rest](https://packagist.org/packages/wulacms/rest) - RESTFull风格API调用与接入管理.
-    * 多媒体[wulacms/media](https://packagist.org/packages/wulacms/media) - 附件管理
+    * 内核模块:[wulacms/system](https://packagist.org/packages/wulacms/system) - 账户管理,模块管理,权限管理,日志管理,任务管理等功能...
+    * 后台界面:[wulacms/backend](https://packagist.org/packages/wulacms/backend) - 基于layui的管理界面
+    * cms模块:[wulacms/cms](https://packagist.org/packages/wulacms/cms) - 多模型,版本控制,多站点,主题支持...
+    * RESTFul:[wulacms/rest](https://packagist.org/packages/wulacms/rest) - RESTFul风格API调用与接入管理.
+    * 多媒体:[wulacms/media](https://packagist.org/packages/wulacms/media) - 附件管理
 * 可选模块:
     * 有很多可选模块供君选择,请[看这儿](https://packagist.org/packages/wulacms).
 * 特性:
@@ -102,11 +102,11 @@
 * 为wulaphp撰写[文档](https://github.com/ninggf/wulaphp.com)
 
 > `Pull Request`注意事项:
-> 1. 推荐使用[PhpStorm](https://www.jetbrains.com/phpstorm/)IDE.
+> 1. 推荐使用 [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE.
 > 2. 为了减少代码合并时产生的冲突,需要您的代码风格与我们保持一致:
 >       * 下载适合PhpStorm使用的[代码风格配置](https://raw.githubusercontent.com/ninggf/wulaphp/v2.0/ide-code-style.xml)文件.
->       * 导入到PhpStorm中.
+>       * 导入到PhpStorm IDE中.
 
 # (许可)License
 
-[MIT](https://github.com/ninggf/wulaphp/blob/v2.0/LICENSE)
+我们选择了[MIT](https://github.com/ninggf/wulaphp/blob/v2.0/LICENSE) License.
