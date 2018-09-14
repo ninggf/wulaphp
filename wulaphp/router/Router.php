@@ -19,9 +19,9 @@ class Router {
 
     private $urlParsedInfo = null;//解析的URL数据.
     private $requestURL    = null;//解析后的URL
-    private $queryParams   = [];//URL的请求参数
-
-    public $requestURI;//请求URI
+    private $queryParams   = [];//QueryString 请求参数
+    public  $urlParams     = [];//URL中的参数
+    public  $requestURI;//请求URI
     /**
      * @var Router
      */
@@ -139,6 +139,20 @@ class Router {
     }
 
     /**
+     * 取URL中的位置参数
+     *
+     * @param int    $pos
+     * @param string $default
+     *
+     * @return mixed|string
+     */
+    public function getParam($pos = 0, $default = '') {
+        $pos = intval($pos);
+
+        return isset($this->urlParams[ $pos ]) ? $this->urlParams[ $pos ] : $default;
+    }
+
+    /**
      * 注册分发器.
      *
      * @param IURLDispatcher $dispatcher
@@ -179,15 +193,15 @@ class Router {
      * @return mixed when run in cli-server return false for assets.
      */
     public function route() {
+        static $alias = false;
         $response = Response::getInstance();
         $uri      = self::getURI();
         if ($uri == '/' || !$uri) {
             $uri = '/index.html';
         }
         //解析url
+        $this->urlParams  = [];
         $this->requestURI = parse_url($uri, PHP_URL_PATH);
-        $url              = apply_filter('router\parse_url', trim($this->requestURI, '/'));
-        $this->requestURL = $url;
         //从原生的URL中解析出参数
         $query = @parse_url($uri, PHP_URL_QUERY);
         $args  = [];
@@ -196,9 +210,24 @@ class Router {
             $this->xssCleaner->xss_clean($args);
         }
         $this->queryParams = $args;
-        $view              = null;
+        $url               = apply_filter('router\parse_url', trim($this->requestURI, '/'));
+        $this->requestURL  = $url;
+        if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
+            if ($alias === false) {
+                $aliasFile = MODULES_PATH . 'alias.php';
+                if (is_file($aliasFile)) {
+                    $alias = (array)include $aliasFile;
+                } else {
+                    $alias = [];
+                }
+            }
+            if ($url && isset($alias[ $url ]) && $alias[ $url ]) {
+                $url = $alias[ $url ];
+            }
+        }
         fire('router\beforeDispatch', $this, $url);
         //预处理
+        $view = null;
         foreach ($this->preDispatchers as $dispatchers) {
             foreach ($dispatchers as $d) {
                 if ($d instanceof IURLPreDispatcher) {
@@ -211,7 +240,6 @@ class Router {
         } else {
             // 真正分发
             $this->urlParsedInfo = new UrlParsedInfo ($uri, $url, $args);
-
             foreach ($this->dispatchers as $dispatchers) {
                 foreach ($dispatchers as $d) {
                     if ($d instanceof IURLDispatcher) {

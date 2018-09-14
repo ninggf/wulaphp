@@ -51,6 +51,18 @@ function rqsts(array $names, $xss_clean = true, array $map = []) {
 }
 
 /**
+ * 取URL中的参数(仅在action中可靠).
+ *
+ * @param int    $pos
+ * @param string $default
+ *
+ * @return mixed
+ */
+function param($pos = 0, $default = '') {
+    return \wulaphp\router\Router::getRouter()->getParam($pos, $default);
+}
+
+/**
  * 取数据.
  *
  * @see rqst

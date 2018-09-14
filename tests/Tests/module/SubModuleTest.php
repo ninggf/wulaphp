@@ -14,55 +14,45 @@ use PHPUnit\Framework\TestCase;
 use wulaphp\app\App;
 
 /**
- * Class SimpleRouteTest
- * @package tests\Tests\route
+ * Class SubModuleTest
+ * @package tests\Tests\module
  * @group   module
  */
-class SimpleRouteTest extends TestCase {
-    public function testModuleLoaded() {
-        $testM = App::getModule('testm');
-        self::assertNotNull($testM);
-        self::assertTrue(ALIAS_ENABLED);
-        $url = App::url('testm/test/sub');
-        self::assertEquals('/sub', $url);
-        self::assertEquals('www', PUBLIC_DIR);
-    }
-
-    /**
-     * @depends testModuleLoaded
-     */
-    public function testSimpleRoute() {
-
+class SubModuleTest extends TestCase {
+    public function testSubModule1() {
         @ob_start();
         try {
-            App::run('testm/test/add/2');
-        } catch (\Exception $e) {
-
-        }
-        $page = @ob_get_clean();
-        self::assertNotEmpty($page);
-        self::assertEquals('3', $page);
-
-        @ob_start();
-        try {
-            App::run('/sub?x=10&y=5');
+            App::run('/subm/add/2/3');
         } catch (\Exception $e) {
             throw $e;
         }
         $page = @ob_get_clean();
         self::assertNotEmpty($page);
         self::assertEquals('{"result":5}', $page);
+
     }
 
-    public function testTableRoute() {
+    public function testUserModule() {
         @ob_start();
         try {
-            App::run('/testm/mul.html');
+            App::run('/subm/user');
         } catch (\Exception $e) {
             throw $e;
         }
         $page = @ob_get_clean();
         self::assertNotEmpty($page);
-        self::assertEquals('result is 200', $page);
+        self::assertEquals('Hello wulaphp~', $page);
+    }
+
+    public function testtestUserAdd() {
+        @ob_start();
+        try {
+            App::run('/subm/user/add/add-op');
+        } catch (\Exception $e) {
+            throw $e;
+        }
+        $page = @ob_get_clean();
+        self::assertNotEmpty($page);
+        self::assertEquals('10', $page);
     }
 }

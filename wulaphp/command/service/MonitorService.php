@@ -29,7 +29,7 @@ class MonitorService extends Service {
 
     public function __construct($name, array $config) {
         parent::__construct($name, $config);
-        $this->setVerbose($this->getOption('verbose'));
+        $this->setVerbose($this->getOption('verbose', 'vvv'));
         $this->output('Starting', false);
         //第一步修改当前进程uid
         $user = $this->getOption('user');

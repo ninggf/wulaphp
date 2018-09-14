@@ -16,7 +16,7 @@ use wulaphp\app\Module;
 
 class TestM extends Module {
     public function getName() {
-        return 'testm';
+        return '模块一';
     }
 
     public function getDescription() {

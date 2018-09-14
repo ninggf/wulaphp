@@ -31,24 +31,11 @@ class DefaultDispatcher implements IURLDispatcher {
      * @throws \Exception
      */
     public function dispatch($url, $router, $parsedInfo) {
-        static $alias = false;
         //检测请求是否合法
         if ((!defined('URL_STRICT_MODE') || URL_STRICT_MODE) && $router->requestURI[ -1 ] == '/') {
             return null;
         }
-        if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
-            if ($alias === false) {
-                $aliasFile = MODULES_PATH . 'alias.php';
-                if (is_file($aliasFile)) {
-                    $alias = (array)include $aliasFile;
-                } else {
-                    $alias = [];
-                }
-            }
-            if ($url && isset($alias[ $url ]) && $alias[ $url ]) {
-                $url = $alias[ $url ];
-            }
-        }
+
         $controllers = explode('/', $url);
         $pms         = [];
         $len         = count($controllers);
@@ -217,7 +204,8 @@ class DefaultDispatcher implements IURLDispatcher {
                                     }
                                 }
                             }
-                            $view = $clz->{$action}(...$args);
+                            $router->urlParams = (array)$pms;
+                            $view              = $clz->{$action}(...$args);
                             if ($view !== null) {
                                 if (is_array($view)) {
                                     $view = new JsonView($view);
@@ -261,6 +249,9 @@ class DefaultDispatcher implements IURLDispatcher {
         if ($subnamespace) {
             $module    .= DS . $subnamespace;
             $namespace .= '\\' . $subnamespace;
+            $mclz      = null;
+        } else {
+            $mclz = App::getModuleByDir($module);
         }
         if ($action != 'index') {
             // Action Controller 的 index方法
@@ -342,6 +333,17 @@ class DefaultDispatcher implements IURLDispatcher {
                         'index'
                     ];
                 }
+            } else if ($mclz && $mclz->hasSubModule()) {
+                array_unshift($params, $action);
+
+                return [
+                    'wulaphp\mvc\controller\SubModuleRouter',
+                    'index',
+                    $params,
+                    null,
+                    'index',
+                    'index'
+                ];
             }
         }
 

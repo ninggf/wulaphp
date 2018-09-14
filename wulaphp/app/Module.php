@@ -253,6 +253,24 @@ abstract class Module {
     }
 
     /**
+     * 是否有子模块
+     *
+     * @return bool
+     */
+    public function hasSubModule() {
+        return false;
+    }
+
+    /**
+     * 自定义路由
+     *
+     * @return array
+     */
+    public function routes() {
+        return [];
+    }
+
+    /**
      * 检测文件权限.
      *
      * @param string $f 文件路径.
