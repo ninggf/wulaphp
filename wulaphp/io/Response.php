@@ -209,6 +209,9 @@ class Response {
             } else if ($status == 500) {
                 $data ['message'] = $message;
                 $view             = template('500.tpl', $data);
+            } else if ($status == 503) {
+                $data ['message'] = $message;
+                $view             = template('503.tpl', $data);
             } else if ($message) {
                 if (is_array($message)) {
                     $view = new JsonView($message);

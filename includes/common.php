@@ -132,7 +132,7 @@ function frqst($name, $default = 0.0) {
  * @param string $file
  */
 function log_debug($message, $file = '') {
-    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, $trace, DEBUG_DEBUG, $file);
 }
 
@@ -165,7 +165,7 @@ function log_warn($message, $file = '') {
  * @param string $file
  */
 function log_error($message, $file = '') {
-    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, $trace, DEBUG_ERROR, $file);
 }
 
@@ -196,7 +196,18 @@ function log_message($message, array $trace_info, $level, $file = 'wula') {
     static $loggers = [];
     $_wula_last_msg = $message;
     if (!defined('DEBUG')) {
-        @file_put_contents(LOGS_PATH . 'core_dump.log', '[' . gmdate('Y-m-d H:i:s') . ' GMT]' . $message . "\n", FILE_APPEND);
+        $dumps = '[' . gmdate('Y-m-d H:i:s') . ' GMT] ' . $message . "\n";
+        for ($i = 0; $i < 10; $i++) {
+            if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
+                $dumps .= \wulaphp\util\CommonLogger::getLine($trace_info[ $i ], $i);
+            }
+        }
+        if (isset ($_SERVER ['REQUEST_URI'])) {
+            $dumps .= " uri: " . $_SERVER ['REQUEST_URI'] . "\n";
+        } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
+            $dumps .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
+        }
+        @file_put_contents(LOGS_PATH . 'core_dump.log', $dumps, FILE_APPEND);
 
         return;
     }

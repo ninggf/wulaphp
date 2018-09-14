@@ -74,7 +74,7 @@ class ThemeView extends View {
                 $this->__smarty->debugging_ctrl  = 'URL';
                 $this->__smarty->smarty_debug_id = '_debug_wula';
             }
-            $this->__smarty->error_reporting = KS_ERROR_REPORT_LEVEL;
+            $this->__smarty->error_reporting = defined('KS_ERROR_REPORT_LEVEL') ? KS_ERROR_REPORT_LEVEL : 0;
         } else {
             throw new \Exception(__('The template %s is not found', $this->tpl));
         }

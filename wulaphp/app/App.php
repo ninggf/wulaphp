@@ -167,22 +167,24 @@ class App {
         if (!self::$app) {
             new App ();
         }
-        $debug = App::icfg('debug', DEBUG_ERROR);
-        if ($debug > 1000 || $debug < 0) {
-            $debug = DEBUG_OFF;
+        if (!defined('DEBUG')) {
+            $debug = App::icfg('debug', DEBUG_ERROR);
+            if ($debug > 1000 || $debug < 0) {
+                $debug = DEBUG_OFF;
+            }
+            define('DEBUG', $debug);
+            if (DEBUG == DEBUG_OFF) {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING);
+                @ini_set('display_errors', 0);
+            } else if (DEBUG == DEBUG_DEBUG) {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE);
+                @ini_set('display_errors', 1);
+            } else {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+                @ini_set('display_errors', 1);
+            }
+            error_reporting(KS_ERROR_REPORT_LEVEL);
         }
-        define('DEBUG', $debug);
-        if (DEBUG == DEBUG_OFF) {
-            define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING);
-            @ini_set('display_errors', 0);
-        } else if (DEBUG == DEBUG_DEBUG) {
-            define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE);
-            @ini_set('display_errors', 1);
-        } else {
-            define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
-            @ini_set('display_errors', 1);
-        }
-        error_reporting(KS_ERROR_REPORT_LEVEL);
         $timezone = App::cfg('timezone', 'Asia/Shanghai');
         // 时区设置
         define('TIMEZONE', $timezone);

@@ -73,7 +73,7 @@ class SmartyView extends View implements IModuleView {
             if ($devMod) {
                 $this->__smarty->caching = false;
             }
-            $this->__smarty->error_reporting = KS_ERROR_REPORT_LEVEL;
+            $this->__smarty->error_reporting = defined('KS_ERROR_REPORT_LEVEL') ? KS_ERROR_REPORT_LEVEL : 0;
         } else {
             throw new \Exception(__('The template %s is not found', $this->tpl . '.tpl'));
         }
