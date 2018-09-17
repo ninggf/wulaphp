@@ -1,9 +1,5 @@
 language: php
 
-env:
-  global:
-  - MySQL_PASSWORD=888888
-
 cache:
   directories:
   - $HOME/.composer/cache
@@ -31,8 +27,6 @@ matrix:
   - php: nightly
 
 before_install:
-# setup mysql
-- sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('${MySQL_PASSWORD}') where User='root'; FLUSH PRIVILEGES;"
 # disable xdebug if available
 - phpenv config-rm xdebug.ini || echo "xdebug not available"
 # disable default memory limit

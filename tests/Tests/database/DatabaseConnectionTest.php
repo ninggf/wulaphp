@@ -32,7 +32,7 @@ class DatabaseConnectionTest extends TestCase {
             'driver'   => 'MySQL',
             'host'     => 'localhost',
             'user'     => 'root',
-            'password' => '888888'
+            'password' => ''
         ];
         $dialect = DatabaseDialect::getDialect($dbcfg);
         self::assertNotNull($dialect);

@@ -15,6 +15,6 @@ $dbcfg->host('127.0.0.1');
 $dbcfg->user('root');
 $dbcfg->dbname('wula_db');
 $dbcfg->encoding('UTF8MB4');
-$dbcfg->password('888888');
+$dbcfg->password('');
 
 return $dbcfg;
