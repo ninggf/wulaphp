@@ -10,7 +10,7 @@ class CreateExtensionCommand extends ArtisanCommand {
     }
 
     public function desc() {
-        return 'Create extension structure for your';
+        return 'Create standard extension structure';
     }
 
     protected function execute($options) {

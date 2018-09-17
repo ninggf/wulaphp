@@ -30,5 +30,12 @@ class AdminCommand extends ArtisanCommand {
     protected function subCommands() {
         $this->subCmds['create-module'] = new CreateModuleCommand('admin');
         $this->subCmds['create-ext']    = new CreateExtensionCommand('admin');
+        $this->subCmds['module']        = new ModuleCommand('admin');
+
+        foreach (apply_filter('artisan\init_admin_commands', []) as $cmd) {
+            if ($cmd instanceof ArtisanCommand) {
+                $this->subCmds[ $cmd->cmd() ] = $cmd->setParent('admin');
+            }
+        }
     }
 }

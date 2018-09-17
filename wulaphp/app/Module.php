@@ -32,14 +32,15 @@ abstract class Module {
         $this->clzName    = get_class($this);
         $ns               = explode('\\', $this->clzName);
         array_pop($ns);
-        $ann                  = new Annotation($this->reflection);
-        $this->group          = $ann->getString('group', 'Unknown');
-        $this->namespace      = implode('\\', $ns);
-        $this->path           = dirname($ref->getFileName());
-        $this->dirname        = basename($this->path);
-        $vs                   = $this->getVersionList();
-        $keys                 = array_keys($vs);
-        $this->currentVersion = array_pop($keys);
+        $ann                    = new Annotation($this->reflection);
+        $this->group            = $ann->getString('group', 'Unknown');
+        $this->namespace        = implode('\\', $ns);
+        $this->path             = dirname($ref->getFileName());
+        $this->dirname          = basename($this->path);
+        $vs                     = $this->getVersionList();
+        $keys                   = array_keys($vs);
+        $this->currentVersion   = array_pop($keys);
+        $this->installedVersion = $this->currentVersion;
         unset($ns);
     }
 
@@ -185,7 +186,7 @@ abstract class Module {
      *
      * @return bool
      */
-    public function install(DatabaseConnection $con, $kernel = 0) {
+    public function install($con, $kernel = 0) {
         return true;
     }
 

@@ -22,6 +22,10 @@ abstract class ArtisanCommand {
         @chdir(APPROOT);
     }
 
+    public function setParent($parent) {
+        $this->pcmd = $parent;
+    }
+
     public function help($message = '') {
         $color = $this->color;
         if ($message) {
@@ -288,7 +292,7 @@ abstract class ArtisanCommand {
             if ($l < $message[1]) {
                 $msgs[] = str_pad($message[0], $message[1], $pad);
             } else if ($l > $message[1]) {
-                $msgs[] = substr($message[0], 0, $message[1]);
+                $msgs[] = mb_substr($message[0], 0, $message[1]);
             } else {
                 $msgs[] = $message[0];
             }
