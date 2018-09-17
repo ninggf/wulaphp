@@ -22,7 +22,6 @@
     <groups>
         <exclude>
             <group>legacy</group>
-            <group>mysql</group>
         </exclude>
     </groups>
 </phpunit>

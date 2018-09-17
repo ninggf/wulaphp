@@ -13,6 +13,7 @@ namespace wula\tests\Tests;
 use PHPUnit\Framework\TestCase;
 use wulaphp\app\App;
 use wulaphp\db\DatabaseConnection;
+use wulaphp\db\dialect\DatabaseDialect;
 
 /**
  * Class DatabaseConnectionTest
@@ -24,14 +25,30 @@ class DatabaseConnectionTest extends TestCase {
      * @var \wulaphp\db\DatabaseConnection
      */
     protected static $con;
+    protected static $dbname;
 
     public static function setUpBeforeClass() {
-        self::$con = App::db(['driver' => 'SQLite', 'dbname' => ':memory:']);
-        $sql       = <<<'SQL'
+        $dbcfg   = [
+            'driver'   => 'MySQL',
+            'host'     => 'localhost',
+            'user'     => 'root',
+            'password' => '888888'
+        ];
+        $dialect = DatabaseDialect::getDialect($dbcfg);
+        self::assertNotNull($dialect);
+        self::$dbname = rand_str(5, 'a-z') . '_db';
+        self::assertNotEmpty($dialect->createDatabase(self::$dbname, 'UTF8MB4'), DatabaseDialect::$lastErrorMassge);
+        $dialect->close();
+
+        $dbcfg['dbname'] = self::$dbname;
+        self::$con       = App::db($dbcfg);
+        self::assertNotNull(self::$con);
+
+        $sql = <<<'SQL'
 CREATE TABLE `{test_user}` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '用户ID',
     `username` VARCHAR(32) NOT NULL COMMENT '用户名',
-    `nickname` VARCHAR(3e2) NULL COMMENT '昵称',
+    `nickname` VARCHAR(32) NULL COMMENT '昵称',
     `phone` VARCHAR(16) NULL COMMENT '手机号',
     `email` VARCHAR(128) NULL COMMENT '邮箱地址',
     `status` SMALLINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1正常,0禁用,2密码过期',
@@ -41,8 +58,8 @@ CREATE TABLE `{test_user}` (
     INDEX `IDX_STATUS` (`status` ASC)
 )  ENGINE=INNODB DEFAULT CHARACTER SET=UTF8 COMMENT='用户表'
 SQL;
-        $rst       = self::$con->exec($sql);
-        self::assertTrue($rst, 'cannot create table: test_user');
+        $rst = self::$con->exec($sql);
+        self::assertTrue($rst, 'cannot create table: test_user for ' . self::$con->error);
 
         $sql1 = <<<'SQL'
 CREATE TABLE `{test_account}` (
@@ -53,9 +70,6 @@ CREATE TABLE `{test_account}` (
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=UTF8 COMMENT '用户账户'
 SQL;
         $rst  = self::$con->exec($sql1);
-        if (!$rst) {
-            self::$con->exec('drop table {test_user}');
-        }
         self::assertTrue($rst, 'cannot create table: test_account');
     }
 
@@ -215,8 +229,9 @@ SQL;
     }
 
     public static function tearDownAfterClass() {
-        self::$con->exec('drop table {test_user}');
-        self::$con->exec('drop table {test_account}');
-        self::$con->close();
+        if (self::$con) {
+            self::$con->exec('drop database ' . self::$dbname);
+            self::$con->close();
+        }
     }
 }
