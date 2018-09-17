@@ -472,7 +472,7 @@ class DatabaseConnection {
      * @return array
      */
     public function queryOne($sql, ...$args) {
-        if (!preg_match('/.+\s+LIMIT\s+((%[ds]|0|[1-9]\d*)\s*,\s*)?1\s*$/i', $sql)) {
+        if (!preg_match('/\s+LIMIT\s+(%[ds]|0|[1-9]\d*)(\s*,\s*(%[ds]|[1-9]\d*))?\s*$/i', $sql)) {
             $sql = $sql . ' LIMIT 0,1';
         }
         $rst = $this->fetch($sql, ...$args);

@@ -166,7 +166,7 @@ SQL;
         $affected = $db->cudx("INSERT INTO `{test_user}` (username,nickname,`hash`) VALUES (%s,%s,%s)", 'Leo4', 'user100', md5('123321'));
         self::assertTrue($affected, $db->error);
         $db->commit();//3
-        $rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo4');
+        $rst = $db->queryOne('select * from {test_user} where username = %s LIMIT 0,2', 'Leo4');
         self::assertNotEmpty($rst);
         $db->commit();//2
         $rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo4');
@@ -209,6 +209,7 @@ SQL;
      *
      * @depends testConnect
      * @depends testTransparentTrans4
+     *
      */
     public function testTransparentTrans5(DatabaseConnection $db) {
         $db->start();//1
@@ -226,6 +227,22 @@ SQL;
         self::assertFalse($rst);
         $rst = $db->queryOne('select * from {test_user} where username = %s', 'Leo6');
         self::assertEmpty($rst);
+    }
+
+    /**
+     * @param $db
+     *
+     * @depends testConnect
+     * @depends testTransparentTrans5
+     */
+    public function testLimitRegex(DatabaseConnection $db) {
+        $cnt = $db->queryOne('select count(*) as cnt from {test_user} where username Like %s', 'Leo%');
+        self::assertNotEmpty($cnt, var_export($cnt, true));
+        self::assertEquals(2, $cnt['cnt']);
+        $rst = $db->queryOne('select * from {test_user} where username Like %s LIMIT 1', 'Leo%');
+        self::assertNotEmpty($rst);
+        $rst = $db->queryOne('select * from {test_user} where username Like %s LIMIT 1,1', 'Leo%');
+        self::assertNotEmpty($rst);
     }
 
     public static function tearDownAfterClass() {
