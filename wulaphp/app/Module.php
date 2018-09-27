@@ -52,12 +52,28 @@ abstract class Module {
     }
 
     /**
-     * @param string $file 文件名.
+     * @param string|null $file 文件名.
      *
      * @return string 路径
      */
     public final function getPath($file = null) {
         return $this->path . ($file ? DS . $file : '');
+    }
+
+    /**
+     * 加载模块内文件内容.
+     *
+     * @param string $file
+     *
+     * @return bool|string
+     */
+    public final function loadFile($file) {
+        $f = $this->getPath($file);
+        if (is_file($f) && is_readable($f)) {
+            return @file_get_contents($f);
+        }
+
+        return false;
     }
 
     /**
