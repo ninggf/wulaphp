@@ -20,14 +20,15 @@ use wulaphp\mvc\view\XmlView;
  */
 class XmlViewTest extends TestCase {
     public function testRender() {
-        $data['books'][] = ['book' => ['@auther' => 'Leo Ning', '#' => 'wulaphp从入门到精通']];
-        $data['books'][] = ['book' => ['@auther' => '金庸', '#' => '笑傲江湖']];
-        $view            = new XmlView($data, 'data');
+        $data['books'][]         = ['book' => ['@auther' => 'Leo Ning', '#' => 'wulaphp从入门到精通']];
+        $data['books'][]         = ['book' => ['@auther' => '金庸', '#' => '笑傲江湖']];
+        $data['books']['@total'] = 2;
+        $view                    = new XmlView($data, 'data');
 
         $content  = $view->render();
         $expected = <<<EOL
 <?xml version="1.0" encoding="UTF-8"?>
-<data><books><book auther="Leo Ning">wulaphp从入门到精通</book><book auther="金庸">笑傲江湖</book></books></data>
+<data><books total="2"><book auther="Leo Ning">wulaphp从入门到精通</book><book auther="金庸">笑傲江湖</book></books></data>
 
 EOL;
 
