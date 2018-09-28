@@ -35,8 +35,8 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
 
     protected function getOpts() {
         return [
-            'h::hosts'   => 'job server hosts',
-            'p::port'    => 'job server port',
+            'H::hosts'   => 'gearman server hosts',
+            'p::port'    => 'gearman server port',
             't::timeout' => 'timeout in seconds',
             'n::number'  => 'number of worker to do job(1)',
             'c::count'   => 'number of jobs for worker to run before exiting(100)',
@@ -96,7 +96,7 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
 
             return false;
         }
-        $this->host    = aryget('h', $options, 'localhost');
+        $this->host    = aryget('H', $options, 'localhost');
         $this->port    = aryget('p', $options, 4730);
         $this->timeout = aryget('t', $options, 5);
         $this->count   = aryget('c', $options, 100);

@@ -132,20 +132,23 @@ abstract class ArtisanCommand {
         }
         $options   = [];
         $op        = [];
-        $opts      = $this->getOpts();
         $opts['h'] = '';
+        $opts      = array_merge($opts, (array)$this->getOpts());
+
         foreach ($opts as $opt => $msg) {
             $opss                 = explode(':', $opt);
             $l                    = count($opss);
             $op[ '-' . $opss[0] ] = $l;
         }
-        $opts         = $this->getLongOpts();
-        $opts['help'] = '';
+        $opts = ['help' => ''];
+        $opts = array_merge($opts, (array)$this->getLongOpts());
+
         foreach ($opts as $opt => $msg) {
             $opss                  = explode(':', $opt);
             $l                     = 10 + count($opss);
             $op[ '--' . $opss[0] ] = $l;
         }
+
         foreach ($op as $o => $r) {
             // $r [1,11] => 标识参数; [2,12]=> 必填选项; [3,13] => 可选参数
             $key = trim($o, '-');
@@ -191,9 +194,10 @@ abstract class ArtisanCommand {
             if ($r % 10 == 2 && !isset($options[ $key ])) {
                 if (key_exists($key, $options)) {
                     $this->help('Invalid option "' . $o . '"');
-                } else {
+                } else if (!isset($options['h']) && !isset($options['help'])) {
                     $this->help('Missing option "' . $o . '"');
                 }
+                break;
             }
         }
         $this->argv[0] = $argv[0];

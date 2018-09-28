@@ -29,13 +29,13 @@ class CrontabCommand extends ArtisanMonitoredTask {
     protected function getOpts() {
         return [
             'i::interval' => 'the interval in seconds, default is 1 second.',
-            's::second'   => 'run at accurate second(0-59)',
+            's::second'   => 'start at second(0-59)',
             'f'           => 'run in fixed interval.'
         ];
     }
 
     protected function argDesc() {
-        return '<crontab> [start|stop|status|help]';
+        return '<job> [start|stop|status|help]';
     }
 
     protected function argValid($options) {
