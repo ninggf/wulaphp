@@ -12,17 +12,18 @@ namespace wulaphp\mvc\view;
 
 class XmlView extends View {
     protected $root = 'root';
+    protected $fileName;
 
     /**
      *
      * @param array|string $data
      * @param string       $root
-     * @param array        $headers
-     * @param int          $status
+     * @param string       $filename
      */
-    public function __construct($data, $root = 'root', $headers = [], $status = 200) {
-        parent::__construct($data, '', $headers, $status);
-        $this->root = $root;
+    public function __construct($data, $root = 'root', $filename = '') {
+        $this->root     = $root;
+        $this->fileName = $filename;
+        parent::__construct($data, '');
     }
 
     /**
@@ -64,6 +65,10 @@ class XmlView extends View {
     }
 
     protected function setHeader() {
-        $this->headers['Content-type'] = 'text/xml; charset=utf-8';
+        if ($this->fileName) {
+            $this->headers['Content-Disposition'] = 'attachment; filename="' . $this->fileName . '.xml"';
+        } else {
+            $this->headers['Content-type'] = 'text/xml; charset=utf-8';
+        }
     }
 }

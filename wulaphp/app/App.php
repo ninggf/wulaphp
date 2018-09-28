@@ -77,26 +77,7 @@ class App {
             throw new \Exception('no ConfigurationLoader found!');
         }
         fire('wula\configLoaded');//配置加载完成
-        //检测语言
-        if (!defined('LANGUAGE')) {
-            $lang        = isset($_COOKIE['language']) ? $_COOKIE['language'] : null;
-            $defaultLang = $this->configs ['default']->get('language');
-            if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
-                //用户设置通过cookie设置
-                define('LANGUAGE', $lang);
-            } else if (preg_match('/^[a-z]{2,3}(-[a-z]{2,8})?$/i', $defaultLang)) {
-                //系统默认
-                define('LANGUAGE', $defaultLang);
-            } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-                //浏览器默认
-                define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
-            } else {
-                //框架默认
-                define('LANGUAGE', 'en');
-            }
-        }
-        //加载语言
-        I18n::addLang(WULA_ROOT . 'lang');
+
         // 加载扩展
         $clz = trim(EXTENSION_LOADER_CLASS);
         if (class_exists($clz)) {
@@ -127,6 +108,26 @@ class App {
             throw new \Exception('No ModuleLoader found!');
         }
         fire('wula\moduleLoaded');//模块加载完成
+        //检测语言
+        if (!defined('LANGUAGE')) {
+            $lang        = isset($_COOKIE['language']) ? $_COOKIE['language'] : null;
+            $defaultLang = $this->configs ['default']->get('language');
+            if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
+                //用户通过cookie设置
+                define('LANGUAGE', $lang);
+            } else if (preg_match('/^[a-z]{2,3}(-[a-z]{2,8})?$/i', $defaultLang)) {
+                //系统默认
+                define('LANGUAGE', $defaultLang);
+            } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+                //浏览器默认
+                define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
+            } else {
+                //框架默认
+                define('LANGUAGE', 'en');
+            }
+        }
+        //加载语言
+        I18n::addLang(WULA_ROOT . 'lang');
     }
 
     /**
