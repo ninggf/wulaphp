@@ -312,7 +312,7 @@ function smarty_modifiercompiler_render($ary, $compiler) {
  * @return \wulaphp\mvc\view\SmartyView
  * @throws
  */
-function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/html']) {
+function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/html; charset=utf-8']) {
     if (is_string($data)) {
         return new \wulaphp\mvc\view\SmartyView($tpl, $data, $headers);
     } else if (is_array($data) && is_array($tpl)) {
@@ -331,7 +331,7 @@ function view($data = [], $tpl = '', array $headers = ['Content-Type' => 'text/h
  *
  * @return \wulaphp\mvc\view\View
  */
-function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
+function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html; charset=utf-8']) {
     if (is_string($data)) {
         return new \wulaphp\mvc\view\HtmlView($tpl, $data, $headers);
     } else if (is_array($data) && is_array($tpl)) {
@@ -342,15 +342,33 @@ function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']
 }
 
 /**
- * XML View
+ * the excel view in modules.
  *
- * @param array  $data
- * @param string $root
+ * @param string       $filename 文件名
+ * @param array|string $data     数据
+ * @param string|array $tpl      excel模板
  *
  * @return \wulaphp\mvc\view\View
  */
-function xmlview(array $data, $root = 'data'){
-    return new \wulaphp\mvc\view\XmlView($data, $root);
+function excel($filename, $data, $tpl = '') {
+    if (is_string($data)) {
+        return new \wulaphp\mvc\view\ExcelView($filename, (array)$tpl, $data);
+    }
+
+    return new \wulaphp\mvc\view\ExcelView($filename, $data, $tpl);
+}
+
+/**
+ * XML View
+ *
+ * @param array  $data     数据
+ * @param string $root     根节点
+ * @param string $filename 文件名(下载时指定)
+ *
+ * @return \wulaphp\mvc\view\View
+ */
+function xmlview(array $data, $root = 'data', $filename = '') {
+    return new \wulaphp\mvc\view\XmlView($data, $root, $filename);
 }
 
 /**
@@ -362,7 +380,7 @@ function xmlview(array $data, $root = 'data'){
  *
  * @return \wulaphp\mvc\view\SmartyView
  */
-function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
+function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html; charset=utf-8']) {
     return view($data, $tpl, $headers)->mustache();
 }
 
@@ -376,7 +394,7 @@ function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/htm
  * @return \wulaphp\mvc\view\ThemeView
  * @throws
  */
-function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html']) {
+function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html; charset=utf-8']) {
     $theme   = apply_filter('get_theme', 'default', $data);
     $tpl     = apply_filter('get_tpl', $tpl, $data);
     $tplname = str_replace(['/', '.'], '_', basename($tpl, '.tpl'));
@@ -493,7 +511,7 @@ function minify_resources($content, $type) {
  *
  * @return \wulaphp\mvc\model\CtsData
  */
-function get_cts_from_datasource( $name, $args = [], $dialect = null, $tplvars = []) {
+function get_cts_from_datasource($name, $args = [], $dialect = null, $tplvars = []) {
     static $urlInfo = null, $providers = null;
     //获取当前解析后的URL信息
     if ($urlInfo === null) {
