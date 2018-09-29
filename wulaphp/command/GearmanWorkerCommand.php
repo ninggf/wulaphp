@@ -46,7 +46,7 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
     }
 
     protected function argDesc() {
-        return '<function> <start|stop|restart|status|help>';
+        return '<script> <start|stop|restart|status|help>';
     }
 
     protected function argValid($options) {
@@ -99,7 +99,7 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
         $this->host    = aryget('H', $options, 'localhost');
         $this->port    = aryget('p', $options, 4730);
         $this->timeout = aryget('t', $options, 5);
-        $this->count   = aryget('c', $options, 100);
+        $this->count   = aryget('c', $options, 1000);
         $this->isJson  = isset($options['j']);
 
         return true;

@@ -57,10 +57,15 @@ class ParallelService extends Service {
                             foreach ($pipes as $p) {
                                 @fclose($p);
                             }
+
                             @proc_close($process);
                             $this->logd($script . ', pid: ' . $pid . ' exits with code: ' . $rtn);
                             if ($rtn == 2) {
                                 $sleep = 0;
+                            } else if ($rtn != 0) {
+                                $this->loge($cmd . ' ' . $arg . ' exit abnormally.');
+
+                                return false;
                             }
                         } else {
                             $this->loge($cmd . ' ' . $arg . ' cannot run!');
