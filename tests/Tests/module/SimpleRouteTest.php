@@ -64,5 +64,15 @@ class SimpleRouteTest extends TestCase {
         $page = @ob_get_clean();
         self::assertNotEmpty($page);
         self::assertEquals('result is 200', $page);
+
+        @ob_start();
+        try {
+            App::run('/testm/math/add.do');
+        } catch (\Exception $e) {
+            throw $e;
+        }
+        $page = @ob_get_clean();
+        self::assertNotEmpty($page);
+        self::assertEquals('result is 200', $page);
     }
 }

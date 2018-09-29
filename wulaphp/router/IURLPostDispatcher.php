@@ -21,5 +21,3 @@ interface IURLPostDispatcher {
 	 */
 	function postDispatch($url, $router, $view);
 }
-
-?>

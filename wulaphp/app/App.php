@@ -42,9 +42,18 @@ class App {
      * 目录映射.
      * @var array
      */
-    private static $maps           = ['dir2id' => [], 'id2dir' => []];
-    private static $modules        = [];//模块
-    private static $extensions     = [];//扩展
+    private static $maps = ['dir2id' => [], 'id2dir' => []];
+    /**
+     * @var \wulaphp\app\Module[]
+     */
+    private static $modules = [];//模块
+    /**
+     * @var \wulaphp\app\Extension[]
+     */
+    private static $extensions = [];//扩展
+    /**
+     * @var \wulaphp\app\Module[]
+     */
     private static $enabledModules = [];//启用的模块
     public static  $prefix         = [];//URL前缀
 
@@ -108,26 +117,6 @@ class App {
             throw new \Exception('No ModuleLoader found!');
         }
         fire('wula\moduleLoaded');//模块加载完成
-        //检测语言
-        if (!defined('LANGUAGE')) {
-            $lang        = isset($_COOKIE['language']) ? $_COOKIE['language'] : null;
-            $defaultLang = $this->configs ['default']->get('language');
-            if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
-                //用户通过cookie设置
-                define('LANGUAGE', $lang);
-            } else if (preg_match('/^[a-z]{2,3}(-[a-z]{2,8})?$/i', $defaultLang)) {
-                //系统默认
-                define('LANGUAGE', $defaultLang);
-            } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-                //浏览器默认
-                define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
-            } else {
-                //框架默认
-                define('LANGUAGE', 'en');
-            }
-        }
-        //加载语言
-        I18n::addLang(WULA_ROOT . 'lang');
     }
 
     /**
@@ -203,6 +192,39 @@ class App {
                     }
                 }
                 $module->autoBind();
+            }
+        }
+        fire('app\started');
+        //检测语言
+        if (!defined('LANGUAGE')) {
+            $lang        = isset($_COOKIE['language']) ? $_COOKIE['language'] : null;
+            $defaultLang = self::$app->configs ['default']->get('language');
+            if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
+                //用户通过cookie设置
+                define('LANGUAGE', $lang);
+            } else if (preg_match('/^[a-z]{2,3}(-[a-z]{2,8})?$/i', $defaultLang)) {
+                //系统默认
+                define('LANGUAGE', $defaultLang);
+            } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+                //浏览器默认
+                define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
+            } else {
+                //框架默认
+                define('LANGUAGE', 'en');
+            }
+        }
+        //加载语言
+        I18n::addLang(WULA_ROOT . 'lang');
+        foreach (self::$enabledModules as $module) {
+            $lang = $module->getPath('lang');
+            if (is_dir($lang)) {//加载语言
+                I18n::addLang($lang);
+            }
+        }
+        foreach (self::$extensions as $extension) {
+            $lang = $extension->getPath('lang');
+            if (is_dir($lang)) {//加载语言
+                I18n::addLang($lang);
             }
         }
 
@@ -962,6 +984,6 @@ class App {
             Response::respond(500, $e->getMessage());
         }
 
-        return null;
+        return false;
     }
 }

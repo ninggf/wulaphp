@@ -2,6 +2,8 @@
 
 namespace wulaphp\io;
 // use cookie for session id
+use wulaphp\app\App;
+
 class Session {
     private $session_id;
     private $expire = 0;
@@ -9,10 +11,14 @@ class Session {
     /**
      * Session constructor.
      *
-     * @param int $expire
+     * @param int|null $expire
      */
-    public function __construct($expire = 0) {
-        $this->expire = intval($expire);
+    public function __construct($expire = null) {
+        if (is_null($expire)) {
+            $this->expire = App::icfg('expire', 0);
+        } else {
+            $this->expire = intval($expire);
+        }
     }
 
     /**

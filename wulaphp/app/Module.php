@@ -12,21 +12,27 @@ use wulaphp\util\Annotation;
  * @package wulaphp\app
  */
 abstract class Module {
-    public $clzName;
     /**@var \ReflectionObject */
-    public    $reflection;
-    public    $enabled          = false;
-    public    $installed        = false;
-    public    $upgradable       = false;
-    public    $installedVersion = '0.0.0';
-    public    $group            = '';
-    public    $isKernel         = true;
+    public $reflection;
+    public $clzName;
+    public $enabled          = false;
+    public $installed        = false;
+    public $upgradable       = false;
+    public $installedVersion = '0.0.0';
+    public $group            = '';
+    public $isKernel         = true;
+
     protected $namespace;
     protected $path;
     protected $dirname;
-    protected $bound            = false;
+    protected $bound = false;
     protected $currentVersion;
 
+    private $subEnabled = false;
+
+    /**
+     * Module constructor.
+     */
     public function __construct() {
         $this->reflection = $ref = new \ReflectionObject($this);
         $this->clzName    = get_class($this);
@@ -34,6 +40,7 @@ abstract class Module {
         array_pop($ns);
         $ann                    = new Annotation($this->reflection);
         $this->group            = $ann->getString('group', 'Unknown');
+        $this->subEnabled       = $ann->has('subEnabled');
         $this->namespace        = implode('\\', $ns);
         $this->path             = dirname($ref->getFileName());
         $this->dirname          = basename($this->path);
@@ -41,7 +48,7 @@ abstract class Module {
         $keys                   = array_keys($vs);
         $this->currentVersion   = array_pop($keys);
         $this->installedVersion = $this->currentVersion;
-        unset($ns);
+        unset($ns, $ann, $vs, $keys);
     }
 
     /**
@@ -112,10 +119,6 @@ abstract class Module {
             return;
         }
         $this->bound = true;
-        //加载语言
-        if (is_dir($this->path . DS . 'lang')) {
-            I18n::addLang($this->path . DS . 'lang');
-        }
         // 批量绑定
         $this->bind();
         // 根据注解进行绑定
@@ -275,7 +278,7 @@ abstract class Module {
      * @return bool
      */
     public function hasSubModule() {
-        return false;
+        return $this->subEnabled;
     }
 
     /**
