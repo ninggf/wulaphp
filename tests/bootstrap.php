@@ -16,4 +16,8 @@ define('PUBLIC_DIR', 'www');
 
 define('APPROOT', __DIR__ . DIRECTORY_SEPARATOR);
 
-require APPROOT . '../bootstrap.php';
+if (defined('PHPUNIT_COMPOSER_INSTALL')) {
+    require APPROOT . '../bootstrap.php';
+} else {
+    require APPROOT . '../vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+}

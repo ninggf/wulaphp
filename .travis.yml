@@ -10,6 +10,7 @@ services:
 - mysql
 - memcached
 - redis-server
+- docker
 
 addons:
   apt:
@@ -37,12 +38,17 @@ before_install:
 - mkdir -p tests/storage/
 - mkdir tests/storage/tmp
 - mkdir tests/storage/logs
+- docker pull wendal/ssdb
+- docker run --rm -d -p 8888:8888 wendal/ssdb
 
 install:
 # flags to pass to install
 - flags="--prefer-dist --no-interaction --optimize-autoloader --no-suggest --no-progress"
 # install dependencies using system provided composer binary
 - composer install $flags
+
+before_script:
+- php -S 127.0.0.1:9090 -t tests/www/ tests/www/index.php
 
 script:
 - ls -d tests/Tests/**/* | parallel --gnu --keep-order 'echo "Running {} tests"; ./vendor/bin/phpunit -c tests/phpunit.xml --colors=always {} || (echo -e "\e[41mFAILED\e[0m {}" && exit 1);'

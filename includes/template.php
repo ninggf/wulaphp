@@ -348,7 +348,7 @@ function pview($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html; 
  * @param array|string $data     数据
  * @param string|array $tpl      excel模板
  *
- * @return \wulaphp\mvc\view\View
+ * @return \wulaphp\mvc\view\ExcelView
  */
 function excel($filename, $data, $tpl = '') {
     if (is_string($data)) {

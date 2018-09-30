@@ -1,3 +1,17 @@
+### Version 2.5.2
+**2018-09-30**
+
+* 新增:
+    * 支持php build-in server
+    * ExcelView
+    * Module::loadFile方法用于加载模块文件内容
+    * 添加存储器`Storage`
+* 优化:
+    * 调整语言检测逻辑
+    * 固化`artisan`命令的`-h`和`--help`参数
+    * `service`命令
+    * 默认配置项详见[配置文档](http://www.wulaphp.com/guide/config/cfg.html)
+
 ### Version 2.5.1
 **2018-09-17**
 * 新增:

@@ -39,10 +39,11 @@ class LocaleUploader implements IUploader {
     /**
      * 默认文件上传器.
      *
-     * @param string $filepath
-     * @param string $path
+     * @param string $filepath 文件路径
+     * @param string $path     目的目录
      *
-     * @return array|bool
+     * @return array|bool  成功返回关键数组:
+     * url,name,path
      */
     public function save($filepath, $path = null) {
         $path = trailingslashit($this->getDestDir($path));

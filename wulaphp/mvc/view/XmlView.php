@@ -65,10 +65,7 @@ class XmlView extends View {
     }
 
     protected function setHeader() {
-        if ($this->fileName) {
-            $this->headers['Content-Disposition'] = 'attachment; filename="' . $this->fileName . '.xml"';
-        } else {
-            $this->headers['Content-type'] = 'text/xml; charset=utf-8';
-        }
+        $this->headers['Content-type']        = 'text/xml; charset=utf-8';
+        $this->headers['Content-Disposition'] = 'attachment; filename="' . $this->fileName . '.xml"';
     }
 }

@@ -21,13 +21,13 @@ bind('get_memcached_cache', function ($cache, $cfg) {
 }, 100, 2);
 
 bind('artisan\getCommands', function ($cmds) {
-    $cmds['admin']   = new \wulaphp\command\AdminCommand();
-    $cmds['cron']    = new \wulaphp\command\CrontabCommand();
-    $cmds['service'] = new \wulaphp\command\ServiceCommand();
-    $cmds['run']     = new \wulaphp\command\RunCommand();
+    $cmds['admin'] = new \wulaphp\command\AdminCommand();
+    $cmds['cron']  = new \wulaphp\command\CrontabCommand();
     if (extension_loaded('gearman')) {
         $cmds['gearman'] = new \wulaphp\command\GearmanWorkerCommand();
     }
+    $cmds['run']     = new \wulaphp\command\RunCommand();
+    $cmds['service'] = new \wulaphp\command\ServiceCommand();
 
     return $cmds;
 });

@@ -3,6 +3,7 @@
 namespace wulaphp\io;
 
 use wulaphp\app\App;
+use wulaphp\mvc\view\ExcelView;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\View;
@@ -272,7 +273,7 @@ class Response {
      * @param bool $return
      *
      * @filter before_output_content $content
-     * @return string
+     * @return string|null
      */
     public function output($view = null, $return = false) {
         if ($view instanceof View) {
@@ -282,14 +283,19 @@ class Response {
         } else if (is_array($view)) {
             $this->view = new JsonView ($view);
         }
+
         if ($this->view instanceof View) {
-            $content = $this->view->render();
             if ($return) {
+                $content = $this->view->render();
+
                 return $content;
             } else {
                 $this->view->echoHeader();
-                $content = apply_filter('before_output_content', $content, $this->view);
-                echo str_replace('<!-- benchmark -->', (microtime(true) - WULA_STARTTIME), $content);
+                $content = $this->view->render();
+                if (is_string($content) && $content) {
+                    $content = apply_filter('before_output_content', $content, $this->view);
+                    echo str_replace('<!-- benchmark -->', (microtime(true) - WULA_STARTTIME), $content);
+                }
             }
         } else {
             Response::respond(404);
