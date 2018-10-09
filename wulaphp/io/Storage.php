@@ -10,6 +10,8 @@
 
 namespace wulaphp\io;
 
+use wulaphp\app\App;
+
 final class  Storage extends StorageDriver {
     private static $IMPLS = [];
     /**
@@ -24,7 +26,10 @@ final class  Storage extends StorageDriver {
      *
      * @throws \Exception 当ssn格式错误时抛出
      */
-    public function __construct($ssn) {
+    public function __construct($ssn = '') {
+        if (empty($ssn)) {
+            $ssn = App::cfg('ssn', 'file:path=storage');
+        }
         $ssns = explode(':', $ssn, 2);
         if (count($ssns) < 2 || empty($ssns[0]) || empty($ssns[1])) {
             throw_exception($ssn . ' is not valid');
