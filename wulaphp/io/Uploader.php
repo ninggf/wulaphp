@@ -30,12 +30,23 @@ abstract class Uploader implements IUploader {
     }
 
     /**
-     * 获取系统默认文件上传器.
+     * 获取文件上传器.
      *
-     * @return \wulaphp\io\IUploader
+     * @param string|null $id 上传器ID
+     *
+     * @return \wulaphp\io\IUploader|null
      */
-    public static function defaultUploader() {
-        return apply_filter('upload\getUploader', new LocaleUploader());
+    public static function getUploader($id = null) {
+        if ($id) {
+            $uploaders = self::uploaders();
+            if (isset($uploaders[ $id ])) {
+                return $uploaders[ $id ];
+            }
+
+            return null;
+        } else {
+            return apply_filter('upload\getUploader', new LocaleUploader());
+        }
     }
 
     /**
@@ -44,8 +55,11 @@ abstract class Uploader implements IUploader {
      * @return \wulaphp\io\IUploader[]
      */
     public static function uploaders() {
-        $uploaders = ['file' => new LocaleUploader()];
-        $uploaders = apply_filter('upload\regUploaders', $uploaders);
+        static $uploaders = [];
+        if (!$uploaders) {
+            $uploaders['file'] = new LocaleUploader();
+            $uploaders         = apply_filter('upload\regUploaders', $uploaders);
+        }
 
         return $uploaders;
     }
