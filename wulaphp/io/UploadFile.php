@@ -47,9 +47,9 @@ class UploadFile {
     /**
      * 保存上传的文件.
      *
-     * @param string $destdir  目录.
-     * @param null   $fileName 文件名(不包括扩展名).
-     * @param bool   $random   是否随机生成文件名.
+     * @param string      $destdir  目录.
+     * @param string|null $fileName 文件名(不包括扩展名).
+     * @param bool        $random   是否随机生成文件名.
      *
      * @return bool|string 保存成功返回文件路径,失败返回false。
      */
