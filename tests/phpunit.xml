@@ -17,6 +17,7 @@
             <directory suffix="Test.php">Tests/view</directory>
             <directory suffix="Test.php">Tests/module</directory>
             <directory suffix="Test.php">Tests/io</directory>
+            <directory suffix="Test.php">Tests/restful</directory>
         </testsuite>
     </testsuites>
 

@@ -179,6 +179,17 @@ class CurlClient {
      * @return bool|mixed
      */
     public function post($url, $data) {
+        foreach ($data as $key => $v) {
+            if (is_array($v)) {
+                foreach ($v as $k => $vv) {
+                    if ($vv{0} == '@') {
+                        $data[ $key ][ $k ] = new \CURLFile(substr($vv, 1));
+                    }
+                }
+            } else if ($v{0} == '@') {
+                $data[ $key ] = new \CURLFile(substr($v, 1));
+            }
+        }
         $options = [
             CURLOPT_URL            => $url,
             CURLOPT_POST           => true,
