@@ -124,6 +124,7 @@ return [
     'Please login'                                                            => '请登录',
     'permission denied'                                                       => '没有权限',
     'Internal Error'                                                          => '内部错误',
+    'Internal Error - database'                                               => '内部错误（数据库）',
     '@validator'                                                              => [
         'required'           => '这是必填字段',
         'datetime'           => '请输入合法的日期时间',
@@ -155,6 +156,15 @@ return [
         'password3'          => '密码必须由数字、小写字母、大写字母和符号组成'
     ],
     '@restful'                                                                => [
-        'In'
+        'miss app_key'                   => '缺少app_key',
+        'Invalid API'                    => '无效API',
+        'module not found'               => '模块不存在',
+        'unsupport request methd'        => '不支持的请求方法',
+        'api not found'                  => 'API不存在',
+        'Miss arg: %s'                   => '缺少参数:%s',
+        'unsupport sign methd'           => '不支持的签名方法',
+        'invalid app_key'                => '无效的app_key',
+        'invalid sign'                   => '签名错误',
+        'Not supported response format.' => '不支持的响应格式'
     ]
 ];

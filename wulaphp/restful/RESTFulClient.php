@@ -226,54 +226,14 @@ class RESTFulClient {
             $rtn = ['response' => ['error' => []]];
             switch ($statusCode) {
                 case 200:
-                    $rtn['response']['error']['code'] = 500;
-                    $rtn['response']['error']['msg']  = '解析出错';
+                    $rtn['response']['error']['code'] = 512;
+                    $rtn['response']['error']['msg']  = __('Not supported response format.@restful');
                     $rtn['response']['error']['body'] = $rst;
                     break;
-                case 400:
-                    $rtn['response']['error']['http_code'] = 400;
-                    $rtn['response']['error']['msg']       = '错误请求，缺少api参数';
-                    break;
-                case 401:
-                    $rtn['response']['error']['http_code'] = 401;
-                    $rtn['response']['error']['msg']       = '需要登录';
-                    break;
-                case 403:
-                    $rtn['response']['error']['http_code'] = 403;
-                    $rtn['response']['error']['msg']       = '禁止访问';
-                    break;
-                case 404:
-                    $rtn['response']['error']['http_code'] = 404;
-                    $rtn['response']['error']['msg']       = 'API不存在';
-                    break;
-                case 405:
-                    $rtn['response']['error']['http_code'] = 405;
-                    $rtn['response']['error']['msg']       = '错误的请求方法';
-                    break;
-                case 406:
-                    $rtn['response']['error']['http_code'] = 406;
-                    $rtn['response']['error']['msg']       = '非法请求';
-                    break;
-                case 416:
-                    $rtn['response']['error']['http_code'] = 416;
-                    $rtn['response']['error']['msg']       = '错误的API格式';
-                    break;
-                case 501:
-                    $rtn['response']['error']['http_code'] = 501;
-                    $rtn['response']['error']['msg']       = '未实现的API';
-                    break;
-                case 502:
-                    $rtn['response']['error']['http_code'] = 502;
-                    $rtn['response']['error']['msg']       = '网关出错';
-                    break;
-                case 503:
-                    $rtn['response']['error']['http_code'] = 503;
-                    $rtn['response']['error']['msg']       = $rst;
-                    break;
-                case 500:
                 default:
-                    $rtn['response']['error']['http_code'] = 500;
-                    $rtn['response']['error']['msg']       = '服务器运行出错';
+                    $rtn['response']['error']['code'] = $statusCode;
+                    $rtn['response']['error']['msg']  = status_header($statusCode);
+                    $rtn['response']['error']['body'] = $rst;
             }
 
             return $rtn;
@@ -299,22 +259,27 @@ class RESTFulClient {
      * @return \SimpleXMLElement
      */
     public function toXml($rst = null) {
+        $statusCode = 200;
         if ($rst === null) {
-            $rst = curl_exec($this->curl);
+            $this->content = $rst = curl_exec($this->curl);
             if ($rst === false) {
                 log_warn(curl_error($this->curl), 'rest.err');
             }
+            $this->code = $statusCode = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
             curl_close($this->curl);
             $this->curl = null;
-        }
-        if (empty ($rst)) {
-            return new \SimpleXMLElement('<response><error><code>106</code><msg>' . __('Internal error.') . '</msg></error></response>');
         } else {
+            $this->content = $rst;
+        }
+
+        if ($statusCode == 200) {
             try {
                 return @new \SimpleXMLElement($rst);
             } catch (\Exception $e) {
-                return new \SimpleXMLElement('<response><error><code>107</code><msg>' . __('Not supported response format.') . '</msg></error></response>');
+                return new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8" ?><response><error><code>512</code><msg>' . __('Not supported response format.@restful') . '</msg><body><![CDATA[' . $rst . ']]></body></error></response>');
             }
+        } else {
+            return new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8" ?><response><error><code>' . $statusCode . '</code><msg>' . status_header($statusCode) . '</msg><body><![CDATA[' . $rst . ']]></body></error></response>');
         }
     }
 

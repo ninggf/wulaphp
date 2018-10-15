@@ -35,7 +35,6 @@ class RESTFulServer {
      * @param int                           $session_expire session过期时间(单位秒)
      */
     public function __construct($secretChecker, $signChecker, $format = 'json', $session_expire = 300) {
-        $this->debug         = boolval($debug);
         $this->secretChecker = $secretChecker;
         $this->signChecker   = $signChecker;
         $this->format        = $format == 'xml' ? 'xml' : 'json';
@@ -66,7 +65,7 @@ class RESTFulServer {
         $rtime     = 0;
         $timestamp = rqst('timestamp');
         //时间检测，时差正负5分钟
-        if ($timestamp && preg_match('/^20\d\d-(1[0-2]|0[1-9])-(0[1-9]|[12]\d|3[01])\s([01][0-9]|2[0-3]):([0-5]\d):([0-5]\d)(\sGMT)?$/', $timestamp)) {
+        if ($timestamp && preg_match('/^2\d\d\d-(1[0-2]|0[1-9])-(0[1-9]|[12]\d|3[01])\s([01][0-9]|2[0-3]):([0-5]\d):([0-5]\d)(\sGMT)?$/', $timestamp)) {
             $timestampx = @strtotime($timestamp);
             if ($timestampx !== false) {
                 $rtime = $timestampx;
@@ -74,21 +73,26 @@ class RESTFulServer {
         }
         $ctime = time();
         if (($rtime + 300) < $ctime || $rtime - 300 > $ctime) {
-            $this->httpout(406);//非法请求
+            $this->httpout(408, 'Request Timeout');//非法请求
         }
         //时间检测结束
         $v   = irqst('v', 1);
         $api = rqst('api');//API
         if (empty($api)) {
-            $this->httpout(400);
+            $this->httpout(400, 'Miss API');
         }
         $app_key = rqst('app_key');//APPKEY
         if (empty($app_key)) {
-            return $this->generateResult($format, ['error' => ['code' => 19, 'msg' => __('miss app_key@restful')]]);
+            return $this->generateResult($format, [
+                'error' => [
+                    'code' => 40000,
+                    'msg'  => __('miss app_key@restful')
+                ]
+            ]);
         }
         $apis = explode('.', $api);
         if (count($apis) != 3) {
-            $this->httpout(416, __('invalid api@restful'));
+            $this->httpout(406, __('Invalid API@restful'));
         }
         $namesapce = $apis[0];
         $module    = App::getModuleById($namesapce);
@@ -138,17 +142,32 @@ class RESTFulServer {
                 } else if (isset($_FILES[ $name ])) {
                     $dparams[ $name ] = $_FILES[ $name ];
                 } else {
-                    return $this->generateResult($format, ['error' => ['code' => 15, 'msg' => '缺少' . $name . '参数']]);
+                    return $this->generateResult($format, [
+                        'error' => [
+                            'code' => 40001,
+                            'msg'  => __('Miss arg: %s@restful', $name)
+                        ]
+                    ]);
                 }
             }
             $sign_method = rqst('sign_method');
             if ($sign_method != 'md5' && $sign_method != 'sha1' && $sign_method != 'hmac') {
-                return $this->generateResult($format, ['error' => ['code' => 16, 'msg' => '不支持的签名方法']]);
+                return $this->generateResult($format, [
+                    'error' => [
+                        'code' => 40002,
+                        'msg'  => __('unsupport sign methd@restful')
+                    ]
+                ]);
             }
 
             $appSecret = $this->secretChecker->check($app_key);
             if (!$appSecret) {
-                return $this->generateResult($format, ['error' => ['code' => 17, 'msg' => '无效的app_key']]);
+                return $this->generateResult($format, [
+                    'error' => [
+                        'code' => 40003,
+                        'msg'  => __('invalid app_key@restful')
+                    ]
+                ]);
             }
             //签名
             $sign = rqst('sign');
@@ -176,8 +195,8 @@ class RESTFulServer {
                 if ($sign !== $sign1) {
                     return $this->generateResult($format, [
                         'error' => [
-                            'code' => 18,
-                            'msg'  => '签名错误'
+                            'code' => 40004,
+                            'msg'  => __('invalid sign@restful')
                         ]
                     ]);
                 }
@@ -207,17 +226,22 @@ class RESTFulServer {
             } catch (UnauthorizedException $un) {
                 $this->httpout(401);
             } catch (\PDOException $pe) {
-                return $this->generateResult($format, ['error' => ['code' => 1026, 'msg' => '内部错误(数据库)']]);
+                return $this->generateResult($format, [
+                    'error' => [
+                        'code' => 40005,
+                        'msg'  => __('Internal Error - database')
+                    ]
+                ]);
             } catch (\Exception $e) {
                 log_error('[' . $api . '] failed! ' . $e->getMessage() . "\n" . var_export($dparams, true), 'api');
 
-                return $this->generateResult($format, ['error' => ['code' => 20, 'msg' => $e->getMessage()]]);
+                return $this->generateResult($format, ['error' => ['code' => 40006, 'msg' => $e->getMessage()]]);
             } finally {
                 $clz->tearDown();
                 fire('restful\endApi', $api, time(), $args);
             }
         }
-
+        // Not Implemented
         $this->httpout(501);
 
         return null;
