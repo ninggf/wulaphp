@@ -1,3 +1,13 @@
+### Version 2.5.3
+**2018-10-15**
+
+* 新增:
+    * RESTFul支持
+        * [RESTFulServer](https://www.wulaphp.com/guide/restful/server.html)
+        * [RESTFulClient](https://www.wulaphp.com/guide/restful/client.html)
+    * 文件[上传器](https://www.wulaphp.com/guide/utils/uploader)
+    * [存储器](https://www.wulaphp.com/guide/utils/storage)
+    
 ### Version 2.5.2
 **2018-09-30**
 
