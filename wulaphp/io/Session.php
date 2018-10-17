@@ -46,15 +46,21 @@ class Session {
                 $session_id = $_REQUEST [ $session_name ];
             }
         }
+        try {
+            @session_name($session_name);
+            if (!empty ($session_id)) {
+                $this->session_id = $session_id;
+                @session_id($session_id);
+                @session_start();
+            } else {
+                @session_start();
+                $this->session_id = session_id();
+            }
+        } catch (\Exception $e) {
+            $msg = 'Cannot start session: ' . $e->getMessage();
+            log_error($msg);
 
-        @session_name($session_name);
-        if (!empty ($session_id)) {
-            $this->session_id = $session_id;
-            @session_id($session_id);
-            @session_start();
-        } else {
-            @session_start();
-            $this->session_id = session_id();
+            return '';
         }
 
         return $this->session_id;

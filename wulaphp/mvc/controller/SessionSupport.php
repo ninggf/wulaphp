@@ -11,14 +11,14 @@ use wulaphp\io\Session;
  * @package wulaphp\mvc\controller
  */
 trait SessionSupport {
-	/**
-	 * Session ID
-	 * @var string
-	 */
-	protected $sessionID;
+    /**
+     * Session ID
+     * @var string
+     */
+    protected $sessionID;
 
-	protected function onInitSessionSupport() {
-		$expire          = App::icfg('expire', 0);
-		$this->sessionID = (new Session ($expire))->start();
-	}
+    protected function onInitSessionSupport() {
+        $expire          = App::icfg('expire', 0);
+        $this->sessionID = (new Session ($expire))->start();
+    }
 }
