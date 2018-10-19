@@ -370,7 +370,6 @@ class DatabaseConnection {
 
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-            log_error($e->getMessage(), 'sql.err');
         }
 
         return null;
@@ -456,7 +455,6 @@ class DatabaseConnection {
             }
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-            log_error($e->getMessage(), 'sql.err');
         }
 
         return null;
