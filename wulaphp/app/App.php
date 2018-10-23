@@ -333,6 +333,21 @@ class App {
     }
 
     /**
+     * 重新加载配置。
+     *
+     * @param string $config 配置组.
+     * @param bool   $file   仅从配置文件读取.
+     *
+     * @return \wulaphp\conf\Configuration
+     */
+    public static function reloadCfg($config, $file = false) {
+        $app = self::$app;
+        unset($app->configs[ $config ]);
+
+        return self::config($config, $file);
+    }
+
+    /**
      * 读取配置.
      *
      * @param string $name    配置项名与组名,例abc@def表示从def配置中读取abc,如果不指定组,则默认为default.
