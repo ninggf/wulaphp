@@ -1,3 +1,17 @@
+### Version 2.5.6
+**2018-10-23**
+
+* 修复
+    * 无法路由"/"BUG
+
+### Version 2.5.5
+**2018-10-23**
+
+* 新增
+    * App::reloadCfg用于重新加载配置。
+* 修改
+    * DatabaseConnection::query 与 DatabaseConnection::cud不再记录错误日志。如果记录日志请通过它的`$error`属性获取。
+    
 ### Version 2.5.4
 **2018-10-19**
 
