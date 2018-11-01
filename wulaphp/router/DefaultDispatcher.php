@@ -33,7 +33,7 @@ class DefaultDispatcher implements IURLDispatcher {
     public function dispatch($url, $router, $parsedInfo) {
         //检测请求是否合法
         $strict_mode = @constant('URL_STRICT_MODE');
-        if (($strict_mode || is_null($strict_mode)) && substr($router->requestURI, -1, 1) == '/') {
+        if (($strict_mode || is_null($strict_mode)) && $router->requestURI != '/' && substr($router->requestURI, -1, 1) == '/') {
             return null;
         }
 
