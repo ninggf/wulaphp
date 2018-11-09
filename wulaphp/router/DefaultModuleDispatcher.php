@@ -27,8 +27,9 @@ class DefaultModuleDispatcher implements IURLDispatcher {
         }
         if ($url) {
             $urls = explode('/', $url);
-            $id   = App::dir2id($urls[0]);
+            $id   = App::dir2id($urls[0], true);
             if ($id) {
+                // 已有模块的URL不分发给默认模块
                 return null;
             }
         }
