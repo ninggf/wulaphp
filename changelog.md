@@ -1,3 +1,10 @@
+### Version 2.5.8
+**2018-11-14**
+  
+* 优化
+    * Annotation::getJsonArray支持URL参数配置
+    * AdminController支持loginBack注解
+    
 ### Version 2.5.7
 **2018-11-12**
 
