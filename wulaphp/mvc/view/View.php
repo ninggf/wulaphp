@@ -102,6 +102,13 @@ abstract class View implements \ArrayAccess, Renderable {
         return $this;
     }
 
+    /**
+     * 添加样式文件.
+     *
+     * @param string|array $file css file url
+     *
+     * @return \wulaphp\mvc\view\View
+     */
     public function addStyle($file) {
         if (is_array($file)) {
             foreach ($file as $f) {
@@ -112,6 +119,8 @@ abstract class View implements \ArrayAccess, Renderable {
         } else if (!in_array($file, $this->sytles)) {
             $this->sytles [] = $file;
         }
+
+        return $this;
     }
 
     public function getStyles($view = null) {
@@ -122,6 +131,12 @@ abstract class View implements \ArrayAccess, Renderable {
         return $this->sytles;
     }
 
+    /**
+     * @param string $file script file url
+     * @param bool   $foot
+     *
+     * @return \wulaphp\mvc\view\View
+     */
     public function addScript($file, $foot = false) {
         if ($foot) {
             if (is_array($file)) {
@@ -144,6 +159,8 @@ abstract class View implements \ArrayAccess, Renderable {
                 $this->scripts ['head'] [] = $file;
             }
         }
+
+        return $this;
     }
 
     public function getScripts($type = null) {
