@@ -19,19 +19,20 @@ use wulaphp\auth\PassportSupport;
 use wulaphp\auth\RbacSupport;
 
 class AdminController extends Controller {
-	use SessionSupport, PassportSupport, RbacSupport;
-	protected $passportType = 'admin';
+    use SessionSupport, PassportSupport, RbacSupport;
+    protected $passportType = 'admin';
+    protected $loginBack    = false;
 
-	public function __construct(Module $module) {
-		parent::__construct($module);
-		$this->globalRbacSetting['login'] = true;
-	}
+    public function __construct(Module $module) {
+        parent::__construct($module);
+        $this->globalRbacSetting['login'] = true;
+    }
 
-	protected function needLogin($view) {
-		return apply_filter('mvc\admin\needLogin', $view);
-	}
+    protected function needLogin($view) {
+        return apply_filter('mvc\admin\needLogin', $view);
+    }
 
-	protected function onDenied($message, $view) {
-		return apply_filter('mvc\admin\onDenied', $view, $message);
-	}
+    protected function onDenied($message, $view) {
+        return apply_filter('mvc\admin\onDenied', $view, $message);
+    }
 }

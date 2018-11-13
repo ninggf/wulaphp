@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\form;
-
+/**
+ * 不可操作数据库的表单.
+ *
+ * @package wulaphp\form
+ */
 class SimpleForm extends FormTable {
-	public $table = null;
+    public $table = null;
 }

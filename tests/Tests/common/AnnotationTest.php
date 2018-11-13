@@ -15,9 +15,12 @@ use wulaphp\util\Annotation;
 
 /**
  * Class AnnotationTest
- * @package  tests\Tests\common
- * @testJson name=leo&age=18&address=上海
+ * @package   tests\Tests\common
+ * @testJson  name=leo&age=18&address=上海
  * @testJson1 {"name":"leo","age":1,"address":"上海"}
+ * @testJson2 name Leo
+ * @testJson2 address 上海 北京
+ * @testJson2 tag
  */
 class AnnotationTest extends TestCase {
     public function testgetJsonArray() {
@@ -32,5 +35,10 @@ class AnnotationTest extends TestCase {
         self::assertNotEmpty($json1);
         self::assertArrayHasKey('address', $json1);
         self::assertEquals('上海', $json1['address']);
+
+        $json2 = $ann->getJsonArray('testJson2');
+        self::assertNotEmpty($json2);
+        self::assertArrayHasKey('address', $json2, var_export($json2, true));
+        self::assertEquals('上海 北京', $json2['address']);
     }
 }

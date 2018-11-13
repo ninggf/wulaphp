@@ -176,7 +176,19 @@ class Annotation {
     public function getJsonArray($annotation, $default = []) {
         $str = $this->getString($annotation);
         if (is_array($str)) {
-            return $str;
+            $rst = [];
+            foreach ($str as $s) {
+                $ss = preg_split('/\s+/', $s, 2);
+                if (count($ss) == 2) {
+                    list($k, $v) = $ss;
+                } else {
+                    $k = $ss[0];
+                    $v = 1;
+                }
+                $rst[ $k ] = $v;
+            }
+
+            return $rst;
         }
         if ($str) {
             $str = trim($str);
