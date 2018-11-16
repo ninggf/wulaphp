@@ -830,6 +830,9 @@ class App {
                 $static_url = WWWROOT_DIR;
             }
         }
+        if (preg_match('#^(/|https?://).+$#', $src)) {
+            return $src;
+        }
 
         return $static_url . $src;
     }
@@ -851,6 +854,9 @@ class App {
             } else {
                 $static_url = WWWROOT_DIR;
             }
+        }
+        if (preg_match('#^(/|https?://).+$#', $res)) {
+            return $res;
         }
         $url = ltrim($res, '/');
         if ($min || APP_MODE == 'pro') {
@@ -881,6 +887,9 @@ class App {
                 $static_url = WWWROOT_DIR;
             }
         }
+        if (preg_match('#^(/|https?://).+$#', $res)) {
+            return $res;
+        }
         $url = ltrim($res, '/');
         if ($min || APP_MODE == 'pro') {
             $url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
@@ -909,6 +918,9 @@ class App {
             } else {
                 $static_url = WWWROOT_DIR;
             }
+        }
+        if (preg_match('#^(/|https?://).+$#', $res)) {
+            return $res;
         }
         $url = ltrim($res, '/');
         if ($min || APP_MODE == 'pro') {
