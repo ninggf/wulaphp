@@ -35,4 +35,9 @@ class CommonFuncsTest extends TestCase {
         self::assertEquals('test1.txt', $f2);
         @unlink(TMP_PATH . 'test.txt');
     }
+
+    public function testPure_comman_string() {
+        $string = pure_comman_string('a,,b,,，c,   d,中国');
+        self::assertEquals('a,b,c,d,中国', $string);
+    }
 }
