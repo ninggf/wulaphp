@@ -75,7 +75,7 @@ trait MetaTable {
         if ($name) {
             $values = $this->get([$this->metaIdField => intval($id), $this->metaNameField => $name])->get($field);
         } else {
-            $values = $this->get([$this->metaIdField => intval($id)])->toArray($field, $this->metaNameField);
+            $values = $this->findAll([$this->metaIdField => intval($id)])->toArray($field, $this->metaNameField);
         }
 
         return $values;
