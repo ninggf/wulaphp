@@ -25,7 +25,7 @@ if (!defined('APPROOT')) {
 }
 @ob_start();
 define('WULA_STARTTIME', microtime(true));
-define('WULA_VERSION', '2.5.0');
+define('WULA_VERSION', '2.5.9');
 define('WULA_RELEASE', 'rc');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);

@@ -1,3 +1,16 @@
+### Version 2.5.9
+**2018-11-18**
+
+* 新增
+    * View::findOne方法
+* 优化
+    * JsonView输出
+    * View::__callStatic方法
+* 修复
+    * MetaTable::getMeta方法
+* 过时
+    * 标记View::get方法过时，使用findOne。
+    
 ### Version 2.5.8
 **2018-11-14**
   
