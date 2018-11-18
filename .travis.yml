@@ -1,7 +1,5 @@
 language: php
 
-if: tag IS present
-
 cache:
   directories:
   - $HOME/.composer/cache

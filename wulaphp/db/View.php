@@ -22,6 +22,7 @@ use wulaphp\util\ObjectCaller;
  * @method static ILock slock($con)
  */
 abstract class View {
+    /**@var \wulaphp\db\View[] */
     private static $tableClzs   = [];
     public         $table       = '';//表名
     private        $originTable;
@@ -100,7 +101,8 @@ abstract class View {
             if (!isset(self::$tableClzs[ $clz ])) {
                 self::$tableClzs[ $clz ] = new $clz();
             } else {
-                self::$tableClzs[ $clz ]->db(App::db());
+                $cfg = self::$tableClzs[ $clz ]->db()->getConfig();
+                self::$tableClzs[ $clz ]->db(DatabaseConnection::connect($cfg));
             }
 
             return ObjectCaller::callObjMethod(self::$tableClzs[ $clz ], substr($name, 1), $arguments);
@@ -129,6 +131,8 @@ abstract class View {
      * @param int|array $id
      * @param string    $fields 字段,默认为*.
      *
+     * @deprecated 使用findOne, 将在4.0版本中移除。
+     * @since      1.0.0
      * @return Query 记录.
      */
     public function get($id, $fields = '*') {
@@ -153,7 +157,7 @@ abstract class View {
      * @return array
      */
     public function json_decode($id, $field) {
-        $rtn = $this->get($id, $field)[ $field ];
+        $rtn = $this->findOne($id, $field)[ $field ];
         if ($rtn) {
             $rtn = @json_decode($rtn, true);
             if ($rtn) {
@@ -162,6 +166,19 @@ abstract class View {
         }
 
         return [];
+    }
+
+    /**
+     * 直接取一个字段的值.
+     *
+     * @param string|array $id
+     * @param string       $field
+     *
+     * @since v3.5.9
+     * @return string
+     */
+    public function fetch($id, $field) {
+        return $this->findOne($id, $field)[ $field ];
     }
 
     /**
@@ -182,6 +199,28 @@ abstract class View {
         if ($limit) {
             $sql->limit($start, $limit);
         }
+
+        return $sql;
+    }
+
+    /**
+     * 取一条记录.
+     *
+     * @param int|array $id
+     * @param string    $fields 字段,默认为*.
+     *
+     * @since v3.5.9
+     * @return Query 记录.
+     */
+    public function findOne($id, $fields = '*') {
+        if (is_array($id)) {
+            $where = $id;
+        } else {
+            $idf   = $this->primaryKey;
+            $where = [$idf => $id];
+        }
+        $sql = $this->select($fields);
+        $sql->where($where)->limit(0, 1);
 
         return $sql;
     }
@@ -509,8 +548,12 @@ abstract class View {
     protected final function getWhere($data) {
         $con = [];
         foreach ($this->primaryKeys as $f) {
-            if (isset ($data [ $f ])) {
-                $con [ $f ] = $data [ $f ];
+            if (array_key_exists($f, $data)) {
+                if (isset($data[ $f ])) {
+                    $con [ $f ] = $data [ $f ];
+                } else {
+                    $con [ $f . ' $' ] = null;
+                }
             }
         }
 

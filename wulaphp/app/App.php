@@ -300,7 +300,7 @@ class App {
             if (!isset($tables[ $dbid ][ $table ])) {
                 $tables[ $dbid ][ $table ] = new SimpleTable($table, $db);
             } else {
-                $tables[ $dbid ][ $table ]->db(App::db($db));
+                $tables[ $dbid ][ $table ]->db(DatabaseConnection::connect($db));
             }
 
             return $tables[ $dbid ][ $table ];

@@ -19,10 +19,10 @@ use wulaphp\mvc\view\JsonView;
  */
 class JsonViewTest extends TestCase {
     public function testRender() {
-        $data    = ['name' => '牛逼的wulaphp'];
+        $data    = ['name' => '牛逼的wulaphp🌥'];
         $view    = new JsonView($data);
         $content = $view->render();
 
-        self::assertEquals(json_encode($data), $content);
+        self::assertEquals(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_BIGINT_AS_STRING | JSON_PRESERVE_ZERO_FRACTION), $content);
     }
 }

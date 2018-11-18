@@ -26,18 +26,21 @@ class DatabaseConnection {
     private        $transLevel = 0;
     private        $commitType = null;//提交类型
     private static $dbs        = [];
+    private        $config     = 'default';
 
     /**
      * DatabaseConnection constructor.
      *
      * @param DatabaseDialect $dialect
+     * @param mixed           $config 配置
      *
      * @throws
      */
-    public function __construct($dialect) {
+    private function __construct($dialect, $config) {
         if (!$dialect instanceof DatabaseDialect) {
             throw new \Exception('the dialect is not instance of DatabaseDialect');
         }
+        $this->config  = $config;
         $this->dialect = $dialect;
     }
 
@@ -82,7 +85,7 @@ class DatabaseConnection {
         if ($config) {
             $dialect = DatabaseDialect::getDialect($config);
             if ($dialect) {
-                $db                   = new DatabaseConnection($dialect);
+                $db                   = new DatabaseConnection($dialect, $name);
                 $db->name             = $pname;
                 self::$dbs [ $pname ] = $db;
 
@@ -99,6 +102,15 @@ class DatabaseConnection {
      */
     public function getDialect() {
         return $this->dialect;
+    }
+
+    /**
+     * 获取数据库连接配置.
+     *
+     * @return mixed|string
+     */
+    public function getConfig() {
+        return $this->config;
     }
 
     /**
