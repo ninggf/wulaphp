@@ -128,8 +128,8 @@ abstract class View {
     /**
      * 取一条记录.
      *
-     * @param int|array $id
-     * @param string    $fields 字段,默认为*.
+     * @param int|array                                   $id
+     * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段,默认为*.
      *
      * @deprecated 使用findOne, 将在4.0版本中移除。
      * @since      1.0.0
@@ -142,7 +142,11 @@ abstract class View {
             $idf   = $this->primaryKey;
             $where = [$idf => $id];
         }
-        $sql = $this->select($fields);
+        if (is_array($fields)) {
+            $sql = $this->select(...$fields);
+        } else {
+            $sql = $this->select($fields);
+        }
         $sql->where($where)->limit(0, 1);
 
         return $sql;
@@ -184,15 +188,19 @@ abstract class View {
     /**
      * 获取列表.
      *
-     * @param array       $where  条件.
-     * @param array|mixed $fields 字段或字段数组.
-     * @param int|null    $limit  取多少条数据，默认10条.
-     * @param int         $start  开始位置
+     * @param array                                       $where  条件.
+     * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段或字段数组.
+     * @param int|null                                    $limit  取多少条数据，默认10条.
+     * @param int                                         $start  开始位置
      *
      * @return Query 列表查询.
      */
     public function find($where = null, $fields = null, $limit = 10, $start = 0) {
-        $sql = $this->select($fields);
+        if (is_array($fields)) {
+            $sql = $this->select(...$fields);
+        } else {
+            $sql = $this->select($fields);
+        }
         if ($where) {
             $sql->where($where);
         }
@@ -206,8 +214,8 @@ abstract class View {
     /**
      * 取一条记录.
      *
-     * @param int|array $id
-     * @param string    $fields 字段,默认为*.
+     * @param int|array                                   $id
+     * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段,默认为*.
      *
      * @since v3.5.9
      * @return Query 记录.
@@ -219,7 +227,11 @@ abstract class View {
             $idf   = $this->primaryKey;
             $where = [$idf => $id];
         }
-        $sql = $this->select($fields);
+        if (is_array($fields)) {
+            $sql = $this->select(...$fields);
+        } else {
+            $sql = $this->select($fields);
+        }
         $sql->where($where)->limit(0, 1);
 
         return $sql;
@@ -228,12 +240,12 @@ abstract class View {
     /**
      * 获取全部数据列表.
      *
-     * @param array       $where  条件.
-     * @param array|mixed $fields 字段或字段数组.
+     * @param array                                       $where  条件.
+     * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段或字段数组.
      *
      * @return Query
      */
-    public function findAll($where = null, $fields = null) {
+    public function findAll($where = null, $fields = '*') {
         return $this->find($where, $fields, 0);
     }
 
