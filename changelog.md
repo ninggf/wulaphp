@@ -1,3 +1,10 @@
+### Version 2.5.10
+**2018-12-04**
+
+* 新增
+    * `service`命令添加`config`子命令
+    * 新增两个勾子`on_load_xxx_config`与`on_load_xxx_dbconfig`
+
 ### Version 2.5.9
 **2018-11-18**
 
