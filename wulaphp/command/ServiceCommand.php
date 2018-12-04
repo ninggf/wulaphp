@@ -35,7 +35,7 @@ class ServiceCommand extends ArtisanCommand {
     }
 
     public function argDesc() {
-        return '<start|stop|status|restart|reload|ps> [service]';
+        return '<start|stop|status|restart|reload|config|ps> [service]';
     }
 
     protected function execute($options) {
@@ -62,7 +62,7 @@ class ServiceCommand extends ArtisanCommand {
             exit(0);
         }
 
-        if (!in_array($cmd, ['start', 'status', 'stop', 'reload', 'restart', 'ps'])) {
+        if (!in_array($cmd, ['start', 'status', 'stop', 'reload', 'restart', 'config', 'ps'])) {
             $this->error('unkown command: ' . $this->color->str($cmd, 'red'));
             exit(1);
         }
@@ -82,6 +82,9 @@ class ServiceCommand extends ArtisanCommand {
                 break;
             case 'restart':
                 $this->stop($service, true);
+                break;
+            case 'config':
+                $this->config();
                 break;
             default:
                 $this->status($service);
@@ -131,7 +134,7 @@ class ServiceCommand extends ArtisanCommand {
      * @param string $service
      * @param bool   $restart
      */
-    private function stop( $service,  $restart = false) {
+    private function stop($service, $restart = false) {
         $this->output('Stopping ...', false);
         $rtn = $this->sendCommand('stop', ['service' => $service, 'restart' => $restart]);
         if ($rtn) {
@@ -185,7 +188,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function status( $service) {
+    private function status($service) {
         $rtn = $this->sendCommand('status', ['service' => $service]);
         if ($rtn) {
             $status = $this->getStatus($rtn['status']);
@@ -220,17 +223,55 @@ class ServiceCommand extends ArtisanCommand {
                     ['Status', 20],
                     ['Message', 44]
                 ]));
-                $this->output($this->cell('-', 120, '-'));
+                $this->output($this->cell('-', 80, '-'));
                 foreach ($services as $id => $ser) {
                     $this->output($this->cell([
                         [$id, 20],
                         [$ser['type'], 16],
-                        [isset($ser['worker']) ?$ser['worker']: 1, 10],
+                        [isset($ser['worker']) ? $ser['worker'] : 1, 10],
                         [$this->getStatus($ser['status']), 20],
-                        [isset($ser['msg']) ?$ser['msg']: '', 44]
+                        [isset($ser['msg']) ? $ser['msg'] : '', 44]
                     ]));
                 }
             }
+        }
+    }
+
+    private function config() {
+        $cfg      = App::config('service', true)->toArray();
+        $user     = aryget('user', $cfg);
+        $group    = aryget('group', $cfg);
+        $verbose  = aryget('verbose', $cfg, 'vvv');
+        $services = aryget('services', $cfg, []);
+
+        $this->output($this->cell([
+            ['Verbose', 20],
+            ['User', 16],
+            ['Group', 16]
+        ]));
+        $this->output(str_pad('-', 80, '-'));
+        $this->output($this->cell([
+            [$verbose, 20],
+            [$user, 16],
+            [$group, 16]
+        ]));
+        $this->output(str_pad('=', 80, '='));
+        $this->output($this->cell([
+            ['Service', 20],
+            ['Type', 16],
+            ['Worker', 10],
+            ['Status', 20],
+            ['', 44]
+        ]));
+        $this->output(str_pad('-', 80, '-'));
+        foreach ($services as $id => $ser) {
+            $this->output($this->cell([
+                [$id, 20],
+                [$ser['type'], 16],
+                [isset($ser['worker']) ? $ser['worker'] : 1, 10],
+                [$this->getStatus($ser['status'] ? $ser['status'] : 'enabled'), 20],
+                [isset($ser['script']) ? $ser['script'] : $ser['jobClass'], 44]
+            ]));
         }
     }
 
@@ -241,6 +282,7 @@ class ServiceCommand extends ArtisanCommand {
             case 'starting':
             case 'reloading':
             case 'reload':
+            case 'enabled':
                 $status = $this->color->str($status, 'green');
                 break;
             case 'stop':
@@ -276,7 +318,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @return mixed
      */
-    private function sendCommand( $command, array $args = []) {
+    private function sendCommand($command, array $args = []) {
         $data['command'] = $command;
         $data['args']    = $args;
         $payload         = json_encode($data) . "\r\n\r\n";
@@ -296,8 +338,8 @@ class ServiceCommand extends ArtisanCommand {
             }
             $rtn = @socket_connect($sock, $sockFile);
         } else {
-            $addr = isset($binds[0]) ?$binds[0]: '127.0.0.1';
-            $port = isset($binds[1]) ?$binds[1]: '5858';
+            $addr = isset($binds[0]) ? $binds[0] : '127.0.0.1';
+            $port = isset($binds[1]) ? $binds[1] : '5858';
             $sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if (!$sock) {
                 $this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));

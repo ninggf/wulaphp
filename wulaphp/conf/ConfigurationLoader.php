@@ -37,8 +37,10 @@ class ConfigurationLoader extends BaseConfigurationLoader {
             }
         }
         unset ($_wula_config_file, $wula_cfg_fiels);
+        // 再给用户一次机会
+        $cfg = apply_filter('on_load_' . $name . '_config', $config);
 
-        return $config;
+        return $cfg instanceof Configuration ? $cfg : $config;
     }
 
     /**
@@ -49,19 +51,13 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      * @return \wulaphp\conf\Configuration
      */
     public static function loadFromFile($name) {
-        /**@var \wulaphp\conf\Configuration[] $cfgs */
-        static $cfgs = [];
+        if (empty($name)) {
+            return new Configuration('');
+        } else {
+            $loader = new ConfigurationLoader();
 
-        if (!isset($cfgs[ $name ])) {
-            if (!$name) {
-                $cfgs[ $name ] = new Configuration('');
-            } else {
-                $loader        = new ConfigurationLoader();
-                $cfgs[ $name ] = $loader->loadConfig($name);
-            }
+            return $loader->loadConfig($name);
         }
-
-        return $cfgs[ $name ];
     }
 
     /**
@@ -92,6 +88,9 @@ class ConfigurationLoader extends BaseConfigurationLoader {
         }
         unset ($_wula_config_file, $wula_cfg_fiels);
 
-        return $config;
+        // 再给用户一次机会
+        $cfg = apply_filter('on_load_' . $name . '_dbconfig', $config);
+
+        return $cfg instanceof DatabaseConfiguration ? $cfg : $config;
     }
 }

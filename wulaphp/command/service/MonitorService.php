@@ -252,6 +252,8 @@ class MonitorService extends Service {
                         $this->logd('service ' . $sid . ', pid ' . $pid . ' exits with code: -2');
                     }
                     unset($this->services[ $sid ]['pids'][ $pid ]);
+                } else {
+                    $this->logw('unkown service ' . $sid . ', pid ' . $pid);
                 }
             } else {
                 break;
@@ -338,6 +340,14 @@ class MonitorService extends Service {
         }
     }
 
+    /**
+     * 重新加载配置
+     *
+     * @param array|null $config
+     * @param string     $service
+     *
+     * @return bool
+     */
     private function reloadConfig($config = null, $service = '') {
         if (!$config) {
             $loader       = new ConfigurationLoader();
@@ -369,8 +379,12 @@ class MonitorService extends Service {
                 } else {
                     $this->services[ $s ] = array_merge($this->services[ $s ], $conf);
                     $status               = isset($conf['status']) ? $conf['status'] : '';
-                    if (!$status && $this->services[ $s ]['status'] == 'running') {
-                        $this->services[ $s ]['status'] = 'reload';
+                    if (!$status) {
+                        if ($status == 'disabled') {
+                            $this->services[ $s ]['status'] = 'disabled';
+                        } else if ($this->services[ $s ]['status'] == 'running') {
+                            $this->services[ $s ]['status'] = 'reload';
+                        }
                     }
                 }
             }

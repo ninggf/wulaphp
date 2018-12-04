@@ -319,7 +319,7 @@ class App {
      */
     public static function config($config, $file = false) {
         $app = self::$app;
-        if (isset ($app->configs [ $config ])) {
+        if (isset ($app->configs [ $config ]) && !$file) {
             $confObj = $app->configs [ $config ];
         } else {
             $confObj = $file ? ConfigurationLoader::loadFromFile($config) : $app->configLoader->loadConfig($config);
@@ -963,7 +963,7 @@ class App {
     }
 
     /**
-     * 启动APP处理请求.
+     * 处理请求.
      *
      * @param string       $url    请求URL.
      * @param array|string $data   请求数据或请求方式
