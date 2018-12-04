@@ -22,12 +22,17 @@ bind('get_memcached_cache', function ($cache, $cfg) {
 
 bind('artisan\getCommands', function ($cmds) {
     $cmds['admin'] = new \wulaphp\command\AdminCommand();
-    $cmds['cron']  = new \wulaphp\command\CrontabCommand();
-    if (extension_loaded('gearman')) {
-        $cmds['gearman'] = new \wulaphp\command\GearmanWorkerCommand();
+
+    if (function_exists('pcntl_fork') && function_exists('posix_getpid')) {
+        $cmds['cron'] = new \wulaphp\command\CrontabCommand();
+        if (extension_loaded('gearman')) {
+            $cmds['gearman'] = new \wulaphp\command\GearmanWorkerCommand();
+        }
+        $cmds['run'] = new \wulaphp\command\RunCommand();
+        if (function_exists('socket_create')) {
+            $cmds['service'] = new \wulaphp\command\ServiceCommand();
+        }
     }
-    $cmds['run']     = new \wulaphp\command\RunCommand();
-    $cmds['service'] = new \wulaphp\command\ServiceCommand();
 
     return $cmds;
 });
