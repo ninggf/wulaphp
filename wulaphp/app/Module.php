@@ -3,7 +3,6 @@
 namespace wulaphp\app;
 
 use wulaphp\db\DatabaseConnection;
-use wulaphp\i18n\I18n;
 use wulaphp\util\Annotation;
 
 /**
@@ -59,12 +58,17 @@ abstract class Module {
     }
 
     /**
-     * @param string|null $file 文件名.
+     * @param string|null $file     文件名.
+     * @param bool        $absolute 是否是绝对路径
      *
      * @return string 路径
      */
-    public final function getPath($file = null) {
-        return $this->path . ($file ? DS . $file : '');
+    public final function getPath($file = null, $absolute = true) {
+        if ($absolute) {
+            return $this->path . ($file ? DS . $file : '');
+        }
+
+        return MODULE_DIR . DS . $this->dirname . DS . ($file ? $file : '');
     }
 
     /**
