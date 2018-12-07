@@ -29,6 +29,10 @@ abstract class Uploader implements IUploader {
         return true;
     }
 
+    public function configHint() {
+        return '';
+    }
+
     /**
      * 获取文件上传器.
      *

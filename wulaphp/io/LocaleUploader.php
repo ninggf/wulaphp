@@ -97,6 +97,14 @@ class LocaleUploader implements IUploader {
     public function thumbnail($file, $w, $h) {
     }
 
+    public function configHint() {
+        return '';
+    }
+
+    public function configValidate($config) {
+        return true;
+    }
+
     /**
      * @param string $path 如果以@开头则不添加upload_dir@media配置.
      *
