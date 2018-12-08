@@ -41,16 +41,17 @@ abstract class Uploader implements IUploader {
      * @return \wulaphp\io\IUploader|null
      */
     public static function getUploader($id = null) {
-        if ($id) {
-            $uploaders = self::uploaders();
-            if (isset($uploaders[ $id ])) {
-                return $uploaders[ $id ];
-            }
-
-            return null;
-        } else {
-            return apply_filter('upload\getUploader', new LocaleUploader());
+        if (!$id) {
+            $id = App::cfg('default_uploader@media', App::cfg('upload.uploader', 'file'));
         }
+        $uploaders = self::uploaders();
+        if (isset($uploaders[ $id ])) {
+            $uploader = $uploaders[ $id ];
+        } else {
+            $uploader = new LocaleUploader();
+        }
+
+        return apply_filter('upload\getUploader', $uploader);
     }
 
     /**
