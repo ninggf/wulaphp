@@ -48,7 +48,11 @@ class DefaultDispatcher implements IURLDispatcher {
         } else if ($len == 1 && !empty ($controllers [0])) {
             $module = $controllers [0];
             if ($module == 'index.html') {
-                $module = 'home';//首页分发给Home模块的默认控制器:IndexController.
+                $dm     = App::getModule('home') ? 'home' : null;
+                $module = apply_filter('module_for_homepage', $dm);
+                if (!$module) {//无模块可
+                    return null;
+                }
             } else if (App::checkUrlPrefix($module)) {
                 $prefix    = $module;
                 $namespace = App::checkUrlPrefix($prefix);

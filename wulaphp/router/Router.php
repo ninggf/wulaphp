@@ -79,18 +79,23 @@ class Router {
 
     /**
      * 获取本次请求的全URI
+     *
+     * @param bool $noRU 是否不包括REQUEST_URI
+     *
      * @return null|string
      */
-    public static function getFullURI() {
+    public static function getFullURI($noRU = false) {
         if (isset($_SERVER ['REQUEST_URI'])) {
             if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off') {
                 $schema = 'https://';
             } else {
                 $schema = 'http://';
             }
-            $uri = $schema . $_SERVER['HTTP_HOST'] . $_SERVER ['REQUEST_URI'];
+            if ($noRU) {
+                return $schema . $_SERVER['HTTP_HOST'];
+            }
 
-            return $uri;
+            return $schema . $_SERVER['HTTP_HOST'] . $_SERVER ['REQUEST_URI'];
         }
 
         return null;
@@ -107,7 +112,7 @@ class Router {
     public static function is($url, $regexp = false) {
         $r = self::getRouter();
         if ($regexp) {
-            return preg_match('`^' . $url . '$`', $r->requestURL);
+            return preg_match('`^' . preg_quote($url, '`') . '$`', $r->requestURL);
         }
 
         return $url == $r->requestURL;
@@ -211,7 +216,10 @@ class Router {
         }
         $this->queryParams = $args;
         $url               = apply_filter('router\parse_url', trim($this->requestURI, '/'));
-        $this->requestURL  = $url;
+        if (!$url) {
+            $url = 'index.html';
+        }
+        $this->requestURL = $url;
         if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
             if ($alias === false) {
                 $aliasFile = MODULES_PATH . 'alias.php';
