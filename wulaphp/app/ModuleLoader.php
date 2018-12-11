@@ -28,18 +28,20 @@ class ModuleLoader {
      */
     public function scanModules() {
         $modules = RtCache::get('loader@modules');
-        if (!$modules && is_dir(MODULE_ROOT)) {
-            $it      = new \DirectoryIterator (MODULE_ROOT);
+        if (!$modules) {
             $modules = [];
-            foreach ($it as $dir) {
-                if ($dir->isDot()) {
-                    continue;
-                }
-                if ($dir->isDir()) {
-                    $dirname = $dir->getFilename();
-                    $boot    = MODULE_ROOT . $dirname . '/bootstrap.php';
-                    if (is_file($boot)) {
-                        $modules[ $dirname ] = $boot;
+            if (is_dir(MODULE_ROOT)) {
+                $it = new \DirectoryIterator (MODULE_ROOT);
+                foreach ($it as $dir) {
+                    if ($dir->isDot()) {
+                        continue;
+                    }
+                    if ($dir->isDir()) {
+                        $dirname = $dir->getFilename();
+                        $boot    = MODULE_ROOT . $dirname . '/bootstrap.php';
+                        if (is_file($boot)) {
+                            $modules[ $dirname ] = $boot;
+                        }
                     }
                 }
             }
