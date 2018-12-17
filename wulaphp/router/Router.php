@@ -112,7 +112,7 @@ class Router {
     public static function is($url, $regexp = false) {
         $r = self::getRouter();
         if ($regexp) {
-            return preg_match('`^' . preg_quote($url, '`') . '$`', $r->requestURL);
+            return preg_match('`^' . $url . '$`', $r->requestURL);
         }
 
         return $url == $r->requestURL;
