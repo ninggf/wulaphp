@@ -9,6 +9,9 @@
  */
 
 namespace wulaphp\io;
+
+use wulaphp\app\App;
+
 /**
  * 文件上传器基类.
  *
