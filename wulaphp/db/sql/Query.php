@@ -333,21 +333,32 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *  $index是数据时返回Query实例;$index是字符时返回null或字符;$index是数字，$field为null时返回array，$field不为null时返回null或字符.
      */
     public function get($index = 0, $field = null) {
-        if (is_array($index)) {
-            return $this->where($index);
-        }
+        if ($this->performed) {
+            if (is_numeric($index)) {
+                $index = intval($index);
+            } else if (is_string($index)) {
+                $field = $index;
+                $index = 0;
+            } else {
+                return null;
+            }
+        } else {
+            if (is_array($index)) {
+                return $this->where($index);
+            }
 
-        if (is_string($index)) {
-            $field = $index;
-            $this->field($field);
-            $index = 0;
-            $this->limit(0, 1);
-        }
-
-        if (!$this->performed) {
+            if (is_numeric($index)) {
+                $index = intval($index);
+            } else if (is_string($index)) {
+                $field = $index;
+                $this->field($field);
+                $index = 0;
+                $this->limit(0, 1);
+            } else {
+                $index = 0;
+            }
             $this->select();
         }
-
         if (isset ($this->resultSets [ $index ])) {
             $row = $this->resultSets [ $index ];
             if ($field != null && isset ($row [ $field ])) {
