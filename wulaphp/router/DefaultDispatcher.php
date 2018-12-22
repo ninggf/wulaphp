@@ -50,7 +50,9 @@ class DefaultDispatcher implements IURLDispatcher {
             if ($module == 'index.html') {
                 $dm     = App::getModule('home') ? 'home' : null;
                 $module = apply_filter('module_for_homepage', $dm);
-                if (!$module) {//无模块可
+                if ($module instanceof View) {
+                    return $module;
+                } else if (!$module) {//无模块可
                     return null;
                 }
             } else if (App::checkUrlPrefix($module)) {

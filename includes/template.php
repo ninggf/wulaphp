@@ -395,7 +395,7 @@ function mustache($data = [], $tpl = '', $headers = ['Content-Type' => 'text/htm
  * @throws
  */
 function template($tpl, $data = [], $headers = ['Content-Type' => 'text/html; charset=utf-8']) {
-    $theme   = apply_filter('get_theme', 'default', $data);
+    $theme   = apply_filter('get_theme', defined('DEFAULT_THEME') ? DEFAULT_THEME : 'default', $data);
     $tpl     = apply_filter('get_tpl', $tpl, $data);
     $tplname = str_replace(['/', '.'], '_', basename($tpl, '.tpl'));
     $tplfile = $_tpl = $theme . DS . $tpl;
