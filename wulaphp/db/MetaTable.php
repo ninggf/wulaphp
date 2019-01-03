@@ -13,8 +13,9 @@ namespace wulaphp\db;
 /**
  * Trait MetaTable
  * @package wulaphp\db
- * @property-read $metaIdField
- * @property-read $metaNameField
+ * @property-read string $metaIdField
+ * @property-read string $metaNameField
+ * @property-read string $originTable
  */
 trait MetaTable {
     protected function onInitMetaTable() {

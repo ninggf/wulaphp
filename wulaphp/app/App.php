@@ -834,7 +834,7 @@ class App {
             return $src;
         }
 
-        return $static_url . $src;
+        return $static_url . $src. '?_ver=' . BUILD_NUMBER;
     }
 
     /**
@@ -866,7 +866,7 @@ class App {
             }
         }
 
-        return $static_url . ASSETS_DIR . '/' . $url;
+        return $static_url . ASSETS_DIR . '/' . $url. '?_ver=' . BUILD_NUMBER;
     }
 
     /**
@@ -898,7 +898,7 @@ class App {
             }
         }
 
-        return $static_url . $url;
+        return $static_url . $url . '?_ver=' . BUILD_NUMBER;
     }
 
     /**
@@ -930,7 +930,7 @@ class App {
             }
         }
 
-        return $static_url . VENDOR_DIR . '/' . $url;
+        return $static_url . VENDOR_DIR . '/' . $url. '?_ver=' . BUILD_NUMBER;
     }
 
     /**
