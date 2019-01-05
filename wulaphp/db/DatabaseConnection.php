@@ -131,6 +131,7 @@ class DatabaseConnection {
     public function close() {
         if ($this->dialect) {
             $this->dialect->close();
+            unset($this->dialect);
         }
         if ($this->name && isset(self::$dbs[ $this->name ])) {
             unset(self::$dbs[ $this->name ]);

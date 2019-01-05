@@ -26,9 +26,11 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
         return $this->name;
     }
 
-    public function setConfigs($settings = []) {
-        if ($settings) {
-            $this->settings = array_merge($this->settings, (array)$settings);
+    public function setConfigs($settings) {
+        if ($settings instanceof Configuration) {
+            $this->settings = array_merge($this->settings, $settings->settings);
+        } else if ($settings && is_array($settings)) {
+            $this->settings = array_merge($this->settings, $settings);
         }
     }
 
