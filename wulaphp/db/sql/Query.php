@@ -227,7 +227,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      */
     public function total($field = '*') {
         if (!$this->countperformed || $this->whereData) {
-            $this->performCount($field);
+            $this->performCount('*');
         }
 
         return $this->count;
@@ -244,7 +244,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      */
     public function count($id = '*') {
         if (!$this->countperformed) {
-            $this->performCount($id);
+            $this->performCount('*');
         }
 
         return $this->count;

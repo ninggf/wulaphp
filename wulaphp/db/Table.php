@@ -38,18 +38,20 @@ abstract class Table extends View {
      *
      * @return mixed|null
      */
-    protected function trans(\Closure $fun, ILock $lock = null) {
+    protected final function trans(\Closure $fun, ILock $lock = null) {
         return $this->dbconnection->trans($fun, $this->errors, $lock);
     }
 
     /**
+     * 保存数据。
+     *
      * @param array         $data 要保存的数据
      * @param array|null    $con  更新条件
      * @param \Closure|null $cb   数据处理回调
      *
      * @return bool|int|\wulaphp\db\sql\UpdateSQL
      */
-    protected function save($data, $con = null, $cb = null) {
+    protected final function save($data, $con = null, $cb = null) {
         if (!$con) {
             return $this->insert($data, $cb);
         } else if ($this->exist($con)) {//存在即修改
@@ -68,7 +70,7 @@ abstract class Table extends View {
      * @return bool|int 成功返回true或主键值,失败返回false.
      * @throws
      */
-    protected function insert($data, $cb = null) {
+    protected final function insert($data, $cb = null) {
         if ($cb && $cb instanceof \Closure) {
             $data = $cb ($data, $this);
         }
@@ -111,7 +113,7 @@ abstract class Table extends View {
      * @return bool|array 如果配置了自增键将返回自增键值的数组.
      * @throws
      */
-    protected function inserts($datas, \Closure $cb = null) {
+    protected final function inserts($datas, \Closure $cb = null) {
         if ($cb && $cb instanceof \Closure) {
             $datas = $cb ($datas, $this);
         }
@@ -154,7 +156,7 @@ abstract class Table extends View {
      * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
      * @throws
      */
-    protected function update($data = null, $con = null, $cb = null) {
+    protected final function update($data = null, $con = null, $cb = null) {
         if ($data === null) {
             $sql = new UpdateSQL($this->qualifiedName);
             $sql->setDialect($this->dialect);
@@ -208,7 +210,7 @@ abstract class Table extends View {
      * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
      * @throws
      */
-    protected function delete($con = null) {
+    protected final function delete($con = null) {
         if ($con === null) {
             $sql = new DeleteSQL();
             $sql->from($this->qualifiedName)->setDialect($this->dialect);
@@ -243,7 +245,7 @@ abstract class Table extends View {
      * @return boolean 成功true，失败false.
      * @throws
      */
-    protected function recycle($con, $uid = 0, $cb = null) {
+    protected final function recycle($con, $uid = 0, $cb = null) {
         if (!$con) {
             return false;
         }

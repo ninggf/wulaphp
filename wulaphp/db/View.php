@@ -118,7 +118,7 @@ abstract class View {
      *
      * @return $this
      */
-    public function alias($alias) {
+    public final function alias($alias) {
         $this->alias         = $alias;
         $this->qualifiedName = $this->table . ' AS ' . $this->alias;
 
@@ -135,7 +135,7 @@ abstract class View {
      * @since      1.0.0
      * @return Query 记录.
      */
-    public function get($id, $fields = '*') {
+    public final function get($id, $fields = '*') {
         if (is_array($id)) {
             $where = $id;
         } else {
@@ -160,7 +160,7 @@ abstract class View {
      *
      * @return array
      */
-    public function json_decode($id, $field) {
+    public final function json_decode($id, $field) {
         $rtn = $this->findOne($id, $field)[ $field ];
         if ($rtn) {
             $rtn = @json_decode($rtn, true);
@@ -181,7 +181,7 @@ abstract class View {
      * @since v3.5.9
      * @return string
      */
-    public function fetch($id, $field) {
+    public final function fetch($id, $field) {
         return $this->findOne($id, $field)[ $field ];
     }
 
@@ -195,7 +195,7 @@ abstract class View {
      *
      * @return Query 列表查询.
      */
-    public function find($where = null, $fields = null, $limit = 10, $start = 0) {
+    public final function find($where = null, $fields = null, $limit = 10, $start = 0) {
         if (is_array($fields)) {
             $sql = $this->select(...$fields);
         } else {
@@ -220,7 +220,7 @@ abstract class View {
      * @since v3.5.9
      * @return Query 记录.
      */
-    public function findOne($id, $fields = '*') {
+    public final function findOne($id, $fields = '*') {
         if (is_array($id)) {
             $where = $id;
         } else {
@@ -245,7 +245,7 @@ abstract class View {
      *
      * @return Query
      */
-    public function findAll($where = null, $fields = '*') {
+    public final function findAll($where = null, $fields = '*') {
         return $this->find($where, $fields, 0);
     }
 
@@ -259,7 +259,7 @@ abstract class View {
      *
      * @return array 读取后的数组.
      */
-    public function map($where, $valueField, $keyField = null, $rows = []) {
+    public final function map($where, $valueField, $keyField = null, $rows = []) {
         $sql = $this->select($valueField, $keyField);
         $sql->where($where);
         $rst = $sql->toArray($valueField, $keyField, $rows);
@@ -276,19 +276,13 @@ abstract class View {
      *
      * @return int 记数.
      */
-    public function count($con, $id = null) {
+    public final function count($con, $id = null) {
         if ($con && !is_array($con)) {
             $con = [$this->primaryKeys[0] => $con];
         }
         $sql = $this->select();
         $sql->where($con);
-        if ($id) {
-            return $sql->count($id);
-        } else if (count($this->primaryKeys) == 1) {
-            return $sql->count($this->primaryKey);
-        } else {
-            return $sql->count('*');
-        }
+        return $sql->count('*');
     }
 
     /**
@@ -299,7 +293,7 @@ abstract class View {
      *
      * @return boolean 有记数返回true,反之返回false.
      */
-    public function exist($con, $id = null) {
+    public final function exist($con, $id = null) {
         return $this->count($con, $id) > 0;
     }
 
@@ -310,7 +304,7 @@ abstract class View {
      *
      * @return Query
      */
-    public function select(...$fileds) {
+    public final function select(...$fileds) {
         if (empty($fileds) || !isset($fileds[0])) {
             if (isset($this->fields) && $this->fields) {
                 $fileds = $this->defaultQueryFields;
@@ -349,7 +343,7 @@ abstract class View {
      * @return ILock
      * @throws \Exception
      */
-    public function lock($con) {
+    public final function lock($con) {
         if (!$con) {
             throw_exception(__('no lock condition'));
         }
