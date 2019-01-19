@@ -32,6 +32,7 @@ class ThemeView extends View {
         if (!isset ($headers ['Content-Type'])) {
             $headers ['Content-Type'] = 'text/html';
         }
+
         parent::__construct($data, $tpl, $headers);
     }
 
@@ -40,8 +41,12 @@ class ThemeView extends View {
      * @throws \Exception
      */
     public function render() {
+        $tplInfo = pathinfo($this->tpl);
+        if (!isset($tplInfo['extension'])) {
+            $tplInfo['extension'] = 'tpl';
+            $this->tpl            .= '.tpl';
+        }
         if (defined('LANGUAGE')) {
-            $tplInfo  = pathinfo($this->tpl);
             $lang_tpl = $tplInfo['dirname'] . DS . $tplInfo['filename'] . '_' . LANGUAGE . '.' . $tplInfo['extension'];
             $tpl      = THEME_PATH . $lang_tpl;
             if (is_file($tpl)) {
@@ -76,7 +81,7 @@ class ThemeView extends View {
             }
             $this->__smarty->error_reporting = defined('KS_ERROR_REPORT_LEVEL') ? KS_ERROR_REPORT_LEVEL : 0;
         } else {
-            throw new \Exception(__('The template %s is not found', $this->tpl));
+            throw new \Exception(__('The template %s is not found', THEME_DIR . '/' . $this->tpl));
         }
         $this->__smarty->assign($this->data);
         $this->__smarty->assign('_css_files', $this->sytles);

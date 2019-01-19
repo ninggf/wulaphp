@@ -75,7 +75,7 @@ class SmartyView extends View implements IModuleView {
             }
             $this->__smarty->error_reporting = defined('KS_ERROR_REPORT_LEVEL') ? KS_ERROR_REPORT_LEVEL : 0;
         } else {
-            throw new \Exception(__('The template %s is not found', $this->tpl . '.tpl'));
+            throw new \Exception(__('The template %s is not found', MODULE_DIR . '/' . $this->tpl . '.tpl'));
         }
 
         $this->__smarty->assign($this->data); // 变量

@@ -34,7 +34,7 @@ class DefaultDispatcher implements IURLDispatcher {
         //检测请求是否合法
         $strict_mode = @constant('URL_STRICT_MODE');
         if (($strict_mode || is_null($strict_mode)) && $router->requestURI != '/' && substr($router->requestURI, -1, 1) == '/') {
-            return null;
+            show_exception_page(new \Exception('wulaphp is running in strict mode'));
         }
 
         $controllers = explode('/', $url);

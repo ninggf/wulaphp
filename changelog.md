@@ -1,3 +1,11 @@
+### Version 2.5.12
+**2019-01-19**
+
+* 增强
+    * Table类的select,update,delete,insert等方法不可被重写.
+    * 使用`template`函数时可以像`view`函数一样省略`.tpl`扩展名.
+    * 优化错误输出页面.
+    
 ### Version 2.5.11
 **2018-12-12**
 

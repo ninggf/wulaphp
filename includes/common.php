@@ -305,19 +305,21 @@ function get_thumbnail_filename($filename, $w, $h, $sep = '-') {
     }
 }
 
-//异常处理
-set_exception_handler(function ($e) {
+/**
+ * 显示异常页.
+ *
+ * @param \Exception $exception 异常
+ */
+function show_exception_page($exception) {
     global $argv;
-    /**@var \Exception $exception */
-    $exception = $e;
-    if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
+    if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
         if ($argv) {
             echo $exception->getMessage(), "\n";
             echo $exception->getTraceAsString(), "\n";
-        } else {
+        } else if (DEBUG == DEBUG_DEBUG) {
             status_header(500);
             $stack  = [];
-            $msg    = $exception->getMessage();
+            $msg    = str_replace('file:' . APPROOT, '', $exception->getMessage());
             $tracks = $exception->getTrace();
 
             $f = $exception->getFile();
@@ -325,10 +327,10 @@ set_exception_handler(function ($e) {
             array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
             foreach ($tracks as $i => $t) {
                 $tss     = ['<tr>'];
-                $tss[]   = "<td bgcolor=\"#eeeeec\" align=\"center\">$i</i>";
-                $tss[]   = "<td bgcolor=\"#eeeeec\">{$t['function']}( )</td>";
+                $tss[]   = "<td class=\"cell-n\">$i</i>";
+                $tss[]   = "<td class=\"cell-f\">{$t['function']}( )</td>";
                 $f       = str_replace(APPROOT, '', $t['file']);
-                $tss[]   = "<td bgcolor=\"#eeeeec\">{$f}<b>:</b>{$t['line']}</td>";
+                $tss[]   = "<td>{$f}<b>:</b>{$t['line']}</td>";
                 $tss []  = '</tr>';
                 $stack[] = implode('', $tss);
             }
@@ -354,16 +356,35 @@ set_exception_handler(function ($e) {
             ], $errorFile);
             echo $errorFile;
             exit(0);
+        } else {
+            status_header(500);
+            $msg  = str_replace('file:' . APPROOT, '', $exception->getMessage());
+            $f    = str_replace(APPROOT, '', $exception->getFile());
+            $l    = $exception->getLine();
+            $html = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head> <meta charset="utf-8">  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no"></head><body>
+<br/><b>Warning</b>: $msg in <b>$f</b> on line <b>$l</b><br/>
+</body></html>
+HTML;
+            echo $html;
+            exit(0);
         }
     } else {
         log_error($exception->getMessage() . "\n" . $exception->getTraceAsString(), 'exceptions');
         if ($argv) {
+            echo $exception->getMessage(), "\n";
+            echo $exception->getTraceAsString(), "\n";
             exit(1);
         } else {
             \wulaphp\io\Response::respond(500, $exception->getMessage());
         }
     }
-});
+}
+
+//异常处理
+set_exception_handler('show_exception_page');
 //脚本结束回调
 register_shutdown_function(function () {
     define('WULA_STOPTIME', microtime(true));

@@ -202,10 +202,10 @@ class App {
             if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
                 //用户通过cookie设置
                 define('LANGUAGE', $lang);
-            } else if (preg_match('/^[a-z]{2,3}(-[a-z]{2,8})?$/i', $defaultLang)) {
+            } else if ($defaultLang && preg_match('/^[a-z]{2,3}(-[a-z]{2,8})?$/i', $defaultLang)) {
                 //系统默认
                 define('LANGUAGE', $defaultLang);
-            } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+            } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) && $_SERVER['HTTP_ACCEPT_LANGUAGE']) {
                 //浏览器默认
                 define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
             } else {
@@ -834,7 +834,7 @@ class App {
             return $src;
         }
 
-        return $static_url . $src. '?_ver=' . BUILD_NUMBER;
+        return $static_url . $src . '?_ver=' . BUILD_NUMBER;
     }
 
     /**
@@ -866,7 +866,7 @@ class App {
             }
         }
 
-        return $static_url . ASSETS_DIR . '/' . $url. '?_ver=' . BUILD_NUMBER;
+        return $static_url . ASSETS_DIR . '/' . $url . '?_ver=' . BUILD_NUMBER;
     }
 
     /**
@@ -930,7 +930,7 @@ class App {
             }
         }
 
-        return $static_url . VENDOR_DIR . '/' . $url. '?_ver=' . BUILD_NUMBER;
+        return $static_url . VENDOR_DIR . '/' . $url . '?_ver=' . BUILD_NUMBER;
     }
 
     /**
@@ -970,6 +970,7 @@ class App {
      * @param string       $method 请求方法.
      *
      * @return mixed
+     * @throws
      */
     public static function run($url = null, $data = null, $method = 'GET') {
         if ($url) {
@@ -1011,7 +1012,11 @@ class App {
         try {
             return self::$app->router->route();
         } catch (\Exception $e) {
-            Response::respond(500, $e->getMessage());
+            if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
+                show_exception_page($e);
+            } else {
+                Response::respond(500, $e->getMessage());
+            }
         }
 
         return false;
