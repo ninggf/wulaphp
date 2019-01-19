@@ -272,7 +272,7 @@ abstract class View {
      * 符合条件的记录总数.
      *
      * @param array|string|int $con 条件.
-     * @param string           $id  字段用于count的字段,默认为*.
+     * @param string           $id  用于count的字段,默认为*.
      *
      * @return int 记数.
      */
@@ -326,7 +326,7 @@ abstract class View {
      *
      * @return \wulaphp\db\DatabaseConnection
      */
-    public function db($con = null) {
+    public final function db($con = null) {
         if ($con) {
             $this->dbconnection = $con;
             $this->dialect      = $this->dbconnection->getDialect();

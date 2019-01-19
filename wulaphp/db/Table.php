@@ -278,7 +278,7 @@ abstract class Table extends View {
      *
      * @return mixed
      */
-    protected function popValue(&$data, $field) {
+    protected final function popValue(&$data, $field) {
         $rtn = null;
         if (isset($data[ $field ])) {
             $rtn = $data[ $field ];
