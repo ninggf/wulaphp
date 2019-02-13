@@ -40,10 +40,13 @@ class ParallelService extends Service {
                             $pid = 0;
                             while (true) {
                                 if ($this->shutdown) {
-                                    @proc_terminate($process, SIGINT);
-                                    break;
+                                    if (isset($env['loop'])) {
+                                        @fwrite($pipes[0], "@shutdown@");
+                                    } else {
+                                        @proc_terminate($process, SIGINT);
+                                    }
                                 }
-                                $info = proc_get_status($process);
+                                $info = @proc_get_status($process);
                                 if (!$info) break;
                                 $pid = $info['pid'];
                                 if (!$info['running']) {

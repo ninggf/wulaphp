@@ -52,7 +52,7 @@ class CronService extends Service {
                 }
                 $i = $intv;
                 while ($i > 0 && !$this->shutdown) {
-                    sleep(1);
+                    usleep(200);
                     $e = time();
                     $i = $intv - ($e - $s);
                 }
@@ -89,8 +89,11 @@ class CronService extends Service {
                             $pid = 0;
                             while (true) {
                                 if ($this->shutdown) {
-                                    @proc_terminate($process, SIGINT);
-                                    break;
+                                    if (isset($env['loop'])) {
+                                        @fwrite($pipes[0], "@shutdown@");
+                                    } else {
+                                        @proc_terminate($process, SIGINT);
+                                    }
                                 }
                                 $info = proc_get_status($process);
                                 if (!$info) break;
