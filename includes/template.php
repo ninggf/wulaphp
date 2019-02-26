@@ -107,13 +107,23 @@ function smarty_vargs($args) {
 function smarty_modifiercompiler_here($params, $compiler) {
     static $base = null;
     if ($base == null) {
-        $base = str_replace(DS, '/', WWWROOT);
+        $base = str_replace(DS, '/', APPROOT);
     }
     $tpl = str_replace(DS, '/', dirname($compiler->template->source->filepath));
     $tpl = str_replace($base, '', $tpl);
     $url = !empty ($tpl) ? trailingslashit($tpl) : '';
+    if (preg_match('#^"([^"]+)"(\..*)$#', $params[0], $ms)) {
+        $a = str_replace("'", "\'", $ms[1]);
+        $b = $ms[2];
 
-    return "\wulaphp\app\App::src('{$url}'." . $params [0] . ')';
+        return "\wulaphp\app\App::src('{$url}{$a}'" . $b . ')';
+    } else if (strpos($params[0], '$_smarty_tpl->') !== false) {
+        return "\wulaphp\app\App::src('{$url}'." . $params [0] . ')';
+    } else {
+        $a = str_replace("'", "\'", trim($params [0], '\'"'));
+
+        return "\wulaphp\app\App::src('{$url}{$a}')";
+    }
 }
 
 function smarty_modifiercompiler_cfg($params, $compiler) {

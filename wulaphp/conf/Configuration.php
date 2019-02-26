@@ -129,6 +129,20 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
         $setting[ $lname ] = $value;
     }
 
+    /**
+     * 设置，但允许通过配置文件重写
+     *
+     * @param string $name
+     * @param mixed  $value
+     */
+    public function setm($name, $value) {
+        if (is_array($value)) {
+            $ov    = $this->geta($name);
+            $value = array_merge($value, $ov);
+        }
+        $this->set($name, $value);
+    }
+
     /*
      * (non-PHPdoc) @see IteratorAggregate::getIterator()
      */

@@ -26,11 +26,13 @@ class MonitorService extends Service {
     private $services = [];
     private $pids     = [];
     private $sockFile;
+    private $cfgFile;
 
     public function __construct($name, array $config) {
         parent::__construct($name, $config);
         $this->setVerbose($this->getOption('verbose', 'vvv'));
         $this->output('Starting', false);
+        $this->cfgFile = TMP_PATH . '.service.json';
         //第一步修改当前进程uid
         $user = $this->getOption('user');
         if ($user) {
@@ -72,6 +74,7 @@ class MonitorService extends Service {
         //第四步安装信号
         $this->initSignal();
         $this->output('.', false);
+        $this->output($this->color->str('Done', 'green'));
     }
 
     public function __destruct() {
@@ -89,7 +92,6 @@ class MonitorService extends Service {
      * 运行
      */
     public function run() {
-        $this->output($this->color->str('Done', 'green'));
         @fclose(STDIN);
         @fclose(STDOUT);
         @fclose(STDERR);
@@ -232,7 +234,7 @@ class MonitorService extends Service {
      */
     private function checkServices() {
         do {
-            $pid = pcntl_wait($status, WNOHANG);
+            $pid = @pcntl_wait($status, WNOHANG);
             if ($pid > 0) {//有进程退出啦
                 $sid = isset($this->pids[ $pid ]) ? $this->pids[ $pid ] : '';
                 unset($this->pids[ $pid ]);
@@ -278,23 +280,36 @@ class MonitorService extends Service {
                     $service['worker'] = intval(isset($service['worker']) ? $service['worker'] : 1);
                     $serOk             = $this->checkSer($service);
                     if ($serOk) {
+                        $forkOk = true;
                         while (count($this->services[ $id ]['pids']) < $service['worker']) {
-                            $pid = pcntl_fork();
-                            if (0 === $pid) {
+                            $pid = @pcntl_fork();
+                            if (0 === $pid) {//子进程
                                 $serImpl = $this->getSerImpl($id, $service);
-                                $rtn     = $serImpl->run();
+                                try {
+                                    $rtn = $serImpl->run();
+                                } catch (\Exception $e) {
+                                    $this->loge('[' . $id . '] ' . $e->getMessage());
+                                    $rtn = false;
+                                }
                                 if ($rtn === false) {
                                     exit(1);
+                                } else {
+                                    exit(0);
                                 }
-                                exit(0);
-                            } else {
+                                //服务进程肯定会肯定
+                            } else if ($pid > 0) {
                                 $this->pids[ $pid ]                    = $id;
                                 $this->services[ $id ]['pids'][ $pid ] = 1;
                                 $this->logd('service ' . $id . ', pid ' . $pid . ' created');
+                            } else {
+                                $forkOk = false;
+                                break;
                             }
                         }
-                        if ($status != 'running') {
+                        if ($status != 'running' && $forkOk) {
                             $this->services[ $id ]['status'] = 'running';
+                        } else if (!$forkOk) {
+                            $this->services[ $id ]['status'] = 'error';
                         }
                     } else {
                         $this->services[ $id ]['status'] = 'error';
@@ -350,8 +365,7 @@ class MonitorService extends Service {
      */
     private function reloadConfig($config = null, $service = '') {
         if (!$config) {
-            $loader       = new ConfigurationLoader();
-            $config       = $loader->loadConfig('service')->toArray();
+            $config       = $this->loadRuntimeCfg();
             $this->config = $config;
             $this->setVerbose($this->getOption('verbose'));
         }
@@ -419,8 +433,7 @@ class MonitorService extends Service {
 
     private function startService($service) {
         if ($service) {
-            $loader       = new ConfigurationLoader();
-            $config       = $loader->loadConfig('service')->toArray();
+            $config       = $this->loadRuntimeCfg();
             $this->config = $config;
             $services     = isset($config['services']) ? $config['services'] : [];
             if (isset($services[ $service ])) {
@@ -621,7 +634,24 @@ class MonitorService extends Service {
      * @param array    $data
      */
     private function response($socket, array $data) {
-        $msg = json_encode($data) . "\r\n\r\n";
+        $msg = json_encode($data, JSON_UNESCAPED_SLASHES) . "\r\n\r\n";
         @socket_write($socket, $msg, strlen($msg));
+    }
+
+    /**
+     * @return array
+     */
+    private function loadRuntimeCfg() {
+        $loader = new ConfigurationLoader();
+        $config = $loader->loadConfig('service')->toArray();
+        if (is_file($this->cfgFile)) {
+            $cfg = @file_get_contents($this->cfgFile);
+            $cfg = $cfg ? @json_decode($cfg, true) : null;
+            if ($cfg) {
+                $config = array_merge($config, $cfg);
+            }
+        }
+
+        return $config;
     }
 }

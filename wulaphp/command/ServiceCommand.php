@@ -84,7 +84,7 @@ class ServiceCommand extends ArtisanCommand {
                 $this->stop($service, true);
                 break;
             case 'config':
-                $this->config();
+                $this->config($service);
                 break;
             default:
                 $this->status($service);
@@ -97,6 +97,7 @@ class ServiceCommand extends ArtisanCommand {
      * @param string $service
      */
     private function start($service) {
+        $this->getRuntimeCfg();
         if ($service) {
             $this->output('Starting ...', false);
             $rtn = $this->sendCommand('start', ['service' => $service]);
@@ -149,6 +150,7 @@ class ServiceCommand extends ArtisanCommand {
      */
     private function reload($service) {
         $this->output('Reloading ...', false);
+        $this->getRuntimeCfg();
         $rtn = $this->sendCommand('reload', ['service' => $service]);
 
         if ($rtn) {
@@ -164,7 +166,6 @@ class ServiceCommand extends ArtisanCommand {
     private function ps($service) {
         $rtn = $this->sendCommand('ps', ['service' => $service]);
         if ($rtn) {
-
             $this->output('monitor');
             $pcnt = count($rtn['ps']);
             $this->output(($pcnt ? '├── ' : '└── ') . $this->color->str($rtn['ssid'], 'green'));
@@ -234,11 +235,13 @@ class ServiceCommand extends ArtisanCommand {
                     ]));
                 }
             }
+        } else {
+            $this->error('Cannot read status data');
         }
     }
 
-    private function config() {
-        $cfg      = App::config('service', true)->toArray();
+    private function config($service) {
+        $cfg      = $this->getRuntimeCfg();
         $user     = aryget('user', $cfg);
         $group    = aryget('group', $cfg);
         $verbose  = aryget('verbose', $cfg, 'vvv');
@@ -249,29 +252,39 @@ class ServiceCommand extends ArtisanCommand {
             ['User', 16],
             ['Group', 16]
         ]));
+
         $this->output(str_pad('-', 80, '-'));
         $this->output($this->cell([
             [$verbose, 20],
             [$user, 16],
             [$group, 16]
         ]));
+
         $this->output(str_pad('=', 80, '='));
-        $this->output($this->cell([
-            ['Service', 20],
-            ['Type', 16],
-            ['Worker', 10],
-            ['Status', 20],
-            ['', 44]
-        ]));
-        $this->output(str_pad('-', 80, '-'));
-        foreach ($services as $id => $ser) {
+
+        if ($service && isset($services[ $service ])) {
+            $this->output(json_encode($services[ $service ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        } else {
             $this->output($this->cell([
-                [$id, 20],
-                [$ser['type'], 16],
-                [isset($ser['worker']) ? $ser['worker'] : 1, 10],
-                [$this->getStatus($ser['status'] ? $ser['status'] : 'enabled'), 20],
-                [isset($ser['script']) ? $ser['script'] : $ser['jobClass'], 44]
+                ['Service', 20],
+                ['Type', 10],
+                ['Worker', 7],
+                ['S/I', 6],
+                ['Status', 20],
+                ['', 44]
             ]));
+            $this->output(str_pad('-', 80, '-'));
+            ksort($services);
+            foreach ($services as $id => $ser) {
+                $this->output($this->cell([
+                    [$id, 20],
+                    [$ser['type'], 10],
+                    [isset($ser['worker']) ? $ser['worker'] : 1, 7],
+                    [isset($ser['sleep']) ? $ser['sleep'] : (isset($ser['interval']) ? $ser['interval'] : 1), 6],
+                    [$this->getStatus($ser['status'] ? $ser['status'] : 'enabled'), 20],
+                    [isset($ser['script']) ? $ser['script'] : $ser['jobClass'], 44]
+                ]));
+            }
         }
     }
 
@@ -329,7 +342,7 @@ class ServiceCommand extends ArtisanCommand {
         if ($binds[0] == 'unix') {
             $sock = @socket_create(AF_UNIX, SOCK_STREAM, 0);
             if (!$sock) {
-                $this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
+                $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
                 exit(-1);
             }
             $sockFile = substr($bind, 5);
@@ -342,7 +355,7 @@ class ServiceCommand extends ArtisanCommand {
             $port = isset($binds[1]) ? $binds[1] : '5858';
             $sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if (!$sock) {
-                $this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
+                $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
                 exit(-1);
             }
             @socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
@@ -352,29 +365,31 @@ class ServiceCommand extends ArtisanCommand {
         if (!$rtn) {
             $error_no = socket_last_error();
             if ($error_no == 2) {
-                $this->output("\n" . $this->color->str('service is not running', 'red'));
+                $this->output($this->color->str('service is not running', 'red'));
             } else if ($error_no == 61) {
-                $this->output("\n" . $this->color->str('service is not running', 'red'));
+                $this->output($this->color->str('service is not running', 'red'));
             } else {
-                $this->output("\n" . $this->color->str(socket_strerror($error_no), 'red'));
+                $this->output($this->color->str(socket_strerror($error_no), 'red'));
             }
             exit(-1);
         }
 
         $rtn = @socket_write($sock, $payload, strlen($payload));
         if (!$rtn) {
-            $this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
+            $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
             exit(-1);
         }
         $msgs = '';
-
         while (true) {
             $buffer = @socket_read($sock, 2048, PHP_BINARY_READ);
-            if ($buffer) {
-                $msgs .= $buffer;
-                if (strpos($msgs, "\r\n\r\n") >= 0) {
-                    @socket_close($sock);
-                    break;
+            if ($buffer !== false) {
+                if ($buffer) {
+                    $msgs .= $buffer;
+                    $pos  = strpos($msgs, "\r\n\r\n");
+                    if ($pos !== false && $pos >= 0) {
+                        @socket_close($sock);
+                        break;
+                    }
                 }
             } else {
                 $this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
@@ -393,7 +408,15 @@ class ServiceCommand extends ArtisanCommand {
             return $rst;
         }
     }
+
+    /**
+     * @return array
+     */
+    private function getRuntimeCfg() {
+        $cfg = App::config('service', true)->toArray();
+        ksort($cfg['services']);
+        @file_put_contents(TMP_PATH . '.service.json', @json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+        return $cfg;
+    }
 }
-
-
-

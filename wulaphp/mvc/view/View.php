@@ -3,6 +3,7 @@
 namespace wulaphp\mvc\view;
 
 use wulaphp\io\Response;
+use wulaphp\router\Router;
 
 /**
  * 视图基类
@@ -198,6 +199,29 @@ abstract class View implements \ArrayAccess, Renderable {
 
     public function getHeaders() {
         return $this->headers;
+    }
+
+    /**
+     * 输出下载头.
+     *
+     * @param string $fileName
+     * @param int    $length
+     * @param string $desc
+     *
+     * @return $this
+     */
+    public function download($fileName, $length = 0, $desc = null) {
+        Response::nocache();
+        $this->headers['Content-Type']        = Router::mimeContentType($fileName);
+        $this->headers['Content-Disposition'] = 'attachment; filename="' . basename($fileName) . '"';
+        if ($length) {
+            $this->headers['Content-Length'] = $length;
+        }
+        if ($desc) {
+            $this->headers['Content-Description'] = $desc;
+        }
+
+        return $this;
     }
 
     /**

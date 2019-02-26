@@ -28,7 +28,6 @@ bind('artisan\getCommands', function ($cmds) {
         if (extension_loaded('gearman')) {
             $cmds['gearman'] = new \wulaphp\command\GearmanWorkerCommand();
         }
-        $cmds['run'] = new \wulaphp\command\RunCommand();
         if (function_exists('socket_create')) {
             $cmds['service'] = new \wulaphp\command\ServiceCommand();
         }

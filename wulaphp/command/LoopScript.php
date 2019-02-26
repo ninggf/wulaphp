@@ -15,23 +15,29 @@ namespace wulaphp\command;
  * @package wulaphp\command
  */
 abstract class LoopScript {
-    protected $sleep   = 0;
+    const DONE = 1;//会sleep一会然后退出,然后被重新拉起
+    const NEXT = 2;//会立即退出,然后被重新拉起
+    const GOON = 3;//继续运行run方法
+    protected $error   = '';
     private   $running = true;
+    private   $command = '';
 
     /**
      * 启动脚本
      */
     public function start() {
         if (!@stream_set_blocking(STDIN, 0)) {
+            echo 'cannot set STDIN to noblock mode';
             exit(1);
         }
         if ($this->setUp()) {
-            $command = '';
             do {
                 try {
                     $rst = $this->run();
-                    if ($rst === false) {
-                        $this->running = false;
+                    if ($rst === self::DONE) {
+                        exit(0);// 会sleep一会然后退出,然后被重新拉起
+                    } else if ($rst === self::NEXT) {
+                        exit(2);// 会立即退出,然后被重新拉起
                     }
                 } catch (\Exception $e) {
                     echo $e->getMessage();
@@ -39,17 +45,19 @@ abstract class LoopScript {
                 }
                 $line = @fgets(STDIN);
                 if ($line) {
-                    $command .= trim($line);
+                    $this->command .= trim($line);
                 }
-                if ($command === '@shutdown@') {
+                if ($this->command === '@shutdown@') {
                     $this->running = false;
-                }
-                if ($this->running && $this->sleep) {
-                    @sleep($this->sleep);
                 }
             } while ($this->running);
             exit(0);
         } else {
+            if ($this->error) {
+                echo $this->error;
+            } else {
+                echo 'setUp fail';
+            }
             exit(1);
         }
     }
@@ -73,6 +81,18 @@ abstract class LoopScript {
      */
     protected function env($name, $default = '') {
         return aryget($name, $_SERVER, $default);
+    }
+
+    protected final function isRunning() {
+        $line = @fgets(STDIN);
+        if ($line) {
+            $this->command .= trim($line);
+        }
+        if ($this->command === '@shutdown@') {
+            $this->running = false;
+        }
+
+        return $this->running;
     }
 
     /**

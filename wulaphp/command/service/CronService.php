@@ -19,7 +19,7 @@ class CronService extends Service {
     public function run() {
         $script   = $this->getOption('script');
         $cron     = $this->getOption('cron');
-        $interval = $this->getOption('interval', 10);
+        $interval = $this->getOption('interval', $this->getOption('sleep', 10));
         $fixed    = $this->getOption('fixed');//以固定间隔运行
         $env      = (array)$this->getOption('env', []);
 
@@ -81,12 +81,16 @@ class CronService extends Service {
                         $descriptorspec = [
                             0 => ["pipe", "r"],  // 标准输入，子进程从此管道中读取数据
                             1 => ["pipe", "w"],  // 标准输出，子进程向此管道中写入数据
-                            2 => ["pipe", "w"] // 标准错误，写入到一个文件
+                            2 => ["pipe", "w"] // 标准错误，子进程向此管道中写入数据
                         ];
                         $process        = @proc_open($cmd . ' ' . $arg, $descriptorspec, $pipes, APPROOT, $env);
+                        $output         = '';
+                        $error          = '';
                         if ($process && is_resource($process)) {
                             $rtn = 0;
                             $pid = 0;
+                            @stream_set_blocking($pipes[1], 0);
+                            @stream_set_blocking($pipes[2], 0);
                             while (true) {
                                 if ($this->shutdown) {
                                     if (isset($env['loop'])) {
@@ -99,7 +103,9 @@ class CronService extends Service {
                                 if (!$info) break;
                                 $pid = $info['pid'];
                                 if (!$info['running']) {
-                                    $rtn = $info['exitcode'];
+                                    $rtn    = $info['exitcode'];
+                                    $output = @fgets($pipes[1], 1024);
+                                    $error  = @fgets($pipes[2], 1024);
                                     break;
                                 } else {
                                     sleep(1);
@@ -110,7 +116,7 @@ class CronService extends Service {
                                 @fclose($p);
                             }
                             @proc_close($process);
-                            $this->logd($script . ', pid: ' . $pid . ' exits with code: ' . $rtn);
+                            $this->logd($script . ', pid: ' . $pid . ' exits with code: ' . $rtn . ", [output] {$output}, [error] {$error}");
 
                             return $rtn;
                         } else {

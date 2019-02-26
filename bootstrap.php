@@ -23,6 +23,11 @@ if (!defined('APPROOT')) {
         !trigger_error('define "APPROOT" first', E_USER_ERROR) or exit(1);
     }
 }
+$gzip = @ini_get('zlib.output_compression');
+if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib')) {
+    @ini_set('zlib.output_compression', 1);
+    @ini_set('zlib.output_compression_level', 5);
+}
 @ob_start();
 define('WULA_STARTTIME', microtime(true));
 define('WULA_VERSION', '2.5.12');

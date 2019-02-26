@@ -72,6 +72,17 @@ abstract class Module {
     }
 
     /**
+     * 获取相对路径
+     *
+     * @param null|string $file
+     *
+     * @return string
+     */
+    public final function getRelativePath($file = null) {
+        return $file ? MODULE_DIR . DS . $this->dirname . DS . ($file ? $file : '') : $this->path . DS;
+    }
+
+    /**
      * 加载模块内文件内容.
      *
      * @param string $file

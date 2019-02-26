@@ -3,7 +3,6 @@
 namespace wulaphp\io;
 
 use wulaphp\app\App;
-use wulaphp\mvc\view\ExcelView;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\View;
@@ -16,7 +15,7 @@ use wulaphp\mvc\view\View;
  *          $Id$
  */
 class Response {
-    private        $before_out = false;
+    private        $before_out = null;
     private        $content    = '';
     private        $view       = null;
     private static $INSTANCE   = null;
@@ -29,33 +28,27 @@ class Response {
      */
     public function __construct() {
         if (self::$INSTANCE == null) {
-            if (!@ini_get('zlib.output_compression') && @ob_get_status()) {
+            @header_remove('X-Powered-By');
+            if ($obl = @ob_get_level()) {
                 $this->before_out = @ob_get_clean();
-                @ob_start();
             }
-            if (!@ob_start(function ($content) {
+            if (@ob_start(function ($content) {
                 $this->content = apply_filter('filter_output_content', $content);
-                if ($this->before_out && DEBUG == DEBUG_DEBUG) {
-                    log_warn($this->before_out, 'bootstrap');
+                if ($this->before_out) {
+                    if (DEBUG == DEBUG_DEBUG) {
+                        return '<!--' . $this->before_out . '-->' . $this->content;
+                    } else {
+                        log_warn($this->before_out, 'bootstrap');
+                    }
                 }
 
                 return $this->content;
             })) {
-                !trigger_error('cannot open response', E_USER_ERROR) or exit(1);
-            } else {
                 $status            = ob_get_status();
                 $this->bufferLevel = $status['level'];
                 $this->bufferName  = $status['name'];
-            }
-            if (defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib')) {
-                $gzip = @ini_get('zlib.output_compression');
-                if (!$gzip) {
-                    @ini_set('zlib.output_compression', 1);
-                }
-                @ini_set('zlib.output_compression_level', 5);
             } else {
-                @ini_set('zlib.output_compression', 0);
-                @ini_set('zlib.output_compression_level', -1);
+                !trigger_error('cannot open response', E_USER_ERROR) or exit(1);
             }
         }
         self::$INSTANCE = $this;
@@ -125,15 +118,35 @@ class Response {
      * @param int|null $last_modify
      */
     public static function cache($expire = 3600, $last_modify = null) {
-        $time    = $last_modify ? $last_modify : time();
+        $time    = time();
         $date    = gmdate('D, d M Y H:i:s', $time) . ' GMT';
+        $ldate   = $last_modify ? gmdate('D, d M Y H:i:s', $last_modify) . ' GMT' : $date;
         $headers = [
             'Age'           => $expire,
             'Date'          => $date,
             'Expires'       => gmdate('D, d M Y H:i:s', $time + $expire) . ' GMT',
-            'Last-Modified' => $date,
+            'Last-Modified' => $ldate,
             'Cache-Control' => 'public, must-revalidate, max-age=' . $expire,
             'Pragma'        => 'cache'
+        ];
+
+        foreach ($headers as $header => $val) {
+            @header($header . ': ' . $val);
+        }
+    }
+
+    /**
+     * 设置最后修改日期.
+     *
+     * @param int $last_modify
+     */
+    public static function lastModified($last_modify) {
+        $time    = time();
+        $date    = gmdate('D, d M Y H:i:s', $time) . ' GMT';
+        $ldate   = gmdate('D, d M Y H:i:s', $last_modify) . ' GMT';
+        $headers = [
+            'Date'          => $date,
+            'Last-Modified' => $ldate
         ];
 
         foreach ($headers as $header => $val) {
@@ -195,7 +208,7 @@ class Response {
      * @param string|array $message
      */
     public static function respond($status = 404, $message = '') {
-        status_header($status);
+        http_response_code($status);
         if (Request::isAjaxRequest()) {
             @header('ajax: 1');
             Response::getInstance()->output(['message' => $message ? $message : __('error occurred')]);
@@ -316,6 +329,7 @@ class Response {
         if ($buffer && $buffer['type'] && $buffer['name'] == $this->bufferName && $buffer['level'] == $this->bufferLevel) {
             @ob_end_flush();
         }
+
         self::$INSTANCE = null;
         if ($exit) {
             exit ();
@@ -324,5 +338,4 @@ class Response {
         }
     }
 }
-
 // END OF FILE response.php
