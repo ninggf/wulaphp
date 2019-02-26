@@ -325,12 +325,6 @@ class Response {
      * @fire after_content_output $content
      */
     public function close($exit = true) {
-        $buffer = @ob_get_status();
-        if ($buffer && $buffer['type'] && $buffer['name'] == $this->bufferName && $buffer['level'] == $this->bufferLevel) {
-            @ob_end_flush();
-        }
-
-        self::$INSTANCE = null;
         if ($exit) {
             exit ();
         } else {

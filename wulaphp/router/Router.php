@@ -274,7 +274,9 @@ class Router {
             if (is_array($view) || $view) {
                 $response->output($view);
             } else if (PHP_SAPI == 'cli-server' && is_file(WWWROOT . ltrim($this->requestURI, '/'))) {
-                $response->close(false);
+                while (@ob_get_level()) {
+                    @ob_end_clean();
+                }
 
                 return false;
             } else if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
