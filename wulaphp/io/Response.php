@@ -295,6 +295,8 @@ class Response {
             $this->view = new SimpleView ($view);
         } else if (is_array($view)) {
             $this->view = new JsonView ($view);
+        } else if (is_object($view)) {
+            $this->view = new JsonView (get_class_vars($view));
         }
 
         if ($this->view instanceof View) {
@@ -310,7 +312,7 @@ class Response {
                     echo str_replace('<!-- benchmark -->', (microtime(true) - WULA_STARTTIME), $content);
                 }
             }
-        } else {
+        } else if (!$return) {
             Response::respond(404);
         }
 
