@@ -18,9 +18,11 @@ use wulaphp\router\DefaultDispatcher;
 use wulaphp\router\Router;
 
 /**
- * Class SubModuleRouter
+ * 仅供内部使用,千万不要继承它。
+ *
  * @package wulaphp\mvc\controller
  * @property-read  array $routes 自定义本模块的路由处理器
+ * @internal
  */
 class SubModuleRouter extends Controller {
     public function __construct(Module $module) {
