@@ -48,6 +48,7 @@ class RESTFulServer {
      * @param bool $debug
      *
      * @return null|\wulaphp\mvc\view\View
+     * @throws
      */
     public function run($debug = false) {
         $this->debug    = $debug;

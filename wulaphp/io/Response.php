@@ -29,7 +29,7 @@ class Response {
     public function __construct() {
         if (self::$INSTANCE == null) {
             @header_remove('X-Powered-By');
-            if ($obl = @ob_get_level()) {
+            if (($obl = @ob_get_level())) {
                 $this->before_out = @ob_get_clean();
             }
             if (@ob_start(function ($content) {

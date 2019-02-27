@@ -2,7 +2,6 @@
 
 namespace wulaphp\app;
 
-use wulaphp\i18n\I18n;
 use wulaphp\util\Annotation;
 
 abstract class Extension {

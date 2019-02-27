@@ -33,7 +33,7 @@ class ArtisanHelpCommand extends ArtisanCommand {
             $line = substr($desc, 0, $sMax);
             echo $line;
             $i = 1;
-            while ($line = substr($desc, $sMax * $i, $sMax)) {
+            while (($line = substr($desc, $sMax * $i, $sMax))) {
                 echo "\n", $leftPad, $line;
                 $i++;
             }
