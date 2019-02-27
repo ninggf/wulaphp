@@ -327,9 +327,9 @@ class Router {
      */
     public static function mimeContentType($filename) {
         static $mime_types = [
-            'html'    => 'text/html',
-            'htm'     => 'text/html',
-            'shtml'   => 'text/html',
+            'html'    => 'text/html;charset=UTF-8',
+            'htm'     => 'text/html;charset=UTF-8',
+            'shtml'   => 'text/html;charset=UTF-8',
             'css'     => 'text/css',
             'xml'     => 'text/xml',
             'gif'     => 'image/gif',
@@ -339,7 +339,7 @@ class Router {
             'atom'    => 'application/atom+xml',
             'rss'     => 'application/rss+xml',
             'mml'     => 'text/mathml',
-            'txt'     => 'text/plain',
+            'txt'     => 'text/plain;charset=UTF-8',
             'jad'     => 'text/vnd.sun.j2me.app-descriptor',
             'wml'     => 'text/vnd.wap.wml',
             'htc'     => 'text/x-component',
@@ -400,7 +400,7 @@ class Router {
             'pem'     => 'application/x-x509-ca-cert',
             'crt'     => 'application/x-x509-ca-cert',
             'xpi'     => 'application/x-xpinstall',
-            'xhtml'   => 'application/xhtml+xml',
+            'xhtml'   => 'application/xhtml+xml;charset=UTF-8',
             'xspf'    => 'application/xspf+xml',
             'zip'     => 'application/zip',
             'bin'     => 'application/octet-stream',

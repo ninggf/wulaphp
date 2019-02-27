@@ -24,10 +24,6 @@ bind('artisan\getCommands', function ($cmds) {
     $cmds['admin'] = new \wulaphp\command\AdminCommand();
 
     if (function_exists('pcntl_fork') && function_exists('posix_getpid')) {
-        $cmds['cron'] = new \wulaphp\command\CrontabCommand();
-        if (extension_loaded('gearman')) {
-            $cmds['gearman'] = new \wulaphp\command\GearmanWorkerCommand();
-        }
         if (function_exists('socket_create')) {
             $cmds['service'] = new \wulaphp\command\ServiceCommand();
         }

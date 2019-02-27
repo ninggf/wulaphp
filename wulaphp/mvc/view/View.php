@@ -186,7 +186,7 @@ abstract class View implements \ArrayAccess, Renderable {
      */
     public function echoHeader() {
         if ($this->status != 200) {
-            status_header($this->status);
+            http_response_code($this->status);
         } else if (defined('CACHE_EXPIRE') && CACHE_EXPIRE) {
             Response::cache(CACHE_EXPIRE);
         }

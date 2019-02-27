@@ -17,7 +17,7 @@ class UrlParsedInfo implements \ArrayAccess {
     public  $ext         = '';//扩展名
     public  $page        = 1;//当前数码
     public  $total       = 1;//总页数
-    public  $contentType = 'text/html';//
+    public  $contentType = 'text/html;charset=UTF-8';
     public  $parsedUrl   = null;//解析后的URL
     private $params; //请求参数
     private $ogs         = [];
@@ -82,7 +82,7 @@ class UrlParsedInfo implements \ArrayAccess {
         $this->name        = $this->ogs[2];
         $this->ogname      = $this->ogs[3];
         $this->ext         = $this->ogs[4];
-        $this->contentType = 'text/html';
+        $this->contentType = 'text/html;charset=UTF-8';
         $this->pageData    = [];
     }
 

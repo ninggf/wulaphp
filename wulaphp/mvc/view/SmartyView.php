@@ -27,9 +27,9 @@ class SmartyView extends View implements IModuleView {
      *
      * @throws \Exception
      */
-    public function __construct($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
+    public function __construct($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html;charset=UTF-8']) {
         if (!isset ($headers ['Content-Type'])) {
-            $headers ['Content-Type'] = 'text/html; charset=utf8';
+            $headers ['Content-Type'] = 'text/html;charset=UTF-8';
         }
         parent::__construct($data, $tpl, $headers);
     }

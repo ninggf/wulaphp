@@ -120,16 +120,17 @@ class Response {
     public static function cache($expire = 3600, $last_modify = null) {
         $time    = time();
         $date    = gmdate('D, d M Y H:i:s', $time) . ' GMT';
-        $ldate   = $last_modify ? gmdate('D, d M Y H:i:s', $last_modify) . ' GMT' : $date;
         $headers = [
             'Age'           => $expire,
             'Date'          => $date,
             'Expires'       => gmdate('D, d M Y H:i:s', $time + $expire) . ' GMT',
-            'Last-Modified' => $ldate,
             'Cache-Control' => 'public, must-revalidate, max-age=' . $expire,
             'Pragma'        => 'cache'
         ];
-
+        if ($last_modify) {
+            $ldate                    = @gmdate('D, d M Y H:i:s', $last_modify) . ' GMT';
+            $headers['Last-Modified'] = $ldate;
+        }
         foreach ($headers as $header => $val) {
             @header($header . ': ' . $val);
         }
@@ -309,7 +310,7 @@ class Response {
                 $content = $this->view->render();
                 if (is_string($content) && $content) {
                     $content = apply_filter('before_output_content', $content, $this->view);
-                    echo str_replace('<!-- benchmark -->', (microtime(true) - WULA_STARTTIME), $content);
+                    echo $content;
                 }
             }
         } else if (!$return) {

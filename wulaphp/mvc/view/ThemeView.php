@@ -28,11 +28,10 @@ class ThemeView extends View {
      * @filter init_template_smarty_engine $smarty
      * @throws \Exception
      */
-    public function __construct($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html']) {
+    public function __construct($data = [], $tpl = '', $headers = ['Content-Type' => 'text/html;charset=UTF-8']) {
         if (!isset ($headers ['Content-Type'])) {
-            $headers ['Content-Type'] = 'text/html';
+            $headers ['Content-Type'] = 'text/html;charset=UTF-8';
         }
-
         parent::__construct($data, $tpl, $headers);
     }
 
