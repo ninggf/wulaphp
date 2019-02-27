@@ -42,7 +42,7 @@ class TableDataProvidor extends FieldDataProvidor {
         if ($option && !is_array($option)) {
             $option = ['' => $option];
         }
-        $format = method_exists($this->form, 'formatData');
+
         if ($where && $eval) {
             $tableData = $this->form->tableData();
             $dataKeys  = array_keys($tableData);
@@ -55,7 +55,7 @@ class TableDataProvidor extends FieldDataProvidor {
             }
         }
         $table = new SimpleTable($table);
-        if ($format) {
+        if (method_exists($this->form, 'formatData')) {
             $datas = $table->select($keyId . ',' . $field);
             if ($sort) {
                 $datas->sort($sort);
