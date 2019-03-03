@@ -1,3 +1,19 @@
+### Version 2.6.0
+**2019-03-03**
+
+* 新增特性：UploadSupport 用于上传文件
+* 新增特性：BreadCrumbSupport 用于支持面包屑导航和恢复搜索条件
+* 新增类: ImageTool
+* 新增类：LoopScript
+* QRcode支持直接生成base64格式
+* 优化built in server处理流程
+* 优化Response
+* 支持直接读取modules,themes里的资源
+* 修复`here`修饰器的BUG
+* 优化`service`命令
+* 控制器方法可以将类实例当视图返回
+* 添加FtpUploader用于将文件上传到FTP服务器
+
 ### Version 2.5.12
 **2019-01-19**
 
