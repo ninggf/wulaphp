@@ -19,7 +19,7 @@ class Router {
 
     private $urlParsedInfo = null;//解析的URL数据.
     private $requestURL    = null;//解析后的URL
-    private $queryParams   = [];//QueryString 请求参数
+    public  $queryParams   = [];//QueryString 请求参数
     public  $urlParams     = [];//URL中的参数
     public  $requestURI;//请求URI
     /**
