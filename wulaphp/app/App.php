@@ -853,10 +853,11 @@ class App {
      *
      * @param string $res
      * @param string $min
+     * @param bool   $appendArg 是否添加参数
      *
      * @return string
      */
-    public static function assets($res, $min = '') {
+    public static function assets($res, $min = '', $appendArg = true) {
         static $static_url = false;
         if ($static_url === false) {
             $static_url = App::cfg('static_base');
@@ -876,8 +877,11 @@ class App {
                 $url = $url1;
             }
         }
-
-        return $static_url . ASSETS_DIR . '/' . $url . '?_ver=' . BUILD_NUMBER;
+        if ($appendArg) {
+            return $static_url . ASSETS_DIR . '/' . $url . '?_ver=' . BUILD_NUMBER;
+        } else {
+            return $static_url . ASSETS_DIR . '/' . $url;
+        }
     }
 
     /**

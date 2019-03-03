@@ -14,7 +14,7 @@ use wulaphp\app\App;
 use wulaphp\io\Uploader;
 use wulaphp\util\ImageTool;
 
-class UploadController extends Controller {
+trait UploadSupport {
     /**
      * 保存通过Plupload上传的文件.
      *

@@ -10,6 +10,7 @@
 
 namespace wulaphp\mvc\controller;
 
+use wulaphp\io\Request;
 use wulaphp\mvc\view\View;
 use wulaphp\router\Router;
 use wulaphp\util\Annotation;
@@ -19,14 +20,36 @@ use wulaphp\util\Annotation;
  * 使用方法:
  * 1. 在方法上添加crumb或crumbd注解
  * 2. crumb注解格式:
- *      2.1 @crumb 1
+ *      2.1 @crumb group-1
  *          2.1.1 此时可以通过设置crumbTitle来自定义标题
- *      2.2 @crumb 1 导航标题
- * 3. crumbd注解格式:
- *      3.1 @crumbd 用于ajax搜索时自动更新列表页参数
+ *      2.2 @crumb group-1 导航标题
+ *      2.3 group 为分组
+ * 3. 通过注解@keepArgs保存搜索条件
+ *      3.1 @keepArgs myargs
+ * 4. 通过注解@restoreArgs恢复搜索条件
+ *      4.1 @restoreArgs myargs
  * @package wulaphp\mvc\controller
  */
 trait BreadCrumbSupport {
+    protected function beforeRunInBreadCrumbSupport($method, $view) {
+        $ann = new Annotation($method);
+        if (($id = $ann->getString('restoreArgs'))) {
+            $args = sess_get('kags_' . $id, []);
+            if ($args && is_array($args)) {
+                Request::getInstance()->addUserData($args);
+            }
+        } else if (($id = $ann->getString('keepArgs'))) {
+            $args = Router::getRouter()->queryParams;
+            unset($args['_']);
+            if ($args) {
+                $_SESSION[ 'kags_' . $id ] = $args;
+            }
+        }
+        $method->anns = $ann;
+
+        return $view;
+    }
+
     /**
      * 后运行.
      *
@@ -37,45 +60,33 @@ trait BreadCrumbSupport {
      * @return \wulaphp\mvc\view\View
      */
     protected function afterRunInBreadCrumbSupport($action, $view, $method) {
+        /**@var Annotation $ann */
+        $ann = $method->anns;
         if ($view instanceof View) {
-            $breadCrumbs = sess_get('_wula_bdCbs_', []);
-            $ann         = new Annotation($method);
+            $breadCrumbs = [];
             $crumb       = $ann->getString('crumb');
-            if ($crumb && preg_match('#^(\d+)(\s+.*)?$#', trim($crumb), $ms)) {
-                $level = intval($ms[1]);
-
-                if (isset($ms[2])) {
-                    $title = trim($ms[2]);
-                } else {
-                    $title = false;
+            if ($crumb && preg_match('#^([a-z][a-z_\d]*)-(\d+)(\s+.*)?$#i', trim($crumb), $ms)) {
+                $sname       = '_wula_bdCbs_' . $ms[1];
+                $breadCrumbs = sess_get($sname, []);
+                $level       = intval($ms[2]);
+                $data        = $view->getData();
+                $title       = isset($data['crumbTitle']) && $data['crumbTitle'] ? $data['crumbTitle'] : false;
+                if (!$title && isset($ms[3])) {
+                    $title = trim($ms[3]);
                 }
-
-                if (!$title) {
-                    $data  = $view->getData();
-                    $title = isset($data['crumbTitle']) && $data['crumbTitle'] ? $data['crumbTitle'] : false;
-                }
-
                 if ($title) {
                     $breadCrumbs[ $level ] = [$title, Router::getFullURI()];
                     ksort($breadCrumbs);
-                    $breadCrumbs              = array_slice($breadCrumbs, 0, $level + 1, true);
-                    $_SESSION['_wula_bdCbs_'] = $breadCrumbs;
-                }
-            } else if ($breadCrumbs && $ann->has('crumbd')) {
-                $ref = isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER'] ? $_SERVER['HTTP_REFERER'] : '';
-                if ($ref) {
-                    foreach ($breadCrumbs as &$breadCrumb) {
-                        if ($breadCrumb[1] == $ref) {
-                            $breadCrumb[1] = url_append_args($breadCrumb[1], Router::getRouter()->queryParams);
-                        }
-                    }
-                    $_SESSION['_wula_bdCbs_'] = $breadCrumbs;
+                    $breadCrumbs        = array_slice($breadCrumbs, 0, $level + 1, true);
+                    $_SESSION[ $sname ] = $breadCrumbs;
                 }
             }
+
             if ($crumb && $breadCrumbs) {
                 $view->assign('breadCrumbs', $breadCrumbs);
             }
         }
+        unset($ann);
 
         return $view;
     }
