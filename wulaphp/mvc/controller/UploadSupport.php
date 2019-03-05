@@ -200,7 +200,8 @@ trait UploadSupport {
                     return $rtn;
                 }
 
-                $imgwh = ['width' => 0, 'height' => 0];
+                $imgwh   = ['width' => 0, 'height' => 0];
+                $imgData = null;
                 if (ImageTool::isImage($filePath)) {
                     if (($imgData = @getimagesize($filePath))) {
                         $imgwh['width']  = $imgData[0];
@@ -213,7 +214,7 @@ trait UploadSupport {
                         unset($img);
                     }
                 }
-                if ($checkResolution instanceof \Closure && ($chkRst = $checkResolution(...$imgwh)) !== true) {
+                if ($imgData && $checkResolution instanceof \Closure && ($chkRst = $checkResolution(...array_values($imgData))) !== true) {
                     $rtn['error'] = ['code' => 423, 'message' => $chkRst ? $chkRst : '图片尺寸不正确'];
                     @unlink($filePath);
 
