@@ -229,4 +229,17 @@ abstract class View implements \ArrayAccess, Renderable {
      */
     protected function setHeader() {
     }
+
+    /**
+     * 响应码.
+     *
+     * @param int $status
+     *
+     * @return $this
+     */
+    public function status($status) {
+        $this->status = $status;
+
+        return $this;
+    }
 }

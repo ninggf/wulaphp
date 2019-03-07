@@ -9,12 +9,26 @@
  */
 
 namespace wulaphp\io;
-
+/**
+ * 上传文件.
+ * @property-read int                   $maxSize
+ * @property-read array                 $exts
+ * @property-read string                $error
+ * @property-read string                $dest;
+ * @property-read string                $watermark
+ * @property-read \Closure              $metaDataExtractor
+ * @property-read \wulaphp\io\IUploader $uploader
+ * @package wulaphp\io
+ */
 class UploadFile {
     private $file;
-    private $maxSize = 0;
+    private $maxSize           = 100000;
     private $exts;
-    private $error   = null;
+    private $error             = null;
+    private $metaDataExtractor = null;
+    private $dest              = null;
+    private $uploader          = null;
+    private $watermark         = null;
 
     /**
      * UploadFile constructor.
@@ -23,7 +37,7 @@ class UploadFile {
      * @param array        $ext  扩展名列表.
      * @param int          $max  最大上传尺寸.
      */
-    public function __construct($name, $ext = [], $max = 0) {
+    public function __construct($name = '', $ext = [], $max = 0) {
         if (is_array($name)) {
             $this->file = $name;
         } else if (isset($_FILES[ $name ])) {
@@ -47,7 +61,7 @@ class UploadFile {
     /**
      * 保存上传的文件.
      *
-     * @param string      $destdir  目录.
+     * @param string      $destdir  保存目录.
      * @param string|null $fileName 文件名(不包括扩展名).
      * @param bool        $random   是否随机生成文件名.
      *
@@ -55,6 +69,8 @@ class UploadFile {
      */
     public function save($destdir, $fileName = null, $random = false) {
         if (!$this->file) {
+            $this->error = '无上传的文件要上传';
+
             return false;
         }
         if (isset ($this->file ['error']) && $this->file['error']) {
@@ -98,9 +114,14 @@ class UploadFile {
                 return false;
             }
             $name   = thefilename($name);
-            $fName  = preg_replace('/[^\w\._]+/', '-', $name);
-            $filext = strtolower(strrchr($fName, '.'));
-            if ($this->exts && !in_array($filext, $this->exts)) {
+            $filext = strtolower(strrchr($name, '.'));
+            $fName  = str_replace(['/', '+', '='], [
+                '-',
+                '_',
+                ''
+            ], base64_encode(md5($name, true)));
+
+            if ($this->exts && !in_array(ltrim($filext, '.'), $this->exts)) {
                 $this->error = '不支持的扩展名';
 
                 return false;
@@ -128,5 +149,67 @@ class UploadFile {
         $this->error = '非法的上传文件';
 
         return false;
+    }
+
+    /**
+     * 允许上传的最大值
+     *
+     * @param int $size
+     */
+    public function setMaxSize($size) {
+        $this->maxSize = abs(intval($size));
+    }
+
+    /**
+     * 设置允许的扩展名.
+     *
+     * @param array $exts
+     */
+    public function setExts($exts) {
+        $this->exts = (array)$exts;
+    }
+
+    /**
+     * 设置保存目录
+     *
+     * @param string $dest
+     */
+    public function setDest($dest) {
+        $this->dest = $dest;
+    }
+
+    /**
+     * 设置文件上传器.
+     *
+     * @param \wulaphp\io\IUploader $uploader
+     */
+    public function setUploader($uploader) {
+        $this->uploader = $uploader;
+    }
+
+    /**
+     * 文件数据抽取器.
+     *
+     * @param \Closure $extractor
+     */
+    public function setMetaDataExtractor(\Closure $extractor) {
+        $this->metaDataExtractor = $extractor;
+    }
+
+    /**
+     * 设置水印.
+     *
+     * @param string $watermark
+     */
+    public function setWatermark($watermark) {
+        $this->watermark = $watermark;
+    }
+
+    public function __get($name) {
+        if (isset($this->{$name})) {
+            return $name;
+        }
+
+        return null;
     }
 }

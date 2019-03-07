@@ -36,7 +36,7 @@ trait BreadCrumbSupport {
         if (($id = $ann->getString('restoreArgs'))) {
             $args = sess_get('kags_' . $id, []);
             if ($args && is_array($args)) {
-                Request::getInstance()->addUserData($args);
+                Request::getInstance()->addUserData($args, false, true);
             }
         } else if (($id = $ann->getString('keepArgs'))) {
             $args = Router::getRouter()->queryParams;

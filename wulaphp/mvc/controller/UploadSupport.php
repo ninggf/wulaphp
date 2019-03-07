@@ -12,22 +12,38 @@ namespace wulaphp\mvc\controller;
 
 use wulaphp\app\App;
 use wulaphp\io\Uploader;
+use wulaphp\io\UploadFile;
 use wulaphp\util\ImageTool;
 
 trait UploadSupport {
     /**
      * 保存通过Plupload上传的文件.
      *
-     * @param string|null           $dest            目标目录
-     * @param int                   $maxSize         最大上传体积
-     * @param bool                  $canUpload       是否可以上传
-     * @param \wulaphp\io\IUploader $uploader        使用指定文件上传器.
-     * @param \Closure              $checkResolution 上传之前的回调
+     * @param string|\wulaphp\io\UploadFile|null $dest                  目标目录或文件定义
+     * @param int                                $maxSize               最大上传体积
+     * @param bool                               $canUpload             是否可以上传
+     * @param \wulaphp\io\IUploader              $uploader              使用指定文件上传器.
+     * @param \Closure                           $fileMetaDataExtractor 上传之前的解析文件数据的回调
+     * @param array                              $allowed               允许的域名
      *
      * @return array
      */
-    protected final function upload($dest = null, $maxSize = 10000000, $canUpload = true, $uploader = null, $checkResolution = null) {
-        $rtn = ['jsonrpc' => '2.0', 'done' => 0];
+    protected final function upload($dest = null, $maxSize = 10000000, $canUpload = true, $uploader = null, $fileMetaDataExtractor = null, $allowed = []) {
+        $rtn   = ['jsonrpc' => '2.0', 'done' => 0];
+        $water = null;
+        if ($dest instanceof UploadFile) {
+            $maxSize               = $dest->maxSize;
+            $fileMetaDataExtractor = $dest->metaDataExtractor;
+            $allowed               = $dest->exts;
+            $uploader              = $dest->uploader;
+            $water                 = $dest->watermark;
+            $dest                  = $dest->dest;
+        } else if ($dest != null && !is_string($dest)) {
+            $rtn['error'] = ['code' => 421, 'message' => '无效的存储目录'];
+
+            return $rtn;
+        }
+
         if (!$canUpload) {
             $rtn['error'] = ['code' => 422, 'message' => '无权限上传文件'];
 
@@ -39,11 +55,8 @@ trait UploadSupport {
         $name      = rqst('name');
         $hasWater  = !rqset('nowater');
         $targetDir = TMP_PATH . "plupload";
-        if (!is_dir($targetDir)) {
-            @mkdir($targetDir, 0755, true);
-        }
-        if (!is_dir($targetDir)) {
-            $rtn['error'] = ['code' => 422, 'message' => '临时目录不存在，无法上传.'];
+        if (!is_dir($targetDir) && !@mkdir($targetDir, 0755, true)) {
+            $rtn['error'] = ['code' => 422, 'message' => '临时目录创建失败，无法上传.'];
 
             return $rtn;
         }
@@ -60,17 +73,25 @@ trait UploadSupport {
             return $rtn;
         }
         $name     = thefilename($name);
-        $fileName = preg_replace('/[^\w\._]+/', rand_str(5, 'a-z'), $name);
-        $filext   = strtolower(strrchr($fileName, '.'));
+        $filext   = strtolower(strrchr($name, '.'));
+        $fileName = str_replace(['/', '+', '='], [
+                '-',
+                '_',
+                ''
+            ], base64_encode(md5($name . rqst('fid', $chunks), true))) . $filext;
 
-        if (!$this->allowed($filext)) {
-            $rtn['error'] = ['code' => 422, 'message' => '不允许的文件扩展名'];
+        if ($allowed) {
+            if (!in_array(ltrim($filext, '.'), $allowed)) {
+                $rtn['error'] = ['code' => 422, 'message' => '不允许的文件扩展名'];
 
-            return $rtn;
-        }
-        // Make sure the fileName is unique but only if chunking is disabled
-        if ($chunks < 2 && file_exists($targetDir . DS . $fileName)) {
-            $fileName = unique_filename($targetDir, $fileName);
+                return $rtn;
+            }
+        } else {
+            if (!$this->allowed($filext)) {
+                $rtn['error'] = ['code' => 422, 'message' => '不允许的文件扩展名'];
+
+                return $rtn;
+            }
         }
 
         $filePath = $targetDir . DS . $fileName;
@@ -113,10 +134,10 @@ trait UploadSupport {
                         $error = '超过表单允许的大小。';
                         break;
                     case '3' :
-                        $error = '图片只有部分被上传。';
+                        $error = '只有部分被上传。';
                         break;
                     case '4' :
-                        $error = '请选择图片。';
+                        $error = '请选择要上传的文件。';
                         break;
                     case '6' :
                         $error = '找不到临时目录。';
@@ -138,9 +159,11 @@ trait UploadSupport {
 
             if (isset ($_FILES ['file'] ['tmp_name']) && is_uploaded_file($_FILES ['file'] ['tmp_name'])) {
                 if ($chunks == 1) {//直接上传
-                    if (!@move_uploaded_file($_FILES['file']['tmp_name'], "{$filePath}.part")) {
-                        $rtn['error'] = ['code' => 422, 'message' => '系统错误，无法保存临时文件'];
+                    ob_start();
+                    if (!move_uploaded_file($_FILES['file']['tmp_name'], "{$filePath}.part")) {
+                        $rtn['error'] = ['code' => 422, 'message' => '系统错误，无法保存临时文件[' . ob_get_contents() . ']'];
                     }
+                    ob_end_clean();
                 } else {//分片上传
                     $out = @fopen("{$filePath}.part", $chunk == 0 ? "wb" : "ab");
                     if ($out) {
@@ -160,7 +183,7 @@ trait UploadSupport {
                         @fclose($in);
                         @unlink($_FILES ['file'] ['tmp_name']);
                     } else {
-                        $rtn['error'] = ['code' => 422, 'message' => '系统错误，无法保存临时文件'];
+                        $rtn['error'] = ['code' => 422, 'message' => '系统错误，无法保存临时文件[chunk]'];
                     }
                 }
             } else {
@@ -200,25 +223,38 @@ trait UploadSupport {
                     return $rtn;
                 }
 
-                $imgwh   = ['width' => 0, 'height' => 0];
-                $imgData = null;
+                $imgwh = ['width' => 0, 'height' => 0];
                 if (ImageTool::isImage($filePath)) {
                     if (($imgData = @getimagesize($filePath))) {
                         $imgwh['width']  = $imgData[0];
                         $imgwh['height'] = $imgData[1];
                     }
                     //添加水印
-                    if ($hasWater && ($water = $this->watermark())) {
+                    if ($hasWater && ($water || ($water = $this->watermark()))) {
                         $img = new ImageTool($filePath);
                         $img->watermark($water, App::cfg('watermark_pos@media', 'br'), App::cfg('watermark_min_size@media'));
                         unset($img);
                     }
                 }
-                if ($imgData && $checkResolution instanceof \Closure && ($chkRst = $checkResolution(...array_values($imgData))) !== true) {
-                    $rtn['error'] = ['code' => 423, 'message' => $chkRst ? $chkRst : '图片尺寸不正确'];
-                    @unlink($filePath);
+                $fileData = null;//文件数据信息
+                if ($fileMetaDataExtractor instanceof \Closure) {
+                    $fileData = $fileMetaDataExtractor(...[
+                        $filePath,
+                        $fsize,
+                        $imgwh['width'],
+                        $imgwh['height']
+                    ]);
+                    if (is_string($fileData)) {//直接返回错误信息了
+                        $rtn['error'] = ['code' => 423, 'message' => ($fileData ? $fileData : '文件不符合要求')];
+                        @unlink($filePath);
 
-                    return $rtn;
+                        return $rtn;
+                    } else if (!is_array($fileData) && !$fileData) {//没返回数据，也没返回真,肯定是不能上传的文件
+                        $rtn['error'] = ['code' => 423, 'message' => '文件不符合要求'];
+                        @unlink($filePath);
+
+                        return $rtn;
+                    }
                 }
                 $uploader = $uploader ? $uploader : Uploader::getUploader();
                 if ($uploader) {
@@ -229,10 +265,13 @@ trait UploadSupport {
                     }
                     if ($rst) {
                         $rst['size']   = $fsize;
+                        $rst['width']  = $imgwh['width'];
+                        $rst['height'] = $imgwh['height'];
+                        if (is_array($fileData)) {
+                            $rst['meta'] = $fileData;
+                        }
                         $rtn['result'] = $rst;
                         $rtn['done']   = 1;
-                        $rtn['width']  = $imgwh['width'];
-                        $rtn['height'] = $imgwh['height'];
                     } else {
                         $rtn['error'] = ['code' => 422, 'message' => $uploader->get_last_error()];
                     }
@@ -247,6 +286,7 @@ trait UploadSupport {
 
             return $rtn;
         }
+        $rtn['done']  = 2;
         $rtn['error'] = ['code' => 102, 'message' => '数据不完整'];
 
         return $rtn;
