@@ -23,7 +23,7 @@ namespace wulaphp\io;
 class UploadFile {
     private $file;
     private $maxSize           = 100000;
-    private $exts;
+    private $exts              = [];
     private $error             = null;
     private $metaDataExtractor = null;
     private $dest              = null;
@@ -207,7 +207,7 @@ class UploadFile {
 
     public function __get($name) {
         if (isset($this->{$name})) {
-            return $name;
+            return $this->{$name};
         }
 
         return null;

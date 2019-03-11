@@ -37,11 +37,13 @@ class ImageTool {
         'image/x-xpixmap'          => 'xpm'
     ];
     private        $file;
+    private        $ext;
     private static $POSITIONS = ['tl', 'tm', 'tr', 'ml', 'mm', 'mr', 'bl', 'bm', 'br'];
 
     public function __construct($file) {
         if (file_exists($file) && self::isImage($file)) {
             $this->file = $file;
+            $this->ext  = strtolower(ltrim(strrchr($file, '.'), '.'));
         } else {
             $this->file = false;
         }
@@ -99,6 +101,17 @@ class ImageTool {
         return $files;
     }
 
+    /**
+     * 裁剪
+     *
+     * @param int         $x
+     * @param int         $y
+     * @param int         $w
+     * @param int         $h
+     * @param string|null $destFile
+     *
+     * @return bool|null
+     */
     public function crop($x, $y, $w, $h, $destFile = null) {
         $file = $this->file;
         if ($this->file) {
@@ -143,6 +156,12 @@ class ImageTool {
         return $file;
     }
 
+    /**
+     * 通过打马赛克的方式去水印
+     *
+     * @param $pos
+     * @param $size
+     */
     public function mosaic($pos, $size) {
         if ($this->file) {
             $image = new \image ($this->file);
@@ -150,6 +169,78 @@ class ImageTool {
             $image->save($this->file);
             $image->destroyImage();
         }
+    }
+
+    /**
+     * 压缩优化。
+     * 1. png格式图片压缩需要通过`pngquant`，请安装它并在media配置中配置pngquant指向pngquant可执行文件。
+     * 2. 无法压缩gif图片.
+     *
+     * @param int    $quality
+     * @param string $file
+     *
+     * @return bool
+     */
+    public function optimize($quality = 70, $file = null) {
+        if ($this->ext == 'png') {
+            $pngquant = App::cfg('pngquant@media');
+            if ($pngquant && is_executable($pngquant)) {
+                $fileTmp        = $this->file . '.tmp';
+                $mq             = 90;
+                $quality        = min(max(intval($quality), 60), 89);
+                $cmd            = escapeshellcmd($pngquant);
+                $arg            = "-f --skip-if-larger --quality $quality-$mq -o " . escapeshellarg($fileTmp) . ' -- ' . escapeshellarg($this->file);
+                $descriptorspec = [
+                    0 => ["pipe", "r"],  // 标准输入，子进程从此管道中读取数据
+                    1 => ["pipe", "w"],  // 标准输出，子进程向此管道中写入数据
+                    2 => ["pipe", "w"] // 标准错误，子进程向此管道中写入数据
+                ];
+                $process        = @proc_open($cmd . ' ' . $arg, $descriptorspec, $pipes, APPROOT);
+                $output         = '';
+                $error          = '';
+                $rtn            = 1;
+                if ($process && is_resource($process)) {
+                    @stream_set_blocking($pipes[1], 0);
+                    @stream_set_blocking($pipes[2], 0);
+                    while (true) {
+                        $info = @proc_get_status($process);
+                        if (!$info) {
+                            break;
+                        }
+
+                        if (!$info['running']) {
+                            $rtn    = $info['exitcode'];
+                            $output = @fgets($pipes[1], 1024);
+                            $error  = @fgets($pipes[2], 1024);
+                            break;
+                        } else {
+                            usleep(200);
+                        }
+                    }
+
+                    foreach ($pipes as $p) {
+                        @fclose($p);
+                    }
+                    @proc_close($process);
+                }
+                if ($rtn) {
+                    log_warn(implode("\n", [$output, $error]), 'png');
+
+                    return false;
+                }
+
+                return @rename($fileTmp, $file ? $file : $this->file);
+            }
+        } else if ($this->ext == 'jpg' || $this->ext == 'jpeg') {
+            $img     = imagecreatefromjpeg($this->file);
+            $fileTmp = $this->file . '.tmp';
+
+            if (@imagejpeg($img, $fileTmp, min(max(intval($quality), 60), 90))) {
+                return @rename($fileTmp, $file ? $file : $this->file);
+            }
+        }
+
+        return false;
     }
 
     /**
