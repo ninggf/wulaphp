@@ -31,6 +31,22 @@ class RESTFulServerTest extends TestCase {
         return $arg;
     }
 
+    public function testServerSign1() {
+        $arg['api']         = 'testm.hello.greeting';
+        $arg['app_key']     = '123';
+        $arg['v']           = 1;
+        $arg['sign_method'] = 'md5';
+        $arg['format']      = 'json';
+        $arg['name']        = 'Leo';
+        $arg['age']         = 0;
+        $arg['timestamp']   = date('Y-m-d H:i:s');
+        $signer             = new DefaultSignChecker();
+        $sign               = $signer->sign($arg, '123', 'md5');
+        $arg['sign']        = $sign;
+
+        return $arg;
+    }
+
     public function testFileSign() {
         $arg['api']         = 'testm.hello.upload';
         $arg['app_key']     = '123';
@@ -81,5 +97,18 @@ class RESTFulServerTest extends TestCase {
         $rtn      = $curlient->post('http://127.0.0.1:9090/testm/api', $args);
 
         $this->assertEquals('{"response":{"name":"Leo","avatar":"a.txt"}}', $rtn);
+    }
+
+    /**
+     * @depends testServerSign1
+     *
+     * @param $args
+     */
+    public function testUnknownParam($args) {
+        $curlient = CurlClient::getClient(5);
+        $rtn      = $curlient->get('http://127.0.0.1:9090/testm/api?' . http_build_query($args));
+
+        $this->assertTrue(strpos($rtn, '40004') > 0);
+        $this->assertTrue(strpos($rtn, '"age"') > 0);
     }
 }

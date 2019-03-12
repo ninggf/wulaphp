@@ -146,7 +146,7 @@ class RESTFulServer {
                     return $this->generateResult($format, [
                         'error' => [
                             'code' => 40001,
-                            'msg'  => __('Miss arg: %s@restful', $name)
+                            'msg'  => __('Miss param: %s@restful', $name)
                         ]
                     ]);
                 }
@@ -188,6 +188,17 @@ class RESTFulServer {
             if (rqset('session')) {
                 $args['session'] = $session;
             }
+            $allreqs = Request::getInstance()->requests();
+            unset($allreqs['sign']);
+            if (($extra = array_diff_key($allreqs, $args))) {
+                return $this->generateResult($format, [
+                    'error' => [
+                        'code'   => 40004,
+                        'msg'    => __('unknown params@restful'),
+                        'params' => array_keys($extra)
+                    ]
+                ]);
+            }
             //开发模式
             $dev = $this->debug;
             if (!$dev) {
@@ -196,7 +207,7 @@ class RESTFulServer {
                 if ($sign !== $sign1) {
                     return $this->generateResult($format, [
                         'error' => [
-                            'code' => 40004,
+                            'code' => 40005,
                             'msg'  => __('invalid sign@restful')
                         ]
                     ]);
@@ -229,14 +240,14 @@ class RESTFulServer {
             } catch (\PDOException $pe) {
                 return $this->generateResult($format, [
                     'error' => [
-                        'code' => 40005,
+                        'code' => 40006,
                         'msg'  => __('Internal Error - database')
                     ]
                 ]);
             } catch (\Exception $e) {
                 log_error('[' . $api . '] failed! ' . $e->getMessage() . "\n" . var_export($dparams, true), 'api');
 
-                return $this->generateResult($format, ['error' => ['code' => 40006, 'msg' => $e->getMessage()]]);
+                return $this->generateResult($format, ['error' => ['code' => 40007, 'msg' => $e->getMessage()]]);
             } finally {
                 $clz->tearDown();
                 fire('restful\endApi', $api, time(), $args);

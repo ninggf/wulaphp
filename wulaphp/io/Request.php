@@ -147,6 +147,17 @@ class Request implements \ArrayAccess {
     }
 
     /**
+     * 获取所有请求数据.
+     *
+     * @param bool $xss_clean
+     *
+     * @return array
+     */
+    public function requests($xss_clean = true) {
+        return array_merge($xss_clean ? $_REQUEST : $this->requestData, $this->userData);
+    }
+
+    /**
      * 添加用户数据供下次使用.
      *
      * @param array $data

@@ -161,10 +161,11 @@ return [
         'module not found'               => '模块不存在',
         'unsupport request methd'        => '不支持的请求方法',
         'api not found'                  => 'API不存在',
-        'Miss arg: %s'                   => '缺少参数:%s',
+        'Miss param: %s'                   => '缺少参数:%s',
         'unsupport sign methd'           => '不支持的签名方法',
         'invalid app_key'                => '无效的app_key',
         'invalid sign'                   => '签名错误',
+        'unknown params'                 => '未知参数',
         'Not supported response format.' => '不支持的响应格式'
     ]
 ];
