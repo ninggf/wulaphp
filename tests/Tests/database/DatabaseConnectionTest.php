@@ -30,7 +30,7 @@ class DatabaseConnectionTest extends TestCase {
     public static function setUpBeforeClass() {
         $dbcfg   = [
             'driver'   => 'MySQL',
-            'host'     => 'localhost',
+            'host'     => '127.0.0.1',
             'user'     => 'root',
             'password' => ''
         ];
