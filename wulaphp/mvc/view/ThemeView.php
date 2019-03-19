@@ -2,6 +2,8 @@
 
 namespace wulaphp\mvc\view;
 
+use wulaphp\app\App;
+
 /**
  * 模板视图.
  *
@@ -74,9 +76,7 @@ class ThemeView extends View {
             fire('init_template_smarty_engine', $this->__smarty);
             $this->__smarty->compile_check = 1;
             if ($devMod) {
-                $this->__smarty->caching         = false;
-                $this->__smarty->debugging_ctrl  = 'URL';
-                $this->__smarty->smarty_debug_id = '_debug_wula';
+                $this->__smarty->caching = false;
             }
             $this->__smarty->error_reporting = defined('KS_ERROR_REPORT_LEVEL') ? KS_ERROR_REPORT_LEVEL : 0;
         } else {
@@ -103,6 +103,15 @@ class ThemeView extends View {
         }
         $this->__smarty->display($this->tpl);
         $content = @ob_get_clean();
+
+        if ($devMod && $content) {
+            $debugArg = App::cfg('debugArg', '');
+            if ($debugArg) {
+                $debugArg    = json_encode($this->data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                $debugString = '<script>console.log([\'pageData\',' . $debugArg . '])</script>';
+                $content     = str_replace('<!--pageEnd-->', $debugString, $content);
+            }
+        }
 
         return $content;
     }

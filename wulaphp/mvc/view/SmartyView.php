@@ -2,6 +2,8 @@
 
 namespace wulaphp\mvc\view;
 
+use wulaphp\app\App;
+
 /**
  * Smarty视图
  *
@@ -67,6 +69,7 @@ class SmartyView extends View implements IModuleView {
             $this->__smarty->setCompileDir(TMP_PATH . 'tpls_c' . DS . $sub);
             $this->__smarty->setCacheDir(TMP_PATH . 'tpls_cache' . DS . $sub);
             $this->__smarty->setDebugTemplate(SMARTY_DIR . 'debug.tpl');
+
             fire('init_smarty_engine', $this->__smarty);
             fire('init_view_smarty_engine', $this->__smarty);
             $this->__smarty->compile_check = 1;
@@ -101,6 +104,15 @@ class SmartyView extends View implements IModuleView {
 
         $this->__smarty->display($this->tpl . '.tpl');
         $content = @ob_get_clean();
+
+        if ($devMod && $content) {
+            $debugArg = App::cfg('debugArg', '');
+            if ($debugArg) {
+                $debugArg    = json_encode($this->data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                $debugString = '<script>console.log([\'pageData\',' . $debugArg . '])</script>';
+                $content     = str_replace('<!--pageEnd-->', $debugString, $content);
+            }
+        }
 
         return $content;
     }
