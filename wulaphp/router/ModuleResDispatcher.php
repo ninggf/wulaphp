@@ -20,7 +20,7 @@ use wulaphp\mvc\view\StaticFileView;
 class ModuleResDispatcher implements IURLDispatcher {
     public function dispatch($url, $router, $parsedInfo) {
         $chunk = explode('/', $url);
-        if (in_array($chunk[0], [MODULE_DIR, THEME_DIR])) {
+        if (in_array($chunk[0], apply_filter('allowed_res_dirs', [MODULE_DIR, THEME_DIR]))) {
             if (preg_match('#\.(png|jpe?g|gif|css|js|eot|ttf|woff|svg|json|html?)$#i', $url) && !preg_match('#/(composer\.json|phpunit\.xml|readme\.md|license.\md)$#i', $url)) {
                 $f = APPROOT . $url;
                 if (is_file($f) && is_readable($f)) {
