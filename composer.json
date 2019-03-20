@@ -47,6 +47,9 @@
             "email": "windywany@gmail.com"
         }
     ],
+    "bin": [
+        "bin/wulaphp"
+    ],
     "autoload": {
         "files": [
             "bootstrap.php"
