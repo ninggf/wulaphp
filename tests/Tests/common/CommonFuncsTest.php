@@ -28,6 +28,9 @@ class CommonFuncsTest extends TestCase {
     }
 
     public function testUnique_filename() {
+        if (!is_dir(TMP_PATH)) {
+            self::assertTrue(mkdir(TMP_PATH, 0755));
+        }
         $f1 = unique_filename(TMP_PATH, 'test.txt');
         self::assertEquals('test.txt', $f1);
         self::assertTrue(@file_put_contents(TMP_PATH . 'test.txt', 'test') > 0);
@@ -39,5 +42,9 @@ class CommonFuncsTest extends TestCase {
     public function testPure_comman_string() {
         $string = pure_comman_string('a,,b,,，c,   d,中国');
         self::assertEquals('a,b,c,d,中国', $string);
+    }
+
+    public static function tearDownAfterClass() {
+        @unlink(TMP_PATH);
     }
 }
