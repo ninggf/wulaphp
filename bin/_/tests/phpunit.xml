@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="./bootstrap.php"
+         backupGlobals="false"
+         backupStaticAttributes="false"
+         stopOnFailure="false"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false">
+
+    <testsuites>
+        <testsuite name="wula Test Suite">
+            <directory suffix="Test.php">demo/</directory>
+        </testsuite>
+    </testsuites>
+
+    <groups>
+        <exclude>
+            <!--<group>demo</group>-->
+        </exclude>
+    </groups>
+
+    <filter>
+        <!--<whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">../modules/</directory>
+            <exclude>
+            </exclude>
+        </whitelist>-->
+    </filter>
+
+    <logging>
+        <log type="junit" target="../storage/report/result.xml"/>
+        <log type="testdox-html" target="../storage/report/testdox.html"/>
+        <!--<log type="coverage-clover" target="../storage/report/coverage.xml"/>-->
+    </logging>
+
+</phpunit>

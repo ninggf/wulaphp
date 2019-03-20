@@ -1,0 +1,50 @@
+#!/usr/bin/env php
+<?php
+if (PHP_SAPI !== 'cli') {
+    echo 'ERROR: Artisan should be invoked via the CLI version of PHP, not the ' . PHP_SAPI . ' SAPI' . PHP_EOL;
+    exit(1);
+}
+
+if (!is_file('vendor/autoload.php')) {
+    if (isset($_SERVER['TERM']) && $_SERVER['TERM'] == 'xterm-256color') {
+        echo "\033[0;31mERROR:\033[0m\n\tPlease run \033[1;37m\033[41mcomposer install\033[0m first!\n";
+    } else {
+        echo "ERROR:\n\tPlease run 'composer install' first!\n";
+    }
+    exit(1);
+}
+
+include __DIR__ . '/bootstrap.php';
+if (@ob_get_status()) @ob_end_clean();
+// comand list
+$commands = [];
+/**@var \wulaphp\artisan\ArtisanCommand $cmd */
+foreach (apply_filter('artisan\getCommands', []) as $key => $cmd) {
+    if (is_numeric($key)) {
+        $commands[ $cmd->cmd() ] = $cmd;
+    } else {
+        $commands[ $key ] = $cmd;
+    }
+}
+ksort($commands);
+
+set_time_limit(0);
+$cmd = isset($argv[1]) ? $argv[1] : 'help';
+if ($cmd == '-v') {
+    $color = new \wulaphp\artisan\Colors();
+    echo $color->str('wulaphp', 'green'), ' version ', $color->str(WULA_VERSION, 'yellow'), ' ', WULA_RELEASE, "\n";
+    exit(0);
+} else if ($cmd == 'help' || $cmd == '--help' || $cmd == '-h') {
+    $cmdi = new \wulaphp\artisan\ArtisanHelpCommand();
+    exit($cmdi->run());
+} else if (!isset($commands[ $cmd ])) {
+    $cmdi = new \wulaphp\artisan\ArtisanHelpCommand();
+    if ($cmd{0} == '-') {
+        $cmdi->help("Unknown Option: " . $cmd);
+    } else {
+        $cmdi->help("Unknown Command: " . $cmd);
+    }
+} else {
+    exit($commands[ $cmd ]->run());
+}
+// end of artisan
