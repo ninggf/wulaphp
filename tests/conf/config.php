@@ -20,6 +20,6 @@ return [
         'path' => 'files'
     ],
     'domains' => [
-        'http://login.wulaphp.com' => 'login'
+        'http://login.wulaphp.com:9090' => 'login'
     ]
 ];

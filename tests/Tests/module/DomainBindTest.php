@@ -74,8 +74,8 @@ class DomainBindTest extends TestCase {
     }
 
     public function testURL() {
-        self::assertEquals('http://login.wulaphp.com/test/add', App::url('login/test/add'));
-        self::assertEquals('http://login.wulaphp.com/test/add', App::action('login\controllers\TestController::add'));
+        self::assertEquals('http://login.wulaphp.com:9090/test/add', App::url('login/test/add'));
+        self::assertEquals('http://login.wulaphp.com:9090/test/add', App::action('login\controllers\TestController::add'));
         self::assertEquals('/testm/add', App::url('testm/add'));
         self::assertEquals('/sub', App::action('\testm\controllers\TestController::sub'));
         self::assertEquals('/testm/test/add', App::action('\testm\controllers\TestController::add'));
@@ -86,7 +86,7 @@ class DomainBindTest extends TestCase {
         stream_set_timeout($sock, 0, 250000);
         $packets   = [];
         $packets[] = 'GET ' . $url . ' HTTP/1.0';
-        $packets[] = 'Host: ' . $host;
+        $packets[] = 'Host: ' . $host . ':9090';
         $packets[] = CLRF;
         $packet    = implode(CLRF, $packets);
         $rtn       = http_send($sock, $packet, $size);
