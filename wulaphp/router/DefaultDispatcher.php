@@ -36,7 +36,6 @@ class DefaultDispatcher implements IURLDispatcher {
         if (($strict_mode || is_null($strict_mode)) && $router->requestURI != '/' && substr($router->requestURI, -1, 1) == '/') {
             show_exception_page(new \Exception('wulaphp is running in strict mode'));
         }
-
         $controllers = explode('/', $url);
         $pms         = [];
         $len         = count($controllers);
@@ -101,6 +100,12 @@ class DefaultDispatcher implements IURLDispatcher {
             }
         }
         if ($namespace) {
+            //是否绑定到指定的域名
+            $domain = App::getModuleDomain($namespace);
+            if ($domain && $domain != VISITING_HOST) {
+                //模块不可用.
+                return null;
+            }
             $mm = App::getModuleById($namespace);
             if (!$mm->enabled) {
                 //模块不可用.
@@ -217,6 +222,9 @@ class DefaultDispatcher implements IURLDispatcher {
                                 if (is_array($view)) {
                                     $view = new JsonView($view);
                                 } else if (!$view instanceof View) {
+                                    if (is_object($view)) {
+                                        return $view;
+                                    }
                                     $view = new SimpleView($view);
                                 } else if (!$aryArgs) {
                                     self::prepareView($view, $module, $clz, $action);
@@ -324,6 +332,19 @@ class DefaultDispatcher implements IURLDispatcher {
         //查找子模块
         if (!$subnamespace) {
             //子模块路由
+            if ($mclz && $mclz->hasSubModule()) {
+                array_unshift($params, $action);
+
+                return [
+                    'wulaphp\mvc\controller\SubModuleRouter',
+                    'index',
+                    $params,
+                    null,
+                    'index',
+                    'index'
+                ];
+            }
+
             $controller_file = MODULES_PATH . $module . DS . 'Router.php';
             if (is_file($controller_file)) {
                 $controllerClz = $namespace . '\\Router';
@@ -340,17 +361,6 @@ class DefaultDispatcher implements IURLDispatcher {
                         'index'
                     ];
                 }
-            } else if ($mclz && $mclz->hasSubModule()) {
-                array_unshift($params, $action);
-
-                return [
-                    'wulaphp\mvc\controller\SubModuleRouter',
-                    'index',
-                    $params,
-                    null,
-                    'index',
-                    'index'
-                ];
             }
         }
 

@@ -297,7 +297,7 @@ class Response {
         } else if (is_array($view)) {
             $this->view = new JsonView ($view);
         } else if (is_object($view)) {
-            $this->view = new JsonView (get_class_vars($view));
+            $this->view = new JsonView (get_object_vars($view));
         }
 
         if ($this->view instanceof View) {

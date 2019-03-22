@@ -3,6 +3,7 @@
 namespace wulaphp\router;
 
 use ci\XssCleaner;
+use wulaphp\app\App;
 use wulaphp\io\Response;
 
 /**
@@ -16,12 +17,12 @@ class Router {
     private $dispatchers     = [];//分发器列表
     private $preDispatchers  = [];//前置分发器列表
     private $postDispatchers = [];//后置分发器列表
+    private $urlParsedInfo   = null;//解析的URL数据.
+    private $requestURL      = null;//解析后的URL
 
-    private $urlParsedInfo = null;//解析的URL数据.
-    private $requestURL    = null;//解析后的URL
-    public  $queryParams   = [];//QueryString 请求参数
-    public  $urlParams     = [];//URL中的参数
-    public  $requestURI;//请求URI
+    public $queryParams = [];//QueryString 请求参数
+    public $urlParams   = [];//URL中的参数
+    public $requestURI;//请求URI
     /**
      * @var Router
      */
@@ -86,20 +87,11 @@ class Router {
      * @return null|string
      */
     public static function getFullURI($noRU = false) {
-        if (isset($_SERVER ['REQUEST_URI'])) {
-            if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off') {
-                $schema = 'https://';
-            } else {
-                $schema = 'http://';
-            }
-            if ($noRU) {
-                return $schema . $_SERVER['HTTP_HOST'];
-            }
-
-            return $schema . $_SERVER['HTTP_HOST'] . $_SERVER ['REQUEST_URI'];
+        if (!$noRU && isset($_SERVER ['REQUEST_URI'])) {
+            return VISITING_HOST . $_SERVER ['REQUEST_URI'];
         }
 
-        return null;
+        return VISITING_HOST;
     }
 
     /**
@@ -220,6 +212,8 @@ class Router {
         if (!$url) {
             $url = 'index.html';
         }
+        //URL转换处理
+        $url              = $this->transform($url);
         $this->requestURL = $url;
         if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
             if ($alias === false) {
@@ -449,5 +443,26 @@ class Router {
         } else {
             return 'application/octet-stream';
         }
+    }
+
+    /**
+     * 根据域名将URL转换到指定模块。
+     *
+     * @param string $url 原URL
+     *
+     * @return string 转换后的URL
+     */
+    private function transform($url) {
+        $domains = App::acfg('domains@default');
+        if (isset($domains[ VISITING_HOST ]) && $domains[ VISITING_HOST ]) {
+            $dir = App::id2dir($domains[ VISITING_HOST ]);
+            if ($url == 'index.html') {
+                $url = $dir;
+            } else {
+                $url = $dir . '/' . $url;
+            }
+        }
+
+        return $url;
     }
 }

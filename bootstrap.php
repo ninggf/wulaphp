@@ -76,8 +76,16 @@ define('EXIT_ERROR', 1);
 define('EXIT_CONTINUE', 2);
 define('PHP_RUNTIME_NAME', php_sapi_name());
 if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']) {
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off') {
+        $schema = 'https://';
+    } else {
+        $schema = 'http://';
+    }
+    define('VISITING_HOST', $schema . $_SERVER['HTTP_HOST']);
     define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
+    unset($schema);
 } else {
+    define('VISITING_HOST', '');
     define('VISITING_DOMAIN', '');
 }
 if (@ini_get('register_globals')) {

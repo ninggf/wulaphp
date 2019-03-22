@@ -534,6 +534,26 @@ class App {
     }
 
     /**
+     * 获取模块绑定的域名.
+     *
+     * @param string $id 模块id
+     *
+     * @return string|null
+     */
+    public static function getModuleDomain($id) {
+        static $domains = null;
+        if ($domains === null) {
+            $domain  = App::acfg('domains@default');
+            $domains = @array_flip($domain);
+            if (!$domains) {
+                $domains = [];
+            }
+        }
+
+        return isset($domains[ $id ]) ? $domains[ $id ] : null;
+    }
+
+    /**
      * alias of getModule.
      *
      * @param string $id namespace of the module
@@ -609,15 +629,20 @@ class App {
             if (!preg_match('#^[a-z][a-z\d_-]*$#', $p)) {
                 throw new \InvalidArgumentException($p . ' is invalid, the valid prefix must be matched ^[a-z][a-z\d_-]*$');
             }
-            self::$prefix['char'][]      = $char;
-            self::$prefix['prefix'][]    = $p . '/';
-            self::$prefix['check'][ $p ] = $namespace;
+            if (!isset(self::$prefix['map'][ $char ])) {
+                self::$prefix['char'][]       = $char;
+                self::$prefix['prefix'][]     = $p . '/';
+                self::$prefix['map'][ $char ] = $p . '/';
+                self::$prefix['check'][ $p ]  = $namespace;
+            }
         } else {
             throw new \InvalidArgumentException('prefix is invalid');
         }
     }
 
     /**
+     * 检测字符$prefix是否是通过URL定义的分组.
+     *
      * @param string $prefix
      *
      * @return null|string
@@ -663,8 +688,8 @@ class App {
     /**
      * 生成模块url.
      *
-     * @param string $url
-     * @param bool   $replace
+     * @param string|array $url     URL
+     * @param bool         $replace 将URL中的id转换为dir
      *
      * @return string
      */
@@ -686,38 +711,57 @@ class App {
             if (defined('DEFAULT_MODULE')) {
                 $defaultModule = self::id2dir(DEFAULT_MODULE);
             } else {
-                $defaultModule = '';
+                $defaultModule = null;
             }
         }
-        $url = trim($url, '/');
-
+        if (is_array($url)) {
+            $host    = $url[0];
+            $url     = $url[1];
+            $replace = false;
+        }
+        $url  = trim($url, '/');
         $urls = explode('/', $url);
-        if ($replace) {
+
+        if ($replace) {//将url中的id替换成dir
             if (preg_match('/^([~!@#%\^&\*])(.+)$/', $urls[0], $ms)) {
                 $urls[0] = $ms[1] . App::id2dir($ms[2]);
             } else {
-                $urls[0] = App::id2dir($urls[0]);
+                if (($host = App::getModuleDomain($urls[0]))) {
+                    $urls[0] = '';
+                } else {
+                    $urls[0] = App::id2dir($urls[0]);
+                }
             }
         }
         if (self::$prefix) {
-            $urls[0] = str_replace(self::$prefix['char'], self::$prefix['prefix'], $urls[0]);
+            $urls[0] = preg_replace_callback('/^([~!@#%\^&\*])/', function ($ms) {
+                if (isset(self::$prefix['map'][ $ms[1] ])) {
+                    return self::$prefix['map'][ $ms[1] ];
+                }
+
+                return $ms[0];
+            }, $urls[0]);
         }
-        $rurl = implode('/', $urls);
-        //检测别名
-        if ($rurl) {
-            $key = array_search($rurl, $alias);
-            if ($key) {
-                $rurl = trim($key, '/');
+        $rurl = ltrim(str_replace('//', '/', implode('/', $urls)), '/');
+        if (isset($host) && $host) {
+            return $host . WWWROOT_DIR . $rurl;
+        } else {
+            //检测默认模块
+            if ($defaultModule && preg_match("#^$defaultModule#", $rurl)) {
+                //去掉默认模块路径
+                $rurl = trim(substr($rurl, strlen($defaultModule)), '/');
             }
-        }
 
-        //检测默认模块
-        if ($defaultModule && preg_match("#^$defaultModule#", $rurl)) {
-            //去掉默认模块路径
-            $rurl = trim(substr($rurl, strlen($defaultModule)), '/');
-        }
+            //检测别名
+            if ($rurl) {
+                $key = array_search($rurl, $alias);
+                if ($key) {
+                    $rurl = trim($key, '/');
+                }
+            }
 
-        return WWWROOT_DIR . $rurl;
+            return WWWROOT_DIR . $rurl;
+        }
     }
 
     /**
@@ -757,7 +801,7 @@ class App {
         if (!isset($prefixes[ $clz ])) {
             $clzs    = explode('\\', $clz);
             $id      = $clzs[0];
-            $clzs[0] = App::id2dir($id);
+            $clzs[0] = App::id2dir($id);//将dir转换为dir
             $file    = MODULES_PATH . implode(DS, $clzs) . '.php';
             if (!is_file($file)) {
                 return '#';
@@ -766,6 +810,11 @@ class App {
                 if (!class_exists($clz) || !is_subclass_of($clz, 'wulaphp\mvc\controller\Controller')) {
                     return '#';
                 }
+            }
+            if (($host = App::getModuleDomain($id))) {
+                $clzs[0] = '';
+            } else {
+                $host = null;
             }
             $ctrClz = array_pop($clzs);
             array_pop($clzs);
@@ -778,19 +827,19 @@ class App {
             }
 
             $prefix = '';
-            if (method_exists($clz, 'urlGroup')) {
+            if (!isset($host) && method_exists($clz, 'urlGroup')) {
                 $tprefix = ObjectCaller::callClzMethod($clz, 'urlGroup');
                 if ($tprefix && isset($tprefix[0])) {
                     $prefix = $tprefix[0];
                 }
             }
 
-            $prefixes[ $clz ] = $prefix . implode('/', $clzs);
+            $prefixes[ $clz ] = [$host, $prefix . implode('/', $clzs)];
         }
         if ($action && $action != 'index') {
-            return self::url($prefixes[ $clz ] . '/' . Router::addSlash($action), false);
+            return self::url([$prefixes[ $clz ][0], $prefixes[ $clz ][1] . '/' . Router::addSlash($action)], false);
         } else {
-            return self::url($prefixes[ $clz ], false);
+            return self::url([$prefixes[ $clz ][0], $prefixes[ $clz ][1]], false);
         }
     }
 

@@ -41,6 +41,7 @@ class UrlParsedInfo implements \ArrayAccess {
      */
     public function base($page) {
         if (!$this->urls) {
+            $urls = [];
             if ($this->ogpath) {
                 $urls [0] = implode('', [WWWROOT_DIR, $this->ogpath, '/', $this->ogname]);
             } else {
@@ -76,7 +77,7 @@ class UrlParsedInfo implements \ArrayAccess {
     public function reset() {
         $this->page        = 1;
         $this->total       = 1;
-        $this->urls        = false;
+        $this->urls        = [];
         $this->path        = $this->ogs[0];
         $this->ogpath      = $this->ogs[1];
         $this->name        = $this->ogs[2];
@@ -140,7 +141,7 @@ class UrlParsedInfo implements \ArrayAccess {
      * 解析URL
      */
     protected function parseURL() {
-        $cc     = explode('/', $this->url);
+        $cc     = explode('/', $this->uri);
         $chunks = [];
         foreach ($cc as $chunk) {
             $chunks[] = urldecode($chunk);
