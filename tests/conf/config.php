@@ -9,14 +9,17 @@
  */
 
 return [
-    'test1'  => 'test1 value',
-    'test2'  => ['key1' => 'hello', 'key2' => ['1', '2']],
-    'test4'  => 0,
-    'test5'  => '',
-    'test6'  => null,
-    'test7'  => false,
-    'upload' => [
+    'test1'   => 'test1 value',
+    'test2'   => ['key1' => 'hello', 'key2' => ['1', '2']],
+    'test4'   => 0,
+    'test5'   => '',
+    'test6'   => null,
+    'test7'   => false,
+    'upload'  => [
         'dir'  => 0,
         'path' => 'files'
+    ],
+    'domains' => [
+        'http://login.wulaphp.com' => 'login'
     ]
 ];
