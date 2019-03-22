@@ -60,11 +60,25 @@ class DomainBindTest extends TestCase {
     public function testDomainBind() {
         $rtn = $this->httpGet('/test/add', 'login.wulaphp.com');
         self::assertNotEmpty($rtn);
-        self::assertEmpty($rtn);
+        self::assertEquals('{"i":"","j":"1"}', $rtn);
+
+        //不能访问
+        $rtn = $this->httpGet('/test/add', '127.0.0.1');
+        self::assertNotEmpty($rtn);
+        self::assertContains('no route for /test/add', $rtn);
+
+        //不能访问
+        $rtn = $this->httpGet('/testm/test/sub', 'login.wulaphp.com');
+        self::assertNotEmpty($rtn);
+        self::assertContains('no route for /testm/test/sub', $rtn);
     }
 
     public function testURL() {
         self::assertEquals('http://login.wulaphp.com/test/add', App::url('login/test/add'));
+        self::assertEquals('http://login.wulaphp.com/test/add', App::action('login\controllers\TestController::add'));
+        self::assertEquals('/testm/add', App::url('testm/add'));
+        self::assertEquals('/sub', App::action('\testm\controllers\TestController::sub'));
+        self::assertEquals('/testm/test/add', App::action('\testm\controllers\TestController::add'));
     }
 
     private function httpGet($url, $host) {
