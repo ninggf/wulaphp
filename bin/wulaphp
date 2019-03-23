@@ -12,6 +12,7 @@
 namespace wulaphp\bin;
 
 define('SDIR', __DIR__ . DIRECTORY_SEPARATOR . '_' . DIRECTORY_SEPARATOR);
+
 if (isset($argv[1]) && $argv[1]) {
     switch ($argv[1]) {
         case 'upgrade':
@@ -19,6 +20,9 @@ if (isset($argv[1]) && $argv[1]) {
             break;
         case 'init':
             init();
+            break;
+        case 'conf':
+            conf();
             break;
         default:
             wulaHint();
@@ -87,6 +91,67 @@ function upgrade() {
 /**
  * @internal
  */
+function conf() {
+    global $argv;
+    if (isset($argv[2]) && $argv[2]) {
+        $type = $argv[2];
+    } else {
+        $type = 'nginx';
+    }
+    $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'wwwroot';
+
+    $apache = <<<ETC
+<VirtualHost *:80>
+    <Directory "$dir">
+        Options FollowSymLinks
+        AllowOverride All
+        Order allow,deny
+        Allow from all
+    </Directory>		
+    ServerAdmin your-email-address
+    DocumentRoot "$dir"
+    ServerName your_server_name
+    # other directives can be here
+</VirtualHost>
+ETC;
+    $nginx  = <<< ETC
+server {
+    listen       80;
+    #listen       443 ssl;
+    server_name  your_server_name;
+    root $dir;
+    location / {
+        index index.php index.html index.htm;
+        if (!-e \$request_filename){
+            rewrite ^(.*)$ index.php last;
+        }
+    }
+    location ~ /(assets|files)/.+\.(php[s345]?|tpl|inc)$ {
+        return 404;
+    }
+    location ~ \.php$ {
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  \$document_root/\$fastcgi_script_name;
+        #fastcgi_param  APPMODE pro;
+        include        fastcgi_params;
+    }
+    location ~ /\.ht {
+        deny  all;
+    }
+}
+ETC;
+
+    if ($type == 'apache') {
+        echo $apache, "\n";
+    } else {
+        echo $nginx, "\n";
+    }
+}
+
+/**
+ * @internal
+ */
 function getDestDir() {
     global $argv;
     if (isset($argv[2]) && $argv[2]) {
@@ -107,9 +172,12 @@ function getDestDir() {
  * @internal
  */
 function wulaHint() {
-    echo 'wulaphp 2.7.0 by Leo Ning and contributors.', "\n\n";
-    echo 'Usage: wulaphp <init|upgrade>', "\n\n";
-    echo "       init     init a wulaphp project\n";
-    echo "       upgrade  upgrade artisan tool\n";
+    echo 'wulaphp 2.8.0 by Leo Ning and contributors.', "\n\n";
+    echo 'Usage: wulaphp <init|upgrade> [dir]', "\n";
+    echo '       wulaphp conf [nginx|apache]', "\n\n";
+    echo "Commands:\n";
+    echo "       init [dir]           init a wulaphp project\n";
+    echo "       upgrade [dir]        upgrade artisan tool\n";
+    echo "       conf [nginx|apache]  show configuration for nginx or apache\n";
 }
 // end of wulaphp
