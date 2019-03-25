@@ -92,13 +92,48 @@ function upgrade() {
  * @internal
  */
 function conf() {
-    global $argv;
+    global $argv, $argc;
+    $domains = [];
     if (isset($argv[2]) && $argv[2]) {
-        $type = $argv[2];
+        if ($argv[2] == '--') {
+            for ($i = 3; $i < $argc; $i++) {
+                $domains[] = $argv[ $i ];
+            }
+            $type = 'nginx';
+        } else {
+            if (isset($argv[3])) {
+                if ($argv[3] == '--') {
+                    for ($i = 4; $i < $argc; $i++) {
+                        $domains[] = $argv[ $i ];
+                    }
+                } else {
+                    for ($i = 3; $i < $argc; $i++) {
+                        $domains[] = $argv[ $i ];
+                    }
+                }
+            }
+
+            $type = $argv[2];
+        }
     } else {
         $type = 'nginx';
     }
+
     $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'wwwroot';
+
+    if ($type == 'apache') {
+        if ($domains) {
+            $domain = 'ServerName ' . implode("\n    ServerName ", $domains);
+        } else {
+            $domain = 'ServerName your_server_name';
+        }
+    } else {
+        if ($domains) {
+            $domain = 'server_name  ' . implode(' ', $domains) . ';';
+        } else {
+            $domain = 'server_name  your_server_name;';
+        }
+    }
 
     $apache = <<<ETC
 <VirtualHost *:80>
@@ -110,7 +145,7 @@ function conf() {
     </Directory>		
     ServerAdmin your-email-address
     DocumentRoot "$dir"
-    ServerName your_server_name
+    $domain
     # other directives can be here
 </VirtualHost>
 ETC;
@@ -118,7 +153,7 @@ ETC;
 server {
     listen       80;
     #listen       443 ssl;
-    server_name  your_server_name;
+    $domain
     root $dir;
     location / {
         index index.php index.html index.htm;
@@ -174,7 +209,7 @@ function getDestDir() {
 function wulaHint() {
     echo 'wulaphp 2.8.0 by Leo Ning and contributors.', "\n\n";
     echo 'Usage: wulaphp <init|upgrade> [dir]', "\n";
-    echo '       wulaphp conf [nginx|apache]', "\n\n";
+    echo '       wulaphp conf [nginx|apache] [-- domain1 domain2 ...]', "\n\n";
     echo "Commands:\n";
     echo "       init [dir]           init a wulaphp project\n";
     echo "       upgrade [dir]        upgrade artisan tool\n";
