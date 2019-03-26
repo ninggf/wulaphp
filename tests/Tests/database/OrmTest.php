@@ -40,6 +40,7 @@ class OrmTest extends TestCase {
 
         $dbcfg['dbname'] = self::$dbname;
         self::$con       = App::db($dbcfg);
+        self::assertNotNull(self::$con);
 
         $sqls[] = <<<SQL
 CREATE TABLE `user` (
@@ -131,7 +132,6 @@ SQL;
             $rst = self::$con->exec($sql);
             self::assertTrue($rst, $sql);
         }
-        self::assertNotNull(self::$con);
     }
 
     public static function tearDownAfterClass() {

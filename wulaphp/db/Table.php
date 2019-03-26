@@ -245,7 +245,7 @@ abstract class Table extends View {
      * @return boolean 成功true，失败false.
      * @throws
      */
-    protected final function recycle($con, $uid = 0, $cb = null) {
+    public final function recycle($con, $uid = 0, $cb = null) {
         if (!$con) {
             return false;
         }
@@ -304,6 +304,7 @@ abstract class Table extends View {
             }
         }
         if ($traits) {
+            $traits = array_unique($traits);
             foreach ($traits as $tt) {
                 $tts   = explode('\\', $tt);
                 $fname = $tts[ count($tts) - 1 ];

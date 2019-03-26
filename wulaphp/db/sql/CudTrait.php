@@ -24,7 +24,7 @@ trait CudTrait {
     }
 
     /**
-     * alias of exec
+     * alias of exec with '$checkNum = false'
      *
      * @return bool
      */
@@ -35,8 +35,12 @@ trait CudTrait {
     /**
      * 执行update,insert,delete语句.
      *
-     * @param boolean $checkNum false 不检测,null直接返回影响的数量
-     *                          是否检测影响的条数.
+     * @param boolean|null $checkNum    是否检测影响的条数 .
+     *                                  1. false不检测影响的行数，SQL语句执行成功返回true，反之false；
+     *                                  1.1 如果是insert语句执行成功则返回auto_increment ID.
+     *                                  2. true影响的行数大于0时返回true,反之返回false；
+     *                                  3. null直接返回影响的行数；
+     *
      *
      * @return boolean|int|mixed
      * @throws \PDOException

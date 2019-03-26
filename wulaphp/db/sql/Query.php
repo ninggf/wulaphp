@@ -155,15 +155,20 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * 生成树型SELECT Options.
      *
-     * @param array   $options 结果数组引用.
-     * @param string  $keyfield
-     * @param string  $upfield
-     * @param string  $varfield
-     * @param string  $stop
-     * @param integer $from
-     * @param integer $level
+     * @param array          $options  结果数组引用.
+     * @param string         $keyfield 主键字段，默认为id
+     * @param string         $upfield  , 指向父ID字段，默认为upid
+     * @param string         $varfield 值字段
+     * @param int|null|array $stop     跳过ID(s)
+     * @param int            $from     从哪个节点开始,默认从0（顶级）开始
+     * @param int            $level    层级（内部递归时使用)
      */
     public function tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0) {
+        $from  = intval($from);
+        $level = intval($level);
+        if ($stop && !is_array($stop)) {
+            $stop = [$stop];
+        }
         if ($level == 0) {
             $con = new Condition ([$upfield => $from]);
             $this->field($upfield)->field($varfield);
@@ -172,12 +177,10 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
             //更新查询条件，重新查询
             $this->updateWhereData([$upfield => $from]);
         }
-
         $rows = $this->toArray();
-
         if ($rows) {
             if ($this->treePad && $level > 0) {
-                $pad = str_replace('~', '&nbsp;', str_pad('~', ($level * 2), '~', STR_PAD_LEFT));
+                $pad = str_replace('~', '&nbsp;', str_pad('~', ($level * 2), '~', STR_PAD_LEFT)) . ' ';
             } else {
                 $pad = '';
             }
@@ -187,9 +190,9 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
                     $tkey = $data [ $this->treeKey ];
                 }
                 $var = $data [ $varfield ];
-                if ($stop == null || $key != $stop) {
+                if ($stop == null || !in_array($key, $stop)) {
                     if ($this->treePad) {
-                        $options [ $tkey ] = $pad . ' ' . $var;
+                        $options [ $tkey ] = $pad . $var;
                     } else {
                         $options [ $tkey ] = $var;
                     }
@@ -444,14 +447,14 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 
             return $this->resultSets;
         } else if ($var != null) {
-            if ($cb) {
+            if ($cb instanceof \Closure) {
                 foreach ($this->resultSets as $row) {
                     $value = $row [ $var ];
                     if ($key != null && isset ($row [ $key ])) {
                         $id           = $row [ $key ];
-                        $rows [ $id ] = @$cb($value);
+                        $rows [ $id ] = $cb($value, $id);
                     } else {
-                        $rows [] = @$cb($value);
+                        $rows [] = $cb($value);
                     }
                 }
             } else {
@@ -468,10 +471,10 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 
             return $rows;
         } else if ($key != null) {
-            if ($cb) {
+            if ($cb instanceof \Closure) {
                 foreach ($this->resultSets as $row) {
                     $id           = $row [ $key ];
-                    $rows [ $id ] = @$cb($row);
+                    $rows [ $id ] = $cb($row);
                 }
             } else {
                 foreach ($this->resultSets as $row) {
@@ -529,19 +532,25 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * @param array  $crumbs [0=>[$idkey=>idvalue,$upkey=>keyvalue]]
      * @param string $idkey
      * @param string $upkey
+     * @param int    $level  内部使用,从0开始
      */
-    public function recurse(&$crumbs, $idkey = 'id', $upkey = 'upid') {
-        if (!$this->where) {
+    public function recurse(&$crumbs, $idkey = 'id', $upkey = 'upid', $level = 0) {
+        if ($this->where) {
+            if ($level == 0) {
+                $con = new Condition ([$idkey => $crumbs [0] [ $upkey ]]);
+                $this->where($con);
+            } else {
+                $this->updateWhereData([$idkey => $crumbs [0] [ $upkey ]]);
+            }
+        } else {
             $con = new Condition ([$idkey => $crumbs [0] [ $upkey ]]);
             $this->where($con, false);
-        } else {
-            $this->updateWhereData([$idkey => $crumbs [0] [ $upkey ]]);
         }
         $rst = $this->get();
         if ($rst) {
             array_unshift($crumbs, $rst);
             if (!empty ($rst [ $upkey ])) {
-                $this->recurse($crumbs, $idkey, $upkey);
+                $this->recurse($crumbs, $idkey, $upkey, $level + 1);
             }
         }
     }
