@@ -10,29 +10,8 @@
 
 namespace wulaphp\form\providor;
 
-use wulaphp\form\FormTable;
-
 class JsonDataProvidor extends FieldDataProvidor {
-	public function getData($search = false) {
-		return (array)$this->optionAry;
-	}
-
-	public function createConfigForm() {
-		$form = new JsonDataProvidorForm(true);
-		$form->inflateByData(['dsCfg' => $this->option]);
-
-		return $form;
-	}
-}
-
-class JsonDataProvidorForm extends FormTable {
-	public $table = null;
-	/**
-	 * JSON数据
-	 * @var \backend\form\TextareaField
-	 * @type string
-	 * @layout 2,col-xs-12
-	 * @option {"row":6}
-	 */
-	public $dsCfg;
+    public function getData($search = false) {
+        return (array)$this->optionAry;
+    }
 }

@@ -8,8 +8,6 @@
 namespace wulaphp\form\providor;
 
 use wulaphp\db\SimpleTable;
-use wulaphp\form\FormTable;
-use wulaphp\validator\JQueryValidator;
 
 /**
  * dsCfg:{
@@ -88,81 +86,4 @@ class TableDataProvidor extends FieldDataProvidor {
             }
         }
     }
-
-    public function createConfigForm() {
-        $form = new TableDataProvidorForm(true);
-        $form->inflateByData($this->optionAry);
-
-        return $form;
-    }
-}
-
-/**
- * Class TableDataProvidorForm
- * @package wulaphp\form\providor
- * @internal
- */
-class TableDataProvidorForm extends FormTable {
-    use JQueryValidator;
-    public $table = null;
-    /**
-     * 表名
-     * @var \backend\form\TextField
-     * @type string
-     * @required
-     * @layout 1,col-xs-4
-     */
-    public $tableName;
-    /**
-     * 值字段
-     * @var  \backend\form\TextField
-     * @type string
-     * @required
-     * @layout 1,col-xs-4
-     */
-    public $key = 'id';
-    /**
-     * 文本字段
-     * @var \backend\form\TextField
-     * @type string
-     * @required
-     * @layout 1,col-xs-4
-     */
-    public $fields = 'name';
-    /**
-     * 条件
-     * @var \backend\form\TextField
-     * @type string
-     * @layout 2,col-xs-12
-     */
-    public $where;
-    /**
-     * 解析条件中的变量
-     * @var \backend\form\CheckboxField
-     * @type bool
-     * @layout 3,col-xs-12
-     */
-    public $eval = 0;
-    /**
-     * 排序
-     * @var \backend\form\TextField
-     * @type string
-     * @note   格式: field a,field2 d
-     * @layout 4,col-xs-12
-     */
-    public $orderBy;
-    /**
-     * 默认选项提示文字
-     * @var \backend\form\TextField
-     * @type string
-     * @layout 5,col-xs-8
-     */
-    public $option;
-    /**
-     * 树型选项父字段
-     * @var \backend\form\TextField
-     * @type string
-     * @layout 5,col-xs-4
-     */
-    public $pid;
 }
