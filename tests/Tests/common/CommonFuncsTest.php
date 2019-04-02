@@ -44,6 +44,64 @@ class CommonFuncsTest extends TestCase {
         self::assertEquals('a,b,c,d,中国', $string);
     }
 
+    public function testKeepargs() {
+        $url = keepargs('ni.html?a=1&b=2&c=3&d=4', ['b', 'c']);
+        self::assertEquals('ni.html?b=2&c=3', $url);
+    }
+
+    public function testUnkeepargs() {
+        $url = unkeepargs('ni.html?a=1&b=2&c=3&d=4', ['b', 'c']);
+        self::assertEquals('ni.html?a=1&d=4', $url);
+    }
+
+    public function testSafeIds() {
+        $ids = safe_ids('1,2,a,b,c,3');
+        self::assertEquals('1,2,3', $ids);
+        $ids2 = safe_ids('1-2-a-b-c-3', '-');
+        self::assertEquals('1-2-3', $ids2);
+        $ids = safe_ids('1,2,a,b,c,3', ',', true);
+        self::assertContains('1', $ids);
+        self::assertContains('2', $ids);
+        self::assertContains('3', $ids);
+
+        $ids = safe_ids2('1,2,a,b,c,3');
+        self::assertContains('1', $ids);
+        self::assertContains('2', $ids);
+        self::assertContains('3', $ids);
+    }
+
+    public function testUrl_append_args() {
+        self::assertEquals('ni.html?d=4&e=5', url_append_args('ni.html', ['d' => 4, 'e' => 5]));
+        $url  = 'ni.html?a=1&b=2&c=3';
+        $url1 = url_append_args($url, ['c' => 4, 'd' => 4, 'e' => 5]);
+        self::assertEquals('ni.html?a=1&b=2&c=4&d=4&e=5', $url1);
+        $url1 = url_append_args($url, ['c' => 4, 'd' => 4, 'e' => 5], false);
+        self::assertEquals('ni.html?a=1&b=2&c=3&d=4&e=5', $url1);
+    }
+
+    public function testIn_atag() {
+        $content = <<< CNT
+        <div>adafad adfa adfasdf adsfas adfaf
+        adsfasdf <p>adsfasdf adsfasdfad afdasdf adsfasdf adsfasdf adsfasdf
+        adsfasdf adsfa<a href="#" title="这个厉害">China</a> adfa word adfasdf<a href="#" 
+        class="adsfasd">nihao</a> adfasdf adfasdf adsfasdf</p>
+        adsfasdf adsfasdf adsfasdf<img src="#" style="asdfasdf"> adsfasdf adfasdf asdfasdf adsfasdf</div>
+CNT;
+
+        $rst = in_atag($content, 'nihao');
+        self::assertTrue($rst);
+        $rst = in_atag($content, 'China');
+        self::assertTrue($rst);
+        $rst = in_atag($content, '厉害');
+        self::assertTrue($rst);
+        $rst = in_atag($content, 'word');
+        self::assertTrue(!$rst);
+        $rst = in_atag($content, '中国');
+        self::assertTrue(!$rst);
+        $rst = in_atag($content, 'style');
+        self::assertTrue($rst);
+    }
+
     public static function tearDownAfterClass() {
         @unlink(TMP_PATH);
     }

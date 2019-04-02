@@ -221,6 +221,7 @@ class Request implements \ArrayAccess {
             $cip = $_SERVER ["HTTP_CLIENT_IP"];
         } else if (!empty ($_SERVER ["HTTP_X_FORWARDED_FOR"])) {
             $cip = $_SERVER ["HTTP_X_FORWARDED_FOR"];
+            $cip = trim(implode(',', $cip)[0]);
         } else if (!empty ($_SERVER ["REMOTE_ADDR"])) {
             $cip = $_SERVER ["REMOTE_ADDR"];
         } else {

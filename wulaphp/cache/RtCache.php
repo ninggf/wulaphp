@@ -35,14 +35,14 @@ namespace wulaphp\cache {
                 if (APP_MODE != 'pro') {
                     RtCache::$CACHE = new Cache ();
                 } else if (defined('RUN_IN_CLUSTER')) {//部署到集群中，使用REDIS
-                    $loader = new ConfigurationLoader();
-                    $cfg    = $loader->loadConfig('cluster');
-                    $cache  = $cfg->getb('enabled', false) ? RedisCache::getInstance($cfg) : null;
+                    $cfg   = ConfigurationLoader::loadFromFile('cluster');
+                    $cache = $cfg->getb('enabled', false) ? RedisCache::getInstance($cfg) : null;
                     if ($cache) {
                         RtCache::$CACHE = $cache;
                     } else {
                         RtCache::$CACHE = new Cache();
                     }
+                    unset($cfg);
                 } else if (extension_loaded('yac')) {
                     RtCache::$CACHE = new YacCache();
                 } else if (function_exists('apcu_store')) {
