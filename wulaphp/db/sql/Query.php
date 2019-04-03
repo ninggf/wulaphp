@@ -25,6 +25,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     private $orm            = null;
     private $eagerFields    = [];
     private $forupdate      = false;
+    private $executeSql     = ''; // 执行时的Sql语句
 
     /**
      * Query constructor.
@@ -715,12 +716,14 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
         //执行
         if ($this->statement) {
             try {
+                $this->executeSql = $this->sql;
                 if ($this->values) {
                     foreach ($this->values as $value) {
                         list ($name, $val, $type, $field, $rkey) = $value;
                         if ($this->whereData) {
                             $val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
                         }
+                        $this->executeSql = str_replace($name, $val, $this->executeSql);
                         if (!$this->statement->bindValue($name, $val, $type)) {
                             $this->errorSQL    = $this->sql;
                             $this->errorValues = $this->values->__toString();
@@ -875,5 +878,13 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
         $q->countperformed = true;
 
         return $q;
+    }
+
+    /**
+     * 获取指定的Sql语句 $query->getExecuteSql();
+     * @return string
+     */
+    public function getExecuteSql() {
+        return $this->executeSql;
     }
 }
