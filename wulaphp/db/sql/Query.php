@@ -584,7 +584,22 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * @return null|string
      */
     public function getSqlString() {
-        return $this->__toString();
+        $sql = $this->__toString();
+        if ($sql && $this->values) {
+            foreach ($this->values as $value) {
+                list ($name, $val, $type, , $rkey) = $value;
+                if ($this->whereData) {
+                    $val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
+                }
+                if ($type == \PDO::PARAM_STR) {
+                    $sql = str_replace($name, $this->dialect->quote($val), $sql);
+                } else {
+                    $sql = str_replace($name, $val, $sql);
+                }
+            }
+        }
+
+        return $sql;
     }
 
     /**
@@ -630,8 +645,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     }
 
     /**
-     * @see \Iterator::current()
      * @return \wulaphp\db\sql\Query|mixed
+     * @see \Iterator::current()
      */
     public function current() {
         return $this;
@@ -648,16 +663,16 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     }
 
     /**
-     * @see \Iterator::key()
      * @return int|mixed
+     * @see \Iterator::key()
      */
     public function key() {
         return $this->resultIdx;
     }
 
     /**
-     * @see \Iterator::valid()
      * @return bool
+     * @see \Iterator::valid()
      */
     public function valid() {
         return $this->resultIdx <= $this->maxIdx && $this->size > 0;
@@ -834,6 +849,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
         }
         if (!$this->values) {
             $this->values = new BindValues ();
+        } else {
+            $this->values->reset();
         }
         $fields = $this->prepareFields($this->fields, $this->values);
         $from   = $this->prepareFrom($this->sanitize($this->from));

@@ -29,7 +29,7 @@ class UpdateSQL extends QueryBuilder {
     }
 
     /**
-     * 连表.
+     * 更新表（同update）。
      *
      * @param string $table
      *
@@ -42,11 +42,24 @@ class UpdateSQL extends QueryBuilder {
     }
 
     /**
-     * 连表(同@see \wulaphp\db\sql\UpdateSQL::table()).
+     * 更新表。
      *
      * @param string $table
      *
      * @return $this
+     */
+    public function update($table) {
+        $this->from[] = self::parseAs($table);
+
+        return $this;
+    }
+
+    /**
+     * 连表(同@param string $table
+     *
+     * @return $this
+     * @see \wulaphp\db\sql\UpdateSQL::table()).
+     *
      */
     public function from($table) {
         $this->from[] = self::parseAs($table);
@@ -74,28 +87,8 @@ class UpdateSQL extends QueryBuilder {
      * @return bool|int
      */
     public function count() {
-        if (empty ($this->from)) {
-            $this->error = 'no table specified!';
-
-            return false;
-        }
-        try {
-            $this->checkDialect();
-        } catch (\Exception $e) {
-            $this->error = $e->getMessage();
-
-            return false;
-        }
-        $values = new BindValues ();
-        $froms  = $this->prepareFrom($this->sanitize($this->from));
-        $order  = $this->sanitize($this->order);
-        $ids    = array_keys($this->data);
-        $data   = $this->batch ? $this->data[ $ids [0] ][0] : $this->data;
-        if ($this->batch) {
-            $this->where($this->data[ $ids [0] ][1]);
-        }
-        $sql       = $this->dialect->getUpdateSQL($froms, $data, $this->where, $values, $order, $this->limit);
-        $this->sql = $sql;
+        $sql    = $this->getSQL();
+        $values = $this->values;
         if ($sql) {
             try {
                 $statement = $this->dialect->prepare($sql);
@@ -168,5 +161,41 @@ class UpdateSQL extends QueryBuilder {
         }
 
         return false;
+    }
+
+    protected function getSQL() {
+        if ($this->sql) {
+            return $this->sql;
+        }
+
+        if (empty ($this->from)) {
+            $this->error = 'no table specified!';
+
+            return false;
+        }
+        try {
+            $this->checkDialect();
+        } catch (\Exception $e) {
+            $this->error = $e->getMessage();
+
+            return false;
+        }
+
+        if (!$this->values) {
+            $this->values = new BindValues ();
+        } else {
+            $this->values->reset();
+        }
+
+        $froms = $this->prepareFrom($this->sanitize($this->from));
+        $order = $this->sanitize($this->order);
+        $ids   = array_keys($this->data);
+        $data  = $this->batch ? $this->data[ $ids [0] ][0] : $this->data;
+        if ($this->batch) {
+            $this->where($this->data[ $ids [0] ][1]);
+        }
+        $this->sql = $this->dialect->getUpdateSQL($froms, $data, $this->where, $this->values, $order, $this->limit);
+
+        return $this->sql;
     }
 }

@@ -83,12 +83,33 @@ trait CudTrait {
         return $this->exec(null);
     }
 
+    public function __toString() {
+        return strval($this->getSQL());
+    }
+
     /**
      * 获取SQL语句.
      *
      * @return string
      */
     public function getSqlString() {
-        return strval($this->sql);
+        $sql = $this->getSQL();
+        if ($sql && $this->values) {
+            foreach ($this->values as $value) {
+                list ($name, $val, $type, , $rkey) = $value;
+                if ($this->whereData) {
+                    $val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
+                }
+                if ($type == \PDO::PARAM_STR) {
+                    $sql = str_replace($name, $this->dialect->quote($val), $sql);
+                } else {
+                    $sql = str_replace($name, $val, $sql);
+                }
+            }
+        }
+
+        return $sql;
     }
+
+    protected abstract function getSQL();
 }

@@ -134,7 +134,7 @@ abstract class DatabaseDialect extends \PDO {
      * @return string
      */
     public function getTableName($table) {
-        if (preg_match('#^\{[^\}]+\}.*$#', $table)) {
+        if (preg_match('#^`?\{[^\}]+\}.*$#', $table)) {
             return str_replace(['{', '}'], [$this->tablePrefix, ''], $table);
         } else {
             return $table;
