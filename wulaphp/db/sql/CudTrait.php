@@ -50,9 +50,6 @@ trait CudTrait {
         if ($cnt === false) {
             if ($this->exception instanceof \PDOException) {
                 $this->error = $this->exception->getMessage();
-                log_error($this->error . '[' . $this->getSqlString() . ']', 'sql.err');
-
-                return false;
             }
             log_error($this->error . '[' . $this->getSqlString() . ']', 'sql.err');
 

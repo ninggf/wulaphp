@@ -142,10 +142,10 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
         if ($cnt === false) {
             if ($this->exception instanceof \PDOException) {
                 $this->error = $this->exception->getMessage();
-                log_error($this->error . '[' . $this->getSqlString() . ']', 'sql.err');
-
-                return 0;
             }
+            log_error($this->error . '[' . $this->getSqlString() . ']', 'sql.err');
+
+            return 0;
         } else if ($this instanceof InsertSQL) {
             $ids = $this->lastInsertIds();
         }
