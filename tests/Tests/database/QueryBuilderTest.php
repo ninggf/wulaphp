@@ -63,13 +63,18 @@ class QueryBuilderTest extends TestCase {
         $sql = $q->getSqlString();
         self::assertEquals('SELECT *,a-b AS `abd` FROM `table` AS T WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
 
-        $cnt  = self::$con->select(imv('COUNT(*)', 'cnt'))->from('{item} AS IT')->where(['IT.tid' => imv('T.id')]);
+        $cnt  = self::$con->select(imv('COUNT(*)', 'cnt'))->from('{item} AS IT')->where([
+            'IT.tid' => imv('T.id'),
+            'name'   => 'abc'
+        ]);
         $sql1 = $cnt->getSqlString();
-        self::assertEquals('SELECT COUNT(*) AS `cnt` FROM item AS IT WHERE `IT`.`tid` = T.id', $sql1);
+        self::assertEquals('SELECT COUNT(*) AS `cnt` FROM item AS IT WHERE `IT`.`tid` = T.id AND `name` = \'abc\'', $sql1);
 
         $q->field($cnt, 'cntt');
+        $sql = $q . '';
+        self::assertEquals('SELECT *,a-b AS `abd`,(SELECT COUNT(*) AS `cnt` FROM item AS IT WHERE `IT`.`tid` = T.id AND `name` = :name_0) AS `cntt` FROM `table` AS T WHERE `id` = :id_0 AND `name` LIKE :name_1 ORDER BY `id` ASC , `name` DESC LIMIT :limit_0,:limit_1', $sql);
         $sql = $q->getSqlString();
-        self::assertEquals('SELECT *,a-b AS `abd`,(SELECT COUNT(*) AS `cnt` FROM item AS IT WHERE `IT`.`tid` = T.id) AS `cntt` FROM `table` AS T WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
+        self::assertEquals('SELECT *,a-b AS `abd`,(SELECT COUNT(*) AS `cnt` FROM item AS IT WHERE `IT`.`tid` = T.id AND `name` = \'abc\') AS `cntt` FROM `table` AS T WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
     }
 
     public function testUpdateGetSqlString() {

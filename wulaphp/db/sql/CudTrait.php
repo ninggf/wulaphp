@@ -50,9 +50,11 @@ trait CudTrait {
         if ($cnt === false) {
             if ($this->exception instanceof \PDOException) {
                 $this->error = $this->exception->getMessage();
+                log_error($this->error, 'sql.err');
 
                 return false;
             }
+            log_error($this->error . '[' . $this->getSqlString() . ']', 'sql.err');
 
             return is_null($checkNum) ? 0 : false;
         } else if ($this instanceof InsertSQL) {
@@ -83,6 +85,9 @@ trait CudTrait {
         return $this->exec(null);
     }
 
+    /**
+     * @return string
+     */
     public function __toString() {
         return strval($this->getSQL());
     }
@@ -111,5 +116,8 @@ trait CudTrait {
         return $sql;
     }
 
+    /**
+     * @return string|null|bool
+     */
     protected abstract function getSQL();
 }

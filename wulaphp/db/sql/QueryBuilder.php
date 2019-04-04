@@ -42,7 +42,8 @@ abstract class QueryBuilder {
     /**
      * @var BindValues
      */
-    protected $values = null;
+    protected $values     = null;
+    protected $valueFixed = false;//子查询时需锁定
 
     public function __destruct() {
         $this->close();
@@ -370,7 +371,8 @@ abstract class QueryBuilder {
      * @param BindValues $values
      */
     public function setBindValues($values) {
-        $this->values = $values;
+        $this->values     = $values;
+        $this->valueFixed = true;
     }
 
     /**

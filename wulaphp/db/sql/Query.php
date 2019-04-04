@@ -849,7 +849,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
         }
         if (!$this->values) {
             $this->values = new BindValues ();
-        } else {
+        } else if (!$this->valueFixed) {
             $this->values->reset();
         }
         $fields = $this->prepareFields($this->fields, $this->values);
@@ -875,7 +875,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
             $this->size        = false;
             $this->errorSQL    = $this->sql;
             $this->errorValues = $this->values->__toString();
-            log_error($this->error . '[' . $this->sql . ']', 'sql.err');
+            log_error($this->error . '[' . $this->getSqlString() . ']', 'sql.err');
         }
     }
 

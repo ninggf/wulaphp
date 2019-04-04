@@ -71,6 +71,18 @@ CREATE TABLE `{test_account}` (
 SQL;
         $rst  = self::$con->exec($sql1);
         self::assertTrue($rst, 'cannot create table: test_account');
+
+        $sql2 = <<<SQL
+CREATE TABLE `{types}` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `price` FLOAT NOT NULL,
+    `quantity` INT NOT NULL,
+    `amount` DECIMAL(10 , 2 ) NOT NULL,
+    PRIMARY KEY (`id`)
+)  ENGINE=INNODB DEFAULT CHARACTER SET=UTF8 COMMENT '类型测试'
+SQL;
+        $rst  = self::$con->exec($sql2);
+        self::assertTrue($rst, 'cannot create table: types');
     }
 
     public function testConnect() {
@@ -245,10 +257,76 @@ SQL;
         self::assertNotEmpty($rst);
     }
 
+    /**
+     * @param $db
+     *
+     * @depends testConnect
+     */
+    public function testTypes(DatabaseConnection $db) {
+        $data['price']    = 1.2;
+        $data['quantity'] = 2;
+        $data['amount']   = 2.4;
+        $t                = $db->insert($data)->into('types')->newId();
+
+        self::assertTrue(!!$t);
+        $rdata = $db->queryOne('select * from types where id = ' . $t);
+        self::assertEquals(1.2, $rdata['price']);
+        self::assertEquals(2, $rdata['quantity']);
+        self::assertEquals(2.40, $rdata['amount']);
+
+        $data['price']    = 1.25;
+        $data['quantity'] = 2;
+        $data['amount']   = imv('price*quantity');
+        $t                = $db->insert($data)->into('types')->newId();
+
+        self::assertTrue(!!$t);
+        $rdata = $db->queryOne('select * from types where id = ' . $t);
+        self::assertEquals(1.25, $rdata['price']);
+        self::assertEquals(2, $rdata['quantity']);
+        self::assertEquals(2.50, $rdata['amount']);
+
+        $data['price']    = '1.25';
+        $data['quantity'] = '4';
+        $data['amount']   = imv('price*quantity');
+        $q                = $db->insert($data)->into('types');
+        $t                = $q->newId();
+        $sql              = $q->getSqlString();
+        self::assertTrue(!!$t);
+        self::assertEquals('INSERT INTO types (`price`,`quantity`,`amount`) VALUES (\'1.25\' , \'4\' , price*quantity)', $sql);
+
+        $rdata = $db->queryOne('select * from types where id = ' . $t);
+        self::assertEquals(1.25, $rdata['price']);
+        self::assertEquals(4, $rdata['quantity']);
+        self::assertTrue('5.00' === $rdata['amount'], '5.00!=' . $rdata['amount']);
+
+        $data['price']    = 'abc';
+        $data['quantity'] = 2;
+        $data['amount']   = 2.4;
+        $q                = $db->insert($data)->into('types');
+        $t                = $q->newId();
+        $err              = $q->lastError();
+        $sql              = $q->getSqlString();
+        self::assertNotTrue(!!$t);
+        self::assertEquals('INSERT INTO types (`price`,`quantity`,`amount`) VALUES (\'abc\' , 2 , 2.4)', $sql);
+        self::assertContains('\'price\' at row 1', $err);
+
+        $data['price']    = '0,1,1),(1';
+        $data['quantity'] = 2;
+        $data['amount']   = 2.4;
+        $q                = $db->insert($data)->into('types');
+        $t                = $q->newId();
+        $err              = $q->lastError();
+        $sql              = $q->getSqlString();
+        self::assertNotTrue(!!$t);
+        self::assertEquals('INSERT INTO types (`price`,`quantity`,`amount`) VALUES (\'0,1,1),(1\' , 2 , 2.4)', $sql);
+        self::assertContains('\'price\' at row 1', $err);
+    }
+
     public static function tearDownAfterClass() {
         if (self::$con) {
             self::$con->exec('drop database ' . self::$dbname);
             self::$con->close();
         }
     }
+
 }

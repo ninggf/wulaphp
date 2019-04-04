@@ -183,7 +183,7 @@ class UpdateSQL extends QueryBuilder {
 
         if (!$this->values) {
             $this->values = new BindValues ();
-        } else {
+        } else if (!$this->valueFixed) {
             $this->values->reset();
         }
 
