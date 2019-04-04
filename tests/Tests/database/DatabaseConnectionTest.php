@@ -83,6 +83,9 @@ CREATE TABLE `{types}` (
 SQL;
         $rst  = self::$con->exec($sql2);
         self::assertTrue($rst, 'cannot create table: types');
+
+        $rst = self::$con->exec(' SET SESSION sql_mode = \'STRICT_TRANS_TABLES\'');
+        self::assertTrue($rst, 'cannot set sql_mode');
     }
 
     public function testConnect() {
@@ -306,8 +309,9 @@ SQL;
         $t                = $q->newId();
         $err              = $q->lastError();
         $sql              = $q->getSqlString();
-        self::assertNotTrue(!!$t);
         self::assertEquals('INSERT INTO types (`price`,`quantity`,`amount`) VALUES (\'abc\' , 2 , 2.4)', $sql);
+        self::assertNotTrue(!!$t, $t . ' is the new id');
+        self::assertNotEmpty($err);
         self::assertContains('\'price\' at row 1', $err);
 
         $data['price']    = '0,1,1),(1';
@@ -317,8 +321,9 @@ SQL;
         $t                = $q->newId();
         $err              = $q->lastError();
         $sql              = $q->getSqlString();
-        self::assertNotTrue(!!$t);
+        self::assertNotTrue(!!$t, $t);
         self::assertEquals('INSERT INTO types (`price`,`quantity`,`amount`) VALUES (\'0,1,1),(1\' , 2 , 2.4)', $sql);
+        self::assertNotEmpty($err);
         self::assertContains('\'price\' at row 1', $err);
     }
 
