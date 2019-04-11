@@ -132,7 +132,7 @@ class DefaultDispatcher implements IURLDispatcher {
                     return null;
                 }
                 try {
-                    $clz = new $controllerClz (App::getModule($namespace));
+                    $clz = new $controllerClz ($mm);
 
                     if ($clz instanceof Controller && $clz->slag == $controllerSlag) {
                         $cprefix = '';

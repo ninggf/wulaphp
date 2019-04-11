@@ -17,6 +17,7 @@ namespace wulaphp\mvc\controller;
 use wulaphp\app\Module;
 use wulaphp\auth\PassportSupport;
 use wulaphp\auth\RbacSupport;
+use wulaphp\mvc\view\SimpleView;
 
 class AdminController extends Controller {
     use SessionSupport, PassportSupport, RbacSupport;
@@ -29,10 +30,29 @@ class AdminController extends Controller {
     }
 
     protected function needLogin($view) {
-        return apply_filter('mvc\admin\needLogin', $view);
+        $view = apply_filter('mvc\admin\needLogin', $view);
+        if ($view === null) {
+            $view = new SimpleView('need Login');
+        }
+
+        return $view;
+    }
+
+    protected function onLocked($view) {
+        $view = apply_filter('mvc\admin\onLocked', $view);
+        if ($view === null) {
+            $view = new SimpleView('you were locked');
+        }
+
+        return $view;
     }
 
     protected function onDenied($message, $view) {
-        return apply_filter('mvc\admin\onDenied', $view, $message);
+        $view = apply_filter('mvc\admin\onDenied', $view, $message);
+        if ($view === null) {
+            $view = new SimpleView('you are denied');
+        }
+
+        return $view;
     }
 }

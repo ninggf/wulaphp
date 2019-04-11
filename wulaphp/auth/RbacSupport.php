@@ -67,6 +67,9 @@ trait RbacSupport {
             if ($login && !$this->passport->isLogin) {
                 return $this->needLogin($view);
             }
+            if ($login && !$this->passport['status']) {
+                return $this->onLocked($view);
+            }
             $rst = true;
             if ($acl) {
                 $res = array_shift($acl);
@@ -94,15 +97,26 @@ trait RbacSupport {
      *
      * @param mixed $view
      *
-     * @return string
+     * @return mixed
      */
     protected abstract function needLogin($view);
+
+    /**
+     * 用户被禁用时.
+     *
+     * @param mixed $view
+     *
+     * @return mixed
+     */
+    protected abstract function onLocked($view);
 
     /**
      * 用户无权限时.
      *
      * @param mixed  $view
      * @param string $message
+     *
+     * @return mixed
      */
     protected abstract function onDenied($message, $view);
 }

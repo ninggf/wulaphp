@@ -1,3 +1,10 @@
+### Version 2.8.4
+**2019-04-11**
+
+* 新增
+    * RbacSupport检测用户状态,如果用户状态`status=0`调用`onLocked`方法
+    * AdminController触发`mvc\admin\onLocked`勾子（用户`status=0`时）
+
 ### Version 2.7.0
 **2019-03-20**
 
