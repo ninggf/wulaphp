@@ -13,13 +13,15 @@ namespace tests\Tests\common;
 use PHPUnit\Framework\TestCase;
 
 class PluginTest extends TestCase {
+    private static $func1;
+    private static $func2;
 
     public static function setUpBeforeClass() {
-        bind('fire_hook', function ($a) {
+        self::$func1 = bind('fire_hook', function ($a) {
             echo 'this is ' . $a;
         }, 2);
 
-        bind('fire_hook', function ($b) {
+        self::$func2 = bind('fire_hook', function ($b) {
             echo 'that is ' . $b;
         }, 1);
 
@@ -29,7 +31,8 @@ class PluginTest extends TestCase {
     }
 
     public function testHas() {
-        self::assertTrue(has_hook('fire_hook'));
+        self::assertTrue(has_hook('fire_hook', self::$func1) !== false);
+        self::assertTrue(has_hook('fire_hook', self::$func2) !== false);
         self::assertTrue(has_hook('alter_var'));
     }
 
@@ -47,5 +50,17 @@ class PluginTest extends TestCase {
     public function testApplyFilter() {
         $var = apply_filter('alter_var', 2);
         self::assertEquals(4, $var);
+    }
+
+    /**
+     * @depends testApplyFilter
+     */
+    public function testUnbind() {
+        unbind('fire_hook', self::$func1, 2);
+        self::assertTrue(!has_hook('fire_hook', self::$func1));
+        self::assertTrue(has_hook('fire_hook'));
+
+        unbind_all('fire_hook');
+        self::assertTrue(!has_hook('fire_hook'));
     }
 }
