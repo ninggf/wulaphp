@@ -9,6 +9,7 @@ dummy.php
 conf/*_dev.php
 .DS_Store
 *.bak
+phpunit.xml
 # composer
 vendor/
 composer.lock

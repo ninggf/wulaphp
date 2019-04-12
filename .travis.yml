@@ -31,6 +31,7 @@ before_install:
 # disable xdebug if available
 - phpenv config-rm xdebug.ini || echo "xdebug not available"
 - echo "extension = redis.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+- echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
 # disable default memory limit
 - export INI=~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
 - echo memory_limit = -1 >> $INI
@@ -50,4 +51,4 @@ before_script:
 - php -S 127.0.0.1:9090 -t tests/www/ tests/www/index.php > /dev/null 2>&1 &
 
 script:
-- ls -d tests/Tests/**/* | parallel --gnu --keep-order 'echo "Running {} tests"; ./vendor/bin/phpunit -c tests/phpunit.xml --colors=always {} || (echo -e "\e[41mFAILED\e[0m {}" && exit 1);'
+- ls -d tests/Tests/**/* | parallel --gnu --keep-order 'echo "Running {} tests"; ./vendor/bin/phpunit -c tests/phpunit.xml.dist --colors=always {} || (echo -e "\e[41mFAILED\e[0m {}" && exit 1);'
