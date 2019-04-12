@@ -20,10 +20,6 @@ if (isset($_REQUEST['_PRO_'])) {
     define('APP_MODE', 'pro');
 }
 
-if (isset($_REQUEST['_RIC_'])) {
-    define('RUN_IN_CLUSTER', true);
-}
-
 if (defined('PHPUNIT_COMPOSER_INSTALL')) {
     require APPROOT . '../bootstrap.php';
 } else {

@@ -14,7 +14,6 @@ use PHPUnit\Framework\TestCase;
 use wulaphp\io\Storage;
 
 class StorageTest extends TestCase {
-
     public function testStorage() {
         $storage = new Storage('file:path=storage/test');
 
@@ -28,13 +27,19 @@ class StorageTest extends TestCase {
 
         $rst = $storage->delete('hello.txt');
         $this->assertTrue($rst);
+
+        self::assertTrue(is_dir(STORAGE_PATH . 'test'));
+
+        self::assertTrue(rmdirs(STORAGE_PATH . 'test', false));
+
+        self::assertTrue(!is_dir(STORAGE_PATH . 'test'));
     }
 
     /**
      * @expectedException \Exception
      */
     public function testUnknowDriver() {
-        $storage = new Storage('filex:path=storage/test');
+        new Storage('filex:path=storage/test');
     }
 
     public function testSSDBStorage() {

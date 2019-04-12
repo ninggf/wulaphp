@@ -5,7 +5,6 @@ namespace wulaphp\cache;
 use wulaphp\conf\ConfigurationLoader;
 
 class Cache implements \ArrayAccess {
-
     public $expire = 0;
 
     public function getName() {
@@ -67,8 +66,11 @@ class Cache implements \ArrayAccess {
      * @param string $key    缓存唯一键值
      * @param mixed  $value  要缓存的数据
      * @param int    $expire 缓存时间,单位秒.
+     *
+     * @return bool
      */
     public function add($key, $value, $expire = 0) {
+        return true;
     }
 
     /**
@@ -86,16 +88,22 @@ class Cache implements \ArrayAccess {
      * 删除一个缓存.
      *
      * @param string $key 缓存唯一键值
+     *
+     * @return bool
      */
     public function delete($key) {
+        return true;
     }
 
     /**
      * 清空所有缓存.
      *
      * @param boolean $check 缓存组
+     *
+     * @return bool
      */
     public function clear($check = true) {
+        return true;
     }
 
     /**
