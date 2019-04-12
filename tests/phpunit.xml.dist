@@ -19,6 +19,7 @@
             <directory suffix="Test.php">Tests/io</directory>
             <directory suffix="Test.php">Tests/restful</directory>
             <directory suffix="Test.php">Tests/util</directory>
+            <directory suffix="Test.php">Tests/auth</directory>
         </testsuite>
         <testsuite name="Cache Test">
             <php>
@@ -38,11 +39,6 @@
         <whitelist processUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">../wulaphp</directory>
             <directory suffix=".php">../includes</directory>
-            <file>../vendors/CrontabHelper.php</file>
-            <file>../vendors/Smarty_Internal_Compile_Combinate.php</file>
-            <file>../vendors/Smarty_Internal_Compile_Cts.php</file>
-            <file>../vendors/Smarty_Internal_Compile_Ctsp.php</file>
-            <file>../vendors/Smarty_Internal_Compile_Minify.php</file>
         </whitelist>
     </filter>
 
