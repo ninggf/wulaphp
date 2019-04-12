@@ -2,12 +2,11 @@
 
 namespace wulaphp\auth;
 
-use wulaphp\wulaphp\auth\AclExtraChecker;
-
 /**
  * Class Passport
  * @package wulaphp\auth
- * @property-read int $pid 父ID
+ * @property-read int $pid    父ID
+ * @property-read int $status 状态
  */
 class Passport implements \ArrayAccess {
     const SESSION_NAME = 'wula_passport';
@@ -38,7 +37,7 @@ class Passport implements \ArrayAccess {
      *
      * @return Passport
      */
-    public static function get($type = 'default') {
+    public final static function get($type = 'default') {
         if (!isset(self::$INSTANCES[ $type ])) {
             $defaultPassport = apply_filter('passport\new' . ucfirst($type) . 'Passport', new Passport());
             $passport        = sess_get(self::SESSION_NAME . '_' . $type);
@@ -133,6 +132,8 @@ class Passport implements \ArrayAccess {
      * 从SESSION中注销.
      */
     public final function logout() {
+        $this->isLogin = false;
+        $this->uid     = 0;
         fire('passport\on' . ucfirst($this->type) . 'PassportLogout', $this);
         $_SESSION[ self::SESSION_NAME . '_' . $this->type ] = '';
         unset($_SESSION[ self::SESSION_NAME . '_' . $this->type ]);
@@ -158,13 +159,13 @@ class Passport implements \ArrayAccess {
     /**
      * 用户是否有权限操作。
      *
-     * @param string $res
+     * @param string $opRes 操作资源
      * @param null   $extra
      *
      * @return bool
      */
-    public function cando($res, $extra = null) {
-        $resid = explode(':', $res);
+    public final function cando($opRes, $extra = null) {
+        $resid = explode(':', $opRes);
         $op    = $resid[0];
         if (!isset($resid[1])) {
             return false;
@@ -237,11 +238,11 @@ class Passport implements \ArrayAccess {
     protected function restore() {
     }
 
-    public function __toString() {
+    public final function __toString() {
         return $this->nickname;
     }
 
-    public function __get($name) {
+    public final function __get($name) {
         if (isset($this->{$name})) {
             return $this->{$name};
         } else if (isset($this->data[ $name ])) {
@@ -251,7 +252,7 @@ class Passport implements \ArrayAccess {
         return null;
     }
 
-    public function offsetGet($offset) {
+    public final function offsetGet($offset) {
         if (isset($this->{$offset})) {
             return $this->{$offset};
         } else if (isset($this->data[ $offset ])) {
@@ -261,7 +262,7 @@ class Passport implements \ArrayAccess {
         return null;
     }
 
-    public function offsetExists($offset) {
+    public final function offsetExists($offset) {
         if (isset($this->{$offset})) {
             return true;
         } else if (isset($this->data[ $offset ])) {
@@ -271,11 +272,11 @@ class Passport implements \ArrayAccess {
         return false;
     }
 
-    public function offsetSet($offset, $value) {
+    public final function offsetSet($offset, $value) {
         $this->data[ $offset ] = $value;
     }
 
-    public function offsetUnset($offset) {
+    public final function offsetUnset($offset) {
         unset($this->data[ $offset ]);
     }
 }

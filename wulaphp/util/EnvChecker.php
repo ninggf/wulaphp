@@ -8,33 +8,33 @@
  * file that was distributed with this source code.
  */
 
-namespace wulaphp\wulaphp\util;
+namespace wulaphp\util;
 
 abstract class EnvChecker {
-	/**
-	 * 检测名称.
-	 *
-	 * @var string
-	 */
-	public $name;
-	/**
-	 * 期望值.
-	 *
-	 * @var string
-	 */
-	public $expectedResult;
-	/**
-	 * 实际值.
-	 *
-	 * @var string
-	 */
-	public $actualResult;
-	/**
-	 * 是否通过.
-	 *
-	 * @var bool
-	 */
-	public $pass;
+    /**
+     * 检测名称.
+     *
+     * @var string
+     */
+    public $name;
+    /**
+     * 期望值.
+     *
+     * @var string
+     */
+    public $expectedResult;
+    /**
+     * 实际值.
+     *
+     * @var string
+     */
+    public $actualResult;
+    /**
+     * 是否通过.
+     *
+     * @var bool
+     */
+    public $pass;
 
-	public abstract function check();
+    public abstract function check();
 }

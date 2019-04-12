@@ -67,7 +67,7 @@ trait RbacSupport {
             if ($login && !$this->passport->isLogin) {
                 return $this->needLogin($view);
             }
-            if ($login && !$this->passport['status']) {
+            if ($login && !$this->passport->status) {
                 return $this->onLocked($view);
             }
             $rst = true;
