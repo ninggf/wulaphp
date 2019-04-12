@@ -1,0 +1,8 @@
+<FilesMatch ".*\.tpl$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+<FilesMatch ".*\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

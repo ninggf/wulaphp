@@ -14,19 +14,19 @@ use wulaphp\mvc\view\View;
 use wulaphp\util\Annotation;
 
 trait CacheSupport {
-	public function afterRunInCacheSupport($action, View $view, $method) {
-		if (APP_MODE == 'pro') {
-			$annotation = new Annotation($method);
-			if ($annotation->has('expire')) {
-				$expire = $annotation->getInt('expire');
-				if ($expire > 0) {
-					$view->expire($expire);
-				} else {
-					$view->expire();
-				}
-			}
-		}
+    protected function afterRunInCacheSupport($action, View $view, $method) {
+        if (APP_MODE == 'pro') {
+            $annotation = new Annotation($method);
+            if ($annotation->has('expire')) {
+                $expire = $annotation->getInt('expire');
+                if ($expire > 0) {
+                    $view->expire($expire);
+                } else {
+                    $view->expire();
+                }
+            }
+        }
 
-		return $view;
-	}
+        return $view;
+    }
 }

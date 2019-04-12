@@ -12,90 +12,89 @@ use Psr\Log\LoggerInterface;
  * @author  Leo Ning <windywany@gmail.com>
  */
 class CommonLogger implements LoggerInterface {
-	private static $log_name = [
-		DEBUG_INFO  => 'INFO',
-		DEBUG_WARN  => 'WARN',
-		DEBUG_DEBUG => 'DEBUG',
-		DEBUG_ERROR => 'ERROR'
-	];
-	private        $file     = '';
+    private static $log_name = [
+        DEBUG_INFO  => 'INFO',
+        DEBUG_WARN  => 'WARN',
+        DEBUG_DEBUG => 'DEBUG',
+        DEBUG_ERROR => 'ERROR'
+    ];
+    private        $file     = '';
 
-	public function __construct($file = 'wula') {
-		$this->file = $file;
-	}
+    public function __construct($file = 'wula') {
+        $this->file = $file;
+    }
 
-	public function emergency($message, array $context = []) {
-		$this->log(DEBUG_ERROR, $message, $context);
-	}
+    public function emergency($message, array $context = []) {
+        $this->log(DEBUG_ERROR, $message, $context);
+    }
 
-	public function alert($message, array $context = []) {
-		$this->log(DEBUG_ERROR, $message, $context);
-	}
+    public function alert($message, array $context = []) {
+        $this->log(DEBUG_ERROR, $message, $context);
+    }
 
-	public function critical($message, array $context = []) {
-		$this->log(DEBUG_ERROR, $message, $context);
-	}
+    public function critical($message, array $context = []) {
+        $this->log(DEBUG_ERROR, $message, $context);
+    }
 
-	public function error($message, array $context = []) {
-		$this->log(DEBUG_ERROR, $message, $context);
-	}
+    public function error($message, array $context = []) {
+        $this->log(DEBUG_ERROR, $message, $context);
+    }
 
-	public function warning($message, array $context = []) {
-		$this->log(DEBUG_WARN, $message, $context);
-	}
+    public function warning($message, array $context = []) {
+        $this->log(DEBUG_WARN, $message, $context);
+    }
 
-	public function notice($message, array $context = []) {
-		$this->log(DEBUG_INFO, $message, $context);
-	}
+    public function notice($message, array $context = []) {
+        $this->log(DEBUG_INFO, $message, $context);
+    }
 
-	public function info($message, array $context = []) {
-		$this->log(DEBUG_INFO, $message, $context);
-	}
+    public function info($message, array $context = []) {
+        $this->log(DEBUG_INFO, $message, $context);
+    }
 
-	public function debug($message, array $context = []) {
-		$this->log(DEBUG_DEBUG, $message, $context);
-	}
+    public function debug($message, array $context = []) {
+        $this->log(DEBUG_DEBUG, $message, $context);
+    }
 
-	public function log($level, $message, array $trace_info = []) {
-		$file = $this->file;
+    public function log($level, $message, array $trace_info = []) {
+        $file = $this->file;
 
-		$ln  = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
-		$msg = date("Y-m-d H:i:s") . " [$ln] {$message}\n";
-		if ($level > DEBUG_WARN) {//只有error的才记录trace info.
-			$msg .= $this->getLine($trace_info[0], 0);
-			if (isset ($trace_info [1]) && $trace_info [1]) {
-				$msg .= $this->getLine($trace_info[1], 1);
-				if (isset ($trace_info [2]) && $trace_info [2]) {
-					$msg .= $this->getLine($trace_info[2], 2);
-				}
-				if (isset ($trace_info [3]) && $trace_info [3]) {
-					$msg .= $this->getLine($trace_info[3], 3);
-				}
-				if (isset ($trace_info [4]) && $trace_info [4]) {
-					$msg .= $this->getLine($trace_info[4], 4);
-				}
-				if (isset ($trace_info [5]) && $trace_info [5]) {
-					$msg .= $this->getLine($trace_info[5], 5);
-				}
-				if (isset ($trace_info [6]) && $trace_info [6]) {
-					$msg .= $this->getLine($trace_info[6], 6);
-				}
-			}
-		}
+        $ln = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
+        if (defined('ARTISAN_TASK_PID')) {
+            $pid = ARTISAN_TASK_PID;
+        } else {
+            $pid = 0;
+        }
+        $msg = date("Y-m-d H:i:s") . " [$pid] [$ln] {$message}\n";
+        $msg .= self::getLine($trace_info[0], 0);
+        if ($level > DEBUG_WARN) {//只有error的才记录trace info.
+            for ($i = 1; $i < 5; $i++) {
+                if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
+                    $msg .= self::getLine($trace_info[ $i ], $i);
+                }
+            }
+            if (isset ($_SERVER ['REQUEST_URI'])) {
+                $msg .= " uri: " . $_SERVER ['REQUEST_URI'] . "\n";
+            } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
+                $msg .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
+            }
+        }
 
-		if (isset ($_SERVER ['REQUEST_URI'])) {
-			$msg .= "\turi: " . $_SERVER ['REQUEST_URI'] . "\n";
-		} else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
-			$msg .= "\tscript: " . implode(' ', $_SERVER ['argv']) . "\n";
-		}
+        $dest_file = $file ? $file . '.log' : 'wula.log';
+        @error_log($msg, 3, LOGS_PATH . $dest_file);
+    }
 
-		$dest_file = $file ? $file . '.log' : 'wula.log';
-		@error_log($msg, 3, LOGS_PATH . $dest_file);
-	}
-
-	private function getLine($info, $i) {
-		$cls = $info['class'] ? "{$info['class']}->" : '';
-
-		return " #{$i} {$info['file']}({$info['line']}): {$cls}{$info['function']}()\n";
-	}
+    public static function getLine($info, $i) {
+        if (isset($info['class'])) {
+            $cls = "{$info['class']}{$info['type']}";
+        } else {
+            $cls = '';
+        }
+        $file = str_replace(APPROOT, '', $info['file']);
+        if ($i) {
+            return " #{$i} {$file}({$info['line']}): {$cls}{$info['function']}()\n";
+        } else {
+            return " #{$i} {$file}({$info['line']})\n";
+        }
+    }
 }

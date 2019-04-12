@@ -15,278 +15,305 @@ use wulaphp\db\sql\UpdateSQL;
  * @property $_tableData
  */
 abstract class Table extends View {
-	protected $autoIncrement = true;
+    protected $autoIncrement = true;
 
-	/**
-	 * Table constructor.
-	 *
-	 * @param string|array|DatabaseConnection|View $db
-	 */
-	public function __construct($db = null) {
-		parent::__construct($db);
-		if (count($this->primaryKeys) != 1) {
-			$this->autoIncrement = false;
-		}
+    /**
+     * Table constructor.
+     *
+     * @param string|array|DatabaseConnection|View $db
+     */
+    public function __construct($db = null) {
+        parent::__construct($db);
+        if (count($this->primaryKeys) != 1) {
+            $this->autoIncrement = false;
+        }
+        $this->parseTraits();
+    }
 
-		$this->parseTraits();
-	}
+    /**
+     * 在事务中运行.
+     *
+     * @param \Closure               $fun
+     * @param \wulaphp\db\ILock|null $lock
+     *
+     * @return mixed|null
+     */
+    protected final function trans(\Closure $fun, ILock $lock = null) {
+        return $this->dbconnection->trans($fun, $this->errors, $lock);
+    }
 
-	/**
-	 * 在事务中运行.
-	 *
-	 * @param \Closure               $fun
-	 * @param \wulaphp\db\ILock|null $lock
-	 *
-	 * @return mixed|null
-	 */
-	protected function trans(\Closure $fun, ILock $lock = null) {
-		return $this->dbconnection->trans($fun, $this->errors, $lock);
-	}
+    /**
+     * 保存数据。
+     *
+     * @param array         $data 要保存的数据
+     * @param array|null    $con  更新条件
+     * @param \Closure|null $cb   数据处理回调
+     *
+     * @return bool|int|\wulaphp\db\sql\UpdateSQL
+     */
+    protected final function save($data, $con = null, $cb = null) {
+        if (!$con) {
+            return $this->insert($data, $cb);
+        } else if ($this->exist($con)) {//存在即修改
+            return $this->update($data, $con, $cb);
+        } else {
+            return $this->insert($data, $cb);
+        }
+    }
 
-	/**
-	 * 创建记录.
-	 *
-	 * @param array    $data 数据.
-	 * @param \Closure $cb   数据处理函数.
-	 *
-	 * @return bool|int 成功返回true或主键值,失败返回false.
-	 * @throws
-	 */
-	protected function insert($data, $cb = null) {
-		if ($cb && $cb instanceof \Closure) {
-			$data = $cb ($data, $this);
-		}
-		if ($data) {
-			if (method_exists($this, 'validateNewData')) {
-				if (isset($this->_formData)) {
-					$this->validateNewData($this->_formData);
-				} else {
-					$this->validateNewData($data);
-				}
-			}
-			$this->filterFields($data);
-			$sql = new InsertSQL($data);
-			$sql->into($this->table)->setDialect($this->dialect);
-			if ($this->autoIncrement) {
-				$rst = $sql->newId();
-			} else {
-				$rst = $sql->exec(true);
-			}
-			if ($rst) {
-				return $rst;
-			} else {
-				$this->checkSQL($sql);
+    /**
+     * 创建记录.
+     *
+     * @param array    $data 数据.
+     * @param \Closure $cb   数据处理函数.
+     *
+     * @return bool|int 成功返回true或主键值,失败返回false.
+     * @throws
+     */
+    protected final function insert($data, $cb = null) {
+        if ($cb && $cb instanceof \Closure) {
+            $data = $cb ($data, $this);
+        }
+        if ($data) {
+            $this->filterFields($data);
+            if (method_exists($this, 'validateNewData')) {
+                if (isset($this->_formData)) {
+                    $this->validateNewData($this->_formData);
+                } else {
+                    $this->validateNewData($data);
+                }
+            }
+            $sql = new InsertSQL($data);
+            $sql->into($this->table)->setDialect($this->dialect);
+            if ($this->autoIncrement) {
+                $rst = $sql->newId();
+            } else {
+                $rst = $sql->exec(true);
+            }
+            if ($rst) {
+                return $rst;
+            } else {
+                $this->checkSQL($sql);
 
-				return false;
-			}
-		} else {
-			$this->errors = '数据为空.';
+                return false;
+            }
+        } else {
+            $this->errors = '数据为空.';
 
-			return false;
-		}
-	}
+            return false;
+        }
+    }
 
-	/**
-	 * 批量插入数据.
-	 *
-	 * @param array    $datas 要插入的数据数组.
-	 * @param \Closure $cb
-	 *
-	 * @return bool|array 如果配置了自增键将返回自增键值的数组.
-	 * @throws
-	 */
-	protected function inserts($datas, \Closure $cb = null) {
-		if ($cb && $cb instanceof \Closure) {
-			$datas = $cb ($datas, $this);
-		}
-		if ($datas) {
-			if (method_exists($this, 'validateNewData')) {
-				foreach ($datas as &$data) {
-					$this->validateNewData($data);
-					$this->filterFields($data);
-				}
-			}
+    /**
+     * 批量插入数据.
+     *
+     * @param array    $datas 要插入的数据数组.
+     * @param \Closure $cb
+     *
+     * @return bool|array 如果配置了自增键将返回自增键值的数组.
+     * @throws
+     */
+    protected final function inserts($datas, \Closure $cb = null) {
+        if ($cb && $cb instanceof \Closure) {
+            $datas = $cb ($datas, $this);
+        }
+        if ($datas) {
+            if (method_exists($this, 'validateNewData')) {
+                foreach ($datas as &$data) {
+                    $this->validateNewData($data);
+                    $this->filterFields($data);
+                }
+            }
 
-			$sql = new InsertSQL($datas, true);
-			$sql->into($this->table)->setDialect($this->dialect);
-			if ($this->autoIncrement) {
-				$rst = $sql->exec();
-			} else {
-				$rst = $sql->exec(true);
-			}
-			if ($rst) {
-				return $rst;
-			} else {
-				$this->checkSQL($sql);
+            $sql = new InsertSQL($datas, true);
+            $sql->into($this->table)->setDialect($this->dialect);
+            if ($this->autoIncrement) {
+                $rst = $sql->exec();
+            } else {
+                $rst = $sql->exec(true);
+            }
+            if ($rst) {
+                return $rst;
+            } else {
+                $this->checkSQL($sql);
 
-				return false;
-			}
-		} else {
-			$this->errors = '数据为空.';
+                return false;
+            }
+        } else {
+            $this->errors = '数据为空.';
 
-			return false;
-		}
-	}
+            return false;
+        }
+    }
 
-	/**
-	 * 更新数据或获取UpdateSQL实例.
-	 *
-	 * @param array|null $data 数据.
-	 * @param array|null $con  更新条件.
-	 * @param \Closure   $cb   数据处理器.
-	 *
-	 * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
-	 * @throws
-	 */
-	protected function update($data = null, $con = null, $cb = null) {
-		if ($data === null) {
-			$sql = new UpdateSQL($this->qualifiedName);
-			$sql->setDialect($this->dialect);
+    /**
+     * 更新数据或获取UpdateSQL实例.
+     *
+     * @param array|null $data 数据.
+     * @param array|null $con  更新条件.
+     * @param \Closure   $cb   数据处理器.
+     *
+     * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
+     * @throws
+     */
+    protected final function update($data = null, $con = null, $cb = null) {
+        if ($data === null) {
+            $sql = new UpdateSQL($this->qualifiedName);
+            $sql->setDialect($this->dialect);
 
-			return $sql;
-		}
-		if ($con && !is_array($con)) {
-			$con = [$this->primaryKeys[0] => $con];
-		}
-		if (!$con) {
-			$con = $this->getWhere($data);
-			if (count($con) != count($this->primaryKeys)) {
-				$this->errors = '未提供更新条件';
+            return $sql;
+        }
+        if ($con && !is_array($con)) {
+            $con = [$this->primaryKeys[0] => $con];
+        }
+        if (!$con) {
+            $con = $this->getWhere($data);
+            if (count($con) != count($this->primaryKeys)) {
+                $this->errors = '未提供更新条件';
 
-				return false;
-			}
-		}
-		if (empty ($con)) {
-			$this->errors = '更新条件为空';
+                return false;
+            }
+        }
+        if (empty ($con)) {
+            $this->errors = '更新条件为空';
 
-			return false;
-		}
-		if ($cb && $cb instanceof \Closure) {
-			$data = $cb ($data, $con, $this);
-		}
-		if ($data) {
-			if (method_exists($this, 'validateUpdateData')) {
-				if (isset($this->_formData)) {
-					$this->validateUpdateData($this->_formData);
-				} else {
-					$this->validateUpdateData($data);
-				}
-			}
-			$this->filterFields($data);
-			$sql = new UpdateSQL($this->table);
-			$sql->set($data)->setDialect($this->dialect)->where($con);
-			$rst = $sql->exec();
-			$this->checkSQL($sql);
+            return false;
+        }
+        if ($cb && $cb instanceof \Closure) {
+            $data = $cb ($data, $con, $this);
+        }
+        if ($data) {
+            $this->filterFields($data);
+            if (method_exists($this, 'validateUpdateData')) {
+                if (isset($this->_formData)) {
+                    $this->validateUpdateData($this->_formData);
+                } else {
+                    $this->validateUpdateData($data);
+                }
+            }
+            $sql = new UpdateSQL($this->table);
+            $sql->set($data)->setDialect($this->dialect)->where($con);
+            $rst = $sql->exec();
+            $this->checkSQL($sql);
 
-			return $rst;
-		} else {
-			return false;
-		}
-	}
+            return $rst;
+        } else {
+            return false;
+        }
+    }
 
-	/**
-	 * 删除记录或获取DeleteSQL实例.
-	 *
-	 * @param array|int $con 条件或主键.
-	 *
-	 * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
-	 * @throws
-	 */
-	protected function delete($con = null) {
-		if ($con === null) {
-			$sql = new DeleteSQL();
-			$sql->from($this->qualifiedName)->setDialect($this->dialect);
+    /**
+     * 删除记录或获取DeleteSQL实例.
+     *
+     * @param array|int $con 条件或主键.
+     *
+     * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
+     * @throws
+     */
+    protected final function delete($con = null) {
+        if ($con === null) {
+            $sql = new DeleteSQL();
+            $sql->from($this->qualifiedName)->setDialect($this->dialect);
 
-			return $sql;
-		}
-		$rst = false;
-		if ($con && !is_array($con)) {
-			$con = [$this->primaryKeys[0] => $con];
-		}
-		if (is_array($con) && $con) {
-			$sql = new DeleteSQL();
-			$sql->from($this->qualifiedName)->setDialect($this->dialect);
-			$sql->where($con);
-			$rst = $sql->exec();
-			$this->checkSQL($sql);
-		}
+            return $sql;
+        }
+        $rst = false;
+        if ($con && !is_array($con)) {
+            $con = [$this->primaryKeys[0] => $con];
+        }
+        if (is_array($con) && $con) {
+            $sql = new DeleteSQL();
+            $sql->from($this->qualifiedName)->setDialect($this->dialect);
+            $sql->where($con);
+            $rst = $sql->exec();
+            $this->checkSQL($sql);
+        }
 
-		return $rst;
-	}
+        return $rst;
+    }
 
-	/**
-	 * 回收内容，适用于软删除(将deleted置为1).
-	 * 所以表中需要有deleted的字段,当其值为1时表示删除.
-	 * 如果uid不为0,则表中还需要有update_time与update_uid字段,
-	 * 分别表示更新时间与更新用户.
-	 *
-	 * @param array    $con 条件.
-	 * @param int      $uid 如果大于0，则表中必须包括update_time(unix时间戳)和update_uid字段.
-	 * @param \Closure $cb  回调.
-	 *
-	 * @return boolean 成功true，失败false.
-	 * @throws
-	 */
-	protected function recycle($con, $uid = 0, $cb = null) {
-		if (!$con) {
-			return false;
-		}
-		$data ['deleted'] = 1;
-		if ($uid) {
-			$data ['update_time'] = time();
-			$data ['update_uid']  = $uid;
-		}
-		$rst = $this->update($data, $con);
-		if ($rst && $cb instanceof \Closure) {
-			$cb ($con, $this);
-		}
+    /**
+     * 回收内容，适用于软删除(将deleted置为1).
+     * 所以表中需要有deleted的字段,当其值为1时表示删除.
+     * 如果uid不为0,则表中还需要有update_time与update_uid字段,
+     * 分别表示更新时间与更新用户.
+     *
+     * @param array    $con 条件.
+     * @param int      $uid 如果大于0，则表中必须包括update_time(unix时间戳)和update_uid字段.
+     * @param \Closure $cb  回调.
+     *
+     * @return boolean 成功true，失败false.
+     * @throws
+     */
+    public final function recycle($con, $uid = 0, $cb = null) {
+        if (!$con) {
+            return false;
+        }
+        $data ['deleted'] = 1;
+        if ($uid) {
+            $data ['update_time'] = time();
+            $data ['update_uid']  = $uid;
+        }
+        $rst = $this->update($data, $con);
+        if ($rst && $cb instanceof \Closure) {
+            $cb ($con, $this);
+        }
 
-		return $rst;
-	}
+        return $rst;
+    }
 
-	/**
-	 * 过滤数据.
-	 *
-	 * @param array $data 要过滤的数据.
-	 */
-	protected function filterFields(&$data) {
-	}
+    /**
+     * 过滤数据.
+     *
+     * @param array $data 要过滤的数据.
+     */
+    protected function filterFields(&$data) {
+    }
 
-	protected function popValue(&$data, $field) {
-		$rtn = null;
-		if (isset($data[ $field ])) {
-			$rtn = $data[ $field ];
-			unset($data[ $field ]);
-		}
+    /**
+     * 从关联数组中弹出$field对应的值并将其返回.
+     *
+     * @param array  $data
+     * @param string $field
+     *
+     * @return mixed
+     */
+    protected final function popValue(&$data, $field) {
+        $rtn = null;
+        if (isset($data[ $field ])) {
+            $rtn = $data[ $field ];
+            unset($data[ $field ]);
+        }
 
-		return $rtn;
-	}
+        return $rtn;
+    }
 
-	/**
-	 * 初始化Traits.
-	 */
-	private function parseTraits() {
-		$parents = class_parents($this);
-		unset($parents['wulaphp\db\Table'], $parents['wulaphp\db\View']);
-		$traits = class_uses($this);
-		if ($parents) {
-			foreach ($parents as $p) {
-				$tt = class_uses($p);
-				if ($tt) {
-					$traits = array_merge($traits, $tt);
-				}
-			}
-		}
-		if ($traits) {
-			foreach ($traits as $tt) {
-				$tts   = explode('\\', $tt);
-				$fname = $tts[ count($tts) - 1 ];
-				$func  = 'onInit' . $fname;
-				if (method_exists($this, $func)) {
-					$this->$func();
-				}
-			}
-		}
-		unset($parents, $traits);
-	}
+    /**
+     * 初始化Traits.
+     */
+    private function parseTraits() {
+        $parents = class_parents($this);
+        unset($parents['wulaphp\db\Table'], $parents['wulaphp\db\View']);
+        $traits = class_uses($this);
+        if ($parents) {
+            foreach ($parents as $p) {
+                $tt = class_uses($p);
+                if ($tt) {
+                    $traits = array_merge($traits, $tt);
+                }
+            }
+        }
+        if ($traits) {
+            $traits = array_unique($traits);
+            foreach ($traits as $tt) {
+                $tts   = explode('\\', $tt);
+                $fname = $tts[ count($tts) - 1 ];
+                $func  = 'onInit' . $fname;
+                if (method_exists($this, $func)) {
+                    $this->$func();
+                }
+            }
+        }
+        unset($parents, $traits);
+    }
 }

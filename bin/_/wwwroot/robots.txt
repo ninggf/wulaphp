@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /modules
+Disallow: /themes
+Disallow: /index.php

@@ -1,8 +1,8 @@
 <?php
 
 class Smarty_Internal_Compile_Minify extends Smarty_Internal_CompileBase {
-	public $shorttag_order      = array('type');
-	public $optional_attributes = array('type');
+	public $shorttag_order      = ['type'];
+	public $optional_attributes = ['type'];
 
 	/**
 	 * Compiles code for the {minify} tag
@@ -22,7 +22,7 @@ class Smarty_Internal_Compile_Minify extends Smarty_Internal_CompileBase {
 
 		// maybe nocache because of nocache variables
 		$compiler->nocache = $compiler->nocache | $compiler->tag_nocache;
-		$this->openTag($compiler, 'minify', array($buffer, $compiler->nocache));
+		$this->openTag($compiler, 'minify', [$buffer, $compiler->nocache]);
 		$_output = "<?php @ob_start(); ?>";
 
 		return $_output;

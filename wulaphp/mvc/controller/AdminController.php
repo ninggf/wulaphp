@@ -17,21 +17,42 @@ namespace wulaphp\mvc\controller;
 use wulaphp\app\Module;
 use wulaphp\auth\PassportSupport;
 use wulaphp\auth\RbacSupport;
+use wulaphp\mvc\view\SimpleView;
 
 class AdminController extends Controller {
-	use SessionSupport, PassportSupport, RbacSupport;
-	protected $passportType = 'admin';
+    use SessionSupport, PassportSupport, RbacSupport;
+    protected $passportType = 'admin';
+    protected $loginBack    = false;
 
-	public function __construct(Module $module) {
-		parent::__construct($module);
-		$this->globalRbacSetting['login'] = true;
-	}
+    public function __construct(Module $module) {
+        parent::__construct($module);
+        $this->globalRbacSetting['login'] = true;
+    }
 
-	protected function needLogin($view) {
-		return apply_filter('mvc\admin\needLogin', $view);
-	}
+    protected function needLogin($view) {
+        $view = apply_filter('mvc\admin\needLogin', $view);
+        if ($view === null) {
+            $view = new SimpleView('need Login');
+        }
 
-	protected function onDenied($message, $view) {
-		return apply_filter('mvc\admin\onDenied', $view, $message);
-	}
+        return $view;
+    }
+
+    protected function onLocked($view) {
+        $view = apply_filter('mvc\admin\onLocked', $view);
+        if ($view === null) {
+            $view = new SimpleView('you were locked');
+        }
+
+        return $view;
+    }
+
+    protected function onDenied($message, $view) {
+        $view = apply_filter('mvc\admin\onDenied', $view, $message);
+        if ($view === null) {
+            $view = new SimpleView('you are denied');
+        }
+
+        return $view;
+    }
 }

@@ -1,0 +1,218 @@
+#!/usr/bin/env php
+<?php
+/*
+ * This file is part of wulacms.
+ *
+ * (c) Leo Ning <windywany@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace wulaphp\bin;
+
+define('SDIR', __DIR__ . DIRECTORY_SEPARATOR . '_' . DIRECTORY_SEPARATOR);
+
+if (isset($argv[1]) && $argv[1]) {
+    switch ($argv[1]) {
+        case 'upgrade':
+            upgrade();
+            break;
+        case 'init':
+            init();
+            break;
+        case 'conf':
+            conf();
+            break;
+        default:
+            wulaHint();
+            exit(1);
+    }
+} else {
+    wulaHint();
+}
+/**
+ * @internal
+ */
+function init() {
+    $dir = getDestDir();
+    if (is_file($dir . 'bootstrap.php')) {
+        echo "'bootstrap.php' found, skip init process!\n";
+        exit(1);
+    }
+    _copy(SDIR, $dir);
+    @chmod($dir . 'artisan', 0777);
+    @chmod($dir . 'storage', 0777);
+    @chmod($dir . 'storage/logs', 0777);
+    @chmod($dir . 'storage/tmp', 0777);
+    echo "done!\n";
+}
+
+/**
+ * @param $dir
+ * @param $ddir
+ *
+ * @internal
+ */
+function _copy($dir, $ddir) {
+    $h = opendir($dir);
+    if ($h) {
+        while (($f = readdir($h))) {
+            if ($f == '.' || $f == '..') {
+                continue;
+            }
+            if (is_dir($dir . $f)) {
+                if (!is_dir($ddir . $f)) {
+                    mkdir($ddir . $f, 0755);
+                }
+                _copy($dir . $f . DIRECTORY_SEPARATOR, $ddir . $f . DIRECTORY_SEPARATOR);
+            } else {
+                copy($dir . $f, $ddir . $f);
+            }
+        }
+        closedir($h);
+    }
+}
+
+/**
+ * @internal
+ */
+function upgrade() {
+    $file = getDestDir() . 'artisan';
+    if (copy(SDIR . 'artisan', $file)) {
+        @chmod($file, 0777);
+        echo "'atrtisan' tool upgraded!\n";
+    } else {
+        echo "can not upgrade 'atrtisan' tool!\n";
+        exit(1);
+    }
+}
+
+/**
+ * @internal
+ */
+function conf() {
+    global $argv, $argc;
+    $domains = [];
+    if (isset($argv[2]) && $argv[2]) {
+        if ($argv[2] == '--') {
+            for ($i = 3; $i < $argc; $i++) {
+                $domains[] = $argv[ $i ];
+            }
+            $type = 'nginx';
+        } else {
+            if (isset($argv[3])) {
+                if ($argv[3] == '--') {
+                    for ($i = 4; $i < $argc; $i++) {
+                        $domains[] = $argv[ $i ];
+                    }
+                } else {
+                    for ($i = 3; $i < $argc; $i++) {
+                        $domains[] = $argv[ $i ];
+                    }
+                }
+            }
+
+            $type = $argv[2];
+        }
+    } else {
+        $type = 'nginx';
+    }
+
+    $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'wwwroot';
+
+    if ($type == 'apache') {
+        if ($domains) {
+            $domain = 'ServerName ' . implode("\n    ServerName ", $domains);
+        } else {
+            $domain = 'ServerName your_server_name';
+        }
+    } else {
+        if ($domains) {
+            $domain = 'server_name  ' . implode(' ', $domains) . ';';
+        } else {
+            $domain = 'server_name  your_server_name;';
+        }
+    }
+
+    $apache = <<<ETC
+<VirtualHost *:80>
+    <Directory "$dir">
+        Options FollowSymLinks
+        AllowOverride All
+        Order allow,deny
+        Allow from all
+    </Directory>		
+    ServerAdmin your-email-address
+    DocumentRoot "$dir"
+    $domain
+    # other directives can be here
+</VirtualHost>
+ETC;
+    $nginx  = <<< ETC
+server {
+    listen       80;
+    #listen       443 ssl;
+    $domain
+    root $dir;
+    location / {
+        index index.php index.html index.htm;
+        if (!-e \$request_filename){
+            rewrite ^(.*)$ index.php last;
+        }
+    }
+    location ~ /(assets|files)/.+\.(php[s345]?|tpl|inc)$ {
+        return 404;
+    }
+    location ~ \.php$ {
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  \$document_root/\$fastcgi_script_name;
+        #fastcgi_param  APPMODE pro;
+        include        fastcgi_params;
+    }
+    location ~ /\.ht {
+        deny  all;
+    }
+}
+ETC;
+
+    if ($type == 'apache') {
+        echo $apache, "\n";
+    } else {
+        echo $nginx, "\n";
+    }
+}
+
+/**
+ * @internal
+ */
+function getDestDir() {
+    global $argv;
+    if (isset($argv[2]) && $argv[2]) {
+        $dir = rtrim($argv[2], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    } else {
+        $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    }
+
+    if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+        echo "cannot create $dir\n";
+        exit(1);
+    }
+
+    return $dir;
+}
+
+/**
+ * @internal
+ */
+function wulaHint() {
+    echo 'wulaphp 2.8.0 by Leo Ning and contributors.', "\n\n";
+    echo 'Usage: wulaphp <init|upgrade> [dir]', "\n";
+    echo '       wulaphp conf [nginx|apache] [-- domain1 domain2 ...]', "\n\n";
+    echo "Commands:\n";
+    echo "       init [dir]           init a wulaphp project\n";
+    echo "       upgrade [dir]        upgrade artisan tool\n";
+    echo "       conf [nginx|apache]  show configuration for nginx or apache\n";
+}
+// end of wulaphp

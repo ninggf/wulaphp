@@ -1,4 +1,5 @@
 <?php
+
 namespace wulaphp\mvc\view;
 
 /**
@@ -13,24 +14,24 @@ namespace wulaphp\mvc\view;
  */
 class SimpleView extends View {
 
-	/**
-	 *
-	 * @param array|string $data
-	 */
-	public function __construct($data) {
-		parent::__construct(array($data));
-	}
+    /**
+     *
+     * @param array|string $data
+     */
+    public function __construct($data) {
+        parent::__construct([$data]);
+    }
 
-	/**
-	 * 绘制
-	 *
-	 * @return string
-	 */
-	public function render() {
-		return array_pop($this->data);
-	}
+    /**
+     * 绘制
+     *
+     * @return string
+     */
+    public function render() {
+        return array_pop($this->data);
+    }
 
-	protected function setHeader() {
-		$this->headers['Content-type'] = 'text/plain; charset=utf-8';
-	}
+    protected function setHeader() {
+        $this->headers['Content-type'] = 'text/plain;charset=UTF-8';
+    }
 }

@@ -3,20 +3,20 @@
  * 取数据.
  *
  * @param string $name
- * @param string $default
+ * @param mixed  $default
  * @param bool   $xss_clean
  *
  * @return mixed
  */
 function rqst($name, $default = '', $xss_clean = true) {
-	global $__rqst;
-	if (defined('ARTISAN_TASK_PID')) {
-		$__rqst = \wulaphp\io\Request::getInstance();
-	} else if (!$__rqst) {
-		$__rqst = wulaphp\io\Request::getInstance();
-	}
+    global $__rqst;
+    if (defined('ARTISAN_TASK_PID')) {
+        $__rqst = \wulaphp\io\Request::getInstance();
+    } else if (!$__rqst) {
+        $__rqst = wulaphp\io\Request::getInstance();
+    }
 
-	return $__rqst->get($name, $default, $xss_clean);
+    return $__rqst->get($name, $default, $xss_clean);
 }
 
 /**
@@ -28,43 +28,59 @@ function rqst($name, $default = '', $xss_clean = true) {
  *
  * @return array
  */
-function rqsts($names, $xss_clean = true, $map = []) {
-	global $__rqst;
-	if (defined('ARTISAN_TASK_PID')) {
-		$__rqst = \wulaphp\io\Request::getInstance();
-	} else if (!$__rqst) {
-		$__rqst = wulaphp\io\Request::getInstance();
-	}
-	$rqts = [];
-	foreach ($names as $key => $default) {
-		if (is_numeric($key)) {
-			$fname   = $default;
-			$default = '';
-		} else {
-			$fname = $key;
-		}
-		$rname          = isset($map[ $fname ]) ? $map[ $fname ] : $fname;
-		$rqts[ $rname ] = $__rqst->get($fname, $default, $xss_clean);
-	}
+function rqsts(array $names, $xss_clean = true, array $map = []) {
+    global $__rqst;
+    if (defined('ARTISAN_TASK_PID')) {
+        $__rqst = \wulaphp\io\Request::getInstance();
+    } else if (!$__rqst) {
+        $__rqst = wulaphp\io\Request::getInstance();
+    }
+    $rqts = [];
+    foreach ($names as $key => $default) {
+        if (is_numeric($key)) {
+            $fname   = $default;
+            $default = '';
+        } else {
+            $fname = $key;
+        }
+        $rname          = isset($map[ $fname ]) ? $map[ $fname ] : $fname;
+        $rqts[ $rname ] = $__rqst->get($fname, $default, $xss_clean);
+    }
 
-	return $rqts;
+    return $rqts;
 }
 
 /**
- * @param string $name
+ * 取URL中的参数(仅在action中可靠).
+ *
+ * @param int    $pos
  * @param string $default
  *
  * @return mixed
  */
-function arg($name, $default = '') {
-	global $__rqst;
-	if (defined('ARTISAN_TASK_PID')) {
-		$__rqst = \wulaphp\io\Request::getInstance();
-	} else if (!$__rqst) {
-		$__rqst = wulaphp\io\Request::getInstance();
-	}
+function param($pos = 0, $default = '') {
+    return \wulaphp\router\Router::getRouter()->getParam($pos, $default);
+}
 
-	return $__rqst->get($name, $default, false);
+/**
+ * 取数据.
+ *
+ * @see rqst
+ *
+ * @param string $name
+ * @param mixed  $default
+ *
+ * @return mixed
+ */
+function arg($name, $default = '') {
+    global $__rqst;
+    if (defined('ARTISAN_TASK_PID')) {
+        $__rqst = \wulaphp\io\Request::getInstance();
+    } else if (!$__rqst) {
+        $__rqst = wulaphp\io\Request::getInstance();
+    }
+
+    return $__rqst->get($name, $default, false);
 }
 
 /**
@@ -75,7 +91,14 @@ function arg($name, $default = '') {
  * @return bool
  */
 function rqset($name) {
-	return isset ($_REQUEST[ $name ]);
+    global $__rqst;
+    if (defined('ARTISAN_TASK_PID')) {
+        $__rqst = \wulaphp\io\Request::getInstance();
+    } else if (!$__rqst) {
+        $__rqst = wulaphp\io\Request::getInstance();
+    }
+
+    return isset ($__rqst[ $name ]);
 }
 
 /**
@@ -87,19 +110,19 @@ function rqset($name) {
  * @return int
  */
 function irqst($name, $default = 0) {
-	return intval(rqst($name, $default, true));
+    return intval(rqst($name, $default, true));
 }
 
 /**
  * 取float型参数.
  *
  * @param string $name
- * @param int    $default
+ * @param float  $default
  *
  * @return float
  */
-function frqst($name, $default = 0) {
-	return floatval(rqst($name, $default, true));
+function frqst($name, $default = 0.0) {
+    return floatval(rqst($name, $default, true));
 }
 
 /**
@@ -109,8 +132,8 @@ function frqst($name, $default = 0) {
  * @param string $file
  */
 function log_debug($message, $file = '') {
-	$trace = debug_backtrace();
-	log_message($message, $trace, DEBUG_DEBUG, $file);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    log_message($message, $trace, DEBUG_DEBUG, $file);
 }
 
 /**
@@ -120,8 +143,8 @@ function log_debug($message, $file = '') {
  * @param string $file
  */
 function log_info($message, $file = '') {
-	$trace = debug_backtrace();
-	log_message($message, $trace, DEBUG_INFO, $file);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    log_message($message, $trace, DEBUG_INFO, $file);
 }
 
 /**
@@ -131,8 +154,8 @@ function log_info($message, $file = '') {
  * @param string $file
  */
 function log_warn($message, $file = '') {
-	$trace = debug_backtrace();
-	log_message($message, $trace, DEBUG_WARN, $file);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    log_message($message, $trace, DEBUG_WARN, $file);
 }
 
 /**
@@ -142,8 +165,8 @@ function log_warn($message, $file = '') {
  * @param string $file
  */
 function log_error($message, $file = '') {
-	$trace = debug_backtrace();
-	log_message($message, $trace, DEBUG_ERROR, $file);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    log_message($message, $trace, DEBUG_ERROR, $file);
 }
 
 /**
@@ -152,9 +175,9 @@ function log_error($message, $file = '') {
  * @return string
  */
 function log_last_msg() {
-	global $_wula_last_msg;
+    global $_wula_last_msg;
 
-	return $_wula_last_msg;
+    return $_wula_last_msg;
 }
 
 /**
@@ -167,42 +190,56 @@ function log_last_msg() {
  *
  * @filter logger\getLogger $logger $level $file
  */
-function log_message($message, $trace_info, $level, $file = 'wula') {
-	global $_wula_last_msg;
-	$_wula_last_msg = $message;
-	//记录关闭.
-	if (DEBUG == DEBUG_OFF) {
-		return;
-	}
-	static $loggers = [];
-	if (!isset($loggers[ $level ][ $file ])) {
-		//获取日志器.
-		$log = apply_filter('logger\getLogger', new \wulaphp\util\CommonLogger($file), $level, $file);
-		if ($log instanceof Psr\Log\LoggerInterface) {
-			$logger = $log;
-		} else {
-			$logger = null;
-		}
-		$loggers[ $level ][ $file ] = $logger;
-	}
+function log_message($message, array $trace_info, $level, $file = 'wula') {
+    global $_wula_last_msg;
+    /**@var \Psr\Log\LoggerInterface[][] $loggers */
+    static $loggers = [];
+    $_wula_last_msg = $message;
+    if (!defined('DEBUG')) {
+        $dumps = '[' . gmdate('Y-m-d H:i:s') . ' GMT] ' . $message . "\n";
+        for ($i = 0; $i < 10; $i++) {
+            if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
+                $dumps .= \wulaphp\util\CommonLogger::getLine($trace_info[ $i ], $i);
+            }
+        }
+        if (isset ($_SERVER ['REQUEST_URI'])) {
+            $dumps .= " uri: " . $_SERVER ['REQUEST_URI'] . "\n";
+        } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
+            $dumps .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
+        }
+        @file_put_contents(LOGS_PATH . 'core_dump.log', $dumps, FILE_APPEND);
 
-	if (empty ($trace_info)) {
-		return;
-	}
+        return;
+    }
+    //记录关闭.
+    if (DEBUG == DEBUG_OFF || empty ($trace_info)) {
+        return;
+    }
 
-	if ($level >= DEBUG && $loggers[ $level ][ $file ]) {
-		$loggers[ $level ][ $file ]->log($level, $message, $trace_info);
-	}
+    if (!isset($loggers[ $level ][ $file ])) {
+        //获取日志器.
+        $log = apply_filter('logger\getLogger', new \wulaphp\util\CommonLogger($file), $level, $file);
+        if ($log instanceof Psr\Log\LoggerInterface) {
+            $logger = $log;
+        } else {
+            $logger = false;
+        }
+        $loggers[ $level ][ $file ] = $logger;
+    }
+
+    if ($level >= DEBUG && $loggers[ $level ][ $file ]) {
+        $loggers[ $level ][ $file ]->log($level, $message, $trace_info);
+    }
 }
 
 /**
  * 得到session名.
  *
- * @return mixed
+ * @return string
  * @filter  get_session_name session_name
  */
 function get_session_name() {
-	return apply_filter('get_session_name', 'phpsid');
+    return apply_filter('get_session_name', 'phpsid');
 }
 
 /**
@@ -214,7 +251,7 @@ function get_session_name() {
  * @return \wulaphp\db\sql\ImmutableValue
  */
 function imv($val, $alias = null) {
-	return new \wulaphp\db\sql\ImmutableValue ($val, $alias);
+    return new \wulaphp\db\sql\ImmutableValue ($val, $alias);
 }
 
 /**
@@ -223,15 +260,15 @@ function imv($val, $alias = null) {
  * @return string
  */
 function get_unique_id($obj) {
-	if (is_string($obj) || is_numeric($obj) || empty($obj)) {
-		return $obj;
-	} else if (is_array($obj)) {
-		return md5(serialize($obj));
-	} else if (is_object($obj) || $obj instanceof Closure) {
-		return spl_object_hash($obj);
-	}
+    if (is_string($obj) || is_numeric($obj) || empty($obj)) {
+        return $obj;
+    } else if (is_array($obj)) {
+        return md5(serialize($obj));
+    } else if (is_object($obj) || $obj instanceof Closure) {
+        return spl_object_hash($obj);
+    }
 
-	return null;
+    return null;
 }
 
 /**
@@ -242,71 +279,7 @@ function get_unique_id($obj) {
  * @return \wulaphp\auth\Passport
  */
 function whoami($type = 'default') {
-	return \wulaphp\auth\Passport::get($type);
-}
-
-/**
- * 不要调用它.
- *
- * @param Throwable $e
- *
- * @deprecated
- */
-function wula_exception_handler($e) {
-	global $argv;
-	if (!defined('DEBUG') || DEBUG < DEBUG_ERROR) {
-		if ($argv) {
-			echo $e->getMessage(), "\n";
-			echo $e->getTraceAsString(), "\n";
-		} else {
-			status_header(500);
-			$stack  = [];
-			$msg    = $e->getMessage();
-			$tracks = $e->getTrace();
-
-			$f = $e->getFile();
-			$l = $e->getLine();
-			array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
-			foreach ($tracks as $i => $t) {
-				$tss     = ['<tr>'];
-				$tss[]   = "<td bgcolor=\"#eeeeec\" align=\"center\">$i</i>";
-				$tss[]   = "<td bgcolor=\"#eeeeec\">{$t['function']}( )</td>";
-				$f       = str_replace(APPROOT, '', $t['file']);
-				$tss[]   = "<td bgcolor=\"#eeeeec\">{$f}<b>:</b>{$t['line']}</td>";
-				$tss []  = '</tr>';
-				$stack[] = implode('', $tss);
-			}
-			$errorFile = file_get_contents(__DIR__ . '/debug.tpl');
-			$errorFile = str_replace([
-				'{$message}',
-				'{$stackInfo}',
-				'{$title}',
-				'{$tip}',
-				'{$cs}',
-				'{$f}',
-				'{$l}',
-				'{$uri}'
-			], [
-				$msg,
-				implode('', $stack),
-				__('Oops'),
-				__('Fatal error'),
-				__('Call Stack'),
-				__('Function'),
-				__('Location'),
-				\wulaphp\router\Router::getURI()
-			], $errorFile);
-			echo $errorFile;
-			exit(0);
-		}
-	} else {
-		log_error($e->getMessage() . "\n" . $e->getTraceAsString(), 'exceptions');
-		if ($argv) {
-			exit(1);
-		} else {
-			\wulaphp\io\Response::respond(500, $e->getMessage());
-		}
-	}
+    return \wulaphp\auth\Passport::get($type);
 }
 
 /**
@@ -321,26 +294,102 @@ function wula_exception_handler($e) {
  * @return string
  */
 function get_thumbnail_filename($filename, $w, $h, $sep = '-') {
-	$finfo = pathinfo($filename);
+    $finfo = pathinfo($filename);
 
-	$shortname = $finfo['dirname'] . '/' . $finfo['filename'];
-	$ext       = $finfo['extension'] ? '.' . $finfo['extension'] : '';
-	if ($h > 0) {
-		return $shortname . "{$sep}{$w}x{$h}{$ext}";
-	} else {
-		return $shortname . "{$sep}{$w}{$ext}";
-	}
+    $shortname = $finfo['dirname'] . '/' . $finfo['filename'];
+    $ext       = $finfo['extension'] ? '.' . $finfo['extension'] : '';
+    if ($h > 0) {
+        return $shortname . "{$sep}{$w}x{$h}{$ext}";
+    } else {
+        return $shortname . "{$sep}{$w}{$ext}";
+    }
 }
 
 /**
- * 不要调用它.
- * @deprecated
+ * 显示异常页.
+ *
+ * @param \Exception $exception 异常
  */
-function wula_shutdown_function() {
-	define('WULA_STOPTIME', microtime(true));
-	fire('wula\stop');
+function show_exception_page($exception) {
+    global $argv;
+    if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
+        if ($argv) {
+            echo $exception->getMessage(), "\n";
+            echo $exception->getTraceAsString(), "\n";
+        } else if (DEBUG == DEBUG_DEBUG) {
+            status_header(500);
+            $stack  = [];
+            $msg    = str_replace('file:' . APPROOT, '', $exception->getMessage());
+            $tracks = $exception->getTrace();
+
+            $f = $exception->getFile();
+            $l = $exception->getLine();
+            array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
+            foreach ($tracks as $i => $t) {
+                $tss     = ['<tr>'];
+                $tss[]   = "<td class=\"cell-n\">$i</i>";
+                $tss[]   = "<td class=\"cell-f\">{$t['function']}( )</td>";
+                $f       = str_replace(APPROOT, '', $t['file']);
+                $tss[]   = "<td>{$f}<b>:</b>{$t['line']}</td>";
+                $tss []  = '</tr>';
+                $stack[] = implode('', $tss);
+            }
+            $errorFile = file_get_contents(__DIR__ . '/debug.tpl');
+            $errorFile = str_replace([
+                '{$message}',
+                '{$stackInfo}',
+                '{$title}',
+                '{$tip}',
+                '{$cs}',
+                '{$f}',
+                '{$l}',
+                '{$uri}'
+            ], [
+                $msg,
+                implode('', $stack),
+                __('Oops'),
+                __('Fatal error'),
+                __('Call Stack'),
+                __('Function'),
+                __('Location'),
+                \wulaphp\router\Router::getURI()
+            ], $errorFile);
+            echo $errorFile;
+            exit(0);
+        } else {
+            status_header(500);
+            $msg  = str_replace('file:' . APPROOT, '', $exception->getMessage());
+            $f    = str_replace(APPROOT, '', $exception->getFile());
+            $l    = $exception->getLine();
+            $html = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head> <meta charset="utf-8">  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no"></head><body>
+<br/><b>Warning</b>: $msg in <b>$f</b> on line <b>$l</b><br/>
+</body></html>
+HTML;
+            echo $html;
+            exit(0);
+        }
+    } else {
+        log_error($exception->getMessage() . "\n" . $exception->getTraceAsString(), 'exceptions');
+        if ($argv) {
+            echo $exception->getMessage(), "\n";
+            echo $exception->getTraceAsString(), "\n";
+            exit(1);
+        } else {
+            \wulaphp\io\Response::respond(500, $exception->getMessage());
+        }
+    }
 }
 
+//异常处理
+set_exception_handler('show_exception_page');
+//脚本结束回调
+register_shutdown_function(function () {
+    define('WULA_STOPTIME', microtime(true));
+    fire('wula\stop');
+});
 include WULA_ROOT . 'includes/plugin.php';
 include WULA_ROOT . 'includes/kernelimpl.php';
 include WULA_ROOT . 'includes/template.php';

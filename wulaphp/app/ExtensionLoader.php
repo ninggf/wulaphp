@@ -8,7 +8,7 @@ class ExtensionLoader {
 	public function load() {
 		$extensions = $this->scanExtensions();
 		foreach ($extensions as $file) {
-			@include $file;
+			include $file;
 		}
 	}
 

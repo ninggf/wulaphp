@@ -21,5 +21,3 @@ interface IURLPreDispatcher {
 	 */
 	function preDispatch($url, $router, $view);
 }
-
-?>

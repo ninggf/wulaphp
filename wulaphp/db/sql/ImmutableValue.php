@@ -22,11 +22,11 @@ class ImmutableValue {
 	/**
 	 * ImmutableValue constructor.
 	 *
-	 * @param string $value
-	 * @param null   $alias
+	 * @param string      $value
+	 * @param string|null $alias
 	 */
 	public function __construct($value, $alias = null) {
-		$this->value = (string)$value;
+		$this->value = $value;
 		$this->alias = $alias;
 	}
 
@@ -50,7 +50,7 @@ class ImmutableValue {
 	 *
 	 * @return \wulaphp\db\sql\ImmutableValue
 	 */
-	public function alias($alias) {
+	public function alias($alias){
 		$this->alias = $alias;
 
 		return $this;
