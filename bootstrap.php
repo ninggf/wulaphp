@@ -30,7 +30,7 @@ if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib'
 }
 @ob_start();
 define('WULA_STARTTIME', microtime(true));
-define('WULA_VERSION', '2.8.0');
+define('WULA_VERSION', '2.8.5');
 define('WULA_RELEASE', 'RC');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
