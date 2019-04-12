@@ -7,9 +7,13 @@
 </p>
 
 
-***以下内容假设你了解`composer`，了解`nginx`或`apache`或`Development Server`。***
+以下内容假设：
 
-> 如果以上假设不成立，请不要浪费您宝贵的时间，立即停止阅读以下内容并离开。
+1. php的基础知识非常扎实。
+2. 熟练使用`composer`。
+3. 熟练配置`nginx`或`apache`
+
+如果以上假设不成立，请不要浪费您宝贵的时间，立即停止阅读以下内容并离开。
 
 # wulaphp
 
@@ -39,7 +43,8 @@
 
 # 文档
 
-[wiki](https://github.com/ninggf/wulaphp/wiki)
+1. [wiki](https://github.com/ninggf/wulaphp/wiki)
+2. [文档](https://www.wulaphp.com)
 
 # License
 
