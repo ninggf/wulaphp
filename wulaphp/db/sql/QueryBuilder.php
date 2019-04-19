@@ -218,19 +218,6 @@ abstract class QueryBuilder {
     }
 
     /**
-     * MySQL的随机排序.
-     *
-     * @param string $rand
-     *
-     * @return $this
-     */
-    public function rand($rand = 'RAND') {
-        $this->order [] = [imv($rand), '()'];
-
-        return $this;
-    }
-
-    /**
      * 排序,多个排序字段用','分隔.
      *
      * 当<code>$field</code>为null时，尝试从请求中读取sort[name]做为$field，sort[dir] 做为$order.
@@ -458,22 +445,6 @@ abstract class QueryBuilder {
     }
 
     /**
-     * work through an array to sanitize it, do not call this function directly.
-     * it is used internally.
-     *
-     * @param mixed $item
-     *
-     * @see        sanitize()
-     *
-     * @deprecated
-     */
-    public function sanitizeAry(&$item) {
-        if (is_string($item)) {
-            $item = $this->dialect->sanitize($item);
-        }
-    }
-
-    /**
      * 清洗数据.
      *
      * @param array|string $var
@@ -490,7 +461,11 @@ abstract class QueryBuilder {
         if (is_string($var)) {
             return $this->dialect->sanitize($var);
         } else if (is_array($var)) {
-            array_walk_recursive($var, [$this, 'sanitizeAry']);
+            array_walk_recursive($var, function (&$item) {
+                if (is_string($item)) {
+                    $item = $this->dialect->sanitize($item);
+                }
+            });
 
             return $var;
         } else {
@@ -516,7 +491,7 @@ abstract class QueryBuilder {
             $alias = trim(array_pop($table));
         }
 
-        return [trim($name), $alias];
+        return [trim($name), trim($alias)];
     }
 
     /**
