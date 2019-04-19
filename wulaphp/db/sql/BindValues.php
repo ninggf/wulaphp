@@ -28,7 +28,7 @@ class BindValues implements \IteratorAggregate {
      * @return string
      */
     public function addValue($field, $value) {
-        $rfield = str_replace('`', '', $field);
+        $rfield = str_replace(['`', '"'], '', $field);
         $field  = Condition::safeField($field);
         $index  = isset ($this->names [ $field ]) ? $this->names [ $field ] : 0;
         $key    = ':' . $field . '_' . $index;

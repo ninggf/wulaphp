@@ -131,9 +131,9 @@ abstract class View {
      * @param int|array                                   $id
      * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段,默认为*.
      *
-     * @deprecated 使用findOne, 将在4.0版本中移除。
-     * @since      1.0.0
      * @return Query 记录.
+     * @since      1.0.0
+     * @deprecated 使用findOne, 将在4.0版本中移除。
      */
     public final function get($id, $fields = '*') {
         if (is_array($id)) {
@@ -178,8 +178,8 @@ abstract class View {
      * @param string|array $id
      * @param string       $field
      *
-     * @since v3.5.9
      * @return string
+     * @since v3.5.9
      */
     public final function fetch($id, $field) {
         return $this->findOne($id, $field)[ $field ];
@@ -217,8 +217,8 @@ abstract class View {
      * @param int|array                                   $id
      * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段,默认为*.
      *
-     * @since v3.5.9
      * @return Query 记录.
+     * @since v3.5.9
      */
     public final function findOne($id, $fields = '*') {
         if (is_array($id)) {
@@ -282,6 +282,7 @@ abstract class View {
         }
         $sql = $this->select();
         $sql->where($con);
+
         return $sql->count('*');
     }
 

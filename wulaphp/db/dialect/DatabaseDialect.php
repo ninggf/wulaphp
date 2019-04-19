@@ -135,9 +135,9 @@ abstract class DatabaseDialect extends \PDO {
      */
     public function getTableName($table) {
         if (preg_match('#^`?\{[^\}]+\}.*$#', $table)) {
-            return str_replace(['{', '}'], [$this->tablePrefix, ''], $table);
+            return $this->sanitize(str_replace(['{', '}'], [$this->tablePrefix, ''], $table));
         } else {
-            return $table;
+            return $this->sanitize($table);
         }
     }
 
@@ -191,6 +191,23 @@ abstract class DatabaseDialect extends \PDO {
     }
 
     public function __toString() {
+    }
+
+    /**
+     * 获取limit.
+     *
+     * @param string $sql
+     * @param int    $start
+     * @param int    $limit
+     *
+     * @return string
+     */
+    public function getLimit($sql, $start, $limit) {
+        if (!preg_match('/\s+LIMIT\s+(%[ds]|0|[1-9]\d*)(\s*,\s*(%[ds]|[1-9]\d*))?\s*$/i', $sql)) {
+            return ' LIMIT ' . implode(' , ', [intval($start), intval($limit)]);
+        }
+
+        return '';
     }
 
     /**
@@ -277,10 +294,11 @@ abstract class DatabaseDialect extends \PDO {
      *
      * @param string $database
      * @param string $charset
+     * @param array  $options
      *
      * @return bool
      */
-    public abstract function createDatabase($database, $charset);
+    public abstract function createDatabase($database, $charset = '', $options = []);
 
     /**
      * get driver name.

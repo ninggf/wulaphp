@@ -9,6 +9,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     private $batch;
     private $ids      = [];
     private $keyField = null;
+    private $keySet   = false;
 
     public function __construct($datas, $batch = false) {
         $this->datas = $datas;
@@ -16,7 +17,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     }
 
     /**
-     * specify the auto increment key then
+     * specify the auto increment key
      *
      * @param string $key
      *
@@ -104,7 +105,11 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 
                 $rst = $statement->execute();
                 if ($rst) {
-                    $this->ids [] = $this->dialect->lastInsertId($this->keyField);
+                    if ($this->keySet) {
+                        $this->fillAutoIds();
+                    } else {
+                        $this->ids [] = $this->dialect->lastInsertId($this->keyField);
+                    }
 
                     return $statement->rowCount();
                 } else {
@@ -264,7 +269,19 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
         $into         = $this->prepareFrom([[$this->intoTable, null]]);
         $sql          = $this->dialect->getInsertSQL($into [0] [0], $data, $this->values);
         $this->sql    = $sql;
+        $this->keySet = $this->keyField && isset($data[ $this->keyField ]);
 
         return $this->sql;
+    }
+
+    /**
+     * 根据数据填充主键.
+     */
+    private function fillAutoIds() {
+        if ($this->batch) {
+            $this->ids[] = $this->datas[ count($this->datas) - 1 ][ $this->keyField ];
+        } else {
+            $this->ids[] = $this->datas[ $this->keyField ];
+        }
     }
 }

@@ -16,7 +16,57 @@ use wulaphp\db\sql\Condition;
 use wulaphp\db\sql\ImmutableValue;
 use wulaphp\db\sql\Query;
 
-class SQLiteDialect extends DatabaseDialect {
+class PostgresDialect extends DatabaseDialect {
+    private $user;
+
+    public function createDatabase($database, $charset = '', $options = []) {
+        if ($charset) {
+            $set = $charset;
+        } else if ($this->charset) {
+            $set = $this->charset;
+        } else {
+            $set = 'UTF8';
+        }
+        $owner = $this->user;
+        if (isset($options['tablespace']) && $options['tablespace']) {
+            $tablespace = $options['tablespace'];
+        } else {
+            $tablespace = 'pg_default';
+        }
+        if (isset($options['con_limit']) && $options['con_limit']) {
+            $con_limit = $options['con_limit'];
+        } else {
+            $con_limit = '-1';
+        }
+        $sql = <<<SQL
+CREATE DATABASE "{$database}"
+    WITH 
+    OWNER = $owner
+    ENCODING = '{$set}'
+    TABLESPACE = $tablespace
+    CONNECTION LIMIT = $con_limit
+SQL;
+        try {
+            $this->exec($sql);
+
+            return true;
+        } catch (\PDOException $e) {
+            DatabaseDialect::$lastErrorMassge = $e->getMessage();
+
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    public function getLimit($sql, $start, $limit) {
+        if (!preg_match('/\s+LIMIT\s+(%[ds]|[1-9]\d*)(\s+OFFSET\s+(%[ds]|0|[-9]\d*))?\s*$/i', $sql)) {
+            return implode(' ', [' LIMIT', intval($limit), 'OFFSET', intval($start)]);
+        }
+
+        return '';
+    }
+
     /**
      * @param array      $fields
      * @param array      $from
@@ -37,14 +87,14 @@ class SQLiteDialect extends DatabaseDialect {
         if ($order) {
             $_orders = [];
             foreach ($order as $o) {
-                $_orders [] = Condition::cleanField($o [0]) . ' ' . ($o [1] == 'a' ? 'ASC' : 'DESC');
+                $_orders [] = $this->sanitize(Condition::cleanField($o [0])) . ' ' . ($o [1] == 'a' ? 'ASC' : 'DESC');
             }
             $sql [] = 'ORDER BY ' . implode(' , ', $_orders);
         }
         if ($limit) {
             $limit1 = $values->addValue('limit', $limit [0]);
             $limit2 = $values->addValue('limit', $limit [1]);
-            $sql [] = 'LIMIT ' . $limit1 . ',' . $limit2;
+            $sql [] = 'LIMIT ' . $limit2 . ' OFFSET ' . $limit1;
         }
         if ($forupdate) {
             $sql[] = 'FOR UPDATE';
@@ -73,18 +123,11 @@ class SQLiteDialect extends DatabaseDialect {
         return $sql;
     }
 
-    /**
-     * @param string     $into
-     * @param array      $data
-     * @param BindValues $values
-     *
-     * @return string
-     */
     public function getInsertSQL($into, $data, $values) {
         $sql    = "INSERT INTO $into (";
         $fields = $_values = [];
         foreach ($data as $field => $value) {
-            $fields [] = Condition::cleanField($field);
+            $fields [] = $this->sanitize(Condition::cleanField($field));
             if ($value instanceof ImmutableValue) { // a immutable value
                 $value->setDialect($this);
                 $_values [] = $this->sanitize($value->__toString());
@@ -112,13 +155,15 @@ class SQLiteDialect extends DatabaseDialect {
      * @return string
      */
     public function getDeleteSQL($from, $joins, $where, $values, $order, $limit) {
-        $len = count($joins);
-        if ($len == 0) {
-            $sql [] = 'DELETE FROM ' . $from [0][0];
-        } else {
-            $sql [] = 'DELETE ' . $from[0][1] . ' FROM ' . implode(' AS ', $from [0]);
+        $len    = count($joins);
+        $jw     = [];
+        $sql [] = 'DELETE FROM ' . implode(' AS ', $from [0]);
+        if ($len) {
+            $sql [] = 'USING';
+
             foreach ($joins as $join) {
-                $sql [] = $join [2] . ' ' . $join [0] . ' AS ' . $join [3] . ' ON (' . $join [1] . ')';
+                $jw[]   = $join[1];
+                $sql [] = $join [0] . ' AS ' . $join [3];
             }
         }
 
@@ -126,17 +171,11 @@ class SQLiteDialect extends DatabaseDialect {
             $sql [] = 'WHERE';
             $sql [] = $where->getWhereCondition($this, $values);
         }
-        if ($len == 0) {
-            if ($order) {
-                $_orders = [];
-                foreach ($order as $o) {
-                    $_orders [] = Condition::cleanField($o [0]) . ' ' . ($o [1] == 'a' ? 'ASC' : 'DESC');
-                }
-                $sql [] = 'ORDER BY ' . implode(' , ', $_orders);
-            }
-            if ($limit) {
-                $limit2 = $values->addValue('limit', $limit [1]);
-                $sql [] = 'LIMIT ' . $limit2;
+        if ($jw) {
+            if ($where && count($where) > 0) {
+                $sql[] = 'AND ' . implode(' AND ', $jw);
+            } else {
+                $sql[] = 'WHERE ' . implode(' AND ', $jw);
             }
         }
 
@@ -154,15 +193,14 @@ class SQLiteDialect extends DatabaseDialect {
      * @return string
      */
     public function getUpdateSQL($table, $data, $where, $values, $order, $limit) {
-        $len = count($table);
-        if ($len == 1) {
-            $sql = ['UPDATE', implode(' AS ', $table[0]), 'SET'];
-        } else {
-            $tables = [];
+        $tables = [];
+        $len    = count($table);
+        $sql    = ['UPDATE', implode(' AS ', $table[0]), 'SET'];
+        if ($len > 1) {
+            unset($table[0]);
             foreach ($table as $t) {
                 $tables[] = implode(' AS ', $t);
             }
-            $sql = ['UPDATE', implode(' , ', $tables), 'SET'];
         }
 
         $fields = [];
@@ -181,120 +219,36 @@ class SQLiteDialect extends DatabaseDialect {
         }
 
         $sql [] = implode(' , ', $fields);
+
+        if ($tables) {
+            $sql[] = 'FROM ' . implode(',', $tables);
+        }
+
         if ($where && count($where) > 0) {
             $sql [] = 'WHERE';
             $sql [] = $where->getWhereCondition($this, $values);
         }
 
-        if ($len == 1) {
-            if ($order) {
-                $_orders = [];
-                foreach ($order as $o) {
-                    $_orders [] = Condition::cleanField($o [0]) . ' ' . ($o [1] == 'a' ? 'ASC' : 'DESC');
-                }
-                $sql [] = 'ORDER BY ' . implode(' , ', $_orders);
-            }
-            if ($limit) {
-                $limit2 = $values->addValue('limit', $limit [1]);
-                $sql [] = 'LIMIT ' . $limit2;
-            }
-        }
-
         return implode(' ', $sql);
     }
 
-    /**
-     * @param array $options
-     *
-     * @return array
-     */
-    protected function prepareConstructOption($options) {
-        if ($options instanceof DatabaseConfiguration) {
-            $options = $options->toArray();
-        }
-        $opts          = array_merge([
-            'encoding'       => 'UTF8',
-            'dbname'         => ':memory:',
-            'host'           => 'localhost',
-            'port'           => 3306,
-            'user'           => 'root',
-            'password'       => 'root',
-            'driver_options' => []
-        ], $options);
-        $charset       = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8';
-        $dsn           = "sqlite:{$opts['dbname']}";
-        $this->charset = $charset;
-
-        return [$dsn, $opts ['user'], $opts ['password'], $opts ['driver_options']];
-    }
-
-    /**
-     * @param string $database
-     * @param string $charset
-     * @param array  $options
-     *
-     * @return bool
-     */
-    public function createDatabase($database, $charset = '', $options = []) {
-        return true;
-    }
-
-    /**
-     * @return array
-     */
     public function listDatabases() {
-        return [];
-    }
-
-    public function getDriverName() {
-        return 'sqlite';
-    }
-
-    /**
-     * @param string $string
-     *
-     * @return string
-     */
-    public function sanitize($string) {
-        return $string;
-    }
-
-    /**
-     * generate the common SQL for select and select count
-     *
-     * @param array      $sql
-     * @param array      $from
-     * @param array      $joins
-     * @param Condition  $where
-     * @param array      $having
-     * @param array      $group
-     * @param BindValues $values
-     */
-    private function generateSQL(&$sql, $from, $joins, $where, $having, $group, $values) {
-        $froms = [];
-        foreach ($from as $f) {
-            $froms [] = $f [0] . ' AS ' . $f [1];
-        }
-        $sql [] = implode(',', $froms);
-        if ($joins) {
-            foreach ($joins as $join) {
-                $sql [] = $join [2] . ' ' . $join [0] . ' AS ' . $join [3] . ' ON (' . $join [1] . ')';
+        $sql = 'SELECT datname FROM pg_database WHERE datistemplate = false';
+        $dbs = [];
+        $rst = $this->query($sql);
+        if ($rst) {
+            $db = $rst->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($db as $d) {
+                $dbs [] = $d ['datname'];
             }
         }
-        if ($where && count($where) > 0) {
-            $sql [] = 'WHERE ' . $where->getWhereCondition($this, $values);
-        }
-        if ($group) {
-            $sql [] = 'GROUP BY ' . implode(' , ', $group);
-        }
-        if ($having) {
-            $sql [] = 'HAVING ' . implode(' AND ', $having);
-        }
+
+        return $dbs;
     }
 
     /**
-     * @param array      $conditions
-     * @param BindValues $values
+     * @param array                      $conditions
+     * @param \wulaphp\db\sql\BindValues $values
      *
      * @return string
      */
@@ -347,7 +301,7 @@ class SQLiteDialect extends DatabaseDialect {
                     $filed = implode(' ', $ops);
                 }
                 $op    = strtoupper($op);
-                $filed = Condition::cleanField($filed);
+                $filed = $this->sanitize(Condition::cleanField($filed));
                 if ($op == '$') { // null or not null
                     if (is_null($value)) {
                         $cons [] = $filed . ' IS NULL';
@@ -380,6 +334,8 @@ class SQLiteDialect extends DatabaseDialect {
                 } else if ($op == 'LIKE' || $op == '!LIKE' || $op == '%' || $op == '!%') { // like
                     $op      = str_replace(['!', '%'], ['NOT ', 'LIKE'], $op);
                     $cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
+                } else if ($op == '~' || $op == '!~' || $op == '~*' || $op == '!~*') {
+                    $cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
                 } else {
                     if ($value instanceof ImmutableValue) {
                         $value->setDialect($dialect);
@@ -404,11 +360,74 @@ class SQLiteDialect extends DatabaseDialect {
         return '';
     }
 
+    protected function prepareConstructOption($options) {
+        if ($options instanceof DatabaseConfiguration) {
+            $options = $options->toArray();
+        }
+        $opts          = array_merge([
+            'encoding'       => 'UTF8',
+            'dbname'         => 'postgres',
+            'host'           => 'localhost',
+            'port'           => 5432,
+            'user'           => 'postgres',
+            'password'       => 'postgres',
+            'driver_options' => []
+        ], $options);
+        $charset       = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8';
+        $dsn           = "pgsql:dbname={$opts['dbname']};host={$opts['host']};port={$opts['port']}";
+        $this->charset = $charset;
+        $this->user    = $opts['user'];
+
+        return [$dsn, $opts ['user'], $opts ['password'], $opts ['driver_options']];
+    }
+
     /**
-     * 编码
+     * @param string $string
+     *
      * @return string
      */
+    public function sanitize($string) {
+        return str_replace('`', '', $string);
+    }
+
+    public function getDriverName() {
+        return 'postgres';
+    }
+
     public function getCharset() {
         return $this->charset;
+    }
+
+    /**
+     * generate the common SQL for select and select count
+     *
+     * @param array      $sql
+     * @param array      $from
+     * @param array      $joins
+     * @param Condition  $where
+     * @param array      $having
+     * @param array      $group
+     * @param BindValues $values
+     */
+    private function generateSQL(&$sql, $from, $joins, $where, $having, $group, $values) {
+        $froms = [];
+        foreach ($from as $f) {
+            $froms [] = $f [0] . ' AS ' . $f [1];
+        }
+        $sql [] = implode(',', $froms);
+        if ($joins) {
+            foreach ($joins as $join) {
+                $sql [] = $join [2] . ' ' . $join [0] . ' AS ' . $join [3] . ' ON (' . $join [1] . ')';
+            }
+        }
+        if ($where && count($where) > 0) {
+            $sql [] = 'WHERE ' . $where->getWhereCondition($this, $values);
+        }
+        if ($group) {
+            $sql [] = 'GROUP BY ' . implode(' , ', $group);
+        }
+        if ($having) {
+            $sql [] = 'HAVING ' . implode(' AND ', $having);
+        }
     }
 }

@@ -4,51 +4,52 @@ if: tag IS present
 
 cache:
   directories:
-  - $HOME/.composer/cache
+    - $HOME/.composer/cache
 
 services:
-- mysql
-- memcached
-- redis-server
-- docker
+  - mysql
+  - postgresql
+  - memcached
+  - redis-server
+  - docker
 
 addons:
   apt:
     packages:
-    - parallel
+      - parallel
 
 php:
-- "5.6"
-- "7.0"
-- "7.1"
-- "7.2"
-- "7.3"
+  - "5.6"
+  - "7.0"
+  - "7.1"
+  - "7.2"
+  - "7.3"
 
 matrix:
   fast_finish: true
 
 before_install:
-# disable xdebug if available
-- phpenv config-rm xdebug.ini || echo "xdebug not available"
-- echo "extension = redis.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-- echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-# disable default memory limit
-- export INI=~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
-- echo memory_limit = -1 >> $INI
-- mkdir -p tests/storage/
-- mkdir tests/storage/tmp
-- mkdir tests/storage/logs
-- docker pull wendal/ssdb
-- docker run --rm -d -p 8888:8888 wendal/ssdb
+  # disable xdebug if available
+  - phpenv config-rm xdebug.ini || echo "xdebug not available"
+  - echo "extension = redis.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  # disable default memory limit
+  - export INI=~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
+  - echo memory_limit = -1 >> $INI
+  - mkdir -p tests/storage/
+  - mkdir tests/storage/tmp
+  - mkdir tests/storage/logs
+  - docker pull wendal/ssdb
+  - docker run --rm -d -p 8888:8888 wendal/ssdb
 
 install:
-# flags to pass to install
-- flags="--prefer-dist --no-interaction --optimize-autoloader --no-suggest --no-progress"
-# install dependencies using system provided composer binary
-- composer install $flags
+  # flags to pass to install
+  - flags="--prefer-dist --no-interaction --optimize-autoloader --no-suggest --no-progress"
+  # install dependencies using system provided composer binary
+  - composer install $flags
 
 before_script:
-- php -S 127.0.0.1:9090 -t tests/www/ tests/www/index.php > /dev/null 2>&1 &
+  - php -S 127.0.0.1:9090 -t tests/www/ tests/www/index.php > /dev/null 2>&1 &
 
 script:
-- ls -d tests/Tests/**/* | parallel --gnu --keep-order 'echo "Running {} tests"; ./vendor/bin/phpunit -c tests/phpunit.xml.dist --colors=always {} || (echo -e "\e[41mFAILED\e[0m {}" && exit 1);'
+  - ls -d tests/Tests/**/* | parallel --gnu --keep-order 'echo "Running {} tests"; ./vendor/bin/phpunit -c tests/phpunit.xml.dist --colors=always {} || (echo -e "\e[41mFAILED\e[0m {}" && exit 1);'
