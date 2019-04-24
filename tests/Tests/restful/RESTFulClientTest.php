@@ -63,4 +63,16 @@ class RESTFulClientTest extends TestCase {
         $this->assertEquals('Leo', $rtns[1]['response']['name']);
         $this->assertEquals('a.txt', $rtns[1]['response']['avatar']);
     }
+
+    public function testRt() {
+        $rest = new RESTFulClient('http://127.0.0.1:9090/testm/api', '123', '123', '1');
+        $rtn  = $rest->get('testm.hello.rt')->getReturn();
+
+        $this->assertArrayHasKey('response', $rtn);
+        if (extension_loaded('yac') || extension_loaded('apc') || extension_loaded('apcu') || extension_loaded('xcache')) {
+            $this->assertStringEndsWith('wulaphp/restful/API.php', $rtn['response']['file']);
+        } else {
+            $this->assertEmpty($rtn['response']['file']);
+        }
+    }
 }
