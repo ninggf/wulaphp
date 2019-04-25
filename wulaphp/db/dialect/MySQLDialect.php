@@ -363,6 +363,9 @@ class MySQLDialect extends DatabaseDialect {
                 } else if (is_array($value)) {
                     $value   = new Condition ($value);
                     $cons [] = '(' . $value->getWhereCondition($dialect, $values) . ')';
+                } else if ($value instanceof ImmutableValue) {
+                    $value->setDialect($this);
+                    $cons [] = $this->sanitize($value->__toString());
                 } else {
                     array_shift($cons);
                 }
