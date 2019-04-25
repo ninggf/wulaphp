@@ -33,6 +33,9 @@ class MemcachedCacheTest extends TestCase {
      * @return \wulaphp\cache\Cache
      */
     public function testGetCacheIns() {
+        self::assertTrue(has_hook('on_load_cache_config'));
+        self::assertTrue(has_hook('get_memcached_cache'));
+
         $cfg = ConfigurationLoader::loadFromFile('cache');
         self::assertTrue($cfg->getb('enabled'));
         self::assertEquals(CACHE_TYPE_MEMCACHED, $cfg->get('default'));

@@ -86,6 +86,7 @@ abstract class Table extends View {
             $sql = new InsertSQL($data);
             $sql->into($this->table)->setDialect($this->dialect);
             if ($this->autoIncrement) {
+                $sql->autoField($this->primaryKey);
                 $rst = $sql->newId();
             } else {
                 $rst = $sql->exec(true);
@@ -128,6 +129,7 @@ abstract class Table extends View {
             $sql = new InsertSQL($datas, true);
             $sql->into($this->table)->setDialect($this->dialect);
             if ($this->autoIncrement) {
+                $sql->autoKey($this->primaryKey);
                 $rst = $sql->exec();
             } else {
                 $rst = $sql->exec(true);

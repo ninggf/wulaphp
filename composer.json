@@ -18,7 +18,6 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^5.7",
-        "phpunit/phpunit-mock-objects": "^3.0",
         "phpoffice/phpspreadsheet": "^1.4"
     },
     "suggest": {

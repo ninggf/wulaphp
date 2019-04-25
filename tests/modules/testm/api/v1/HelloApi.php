@@ -29,4 +29,18 @@ class HelloApi extends API {
             return ['error' => 12];
         }
     }
+
+    public function rt() {
+        if (extension_loaded('yac')) {
+            $rtc = new \wulaphp\cache\YacCache();
+        } else if (function_exists('apcu_store')) {
+            $rtc = new \wulaphp\cache\ApcCacher();
+        } else if (function_exists('xcache_get')) {
+            $rtc = new \wulaphp\cache\XCacheCacher();
+        } else {
+            $rtc = new \wulaphp\cache\Cache();
+        }
+
+        return ['file' => $rtc->get('wulaphp\restful\API.class')];
+    }
 }

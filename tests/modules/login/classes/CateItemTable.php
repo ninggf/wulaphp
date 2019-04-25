@@ -47,6 +47,13 @@ class CateItemTable extends Table {
         return $sql->exec(null);
     }
 
+    public function updateByCatePg() {
+        $sql = $this->update()->table('{cate} AS C')->set(['deleted' => 1]);
+        $sql->where(['CateItem.cid' => imv('C.id'), 'C.deleted' => 1]);
+
+        return $sql->exec(null);
+    }
+
     public function deleteRecycled() {
         $sql = $this->delete();
         $sql->left('{cate} AS C', 'CateItem.cid', 'C.id');

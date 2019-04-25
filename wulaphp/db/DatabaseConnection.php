@@ -314,14 +314,12 @@ class DatabaseConnection {
                 return $dialect->getTableName($r[0]);
             }, $sql);
 
-            $dialect->exec($sql);
+            return false !== $dialect->exec($sql);
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
 
             return false;
         }
-
-        return true;
     }
 
     /**
@@ -483,9 +481,14 @@ class DatabaseConnection {
      * @return array
      */
     public function queryOne($sql, ...$args) {
-        if (!preg_match('/\s+LIMIT\s+(%[ds]|0|[1-9]\d*)(\s*,\s*(%[ds]|[1-9]\d*))?\s*$/i', $sql)) {
-            $sql = $sql . ' LIMIT 0,1';
+        if (is_null($this->dialect)) {
+            $this->error = 'cannot connect to the database';
+
+            return [];
         }
+
+        $sql .= $this->dialect->getLimit($sql, 0, 1);
+
         $rst = $this->fetch($sql, ...$args);
         if ($rst) {
             $result = $rst->fetch(\PDO::FETCH_ASSOC);

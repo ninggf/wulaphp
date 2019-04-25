@@ -16,81 +16,93 @@ use tests\modules\login\classes\CateModel;
 use wulaphp\app\App;
 use wulaphp\db\dialect\DatabaseDialect;
 
-class ModelTest extends TestCase {
+class PgModelTest extends TestCase {
     /**
      * @var \wulaphp\db\DatabaseConnection
      */
     protected static $con;
     protected static $dbname;
+    /**
+     * @var \PDO
+     */
+    private static $dialect;
 
     public static function setUpBeforeClass() {
-        $dbcfg   = [
-            'driver'   => 'MySQL',
-            'host'     => '127.0.0.1',
-            'user'     => 'root',
+        $dbcfg         = [
+            'driver'   => 'Postgres',
+            'host'     => 'localhost',
+            'dbname'   => 'postgres',
+            'port'     => 5432,
+            'user'     => 'postgres',
             'password' => ''
         ];
-        $dialect = DatabaseDialect::getDialect($dbcfg);
+        self::$dialect = $dialect = DatabaseDialect::getDialect($dbcfg);
         self::assertNotNull($dialect);
         self::$dbname = rand_str(5, 'a-z') . '_db';
-        self::assertNotEmpty($dialect->createDatabase(self::$dbname, 'UTF8MB4'), DatabaseDialect::$lastErrorMassge);
-        $dialect->close();
+        self::assertTrue($dialect->createDatabase(self::$dbname, 'UTF8'), DatabaseDialect::$lastErrorMassge);
 
         $dbcfg['dbname'] = self::$dbname;
         self::$con       = App::db($dbcfg);
         self::assertNotNull(self::$con);
+    }
 
+    public function testConnect() {
+        self::assertNotNull(self::$con);
+
+        return self::$con;
+    }
+
+    /**
+     * @depends testConnect
+     */
+    public function testExec() {
         //以下准备测试数据.
         $sqls[] = <<< SQL
-CREATE TABLE IF NOT EXISTS `cate` (
-    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `deleted` TINYINT NOT NULL DEFAULT 0,
-    `update_time` INT UNSIGNED NOT NULL DEFAULT 0,
-    `update_uid` INT UNSIGNED NOT NULL DEFAULT 0,
-    `upid` INT UNSIGNED NOT NULL DEFAULT 0,
-    `name` VARCHAR(45) NOT NULL,
-    PRIMARY KEY (`id`)
-)  ENGINE=INNODB DEFAULT CHARACTER SET=UTF8
+CREATE TABLE  "cate" (
+    "id" serial  NOT NULL ,
+    "deleted" SMALLINT NOT NULL DEFAULT 0,
+    "update_time" INT  NOT NULL DEFAULT 0,
+    "update_uid" INT  NOT NULL DEFAULT 0,
+    "upid" INT  NOT NULL DEFAULT 0,
+    "name" VARCHAR(45) NOT NULL,
+    PRIMARY KEY ("id")
+) WITH ( OIDS = FALSE)
 SQL;
         $sqls[] = <<< SQL
-CREATE TABLE IF NOT EXISTS `cate_item` (
-    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `deleted` TINYINT NOT NULL DEFAULT 0,
-    `update_time` INT UNSIGNED NOT NULL DEFAULT 0,
-    `update_uid` INT UNSIGNED NOT NULL DEFAULT 0,
-    `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-    `name` VARCHAR(45) NOT NULL,
-    PRIMARY KEY (`id`)
-)  ENGINE=INNODB DEFAULT CHARACTER SET=UTF8
+CREATE TABLE  "cate_item" (
+    "id" serial  NOT NULL ,
+    "deleted" SMALLINT NOT NULL DEFAULT 0,
+    "update_time" INT  NOT NULL DEFAULT 0,
+    "update_uid" INT  NOT NULL DEFAULT 0,
+    "cid" INT  NOT NULL DEFAULT 0,
+    "name" VARCHAR(45) NOT NULL,
+    PRIMARY KEY ("id")
+)  WITH ( OIDS = FALSE)
 SQL;
 
         foreach ($sqls as $sql) {
             $rst = self::$con->exec($sql);
-            self::assertTrue($rst, $sql);
+            self::assertTrue($rst, self::$con->error);
         }
     }
 
-    public static function tearDownAfterClass() {
-        if (self::$con) {
-            self::$con->exec('drop database ' . self::$dbname);
-            self::$con->close();
-        }
-    }
-
+    /**
+     * @depends testExec
+     */
     public function testInsert() {
         $cate         = new CateModel(self::$con);
         $c['id']      = 1;
         $c['deleted'] = 0;
         $c['name']    = 'C1';
         $rst          = $cate->add($c);
-        self::assertEquals(1, $rst);
+        self::assertEquals(1, $rst, $cate->lastError());
 
         $cateItem   = new CateItemTable(self::$con);
         $ci['id']   = 1;
         $ci['cid']  = 1;
         $ci['name'] = 'C1-Item1';
         $rst        = $cateItem->add($ci);
-        self::assertEquals(1, $rst);
+        self::assertEquals(1, $rst, $cateItem->lastError());
     }
 
     /**
@@ -98,11 +110,13 @@ SQL;
      */
     public function testFindOne() {
         $cate = new CateModel(self::$con);
-        $c    = $cate->findOne(1);
-        self::assertEquals('C1', $c['name']);
+        $sql  = $cate->findOne(1);
+        $c    = $sql->ary();
+        self::assertEquals('C1', $c['name'], $sql . ' ' . $sql->getSqlString());
     }
 
     /**
+     * @depends testFindOne
      * @depends testInsert
      */
     public function testInserts() {
@@ -346,8 +360,8 @@ SQL;
      */
     public function testCrossUpdate($cate) {
         $ci  = new CateItemTable($cate->db());
-        $rst = $ci->updateByCate();
-        self::assertEquals(4, $rst);
+        $rst = $ci->updateByCatePg();
+        self::assertEquals(4, $rst, $ci->lastError());
 
         return $ci;
     }
@@ -364,6 +378,7 @@ SQL;
         $ghq = $ci->select('cid')->groupBy('cid')->having('count(*) = 1')->desc('cid')->limit(0, 2)->implode('cid');
         self::assertEquals('5,4', $ghq, $ci->lastError());
 
+
         return $ci;
     }
 
@@ -375,7 +390,19 @@ SQL;
     public function testDelete($ci) {
         $rst = $ci->deleteRecycled();
         self::assertEquals(4, $rst);
-        $cs = $ci->find(['id >' => 0], 'id')->asc('id')->implode('id');
-        self::assertEquals('1,5,6', $cs);
+        $sql = $ci->find(['id >' => 0], 'id')->asc('id');
+        $cs  = $sql->implode('id');
+        self::assertEquals('1,5,6', $cs, $sql->getSqlString());
+    }
+
+    public static function tearDownAfterClass() {
+        if (self::$con) {
+            self::$con->close();
+            try {
+                self::$dialect->exec('drop database ' . self::$dbname);
+            } catch (\Exception $e) {
+                echo "\n", $e->getMessage(), "\n";
+            }
+        }
     }
 }
