@@ -73,14 +73,14 @@ class ParallelService extends Service {
                                 $sleep = 0;
                             } else if ($rtn != 0) {
                                 $this->loge($cmd . ' ' . $arg . ' exit abnormally.' . "[output] {$output}, [error] {$error}");
-
-                                return false;
+                                //return false; #允许重试
                             }
                         } else {
                             $this->loge($cmd . ' ' . $arg . ' cannot run!');
 
                             return false;
                         }
+                        // sleep
                         while ($sleep > 0 && !$this->shutdown) {
                             sleep(1);
                             $sleep -= 1;
@@ -100,8 +100,7 @@ class ParallelService extends Service {
 
                 return false;
             }
-        }
-
+        }//end while
         return true;
     }
 }

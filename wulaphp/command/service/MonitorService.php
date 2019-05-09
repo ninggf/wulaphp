@@ -283,21 +283,27 @@ class MonitorService extends Service {
                         $forkOk = true;
                         while (count($this->services[ $id ]['pids']) < $service['worker']) {
                             $pid = @pcntl_fork();
-                            if (0 === $pid) {//子进程
+                            if (0 === $pid) {//服务进程
                                 $serImpl = $this->getSerImpl($id, $service);
                                 try {
-                                    $rtn = $serImpl->run();
+                                    $sid = @posix_setsid();//防止出现僵尸进程
+                                    if ($sid < 0) {
+                                        $this->loge('[' . $id . '] [' . $pid . '] could not detach session id.');
+                                        exit(1);
+                                    }
+                                    $rtn = $serImpl->run();//极有可能是死循环
                                 } catch (\Exception $e) {
                                     $this->loge('[' . $id . '] ' . $e->getMessage());
                                     $rtn = false;
                                 }
+                                //服务进程肯定要退出
                                 if ($rtn === false) {
                                     exit(1);
                                 } else {
                                     exit(0);
                                 }
-                                //服务进程肯定会肯定
                             } else if ($pid > 0) {
+                                //监控进程
                                 $this->pids[ $pid ]                    = $id;
                                 $this->services[ $id ]['pids'][ $pid ] = 1;
                                 $this->logd('service ' . $id . ', pid ' . $pid . ' created');
@@ -590,7 +596,7 @@ class MonitorService extends Service {
         }
         /**@var \wulaphp\command\service\Service $typeClz */
         $typeClz = new $typeCls($id, $config);
-        $typeClz->initSignal();
+        $typeClz->initSignal();//安装信号量以便可以优雅地退出
         $typeClz->setVerbose($this->verbose);
 
         return $typeClz;
