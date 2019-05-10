@@ -169,7 +169,7 @@ spl_autoload_register(function ($clz) {
             $rtc = new \wulaphp\cache\Cache();
         }
     }
-    $key      = $clz . '.class';
+    $key      = md5(APPROOT . $clz);
     $clz_file = $rtc->get($key);
     if ($clz_file && is_file($clz_file)) {
         include $clz_file;

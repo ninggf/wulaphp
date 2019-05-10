@@ -286,11 +286,6 @@ class MonitorService extends Service {
                             if (0 === $pid) {//服务进程
                                 $serImpl = $this->getSerImpl($id, $service);
                                 try {
-                                    $sid = @posix_setsid();//防止出现僵尸进程
-                                    if ($sid < 0) {
-                                        $this->loge('[' . $id . '] [' . $pid . '] could not detach session id.');
-                                        exit(1);
-                                    }
                                     $rtn = $serImpl->run();//极有可能是死循环
                                 } catch (\Exception $e) {
                                     $this->loge('[' . $id . '] ' . $e->getMessage());

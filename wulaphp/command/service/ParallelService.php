@@ -19,84 +19,83 @@ namespace wulaphp\command\service;
 class ParallelService extends Service {
     public function run() {
         $script = $this->getOption('script');
-        $sleep1 = $this->getOption('sleep', 1);
+        $sleep1 = max(1, intval($this->getOption('sleep', 1)));
         $env    = (array)$this->getOption('env', []);
+        if (!$script) {
+            $this->loge('no script specified');
+
+            return false;
+        }
+        if (!is_file(APPROOT . $script)) {
+            $this->loge($script . ' not found');
+
+            return false;
+        }
+        $this->logd('start to run ' . $script);
+        $cmd            = escapeshellcmd(PHP_BINARY);
+        $arg            = escapeshellarg($script);
+        $proc           = $cmd . ' ' . $arg;
+        $descriptorspec = [
+            0 => ["pipe", "r"],  // 标准输入，子进程从此管道中读取数据
+            1 => ["pipe", "w"],  // 标准输出，子进程向此管道中写入数据
+            2 => ["pipe", "w"] // 标准错误，子进程向此管道中写入数据
+        ];
         while (!$this->shutdown) {
-            if ($script) {
-                if (is_file(APPROOT . $script)) {
-                    try {
-                        $sleep = $sleep1;
-                        $this->logd('start to run ' . $script);
-                        $cmd            = escapeshellcmd(PHP_BINARY);
-                        $arg            = escapeshellarg($script);
-                        $descriptorspec = [
-                            0 => ["pipe", "r"],  // 标准输入，子进程从此管道中读取数据
-                            1 => ["pipe", "w"],  // 标准输出，子进程向此管道中写入数据
-                            2 => ["pipe", "w"] // 标准错误，子进程向此管道中写入数据
-                        ];
-                        $process        = @proc_open($cmd . ' ' . $arg, $descriptorspec, $pipes, APPROOT, $env);
-                        $output         = '';
-                        $error          = '';
-                        if ($process && is_resource($process)) {
-                            $rtn = 0;
-                            $pid = 0;
-                            @stream_set_blocking($pipes[1], 0);
-                            @stream_set_blocking($pipes[2], 0);
-                            while (true) {
-                                if ($this->shutdown) {
-                                    if (isset($env['loop'])) {
-                                        @fwrite($pipes[0], "@shutdown@");
-                                    } else {
-                                        @proc_terminate($process, SIGINT);
-                                    }
-                                }
-                                $info = @proc_get_status($process);
-                                if (!$info) break;
-                                $pid = $info['pid'];
-                                if (!$info['running']) {
-                                    $rtn    = $info['exitcode'];
-                                    $output = @fgets($pipes[1], 1024);
-                                    $error  = @fgets($pipes[2], 1024);
-                                    break;
+            try {
+                $sleep   = $sleep1;
+                $process = @proc_open($proc, $descriptorspec, $pipes, APPROOT, $env);
+                $output  = '';
+                $error   = '';
+                if ($process && is_resource($process)) {
+                    $rtn = 0;
+                    @stream_set_blocking($pipes[1], 0);
+                    @stream_set_blocking($pipes[2], 0);
+                    do {
+                        $pid = @pcntl_wait($status, WNOHANG);
+                        if ($pid == 0) {
+                            if ($this->shutdown) {
+                                if (isset($env['loop'])) {
+                                    @fwrite($pipes[0], "@shutdown@");
                                 } else {
-                                    sleep(1);
+                                    @proc_terminate($process, SIGINT);
                                 }
                             }
-
-                            foreach ($pipes as $p) {
-                                @fclose($p);
-                            }
-
-                            @proc_close($process);
-                            $this->logd($script . ', pid: ' . $pid . ' exits with code: ' . $rtn);
-                            if ($rtn == 2) {
-                                $sleep = 0;
-                            } else if ($rtn != 0) {
-                                $this->loge($cmd . ' ' . $arg . ' exit abnormally.' . "[output] {$output}, [error] {$error}");
-                                //return false; #允许重试
-                            }
-                        } else {
-                            $this->loge($cmd . ' ' . $arg . ' cannot run!');
-
-                            return false;
+                            usleep(rand(300, 500));
+                        } else if ($pid > 0) {//exit
+                            $rtn    = pcntl_wifexited($status) ? pcntl_wexitstatus($status) : 1;
+                            $output = @fgets($pipes[1], 1024);
+                            $error  = @fgets($pipes[2], 1024);
+                        } else {// error
+                            $rtn   = 1;
+                            $error = pcntl_strerror(pcntl_get_last_error());
                         }
-                        // sleep
-                        while ($sleep > 0 && !$this->shutdown) {
-                            sleep(1);
-                            $sleep -= 1;
-                        }
-                    } catch (\Exception $e) {
-                        $this->loge($e->getMessage());
+                    } while ($pid == 0);
 
-                        return false;
+                    foreach ($pipes as $p) {
+                        @fclose($p);
+                    }
+                    @proc_close($process);
+
+                    if ($rtn == 2) {
+                        $this->logi($script . ', pid: ' . $pid . ' exits with code: 2' . "[output] {$output}");
+                        $sleep = 0;
+                    } else if ($rtn != 0) {
+                        $this->loge($cmd . ' ' . $arg . ' exit abnormally.' . "[output] {$output}, [error] {$error}");
+                        $sleep *= 2;
+                    }
+                    unset($process, $output, $error, $pipes);
+                    // sleep
+                    while ($sleep > 0 && !$this->shutdown) {
+                        sleep(1);
+                        $sleep -= 1;
                     }
                 } else {
-                    $this->loge($script . ' not found');
+                    $this->loge($proc . ' cannot run!');
 
                     return false;
                 }
-            } else {
-                $this->loge('no script specified');
+            } catch (\Exception $e) {
+                $this->loge($e->getMessage());
 
                 return false;
             }
