@@ -28,6 +28,10 @@ class PluginTest extends TestCase {
         bind('alter_var', function ($a) {
             return $a * 2;
         });
+        bind('common\onAdd', '&\tests\Tests\common\PluginTest', 1, 2);
+        bind('common.onAdd', '&\tests\Tests\common\PluginTest', 1, 2);
+        bind('common/onAdd', '&\tests\Tests\common\PluginTest', 1, 2);
+        bind('common-onAdd', '&\tests\Tests\common\PluginTest', 1, 2);
     }
 
     public function testHas() {
@@ -62,5 +66,20 @@ class PluginTest extends TestCase {
 
         unbind_all('fire_hook');
         self::assertTrue(!has_hook('fire_hook'));
+    }
+
+    public function testClsFunc() {
+        $var = apply_filter('common\onAdd', 1, 2);
+        self::assertEquals(3, $var);
+        $var = apply_filter('common.onAdd', 1, 2);
+        self::assertEquals(3, $var);
+        $var = apply_filter('common/onAdd', 1, 2);
+        self::assertEquals(3, $var);
+        $var = apply_filter('common-onAdd', 1, 2);
+        self::assertEquals(3, $var);
+    }
+
+    public static function commononAdd($a, $b) {
+        return $a + $b;
     }
 }
