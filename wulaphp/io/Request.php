@@ -226,9 +226,9 @@ class Request implements \ArrayAccess {
      * @return string
      */
     public static function getIp() {
-        if (!empty ($_SERVER ['HTTP_X_REAL_IP'])) {
+        if (isset($_SERVER['IAMPROXIED']) && !empty ($_SERVER ['HTTP_X_REAL_IP'])) {
             $cip = $_SERVER ['HTTP_X_REAL_IP'];
-        } else if (!empty ($_SERVER ["REMOTE_ADDR"])) {
+        } else if (!empty ($_SERVER ['REMOTE_ADDR'])) {
             $cip = $_SERVER ['REMOTE_ADDR'];
         } else {
             $cip = '';
