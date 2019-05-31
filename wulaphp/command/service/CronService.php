@@ -71,7 +71,7 @@ class CronService extends Service {
      *
      * @param string     $script
      * @param array|null $env
-     ** @return int
+     * @return int
      */
     private function cron($script, array $env) {
         try {
