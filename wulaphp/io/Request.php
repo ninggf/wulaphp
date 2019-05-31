@@ -60,11 +60,20 @@ class Request implements \ArrayAccess {
     }
 
     /**
-     * 本次请求的类型
+     * 本次请求是否是ajax请求
      *
      * @return bool 如果是通过ajax请求的返回true,反之返回false
      */
     public static function isAjaxRequest() {
+        return isset ($_SERVER ["HTTP_X_AJAX_TYPE"]) || (isset ($_SERVER ['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER ['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+    }
+
+    /**
+     * 本次请求是否是ajax请求
+     *
+     * @return bool 如果是通过ajax请求的返回true,反之返回false
+     */
+    public static function isAjax() {
         return isset ($_SERVER ["HTTP_X_AJAX_TYPE"]) || (isset ($_SERVER ['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER ['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
     }
 
@@ -217,15 +226,12 @@ class Request implements \ArrayAccess {
      * @return string
      */
     public static function getIp() {
-        if (!empty ($_SERVER ["HTTP_CLIENT_IP"])) {
-            $cip = $_SERVER ["HTTP_CLIENT_IP"];
-        } else if (!empty ($_SERVER ["HTTP_X_FORWARDED_FOR"])) {
-            $cip = $_SERVER ["HTTP_X_FORWARDED_FOR"];
-            $cip = trim(implode(',', $cip)[0]);
+        if (!empty ($_SERVER ['HTTP_X_REAL_IP'])) {
+            $cip = $_SERVER ['HTTP_X_REAL_IP'];
         } else if (!empty ($_SERVER ["REMOTE_ADDR"])) {
-            $cip = $_SERVER ["REMOTE_ADDR"];
+            $cip = $_SERVER ['REMOTE_ADDR'];
         } else {
-            $cip = "";
+            $cip = '';
         }
 
         return $cip;
