@@ -148,6 +148,15 @@ class App {
     }
 
     /**
+     * 服务器ID.
+     *
+     * @return null|int
+     */
+    public static function serverId() {
+        return env('server_id', null);
+    }
+
+    /**
      * 启动App.
      *
      * @return App
