@@ -226,12 +226,15 @@ class Request implements \ArrayAccess {
      * @return string
      */
     public static function getIp() {
-        if (isset($_SERVER['IAMPROXIED']) && !empty ($_SERVER ['HTTP_X_REAL_IP'])) {
-            $cip = $_SERVER ['HTTP_X_REAL_IP'];
-        } else if (!empty ($_SERVER ['REMOTE_ADDR'])) {
-            $cip = $_SERVER ['REMOTE_ADDR'];
-        } else {
-            $cip = '';
+        static $cip = null;
+        if ($cip === null) {
+            if ((isset($_SERVER['IAMPROXIED']) || env('app_proxied')) && !empty ($_SERVER ['HTTP_X_REAL_IP'])) {
+                $cip = $_SERVER ['HTTP_X_REAL_IP'];
+            } else if (!empty ($_SERVER ['REMOTE_ADDR'])) {
+                $cip = $_SERVER ['REMOTE_ADDR'];
+            } else {
+                $cip = '';
+            }
         }
 
         return $cip;
@@ -251,7 +254,23 @@ class Request implements \ArrayAccess {
         @setcookie('__m_uuid', self::$UUID, time() + 63072000, '/', '', false, true);
     }
 
+    /**
+     * 获取用户唯一ID
+     *
+     * @return string
+     */
     public static function getUUID() {
+        if (self::$UUID) {
+            return self::$UUID;
+        }
+        if (isset ($_COOKIE ['__m_uuid'])) {
+            self::$UUID = $_COOKIE ['__m_uuid'];
+        } else {
+            self::$UUID = uniqid();
+            // 2 years = 63072000
+            @setcookie('__m_uuid', self::$UUID, time() + 63072000, '/', '', false, true);
+        }
+
         return self::$UUID;
     }
 

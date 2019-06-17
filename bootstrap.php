@@ -159,15 +159,7 @@ spl_autoload_register(function ($clz) {
     global $_wula_classpath, $_wula_namespace_classpath;
     static $rtc = false;
     if ($rtc === false) {
-        if (extension_loaded('yac')) {
-            $rtc = new \wulaphp\cache\YacCache();
-        } else if (function_exists('apcu_store')) {
-            $rtc = new \wulaphp\cache\ApcCacher();
-        } else if (function_exists('xcache_get')) {
-            $rtc = new \wulaphp\cache\XCacheCacher();
-        } else {
-            $rtc = new \wulaphp\cache\Cache();
-        }
+        $rtc = RtCache::local();
     }
     $key      = md5(APPROOT . $clz);
     $clz_file = $rtc->get($key);
