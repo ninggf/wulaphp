@@ -67,5 +67,8 @@ class AppTest extends TestCase {
 
         $val = App::cfg('test5@my');
         self::assertEquals('test5 value', $val);
+
+        self::assertEquals('1', App::serverId());
+        self::assertEquals('1', App::serverId());
     }
 }

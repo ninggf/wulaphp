@@ -24,6 +24,7 @@ namespace wulaphp\cache {
          * @var Cache
          */
         private static $CACHE;
+        private static $LOCAK_CACHE;
         public static  $PREFIX;
 
         /**
@@ -139,10 +140,36 @@ namespace wulaphp\cache {
 
             return 'Unkown';
         }
+
+        /**
+         * 获取本地运行时缓存.
+         *
+         * @return \wulaphp\cache\Cache
+         */
+        public static function local() {
+            if (self::$LOCAK_CACHE) {
+                return self::$LOCAK_CACHE;
+            }
+            if (extension_loaded('yac')) {
+                $rtc = new YacCache();
+            } else if (function_exists('apcu_store')) {
+                $rtc = new ApcCacher();
+            } else if (function_exists('xcache_get')) {
+                $rtc = new XCacheCacher();
+            } else {
+                $rtc = new Cache();
+            }
+            self::$LOCAK_CACHE = $rtc;
+
+            return self::$LOCAK_CACHE;
+        }
     }
 }
 
 namespace {
+
+    use wulaphp\cache\RtCache;
+
     /**
      * 从.env中取配置.
      *
@@ -152,10 +179,23 @@ namespace {
      * @return mixed
      */
     function env($key, $default = '') {
-        static $envs = null;
+        static $envs = null, $rtc = false;
+
+        if ($rtc === false) {
+            $rtc = RtCache::local();
+        }
+
         if ($envs === null) {
-            if (is_file(CONFIG_PATH . '.env')) {
-                $envs = @parse_ini_file(CONFIG_PATH . '.env');
+            $evnf = CONFIG_PATH . '.env';
+            $ckey = md5($evnf);
+            $envs = $rtc->get($ckey);
+            if (($mtime = filemtime($evnf))) {
+                if (!$envs || @$envs['dot_env_mtime'] < $mtime) {
+                    $envs                  = @parse_ini_file($evnf);
+                    $envs['dot_env_mtime'] = $mtime;
+                }
+            } else {
+                $envs = null;
             }
             if (!$envs) {
                 $envs = [];
@@ -165,7 +205,9 @@ namespace {
             } else {
                 $envs['debug'] = 100;
             }
+            $rtc->add($ckey, $envs);
         }
+
         if (isset($envs[ $key ])) {
             $default = $envs[ $key ];
         }
