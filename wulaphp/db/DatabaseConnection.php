@@ -66,12 +66,12 @@ class DatabaseConnection {
         }
         $config = $pname = false;
         if (is_array($name)) {
-            $tmpname = implode('_', $name) . $pid;
-            if (isset (self::$dbs [ $tmpname ])) {
-                return self::$dbs [ $tmpname ];
+            ksort($name);
+            $pname = implode('_', $name) . $pid;
+            if (isset (self::$dbs [ $pname ])) {
+                return self::$dbs [ $pname ];
             }
             $config = $name;
-            $pname  = $tmpname;
         } else if (is_string($name)) {
             $pname = $name . $pid;
             if (isset (self::$dbs [ $pname ])) {
@@ -79,8 +79,11 @@ class DatabaseConnection {
             }
             $config = App::cfgLoader()->loadDatabaseConfig($name);
         } else if ($name instanceof DatabaseConfiguration) {
+            $pname = $name->__toString() . $pid;
+            if (isset (self::$dbs [ $pname ])) {
+                return self::$dbs [ $pname ];
+            }
             $config = $name;
-            $pname  = $config->__toString() . $pid;
         }
         if ($config) {
             $dialect = DatabaseDialect::getDialect($config);
@@ -93,6 +96,46 @@ class DatabaseConnection {
             }
         }
         throw new DialectException('cannot connect the database server!');
+    }
+
+    /**
+     * 断开数据库连接.
+     *
+     * @param string $name
+     */
+    public static function disconnect($name = 'default') {
+        if (is_null($name)) {
+            $name = 'default';
+        }
+        if (defined('ARTISAN_TASK_PID')) {
+            $pid = '@' . @posix_getpid();
+        } else {
+            $pid = '';
+        }
+        /**@var \wulaphp\db\DatabaseConnection $con */
+        $con   = null;
+        $pname = null;
+        if (is_array($name)) {
+            ksort($name);
+            $pname = implode('_', $name) . $pid;
+            if (isset (self::$dbs [ $pname ])) {
+                $con = self::$dbs [ $pname ];
+            }
+        } else if (is_string($name)) {
+            $pname = $name . $pid;
+            if (isset (self::$dbs [ $pname ])) {
+                $con = self::$dbs [ $pname ];
+            }
+        } else if ($name instanceof DatabaseConfiguration) {
+            $pname = $name->__toString() . $pid;
+            if (isset (self::$dbs [ $pname ])) {
+                $con = self::$dbs [ $pname ];
+            }
+        }
+        if ($con) {
+            $con->close();
+            unset($con);
+        }
     }
 
     /**

@@ -59,6 +59,8 @@ class DatabaseConfiguration extends Configuration {
     }
 
     public function __toString() {
+        ksort($this->settings);
+
         return @implode('_', $this->settings);
     }
 }

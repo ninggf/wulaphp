@@ -14,6 +14,7 @@ namespace wulaphp\command;
 use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
 use wulaphp\command\service\MonitorService;
+use wulaphp\util\ArrayCompare;
 
 /**
  * 服务命令，让服务优雅地运行在后台.
@@ -274,7 +275,7 @@ class ServiceCommand extends ArtisanCommand {
                 ['', 44]
             ]));
             $this->output(str_pad('-', 80, '-'));
-            ksort($services);
+            uasort($services, ArrayCompare::compare('order'));
             foreach ($services as $id => $ser) {
                 $this->output($this->cell([
                     [$id, 20],
@@ -302,13 +303,13 @@ class ServiceCommand extends ArtisanCommand {
                 $status = $this->color->str('stopped', 'yellow');
                 break;
             case 'stopping':
-                $status = $this->color->str('stopping', 'yellow');
+                $status = $this->color->str('stopping', 'cyan');
                 break;
             case 'error':
                 $status = $this->color->str('error', 'red');
                 break;
             case 'disabled':
-                $status = $this->color->str('disabled', 'cyan');
+                $status = $this->color->str('disabled', 'light_gray');
                 break;
             case 'done':
                 $status = $this->color->str('Done', 'green');
@@ -317,7 +318,7 @@ class ServiceCommand extends ArtisanCommand {
                 $status = $this->color->str('Fail', 'red');
                 break;
             default:
-                $status = $this->color->str($status, 'light_gray');
+
         }
 
         return $status;
@@ -414,7 +415,43 @@ class ServiceCommand extends ArtisanCommand {
      */
     private function getRuntimeCfg() {
         $cfg = App::config('service', true)->toArray();
-        ksort($cfg['services']);
+        $i   = 0;
+        $j   = 500;
+        if (isset($cfg['enabled']) && $cfg['enabled']) {
+            $enabledServices = $cfg['enabled'];
+            if (is_string($enabledServices)) {
+                $enabledServices = explode(',', pure_comman_string(trim($enabledServices)));
+            }
+
+            if ($enabledServices && is_array($enabledServices)) {
+                foreach ($cfg['services'] as $id => &$service) {
+                    if (in_array($id, $enabledServices)) {
+                        $service['status'] = 'enabled';
+                        $service['order']  = $i++;
+                    } else {
+                        $service['status'] = 'disabled';
+                        $service['order']  = $j++;
+                    }
+                }
+            }
+        } else if (isset($cfg['disabled']) && $cfg['disabled']) {
+            $disabledServices = $cfg['disabled'];
+            if (is_string($disabledServices)) {
+                $disabledServices = explode(',', pure_comman_string(trim($disabledServices)));
+            }
+
+            if ($disabledServices && is_array($disabledServices)) {
+                foreach ($cfg['services'] as $id => &$service) {
+                    if (in_array($id, $disabledServices)) {
+                        $service['status'] = 'disabled';
+                        $service['order']  = $j++;
+                    } else {
+                        $service['status'] = 'enabled';
+                        $service['order']  = $i++;
+                    }
+                }
+            }
+        }
         @file_put_contents(TMP_PATH . '.service.json', @json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
         return $cfg;
