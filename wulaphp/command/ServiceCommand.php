@@ -98,7 +98,6 @@ class ServiceCommand extends ArtisanCommand {
      * @param string $service
      */
     private function start($service) {
-        $this->getRuntimeCfg();
         if ($service) {
             $this->output('Starting ...', false);
             $rtn = $this->sendCommand('start', ['service' => $service]);
@@ -118,7 +117,8 @@ class ServiceCommand extends ArtisanCommand {
                         $this->error('[service] could not detach session id.');
                         exit(1);
                     }
-                    $monitor = new MonitorService('monitor', App::config('service', true)->toArray());
+                    $conf = $this->getRuntimeCfg();
+                    $monitor = new MonitorService('monitor', $conf);
                     $monitor->run();
                 } catch (\Exception $e) {
                     exit(-1);
