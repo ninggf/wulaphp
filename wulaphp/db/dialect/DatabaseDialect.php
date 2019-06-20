@@ -69,8 +69,8 @@ abstract class DatabaseDialect extends \PDO {
 
             return self::$INSTANCE [ $pid ][ $name ];
         } catch (\Exception $e) {
-            log_error($e->getMessage(), 'database');
             if (isset($_SERVER['REQUEST_URI'])) {
+                log_error($e->getMessage(), 'database');
                 Response::respond(503, 'Whoops! Database server has gone away ~');
             } else {
                 throw new DialectException($e->getMessage());

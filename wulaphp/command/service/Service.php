@@ -21,7 +21,7 @@ abstract class Service {
     protected $color    = null;
     protected $rSignal;
     protected $verbose  = 3;//0:off;1:info;2:error;3:warn;4:debug
-    private   $logFile;
+    protected $logFile;
 
     /**
      * Service constructor.

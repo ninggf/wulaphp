@@ -30,6 +30,7 @@ class MonitorService extends Service {
 
     public function __construct($name, array $config) {
         parent::__construct($name, $config);
+        $this->logFile = LOGS_PATH . 'service.log';
         $this->setVerbose($this->getOption('verbose', 'vvv'));
         $this->output('Starting', false);
         $this->cfgFile = TMP_PATH . '.service.json';
@@ -95,9 +96,6 @@ class MonitorService extends Service {
         @fclose(STDIN);
         @fclose(STDOUT);
         @fclose(STDERR);
-        $STDIN  = @fopen('/dev/null', 'r');
-        $logf   = LOGS_PATH . 'service.log';
-        $STDERR = $STDOUT = @fopen($logf, is_file($logf) ? 'ab' : 'wb');
         $this->logi('started');
         while (!$this->shutdown) {
             $this->checkServices();
@@ -146,9 +144,6 @@ class MonitorService extends Service {
             @unlink($this->sockFile);
         }
         $this->logi('stopped');
-        @fclose($STDIN);
-        @fclose($STDOUT);
-        @fclose($STDERR);
     }
 
     /**
