@@ -270,7 +270,7 @@ SQL;
         self::assertNotEmpty($rst);
         $rst = $db->queryOne('select * from {test_user} where username Like %s LIMIT 1 offset %d', 'Leo%', 1);
         self::assertNotEmpty($rst);
-        $rst = $db->queryOne('select * from {test_user} where username Like %s LIMIT 1 offset 0', 'Leo%', 1);
+        $rst = $db->queryOne('select * from {test_user} where username Like %s LIMIT 1 offset 0', 'Leo%');
         self::assertNotEmpty($rst);
     }
 
