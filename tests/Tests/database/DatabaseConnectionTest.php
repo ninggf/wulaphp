@@ -32,6 +32,7 @@ class DatabaseConnectionTest extends TestCase {
             'driver'   => 'MySQL',
             'host'     => '127.0.0.1',
             'user'     => 'root',
+            'port'     => 3307,
             'password' => ''
         ];
         $dialect = DatabaseDialect::getDialect($dbcfg);
@@ -253,11 +254,48 @@ SQL;
     public function testLimitRegex(DatabaseConnection $db) {
         $cnt = $db->queryOne('select count(*) as cnt from {test_user} where username Like %s', 'Leo%');
         self::assertNotEmpty($cnt, var_export($cnt, true));
+        $sql   = <<<SQL
+select 
+    count(*) as cnt 
+from 
+    {test_user} 
+where 
+    username Like %s
+SQL;
+        $limit = $db->getDialect()->getLimit($sql, 0, 1);
+        self::assertEquals(' LIMIT 0 , 1', $limit);
+        $cnt = $db->queryOne($sql, 'Leo%');
+        self::assertNotEmpty($cnt, var_export($cnt, true));
         self::assertEquals(2, $cnt['cnt']);
+
         $rst = $db->queryOne('select * from {test_user} where username Like %s LIMIT 1', 'Leo%');
         self::assertNotEmpty($rst);
+        self::assertEquals('Leo', $rst['username']);
+
         $rst = $db->queryOne('select * from {test_user} where username Like %s LIMIT 1,1', 'Leo%');
         self::assertNotEmpty($rst);
+        self::assertEquals('Leo3', $rst['username']);
+        $sql   = <<<SQL
+select * from {test_user} 
+    where 
+    username Like %s
+SQL;
+        $limit = $db->getDialect()->getLimit($sql, 0, 1);
+        self::assertEquals(' LIMIT 0 , 1', $limit);
+        $rst = $db->queryOne($sql, 'Leo%');
+        self::assertNotEmpty($rst);
+        self::assertEquals('Leo', $rst['username']);
+
+        $sql   = <<<SQL
+select * from {test_user} 
+    where 
+    username Like %s LIMIT 1,1
+SQL;
+        $limit = $db->getDialect()->getLimit($sql, 0, 1);
+        self::assertEquals('', $limit);
+        $rst = $db->queryOne($sql, 'Leo%');
+        self::assertNotEmpty($rst);
+        self::assertEquals('Leo3', $rst['username']);
     }
 
     /**
@@ -333,5 +371,4 @@ SQL;
             self::$con->close();
         }
     }
-
 }

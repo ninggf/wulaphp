@@ -349,6 +349,8 @@ class DatabaseConnection {
     public function exec($sql) {
         $dialect = $this->dialect;
         if (is_null($dialect)) {
+            $this->error = 'dialect is null [' . $sql . ']';
+
             return false;
         }
         try {
@@ -392,6 +394,8 @@ class DatabaseConnection {
      */
     public function cud($sql, ...$args) {
         if (is_null($this->dialect)) {
+            $this->error = 'dialect is null [' . $sql . ']';
+
             return null;
         }
         $dialect = $this->dialect;
@@ -403,7 +407,7 @@ class DatabaseConnection {
             if ($args) {
                 // 参数处理
                 $params = 0;
-                $sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect, $sql) {
+                $sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
                     if ($r[1] == 'f') {
                         $v = floatval($args[ $params ]);
                     } else if ($r[1] == 'd') {
@@ -417,13 +421,21 @@ class DatabaseConnection {
 
                     return $v;
                 }, $sql);
+
+                if (($argsn = count($args)) != $params) {
+                    $this->error = "needs $params args, but $argsn given. [" . $sql . ']';
+
+                    return null;
+                }
             }
             $rst = $dialect->exec($sql);
-
-            return $rst === false ? null : $rst;
+            if ($rst !== false) {
+                return $rst;
+            }
+            $this->error = 'cannot perform sql. [' . $sql . ']';
 
         } catch (\Exception $e) {
-            $this->error = $e->getMessage();
+            $this->error = $e->getMessage() . ' [' . $sql . ']';
         }
 
         return null;
@@ -477,6 +489,8 @@ class DatabaseConnection {
      */
     public function fetch($sql, ...$args) {
         if (is_null($this->dialect)) {
+            $this->error = 'dialect is null. [' . $sql . ']';
+
             return null;
         }
         $dialect = $this->dialect;
@@ -487,7 +501,7 @@ class DatabaseConnection {
             }, $sql);
             if ($args) {
                 $params = 0;
-                $sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect, $sql) {
+                $sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
                     if ($r[1] == 'f') {
                         $v = floatval($args[ $params ]);
                     } else if ($r[1] == 'd') {
@@ -501,14 +515,21 @@ class DatabaseConnection {
 
                     return $v;
                 }, $sql);
+                if (($argsn = count($args)) != $params) {
+                    $this->error = "needs $params args, but $argsn given. [" . $sql . ']';
+
+                    return null;
+                }
             }
             //查询
             $rst = $this->dialect->query($sql);
             if ($rst) {
                 return $rst;
+            } else {
+                $this->error = 'cannot fetch from database [' . $sql . ']';
             }
         } catch (\Exception $e) {
-            $this->error = $e->getMessage();
+            $this->error = $e->getMessage() . ' [' . $sql . ']';
         }
 
         return null;
