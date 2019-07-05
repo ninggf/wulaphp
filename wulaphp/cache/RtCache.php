@@ -189,7 +189,7 @@ namespace {
             $evnf = CONFIG_PATH . '.env';
             $ckey = md5($evnf);
             $envs = $rtc->get($ckey);
-            if (($mtime = filemtime($evnf))) {
+            if (is_file($evnf) && ($mtime = intval(@filemtime($evnf)))) {
                 if (!$envs || @$envs['dot_env_mtime'] < $mtime) {
                     $envs                  = @parse_ini_file($evnf);
                     $envs['dot_env_mtime'] = $mtime;
