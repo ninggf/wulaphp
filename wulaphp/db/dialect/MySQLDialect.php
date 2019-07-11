@@ -217,7 +217,7 @@ class MySQLDialect extends DatabaseDialect {
             'port'           => 3306,
             'user'           => 'root',
             'password'       => 'root',
-            'driver_options' => [
+            'options' => [
                 \PDO::MYSQL_ATTR_COMPRESS => true
             ]
         ], $options);
@@ -229,7 +229,7 @@ class MySQLDialect extends DatabaseDialect {
         }
         $this->charset = $charset;
 
-        return [$dsn, $opts ['user'], $opts ['password'], $opts ['driver_options']];
+        return [$dsn, $opts ['user'], $opts ['password'], $opts ['options']];
     }
 
     /**

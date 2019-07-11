@@ -374,14 +374,14 @@ SQL;
             'port'           => 5432,
             'user'           => 'postgres',
             'password'       => 'postgres',
-            'driver_options' => []
+            'options' => []
         ], $options);
         $charset       = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8';
         $dsn           = "pgsql:dbname={$opts['dbname']};host={$opts['host']};port={$opts['port']}";
         $this->charset = $charset;
         $this->user    = $opts['user'];
 
-        return [$dsn, $opts ['user'], $opts ['password'], $opts ['driver_options']];
+        return [$dsn, $opts ['user'], $opts ['password'], $opts ['options']];
     }
 
     /**

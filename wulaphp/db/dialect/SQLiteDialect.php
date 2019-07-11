@@ -219,13 +219,13 @@ class SQLiteDialect extends DatabaseDialect {
             'port'           => 3306,
             'user'           => 'root',
             'password'       => 'root',
-            'driver_options' => []
+            'options' => []
         ], $options);
         $charset       = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8';
         $dsn           = "sqlite:{$opts['dbname']}";
         $this->charset = $charset;
 
-        return [$dsn, $opts ['user'], $opts ['password'], $opts ['driver_options']];
+        return [$dsn, $opts ['user'], $opts ['password'], $opts ['options']];
     }
 
     /**
