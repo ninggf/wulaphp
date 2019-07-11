@@ -82,4 +82,8 @@ class PluginTest extends TestCase {
     public static function commononAdd($a, $b) {
         return $a + $b;
     }
+
+    public static function common_onAdd($a, $b) {
+        return $a + $b;
+    }
 }
