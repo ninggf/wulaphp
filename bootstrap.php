@@ -157,12 +157,8 @@ RtCache::init();
 //注册类自动加载
 spl_autoload_register(function ($clz) {
     global $_wula_classpath, $_wula_namespace_classpath;
-    static $rtc = false;
-    if ($rtc === false) {
-        $rtc = RtCache::local();
-    }
-    $key      = md5(APPROOT . $clz);
-    $clz_file = $rtc->get($key);
+    $key      = 'rt@' . $clz;
+    $clz_file = RtCache::lget($key);
     if ($clz_file && is_file($clz_file)) {
         include $clz_file;
 
@@ -173,7 +169,7 @@ spl_autoload_register(function ($clz) {
         foreach ($_wula_namespace_classpath as $cp) {
             $clz_file = $cp . $clzf . '.php';
             if (is_file($clz_file)) {
-                $rtc->add($key, $clz_file);
+                RtCache::ladd($key, $clz_file);
                 include $clz_file;
 
                 return;
@@ -182,7 +178,7 @@ spl_autoload_register(function ($clz) {
         //从模块加载
         $clz_file = App::loadClass($clz);
         if ($clz_file && is_file($clz_file)) {
-            $rtc->add($key, $clz_file);
+            RtCache::ladd($key, $clz_file);
             include $clz_file;
 
             return;
@@ -191,7 +187,7 @@ spl_autoload_register(function ($clz) {
     foreach ($_wula_classpath as $path) {
         $clz_file = $path . DS . $clz . '.php';
         if (is_file($clz_file)) {
-            $rtc->add($key, $clz_file);
+            RtCache::ladd($key, $clz_file);
             include $clz_file;
 
             return;
@@ -199,7 +195,7 @@ spl_autoload_register(function ($clz) {
     }
     $clz_file = apply_filter('loader\loadClass', null, $clz);
     if ($clz_file && is_file($clz_file)) {
-        $rtc->add($key, $clz_file);
+        RtCache::ladd($key, $clz_file);
         include $clz_file;
     }
 });

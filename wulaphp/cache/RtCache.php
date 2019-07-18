@@ -24,7 +24,10 @@ namespace wulaphp\cache {
          * @var Cache
          */
         private static $CACHE;
-        private static $LOCAK_CACHE;
+        /**
+         * @var Cache
+         */
+        private static $LOCAL_CACHE;
         public static  $PREFIX;
 
         /**
@@ -36,7 +39,6 @@ namespace wulaphp\cache {
          */
         public static function init($force = false) {
             if (RtCache::$CACHE == null || $force) {
-                RtCache::$PREFIX = defined('APPID') && APPID ? APPID : WWWROOT;
                 if (!$force && APP_MODE != 'pro') {
                     RtCache::$CACHE = new Cache ();
                 } else if (defined('RUN_IN_CLUSTER')) {//部署到集群中，使用REDIS
@@ -64,6 +66,22 @@ namespace wulaphp\cache {
             }
 
             return RtCache::$CACHE;
+        }
+
+        public static function initLocal() {
+            if (!self::$LOCAL_CACHE) {
+                RtCache::$PREFIX = defined('APPID') && APPID ? APPID : WWWROOT;
+                if (extension_loaded('yac')) {
+                    $rtc = new YacCache();
+                } else if (function_exists('apcu_store')) {
+                    $rtc = new ApcCacher();
+                } else if (function_exists('xcache_get')) {
+                    $rtc = new XCacheCacher();
+                } else {
+                    $rtc = new Cache();
+                }
+                self::$LOCAL_CACHE = $rtc;
+            }
         }
 
         /**
@@ -142,28 +160,68 @@ namespace wulaphp\cache {
         }
 
         /**
-         * 获取本地运行时缓存.
+         * 向运行时缓存写入数据.
          *
-         * @return \wulaphp\cache\Cache
+         * @param string $key
+         * @param mixed  $data
+         *
+         * @return bool
          */
-        public static function local() {
-            if (self::$LOCAK_CACHE) {
-                return self::$LOCAK_CACHE;
-            }
-            if (extension_loaded('yac')) {
-                $rtc = new YacCache();
-            } else if (function_exists('apcu_store')) {
-                $rtc = new ApcCacher();
-            } else if (function_exists('xcache_get')) {
-                $rtc = new XCacheCacher();
-            } else {
-                $rtc = new Cache();
-            }
-            self::$LOCAK_CACHE = $rtc;
+        public static function ladd($key, $data) {
+            $key = md5(RtCache::$PREFIX . $key);
+            RtCache::$LOCAL_CACHE->add($key, $data);
 
-            return self::$LOCAK_CACHE;
+            return true;
+        }
+
+        /**
+         * 从运行时缓存读取数据.
+         *
+         * @param string $key
+         *
+         * @return mixed
+         */
+        public static function lget($key) {
+            $key = md5(RtCache::$PREFIX . $key);
+
+            return RtCache::$LOCAL_CACHE->get($key);
+        }
+
+        /**
+         * 删除缓存数据.
+         *
+         * @param string $key
+         *
+         * @return bool
+         */
+        public static function ldelete($key) {
+            $key = md5(RtCache::$PREFIX . $key);
+
+            return RtCache::$LOCAL_CACHE->delete($key);
+        }
+
+        /**
+         * 清空运行时缓存.
+         */
+        public static function lclear() {
+            RtCache::$LOCAL_CACHE->clear();
+        }
+
+        /**
+         * 缓存是否存在.
+         *
+         * @param string $key
+         *
+         * @return bool
+         */
+        public static function lexists($key) {
+            $key = md5(RtCache::$PREFIX . $key);
+
+            return RtCache::$LOCAL_CACHE->has_key($key);
         }
     }
+
+    RtCache::initLocal();
 }
 
 namespace {
@@ -179,16 +237,12 @@ namespace {
      * @return mixed
      */
     function env($key, $default = '') {
-        static $envs = null, $rtc = false;
-
-        if ($rtc === false) {
-            $rtc = RtCache::local();
-        }
+        static $envs = null;
 
         if ($envs === null) {
             $evnf = CONFIG_PATH . '.env';
-            $ckey = md5($evnf);
-            $envs = $rtc->get($ckey);
+            $ckey = 'rt@.env';
+            $envs = RtCache::lget($ckey);
             if (is_file($evnf) && ($mtime = intval(@filemtime($evnf)))) {
                 if (!$envs || @$envs['dot_env_mtime'] < $mtime) {
                     $envs                  = @parse_ini_file($evnf);
@@ -205,7 +259,7 @@ namespace {
             } else {
                 $envs['debug'] = 100;
             }
-            $rtc->add($ckey, $envs);
+            RtCache::ladd($ckey, $envs);
         }
 
         if (isset($envs[ $key ])) {

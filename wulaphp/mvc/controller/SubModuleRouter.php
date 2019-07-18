@@ -11,6 +11,7 @@
 namespace wulaphp\mvc\controller;
 
 use wulaphp\app\Module;
+use wulaphp\cache\RtCache;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\View;
@@ -28,7 +29,7 @@ class SubModuleRouter extends Controller {
     public function __construct(Module $module) {
         parent::__construct($module);
         $this->slag = 'index';
-        $routes     = isset($this->routes) && is_array($this->routes) ? $this->routes : $module->routes();
+        $routes     = $module->routes();
         if ($routes && is_array($routes)) {
             $ns = $module->getNamespace();
             foreach ($routes as $route => $cb) {
@@ -63,12 +64,24 @@ class SubModuleRouter extends Controller {
         if (empty($subname) || empty($action)) {
             return null;
         }
+
         $module = $this->module->getDirname();
-        $app    = DefaultDispatcher::findApp($module, $action, $args, $this->module->getNamespace(), $subname);
+        $ckey   = 'rt@' . Router::getRouter()->requestURI;
+        $app    = RtCache::lget($ckey);# 从缓存读取
+        if ($app && is_file($app[3])) {
+            include_once $app[3];
+            $nc = false;
+        } else {
+            $app = DefaultDispatcher::findApp($module, $action, $args, $this->module->getNamespace(), $subname);
+            $nc  = true;
+        }
         if ($app) {
             list ($controllerClz, $action, $pms, , $controllerSlag, $actionSlag) = $app;
             if (in_array($action, ['beforerun', 'afterrun', 'geturlprefix'])) {
                 return null;
+            }
+            if ($nc) {
+                RtCache::ladd($ckey, $app);
             }
             try {
                 $clz = new $controllerClz ($this->module);

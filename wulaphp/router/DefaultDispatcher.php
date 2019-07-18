@@ -3,9 +3,9 @@
 namespace wulaphp\router;
 
 use wulaphp\app\App;
+use wulaphp\app\Module;
 use wulaphp\cache\RtCache;
 use wulaphp\mvc\controller\Controller;
-use wulaphp\mvc\controller\SubModuleRouter;
 use wulaphp\mvc\view\IModuleView;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
@@ -51,7 +51,13 @@ class DefaultDispatcher implements IURLDispatcher {
                 $module = apply_filter('module_for_homepage', $dm);
                 if ($module instanceof View) {
                     return $module;
-                } else if (!$module) {//无模块可
+                } else if ($module) {
+                    if ($module instanceof Module) {
+                        $module = $module->getDirname();
+                    } else if (!is_string($module)) {
+                        return null;
+                    }
+                } else {//无模块可
                     return null;
                 }
             } else if (App::checkUrlPrefix($module)) {
@@ -112,24 +118,21 @@ class DefaultDispatcher implements IURLDispatcher {
                 return null;
             }
             $ckey = 'rt@' . $url;
-            $app  = RtCache::get($ckey);
-            if (!$app) {
-                $app = self::findApp($module, $action, $pms, $namespace);
-                RtCache::add($ckey, $app);
-            } else if (is_file($app[3])) {
+            $app  = RtCache::lget($ckey);
+            if ($app && is_file($app[3])) {
                 include_once $app[3];
+                $nc = false;
             } else {
                 $app = self::findApp($module, $action, $pms, $namespace);
-                if ($app) {
-                    RtCache::add($ckey, $app);
-                }
+                $nc  = true;
             }
             if ($app) {
                 list ($controllerClz, $action, $pms, , $controllerSlag, $actionSlag) = $app;
                 if (in_array($action, ['beforerun', 'afterrun', 'geturlprefix'])) {
-                    RtCache::delete($ckey);
-
                     return null;
+                }
+                if ($nc) {
+                    RtCache::ladd($ckey, $app);
                 }
                 try {
                     $clz = new $controllerClz ($mm);
@@ -141,7 +144,7 @@ class DefaultDispatcher implements IURLDispatcher {
                             $cprefix   = $tmpPrefix && isset($tmpPrefix[1]) ? $tmpPrefix[1] : '';
                         }
                         if (($cprefix || $prefix) && $cprefix != $prefix) {
-                            RtCache::delete($ckey);
+                            RtCache::ldelete($ckey);
 
                             return null;
                         }
@@ -264,9 +267,9 @@ class DefaultDispatcher implements IURLDispatcher {
         if ($subnamespace) {
             $module    .= DS . $subnamespace;
             $namespace .= '\\' . $subnamespace;
-            $mclz      = null;
+            $parent    = null;
         } else {
-            $mclz = App::getModuleByDir($module);
+            $parent = App::getModuleByDir($module);
         }
         if ($action != 'index') {
             // Action Controller 的 index方法
@@ -274,13 +277,6 @@ class DefaultDispatcher implements IURLDispatcher {
             $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
             $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action];
 
-            //子模块
-            if (!$subnamespace) {
-                $controller_file = MODULES_PATH . $module . DS . 'Router.php';
-                if (is_file($controller_file)) {
-                    $files [] = [$controller_file, $namespace . '\Router', $action, 'index'];
-                }
-            }
             // 默认controller的action方法
             $controllerClz   = 'IndexController';
             $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
@@ -293,10 +289,6 @@ class DefaultDispatcher implements IURLDispatcher {
                     if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
                         if ($action == 'index' && count($params) > 0) {
                             $action = array_shift($params);
-                        } else if (is_subclass_of($controllerClz, SubModuleRouter::class)) {
-                            //子模块
-                            array_unshift($params, $action);
-                            $action = 'index';
                         }
 
                         return [
@@ -329,39 +321,19 @@ class DefaultDispatcher implements IURLDispatcher {
                 }
             }
         }
+
         //查找子模块
-        if (!$subnamespace) {
-            //子模块路由
-            if ($mclz && $mclz->hasSubModule()) {
-                array_unshift($params, $action);
+        if ($parent && $parent->hasSubModule()) {
+            array_unshift($params, $action);
 
-                return [
-                    'wulaphp\mvc\controller\SubModuleRouter',
-                    'index',
-                    $params,
-                    null,
-                    'index',
-                    'index'
-                ];
-            }
-
-            $controller_file = MODULES_PATH . $module . DS . 'Router.php';
-            if (is_file($controller_file)) {
-                $controllerClz = $namespace . '\\Router';
-                include_once $controller_file;
-                if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\SubModuleRouter')) {
-                    array_unshift($params, $action);
-
-                    return [
-                        $controllerClz,
-                        'index',
-                        $params,
-                        $controller_file,
-                        'index',
-                        'index'
-                    ];
-                }
-            }
+            return [
+                'wulaphp\mvc\controller\SubModuleRouter',
+                'index',
+                $params,
+                null,
+                'index',
+                'index'
+            ];
         }
 
         return null;

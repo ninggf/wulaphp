@@ -18,11 +18,11 @@ class Router {
     private $preDispatchers  = [];//前置分发器列表
     private $postDispatchers = [];//后置分发器列表
     private $urlParsedInfo   = null;//解析的URL数据.
-    private $requestURL      = null;//解析后的URL
 
     public $queryParams = [];//QueryString 请求参数
     public $urlParams   = [];//URL中的参数
-    public $requestURI;//请求URI
+    public $requestURI  = null;//请求URI
+    public $requestURL  = null;//解析后的URL
     /**
      * @var Router
      */
@@ -187,8 +187,8 @@ class Router {
      * 将URL解析后分发给分发器处理.
      *
      * @filter router\parse_url url
-     * @throws \Exception when no router
      * @return mixed when run in cli-server return false for assets.
+     * @throws \Exception when no router
      */
     public function route() {
         static $alias = false;
@@ -213,8 +213,7 @@ class Router {
             $url = 'index.html';
         }
         //URL转换处理
-        $url              = $this->transform($url);
-        $this->requestURL = $url;
+        $url = $this->transform($url);
         if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
             if ($alias === false) {
                 $aliasFile = MODULES_PATH . 'alias.php';
@@ -228,6 +227,7 @@ class Router {
                 $url = $alias[ $url ];
             }
         }
+        $this->requestURL = $url;
         fire('router\beforeDispatch', $this, $url);
         //预处理
         $view = null;

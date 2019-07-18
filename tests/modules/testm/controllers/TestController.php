@@ -11,6 +11,7 @@
 namespace testm\controllers;
 
 use PhpOffice\PhpSpreadsheet\Style\Color;
+use wulaphp\cache\RtCache;
 use wulaphp\mvc\controller\Controller;
 
 class TestController extends Controller {
@@ -34,5 +35,11 @@ class TestController extends Controller {
         $rows[4] = ['A' => '中七班', 'B' => 29, 'C' => '周老师', 'D' => '阮老师', 'E' => '徐老师'];
 
         return excel('班级信息表-' . date('Y-m-d-His'), $rows, 'test/class');
+    }
+
+    public function rt() {
+        RtCache::ladd('rt@test', '11111');
+
+        return ['rt' => RtCache::lget('rt@test')];
     }
 }
