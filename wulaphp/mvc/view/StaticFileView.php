@@ -24,7 +24,7 @@ class StaticFileView extends View {
     public function __construct($tpl = '') {
         $headers         = ['Content-Type' => Router::mimeContentType($tpl)];
         $this->mtime     = @filemtime($tpl);
-        $headers['ETag'] = substr(md5_file($tpl), 0, 8) . '-' . substr(md5($this->mtime), 0, 4);
+        $headers['ETag'] = substr(md5_file($tpl), 0, 8) . '-' . substr(md5($this->mtime), 0, 4) . '-d';
         parent::__construct([], $tpl, $headers);
     }
 
