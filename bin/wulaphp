@@ -147,7 +147,7 @@ function conf() {
         Require all granted
     </Directory>
     
-  	<IfModule alias_module>
+    <IfModule alias_module>
         AliasMatch "^/(modules|themes)/(.+\.(js|css|jpe?g|png|gif))$" "{$dir}$1/$2"
     </IfModule>
     
