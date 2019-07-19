@@ -4,7 +4,10 @@ namespace wulaphp\router;
 
 use ci\XssCleaner;
 use wulaphp\app\App;
+use wulaphp\cache\Cache;
 use wulaphp\io\Response;
+use wulaphp\mvc\view\View;
+use wulaphp\util\RedisLock;
 
 /**
  * 路由器.负载解析URL并将URL分发给相应的处理器.
@@ -23,6 +26,8 @@ class Router {
     public $urlParams   = [];//URL中的参数
     public $requestURI  = null;//请求URI
     public $requestURL  = null;//解析后的URL
+
+    private static $cacheCheck = false;//
     /**
      * @var Router
      */
@@ -125,6 +130,95 @@ class Router {
         }
 
         return false;
+    }
+
+    /**
+     * 检测缓存。
+     */
+    public static function checkCache() {
+        if (self::$cacheCheck) {
+            return;
+        }
+        self::$cacheCheck = true;
+        $cache            = Cache::getCache();
+        if (!$cache->enabled()) {
+            return;
+        }
+        $url  = self::getFullURI();
+        $qstr = get_query_string();//参数
+        $cid  = md5($url . $qstr);
+        $page = $cache->get($cid);
+        //防雪崩机制: 加锁读缓存
+        if (!$page && defined('ANTI_AVALANCHE') && ANTI_AVALANCHE) {
+            $wait = false;
+            RedisLock::ulock($cid, 30, $wait);
+            if ($wait) {//被锁，说明有其它人会更新缓存 ，再读一次
+                $page = $cache->get($cid);
+            }
+        }
+        //缓存命中
+        if ($page && is_array($page)) {
+            if (isset($wait)) {
+                RedisLock::release($cid);
+            }
+            @header_remove('X-Powered-By');
+            $page = apply_filter('alter_page_cache', $page);
+            @list($content, $headers, $time, $expire) = $page;
+            if (isset ($_SERVER ['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER ['HTTP_IF_MODIFIED_SINCE']) === $time) {
+                http_response_code(304);
+                if (php_sapi_name() == 'cgi-fcgi') {
+                    @header('Status: 304 Not Modified');
+                }
+            } else {
+                if ($headers) {
+                    foreach ($headers as $h => $v) {
+                        @header($h . ': ' . $v);
+                    }
+                }
+                if ($time !== 0) {
+                    Response::cache($expire, $time);
+                } else if ($time == 0) {
+                    Response::nocache();
+                }
+                echo $content;
+            }
+            exit ();
+        } else {
+            //注册缓存内容处理器
+            $unlock = isset($wait);
+            bind('before_output_content', function ($content, View $view) use ($cid, $cache, $unlock, $url) {
+                //需要缓存
+                if (defined('CACHE_EXPIRE') && CACHE_EXPIRE > 0) {
+                    try {
+                        //插件或扩展可以将最后修改时间设为0来取消本次缓存.
+                        $time    = apply_filter('alter_page_modified_time', time());
+                        $headers = $view->getHeaders();//原输出头
+                        $cache->add($cid, [
+                            $content,//缓存内容
+                            $headers,
+                            $time == 0 ? time() : $time,// 最后修改时间
+                            CACHE_EXPIRE//缓存时间
+                        ], CACHE_EXPIRE);
+                        try {
+                            fire('on_page_cached', $cid, $url);
+                        } catch (\Exception $ee) {
+                        }
+                        if ($time > 0) {
+                            Response::lastModified($time);
+                        } else if ($time == 0) {
+                            Response::nocache();
+                        }
+                    } catch (\Exception $e) {
+                    }
+                }
+
+                if ($unlock) {
+                    RedisLock::release($cid);
+                }
+
+                return $content;
+            }, 100, 2);
+        }
     }
 
     /**

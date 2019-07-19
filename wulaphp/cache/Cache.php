@@ -5,7 +5,8 @@ namespace wulaphp\cache;
 use wulaphp\conf\ConfigurationLoader;
 
 class Cache implements \ArrayAccess {
-    public $expire = 0;
+    public  $expire    = 0;
+    private $isEnalbed = true;
 
     public function getName() {
         return '未启用';
@@ -20,28 +21,41 @@ class Cache implements \ArrayAccess {
      */
     public static function getCache($type = '') {
         static $caches = [];
-
         if (!$type) {
             $loader = new ConfigurationLoader();
             $cfg    = $loader->loadConfig('cache');
             $type   = $cfg->get('default', CACHE_TYPE_REDIS);
         }
+
         if (!isset($caches[ $type ])) {
             if (!isset($cfg)) {
                 $loader = new ConfigurationLoader();
                 $cfg    = $loader->loadConfig('cache');
             }
             if (!$cfg->getb('enabled')) {
-                return new Cache();
+                $cache            = new Cache();
+                $cache->isEnalbed = false;
+                $caches[ $type ]  = $cache;
+
+                return $cache;
             }
             $cache = apply_filter('get_' . $type . '_cache', null, $cfg);
             if (!$cache instanceof Cache) {
-                $cache = new Cache ();
+                $cache            = new Cache ();
+                $cache->isEnalbed = false;
             }
             $caches[ $type ] = $cache;
         }
 
         return $caches[ $type ];
+    }
+
+    /**
+     * 是否启用
+     * @return bool
+     */
+    public function enabled() {
+        return $this->isEnalbed;
     }
 
     public function offsetExists($offset) {

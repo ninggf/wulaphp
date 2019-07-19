@@ -46,8 +46,12 @@ class RouteTableDispatcher implements IURLDispatcher {
                 $route = $routes[ $uk ];
                 if (isset($route['template']) && $route['template']) {
                     $expire = intval(aryget('expire', $route), 0);
-                    $func   = aryget('func', $route);
-                    $data   = isset($route['data']) ? (array)$route['data'] : [];
+                    if ($expire > 0) {
+                        Router::checkCache();#检测缓存
+                        define('CACHE_EXPIRE', $expire);
+                    }
+                    $func = aryget('func', $route);
+                    $data = isset($route['data']) ? (array)$route['data'] : [];
                     if (isset($route['session']) && $route['session']) {
                         (new Session())->start();
                     }
@@ -56,9 +60,6 @@ class RouteTableDispatcher implements IURLDispatcher {
                     }
                     $data            = is_array($data) ? $data : ['result' => $data];
                     $data['urlInfo'] = $parsedInfo;
-                    if ($expire > 0) {
-                        define('CACHE_EXPIRE', $expire);
-                    }
                     if (isset($route['Content-Type'])) {
                         $headers['Content-Type'] = $route['Content-Type'];
                     } else {
