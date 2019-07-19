@@ -294,6 +294,6 @@ function __rt_hook_unique_id($function) {
 function __rt_real_hook($hook) {
     $hook = ucwords(ltrim($hook, '\\'), '\\');
 
-    return lcfirst(str_replace('\\', '.', $hook));
+    return lcfirst($hook);
 }
 // end of file plugin.php
