@@ -5,7 +5,6 @@
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
 
-<FilesMatch ".*\.tpl$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
+<IfDirective SetEnv>
+    #SetEnv APPMODE pro
+</IfDirective>

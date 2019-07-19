@@ -119,14 +119,15 @@ function conf() {
         $type = 'nginx';
     }
 
-    $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'wwwroot';
+    $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 
-    if ($type == 'apache') {
+    if ($type == 'apache' || $type == 'httpd') {
         if ($domains) {
             $domain = 'ServerName ' . implode("\n    ServerName ", $domains);
         } else {
             $domain = 'ServerName your_server_name';
         }
+        $type = 'apache';
     } else {
         if ($domains) {
             $domain = 'server_name  ' . implode(' ', $domains) . ';';
@@ -137,33 +138,55 @@ function conf() {
 
     $apache = <<<ETC
 <VirtualHost *:80>
-    <Directory "$dir">
-        Options FollowSymLinks
-        AllowOverride All
-        Order allow,deny
-        Allow from all
-    </Directory>		
-    ServerAdmin your-email-address
-    DocumentRoot "$dir"
+    DocumentRoot "{$dir}wwwroot"
     $domain
+    
+    <Directory "{$dir}">
+        Options FollowSymLinks
+        AllowOverride All 
+        Require all granted
+    </Directory>
+    
+  	<IfModule alias_module>
+        AliasMatch "^/(modules|themes)/(.+\.(js|css|jpe?g|png|gif))$" "{$dir}$1/$2"
+    </IfModule>
+    
     # other directives can be here
 </VirtualHost>
 ETC;
-    $nginx  = <<< ETC
+
+    $nginx = <<< ETC
 server {
     listen       80;
     #listen       443 ssl;
     $domain
-    root $dir;
+    
+    #access_log  off;
+    #error_log  off;
+    
+    root {$dir}wwwroot;
+    
     location / {
         index index.php index.html index.htm;
         if (!-e \$request_filename){
             rewrite ^(.*)$ index.php last;
         }
     }
-    location ~ /(assets|files)/.+\.(php[s345]?|tpl|inc)$ {
+    
+    location ~ ^/(assets|files)/.+\.(php[s345]?|tpl|inc)$ {        
         return 404;
     }
+    
+    location ~ ^/(modules|themes)/.+\.(js|css|png|gif|jpe?g)$ {
+        root {$dir};
+        
+        #gzip on;
+        #gzip_min_length 1000;
+        #gzip_comp_level 7;
+        #gzip_types text/plain text/css application/x-javascript application/javascript text/javascript;
+        #expires 30d;
+    }
+    
     location ~ \.php$ {
         fastcgi_pass   127.0.0.1:9000;
         fastcgi_index  index.php;
@@ -171,6 +194,7 @@ server {
         #fastcgi_param  APPMODE pro;
         include        fastcgi_params;
     }
+    
     location ~ /\.ht {
         deny  all;
     }
