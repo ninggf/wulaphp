@@ -371,6 +371,49 @@ SQL;
      * @param CateItemTable $ci
      *
      * @depends testAdvanceQuery
+     * @return CateItemTable
+     */
+    public function testTraverse($ci) {
+        $t1  = $ci->traverse();
+        $sum = 0;
+        foreach ($t1 as $t) {
+            $sum += $t['id'];
+        }
+        # 1,2,3,4,5,6,7 = 7*(7+1)/2 = 28
+        self::assertEquals(28, $sum);
+
+        $t2  = $ci->traverse(['id' => [3, 6]], 2, 'id,deleted');
+        $sum = 0;
+        foreach ($t2 as $t) {
+            $sum += $t['id'];
+        }
+        # 3+4+5+6 = 18
+        self::assertEquals(18, $sum);
+
+        $t3  = $ci->traverse(['id' => [2, 7], 'deleted' => 0], 5, 'id,deleted', 'id');
+        $sum = 0;
+        foreach ($t3 as $t) {
+            $sum += $t['id'];
+        }
+        # 5+6 = 11
+        self::assertEquals(11, $sum);
+
+        $t4  = $ci->traverse(['id' => [8, 17], 'deleted' => 0], 50, 'id,deleted', 'id');
+        $sum = 0;
+        foreach ($t4 as $t) {
+            print_r($t);
+            $sum += $t['id'];
+        }
+        #
+        self::assertEquals(0, $sum);
+
+        return $ci;
+    }
+
+    /**
+     * @param CateItemTable $ci
+     *
+     * @depends testTraverse
      */
     public function testDelete($ci) {
         $rst = $ci->deleteRecycled();

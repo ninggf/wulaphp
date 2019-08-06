@@ -3,6 +3,8 @@
 namespace wulaphp\db;
 
 use wulaphp\app\App;
+use wulaphp\db\sql\BindValues;
+use wulaphp\db\sql\Condition;
 use wulaphp\db\sql\Query;
 use wulaphp\db\sql\QueryBuilder;
 use wulaphp\util\ObjectCaller;
@@ -296,6 +298,76 @@ abstract class View {
      */
     public final function exist($con, $id = null) {
         return $this->count($con, $id) > 0;
+    }
+
+    /**
+     * 基于自增的ID主键对大表进行遍历。示例代码如下:
+     * <code>
+     *  $m = new UserModel();
+     *  foreach ($m->traverse(['status'=>1],500,'uid,nickname','uid')){
+     *      // your codes here
+     *  }
+     * </code>
+     *
+     * @param array  $con    条件,可以通过$id对应的字段指定启始id。
+     * @param int    $num    每次读取多少条记录
+     * @param string $fields 字段
+     * @param string $id     自增主键字段
+     *
+     * @return \Generator
+     */
+    public final function traverse($con = [], $num = 100, $fields = '*', $id = 'id') {
+        if (isset($con[ $id ][0]) && isset($con[ $id ][1])) {
+            $rst[0]['minId'] = $con[ $id ][0];
+            $rst[0]['maxId'] = $con[ $id ][1];
+            unset($con[ $id ]);
+        } else {
+            $ids = "SELECT MIN($id) AS minId,MAX($id) AS maxId FROM " . $this->tableName;
+            $rst = $this->dbconnection->query($ids);
+        }
+        if ($rst) {
+            $minId = $rst[0]['minId'];
+            $maxId = $rst[0]['maxId'] + 1; #一定要加1
+            $vs    = new BindValues();
+            if ($con) {
+                $where = (new Condition($con))->getWhereCondition($this->dialect, $vs);
+                $sql   = "SELECT $fields FROM  $this->tableName WHERE $where AND $id >= :minId AND $id < :maxId";
+                $stmt  = $this->dialect->prepare($sql);
+                if (!$stmt) {
+                    return;
+                }
+                foreach ($vs as $value) {
+                    list ($name, $val, $type) = $value;
+                    if (!$stmt->bindValue($name, $val, $type)) {
+                        return;
+                    }
+                }
+            } else {
+                $sql  = "SELECT $fields FROM  $this->tableName WHERE $id >= :minId AND $id < :maxId";
+                $stmt = $this->dialect->prepare($sql);
+                if (!$stmt) {
+                    return;
+                }
+            }
+            $gap = max(1, intval($num));
+            while ($minId < $maxId) {
+                $sid   = $minId;
+                $minId = min($minId + $gap, $maxId);
+
+                $stmt->bindValue(':minId', $sid);
+                $stmt->bindValue(':maxId', $minId);
+                $results = $stmt->execute();
+                if ($results && $stmt->rowCount() > 0) {
+                    while (($row = $stmt->fetch(\PDO::FETCH_ASSOC))) {
+                        yield $row;
+                    }
+                    if (!$stmt->closeCursor()) {
+                        break;
+                    }
+                }
+            }
+            unset($stmt);
+        }
     }
 
     /**
