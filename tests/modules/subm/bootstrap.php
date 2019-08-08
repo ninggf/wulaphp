@@ -31,21 +31,6 @@ class SubM extends Module {
     public function hasSubModule() {
         return true;
     }
-
-    public function routes() {
-        return [
-            'add' => function ($view, $args) {
-                if (!$view) {
-                    $a = aryget(0, $args);
-                    $b = aryget(1, $args);
-
-                    return ['result' => $a + $b];
-                }
-
-                return $view;
-            }
-        ];
-    }
 }
 
 App::register(new SubM());

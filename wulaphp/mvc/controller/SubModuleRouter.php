@@ -29,17 +29,6 @@ class SubModuleRouter extends Controller {
     public function __construct(Module $module) {
         parent::__construct($module);
         $this->slag = 'index';
-        $routes     = $module->routes();
-        if ($routes && is_array($routes)) {
-            $ns = $module->getNamespace();
-            foreach ($routes as $route => $cb) {
-                if (is_callable($cb)) {
-                    bind('router:' . $ns . '/' . $route, $cb, 1, 2);
-                } else {
-                    bind('router:' . $ns . '/' . $route, $ns . '\\' . $cb, 1, 2);
-                }
-            }
-        }
     }
 
     /**
@@ -168,12 +157,6 @@ class SubModuleRouter extends Controller {
             }
         }
 
-        //通过插件扩展路由
-        $ns = 'router:' . $this->module->getNamespace() . '/' . $subname;
-        if (isset($fParam)) {
-            array_unshift($args, $fParam);
-        }
-
-        return apply_filter($ns, null, $args);
+        return null;
     }
 }

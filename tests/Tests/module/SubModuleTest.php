@@ -19,19 +19,6 @@ use wulaphp\app\App;
  * @group   module
  */
 class SubModuleTest extends TestCase {
-    public function testSubModule1() {
-        @ob_start();
-        try {
-            App::run('/subm/add/2/3');
-        } catch (\Exception $e) {
-            throw $e;
-        }
-        $page = @ob_get_clean();
-        self::assertNotEmpty($page);
-        self::assertEquals('{"result":5}', $page);
-
-    }
-
     public function testUserModule() {
         @ob_start();
         try {

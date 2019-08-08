@@ -205,8 +205,8 @@ abstract class Module {
 
     /**
      * 依赖.
-     * @deprecated 使用composer.json定义
      * @return array|null
+     * @deprecated 使用composer.json定义
      */
     public function getDependences() {
         return null;
@@ -294,15 +294,6 @@ abstract class Module {
      */
     public function hasSubModule() {
         return $this->subEnabled;
-    }
-
-    /**
-     * 自定义路由
-     *
-     * @return array
-     */
-    public function routes() {
-        return [];
     }
 
     /**
