@@ -31,6 +31,7 @@ class AdminCommand extends ArtisanCommand {
         $this->subCmds['create-module'] = new CreateModuleCommand('admin');
         $this->subCmds['create-ext']    = new CreateExtensionCommand('admin');
         $this->subCmds['module']        = new ModuleCommand('admin');
+        $this->subCmds['router']        = new RouterCommand();
 
         foreach (apply_filter('artisan\init_admin_commands', []) as $cmd) {
             if ($cmd instanceof ArtisanCommand) {

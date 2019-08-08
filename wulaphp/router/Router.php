@@ -231,6 +231,15 @@ class Router {
     }
 
     /**
+     * 获取注册的分发器.
+     *
+     * @return array
+     */
+    public function getDispatchers() {
+        return ['before' => $this->preDispatchers, 'disp' => $this->dispatchers, 'post' => $this->postDispatchers];
+    }
+
+    /**
      * 取URL中的位置参数
      *
      * @param int    $pos
@@ -327,9 +336,7 @@ class Router {
         $view = null;
         foreach ($this->preDispatchers as $dispatchers) {
             foreach ($dispatchers as $d) {
-                if ($d instanceof IURLPreDispatcher) {
-                    $view = $d->preDispatch($url, $this, $view);
-                }
+                $view = $d->preDispatch($url, $this, $view);
             }
         }
         if ($view) {
@@ -339,13 +346,11 @@ class Router {
             $this->urlParsedInfo = new UrlParsedInfo ($uri, $url, $args);
             foreach ($this->dispatchers as $dispatchers) {
                 foreach ($dispatchers as $d) {
-                    if ($d instanceof IURLDispatcher) {
-                        $view = $d->dispatch($url, $this, $this->urlParsedInfo);
-                        if (is_array($view) || $view) {
-                            break;
-                        }
-                        $this->urlParsedInfo->reset();
+                    $view = $d->dispatch($url, $this, $this->urlParsedInfo);
+                    if (is_array($view) || $view) {
+                        break;
                     }
+                    $this->urlParsedInfo->reset();
                 }
                 if (is_array($view) || $view) {
                     break;
@@ -354,9 +359,7 @@ class Router {
 
             foreach ($this->postDispatchers as $dispatchers) {
                 foreach ($dispatchers as $d) {
-                    if ($d instanceof IURLPostDispatcher) {
-                        $view = $d->postDispatch($url, $this, $view);
-                    }
+                    $view = $d->postDispatch($url, $this, $view);
                 }
             }
             if (is_array($view) || $view) {
