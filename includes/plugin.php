@@ -123,10 +123,11 @@ function unbind_all($hook, $priority = false) {
  * @param mixed  $arg                    参数
  *
  * @return string
+ * @return string
+ * @throws \Exception
+ * @global array $__ksg_triggering_hooks 正在执行的回调
  * @global array $__ksg_rtk_hooks        系统所有HOOK的回调
  * @global array $__ksg_sorted_hooks     当前的HOOK回调是否已经排序
- * @global array $__ksg_triggering_hooks 正在执行的回调
- *
  */
 function fire($hook, $arg = '') {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks, $__ksg_triggering_hooks;
@@ -172,7 +173,7 @@ function fire($hook, $arg = '') {
             }
         } while (next($__ksg_rtk_hooks [ $hook ]) !== false);
     } catch (Exception $e) {
-
+        throw $e;
     }
     array_pop($__ksg_triggering_hooks);
 
@@ -207,27 +208,31 @@ function apply_filter($filter, $value) {
     reset($__ksg_rtk_hooks [ $filter ]);
 
     $args = func_get_args();
-
-    do {
-        foreach (( array )current($__ksg_rtk_hooks [ $filter ]) as $the_) {
-            if (!is_null($the_ ['func'])) {
-                $args [1] = $value;
-                if (is_array($the_['func'])) {
-                    $value = \wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], array_slice($args, 1));
-                } else if ($the_ ['func'] instanceof Closure) {
-                    $params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
-                    $value  = $the_ ['func'](...$params);
-                } else if (is_callable($the_ ['func'])) {
-                    $params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
-                    $value  = $the_ ['func'](...$params);
+    try {
+        do {
+            foreach (( array )current($__ksg_rtk_hooks [ $filter ]) as $the_) {
+                if (!is_null($the_ ['func'])) {
+                    $args [1] = $value;
+                    if (is_array($the_['func'])) {
+                        $value = \wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], array_slice($args, 1));
+                    } else if ($the_ ['func'] instanceof Closure) {
+                        $params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
+                        $value  = $the_ ['func'](...$params);
+                    } else if (is_callable($the_ ['func'])) {
+                        $params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
+                        $value  = $the_ ['func'](...$params);
+                    }
                 }
             }
-        }
-    } while (next($__ksg_rtk_hooks [ $filter ]) !== false);
+        } while (next($__ksg_rtk_hooks [ $filter ]) !== false);
+        array_pop($__ksg_triggering_hooks);
 
-    array_pop($__ksg_triggering_hooks);
+        return $value;
+    } catch (Exception $e) {
 
-    return $value;
+    }
+
+    return null;
 }
 
 /**
