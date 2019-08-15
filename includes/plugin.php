@@ -162,8 +162,8 @@ function fire($hook, $arg = '') {
     }
     // 重置hook回调数组
     reset($__ksg_rtk_hooks [ $hook ]);
-    @ob_start();
     try {
+        @ob_start();
         do {
             foreach (( array )current($__ksg_rtk_hooks [ $hook ]) as $the_) {
                 if (!is_null($the_ ['func'])) {
@@ -183,9 +183,10 @@ function fire($hook, $arg = '') {
         throw $e;
     } finally {
         array_pop($__ksg_triggering_hooks);
-
-        return @ob_get_clean();
+        $rtn = @ob_get_clean();
     }
+
+    return $rtn;
 }
 
 /**
