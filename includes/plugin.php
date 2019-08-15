@@ -45,19 +45,26 @@ function bind($hook, $hook_func, $priority = 10, $accepted_args = 1) {
 
         return false;
     }
-    $hook     = __rt_real_hook($hook);
-    $priority = $priority ? $priority : 10;
-    if (is_string($hook_func) && $hook_func{0} == '&') {
-        $hook_func = ltrim($hook_func, '&');
-        $hook_func = [$hook_func, str_replace(['.', '\\', '/', '-'], ['_', ''], $hook)];
-    }
     if (empty ($hook_func)) {
         log_error('the hook function must not be empty!', 'plugin');
 
         return false;
     }
+
+    $hook     = __rt_real_hook($hook);
+    $priority = $priority ? $priority : 10;
+    $extra    = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
+    if (is_string($hook_func) && $hook_func{0} == '&') {
+        $hook_func = ltrim($hook_func, '&');
+        $hook_func = [$hook_func, str_replace(['.', '\\', '/', '-'], ['_', ''], $hook)];
+    }
+
     $idx                                              = __rt_hook_unique_id($hook_func);
-    $__ksg_rtk_hooks [ $hook ] [ $priority ] [ $idx ] = ['func' => $hook_func, 'accepted_args' => $accepted_args];
+    $__ksg_rtk_hooks [ $hook ] [ $priority ] [ $idx ] = [
+        'func'          => $hook_func,
+        'accepted_args' => $accepted_args,
+        'extra'         => $extra
+    ];
 
     unset ($__ksg_sorted_hooks [ $hook ]);
 
@@ -174,10 +181,11 @@ function fire($hook, $arg = '') {
         } while (next($__ksg_rtk_hooks [ $hook ]) !== false);
     } catch (Exception $e) {
         throw $e;
-    }
-    array_pop($__ksg_triggering_hooks);
+    } finally {
+        array_pop($__ksg_triggering_hooks);
 
-    return @ob_get_clean();
+        return @ob_get_clean();
+    }
 }
 
 /**

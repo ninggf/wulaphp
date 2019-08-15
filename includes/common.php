@@ -132,7 +132,7 @@ function frqst($name, $default = 0.0) {
  * @param string $file
  */
 function log_debug($message, $file = '') {
-    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, $trace, DEBUG_DEBUG, $file);
 }
 
@@ -143,7 +143,7 @@ function log_debug($message, $file = '') {
  * @param string $file
  */
 function log_info($message, $file = '') {
-    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 1);
     log_message($message, $trace, DEBUG_INFO, $file);
 }
 
@@ -154,7 +154,7 @@ function log_info($message, $file = '') {
  * @param string $file
  */
 function log_warn($message, $file = '') {
-    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
     log_message($message, $trace, DEBUG_WARN, $file);
 }
 
@@ -165,7 +165,7 @@ function log_warn($message, $file = '') {
  * @param string $file
  */
 function log_error($message, $file = '') {
-    $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, $trace, DEBUG_ERROR, $file);
 }
 
