@@ -32,7 +32,7 @@ class ExcelView extends View implements IModuleView {
      * @param string $tpl      模板
      */
     public function __construct($filename, $data, $tpl = '') {
-        $this->fileName = $filename;
+        $this->fileName = $filename ? $filename : 'excel';
         parent::__construct($data, $tpl);
     }
 
