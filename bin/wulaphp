@@ -140,6 +140,8 @@ function conf() {
 <VirtualHost *:80>
     DocumentRoot "{$dir}wwwroot"
     $domain
+    #CustomLog "access_log" common
+    #ErrorLog "error_log" 
     
     <Directory "{$dir}">
         Options FollowSymLinks
@@ -147,9 +149,18 @@ function conf() {
         Require all granted
     </Directory>
     
-    <IfModule alias_module>
-        AliasMatch "^/(modules|themes)/(.+\.(js|css|jpe?g|png|gif))$" "{$dir}$1/$2"
-    </IfModule>
+    <LocationMatch "^/(?<DIR>modules|themes)/(?<FILE>.+\.(js|css|jpe?g|png|gif))$">
+        <IfModule alias_module>
+            Alias "{$dir}%{env:MATCH_DIR}/%{env:MATCH_FILE}"
+        </IfModule>
+        <IfModule deflate_module>
+            AddOutputFilterByType DEFLATE text/css text/javascript application/javascript
+        </IfModule>
+        <IfModule expires_module>
+            ExpiresActive Off
+            ExpiresDefault "access plus 30 days"
+        </IfModule>
+    </LocationMatch>
     
     # other directives can be here
 </VirtualHost>
@@ -158,11 +169,11 @@ ETC;
     $nginx = <<< ETC
 server {
     listen       80;
-    #listen       443 ssl;
+    #listen      443 ssl;
     $domain
     
     #access_log  off;
-    #error_log  off;
+    #error_log   off;
     
     root {$dir}wwwroot;
     
@@ -180,10 +191,10 @@ server {
     location ~ ^/(modules|themes)/.+\.(js|css|png|gif|jpe?g)$ {
         root {$dir};
         
-        #gzip on;
-        #gzip_min_length 1000;
-        #gzip_comp_level 7;
-        #gzip_types text/plain text/css application/x-javascript application/javascript text/javascript;
+        gzip on;
+        gzip_min_length 1000;
+        gzip_comp_level 7;
+        gzip_types text/css application/x-javascript application/javascript text/javascript;
         #expires 30d;
     }
     
