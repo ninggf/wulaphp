@@ -117,7 +117,7 @@ class DefaultDispatcher implements IURLDispatcher {
                 //模块不可用.
                 return null;
             }
-            $ckey = 'rt@' . $url;
+            $ckey = 'rt#' . $url;
             $app  = RtCache::lget($ckey);
             if ($app && is_file($app[3])) {
                 include_once $app[3];
@@ -264,40 +264,44 @@ class DefaultDispatcher implements IURLDispatcher {
             array_unshift($params, $action);
             $action = 'index';
         }
+        $parent = null;
         if ($subnamespace) {
             $module    .= DS . $subnamespace;
             $namespace .= '\\' . $subnamespace;
-            $parent    = null;
         } else {
             $parent = App::getModuleByDir($module);
         }
+        $isParent = $parent && $parent->hasSubModule();
         if ($action != 'index') {
+            $modulePath = MODULES_PATH . $module . DS;
             // Action Controller 的 index方法
             $controllerClz   = str_replace('-', '', ucwords($action, '-')) . 'Controller';
-            $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
+            $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
             $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action];
 
-            // 默认controller的action方法
-            $controllerClz   = 'IndexController';
-            $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
-            $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, $action, 'index'];
+            if ($subnamespace || ($isParent && !is_dir($modulePath . $action . DS . 'controllers'))) {
+                // 默认controller的action方法
+                $controllerClz   = 'IndexController';
+                $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
+                $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, $action, 'index'];
+            }
 
             foreach ($files as $file) {
-                list ($controller_file, $controllerClz, $action, $controller) = $file;
+                list ($controller_file, $controllerClz, $act, $controller) = $file;
                 if (is_file($controller_file)) {
                     include_once $controller_file;
                     if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
-                        if ($action == 'index' && count($params) > 0) {
-                            $action = array_shift($params);
+                        if ($act == 'index' && count($params) > 0) {
+                            $act = array_shift($params);
                         }
 
                         return [
                             $controllerClz,
-                            Router::removeSlash($action),
+                            Router::removeSlash($act),
                             $params,
                             $controller_file,
                             $controller,
-                            $action
+                            $act
                         ];
                     }
                 }
