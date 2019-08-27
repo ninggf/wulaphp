@@ -279,7 +279,7 @@ class DefaultDispatcher implements IURLDispatcher {
             $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
             $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action];
 
-            if ($subnamespace || ($isParent && !is_dir($modulePath . $action . DS . 'controllers'))) {
+            if (!$isParent || $subnamespace || ($isParent && !is_dir($modulePath . $action . DS . 'controllers'))) {
                 // 默认controller的action方法
                 $controllerClz   = 'IndexController';
                 $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
