@@ -119,7 +119,7 @@ class DefaultDispatcher implements IURLDispatcher {
                 include_once $app[3];
                 $nc = false;
             } else {
-                $app = self::findApp($module, $action, $pms, $namespace);
+                $app = self::findApp($namespace, $action, $pms, $namespace);
                 $nc  = true;
             }
             if ($app) {
@@ -269,7 +269,7 @@ class DefaultDispatcher implements IURLDispatcher {
             $module    .= DS . $subnamespace;
             $namespace .= '\\' . $subnamespace;
         } else {
-            $parent = App::getModuleByDir($module);
+            $parent = App::getModuleById($namespace);
         }
         $isParent = $parent && $parent->hasSubModule();
         if ($action != 'index') {
