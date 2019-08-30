@@ -12,9 +12,10 @@ use wulaphp\util\Annotation;
  *
  * @package wulaphp\auth
  *
- * @property-read  Passport   $passport
- * @property-read  Annotation $ann
- * @property-read  bool       $loginBack
+ * @property-read  Passport                $passport
+ * @property-read  Annotation              $ann
+ * @property-read \wulaphp\util\Annotation $methodAnn           正在执行动作的注解
+ * @property-read  bool                    $loginBack
  */
 trait RbacSupport {
     protected $globalRbacSetting = ['login' => false];
@@ -40,7 +41,7 @@ trait RbacSupport {
      */
     protected function beforeRunInRbacSupport(\Reflector $method, $view) {
         if ($this->passport instanceof Passport) {
-            $annotation = new Annotation($method);
+            $annotation = $this->methodAnn;
 
             //不需要登录
             $nologin = $annotation->has('nologin');
@@ -66,9 +67,6 @@ trait RbacSupport {
             $login = $login || $acl || $roles;
             if ($login && !$this->passport->isLogin) {
                 return $this->needLogin($view);
-            }
-            if ($login && !$this->passport->status) {
-                return $this->onLocked($view);
             }
             $rst = true;
             if ($acl) {
@@ -100,15 +98,6 @@ trait RbacSupport {
      * @return mixed
      */
     protected abstract function needLogin($view);
-
-    /**
-     * 用户被禁用时.
-     *
-     * @param mixed $view
-     *
-     * @return mixed
-     */
-    protected abstract function onLocked($view);
 
     /**
      * 用户无权限时.

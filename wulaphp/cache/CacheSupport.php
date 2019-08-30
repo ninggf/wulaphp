@@ -12,11 +12,15 @@ namespace wulaphp\cache;
 
 use wulaphp\mvc\view\View;
 use wulaphp\router\Router;
-use wulaphp\util\Annotation;
 
+/**
+ * Trait CacheSupport
+ * @package wulaphp\cache
+ * @property-read \wulaphp\util\Annotation $methodAnn
+ */
 trait CacheSupport {
     protected function afterRunInCacheSupport($action, View $view, $method) {
-        $annotation = new Annotation($method);
+        $annotation = $this->methodAnn;
         if ($annotation->has('expire')) {
             $expire = $annotation->getInt('expire');
             if ($expire > 0) {

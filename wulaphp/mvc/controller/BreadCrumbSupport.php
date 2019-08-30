@@ -32,7 +32,8 @@ use wulaphp\util\Annotation;
  */
 trait BreadCrumbSupport {
     protected function beforeRunInBreadCrumbSupport($method, $view) {
-        $ann = new Annotation($method);
+        /**@var Annotation $ann */
+        $ann = $this->methodAnn;
         if (($id = $ann->getString('restoreArgs'))) {
             $args = sess_get('kags_' . $id, []);
             if ($args && is_array($args)) {
@@ -45,7 +46,6 @@ trait BreadCrumbSupport {
                 $_SESSION[ 'kags_' . $id ] = $args;
             }
         }
-        $method->anns = $ann;
 
         return $view;
     }
@@ -61,7 +61,7 @@ trait BreadCrumbSupport {
      */
     protected function afterRunInBreadCrumbSupport($action, $view, $method) {
         /**@var Annotation $ann */
-        $ann = $method->anns;
+        $ann = $this->methodAnn;
         if ($view instanceof View) {
             $breadCrumbs = [];
             $crumb       = $ann->getString('crumb');
@@ -86,7 +86,6 @@ trait BreadCrumbSupport {
                 $view->assign('breadCrumbs', $breadCrumbs);
             }
         }
-        unset($ann);
 
         return $view;
     }

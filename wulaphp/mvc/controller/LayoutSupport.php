@@ -2,9 +2,6 @@
 
 namespace wulaphp\mvc\controller;
 
-use wulaphp\app\App;
-use wulaphp\util\Annotation;
-
 /**
  * Class LayoutSupport
  * @property-read  string           $layout 布局模板.
@@ -49,7 +46,7 @@ trait LayoutSupport {
         if ($this instanceof Controller) {
             if (!isset($this->layout)) {
                 if ($this->reflectionObj instanceof \ReflectionClass) {
-                    $ann          = new Annotation($this->reflectionObj);
+                    $ann          = $this->methodAnn;
                     $this->layout = $ann->getString('layout');
                 } else {
                     $this->layout = null;

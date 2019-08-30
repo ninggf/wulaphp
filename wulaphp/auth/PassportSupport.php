@@ -4,6 +4,7 @@ namespace wulaphp\auth;
 
 use wulaphp\mvc\view\SmartyView;
 use wulaphp\mvc\view\ThemeView;
+use wulaphp\mvc\view\View;
 use wulaphp\util\Annotation;
 
 /**
@@ -33,11 +34,52 @@ trait PassportSupport {
         }
     }
 
+    /**
+     * @param \Reflector $method
+     * @param View       $view
+     *
+     * @return mixed
+     */
+    protected function beforeRunInPassportSupport(\Reflector $method, $view) {
+        if ($this->passport->uid && !$this->passport->status) {
+            if ($this->passport->status) {
+                return $this->onLocked($view);
+            }
+            if ($this->passport->screenLocked) {
+                return $this->onScreenLocked($view);
+            }
+        }
+
+        return $view;
+    }
+
     protected function afterRunInPassportSupport($action, $view, $method) {
         if ($view instanceof SmartyView || $view instanceof ThemeView) {
             $view->assign('myPassport', $this->passport);
         }
 
+        return $view;
+    }
+
+    /**
+     * 用户被禁用时.
+     *
+     * @param mixed $view
+     *
+     * @return mixed
+     */
+    protected function onLocked($view) {
+        return $view;
+    }
+
+    /**
+     * 用户锁定界面时.
+     *
+     * @param mixed $view
+     *
+     * @return mixed
+     */
+    protected function onScreenLocked($view) {
         return $view;
     }
 }

@@ -10,13 +10,14 @@ use wulaphp\util\Annotation;
  * Base Controller.
  *
  * @package wulaphp\mvc\controller
- * @property-read Module                   $module        模块
- * @property-read \ReflectionObject        $reflectionObj 反射
- * @property-read \wulaphp\util\Annotation $ann           注解
- * @property-read string                   $clzName       类名
- * @property-read string                   $ctrName       小写类名
- * @property-read string                   $slag          类名格式化后的URL
- * @property-read string                   $action        动作
+ * @property-read Module                   $module              模块
+ * @property-read \ReflectionObject        $reflectionObj       反射
+ * @property-read \wulaphp\util\Annotation $ann                 注解
+ * @property-read \wulaphp\util\Annotation $methodAnn           正在执行动作的注解
+ * @property-read string                   $clzName             类名
+ * @property-read string                   $ctrName             小写类名
+ * @property-read string                   $slag                类名格式化后的URL
+ * @property-read string                   $action              动作
  */
 abstract class Controller {
     private $_module;  // 所属模块
@@ -26,6 +27,7 @@ abstract class Controller {
     private $_action;  // 动作
     private $_reflectionObj;
     private $_ann;
+    private $_methodAnn;
     private $beforeFeatures = [];
     private $afterFeatures  = [];
 
@@ -54,6 +56,7 @@ abstract class Controller {
         $view          = null;
         $this->_action = $action;
         if ($this->beforeFeatures) {
+            $this->_methodAnn = new Annotation($refMethod);
             foreach ($this->beforeFeatures as $feature) {
                 $view = $this->$feature($refMethod, $view);
             }

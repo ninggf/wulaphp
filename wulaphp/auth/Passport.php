@@ -5,8 +5,9 @@ namespace wulaphp\auth;
 /**
  * Class Passport
  * @package wulaphp\auth
- * @property-read int $pid    父ID
- * @property-read int $status 状态
+ * @property-read int $pid          父ID
+ * @property-read int $status       状态
+ * @property-read int $screenLocked 屏幕锁定时间
  */
 class Passport implements \ArrayAccess {
     const SESSION_NAME = 'wula_passport';
@@ -91,7 +92,11 @@ class Passport implements \ArrayAccess {
 
     public function __wakeup() {
         $this->restore();
-        fire('passport\restore' . ucfirst($this->type) . 'Passport', $this);
+        try {
+            fire('passport\restore' . ucfirst($this->type) . 'Passport', $this);
+        } catch (\Exception $e) {
+
+        }
     }
 
     /**
@@ -134,7 +139,11 @@ class Passport implements \ArrayAccess {
     public final function logout() {
         $this->isLogin = false;
         $this->uid     = 0;
-        fire('passport\on' . ucfirst($this->type) . 'PassportLogout', $this);
+        try {
+            fire('passport\on' . ucfirst($this->type) . 'PassportLogout', $this);
+        } catch (\Exception $e) {
+
+        }
         $_SESSION[ self::SESSION_NAME . '_' . $this->type ] = '';
         unset($_SESSION[ self::SESSION_NAME . '_' . $this->type ]);
     }
@@ -145,6 +154,7 @@ class Passport implements \ArrayAccess {
      * @param mixed $data 登录验证使用的数据
      *
      * @return bool
+     * @throws \Exception
      */
     public final function login($data = null) {
         $this->isLogin = $this->doAuth($data);
@@ -217,6 +227,43 @@ class Passport implements \ArrayAccess {
             return $this->data['pid'] == $this->uid;
         }
 
+        return true;
+    }
+
+    /**
+     * 锁定屏幕.
+     */
+    public final function lockScreen() {
+        $this->data['screenLocked'] = time();
+        $this->store();
+    }
+
+    /**
+     * 解锁屏幕.
+     *
+     * @param string $password
+     *
+     * @return bool
+     */
+    public final function unlockScreen($password) {
+        if ($this->verifyPasswd($password)) {
+            $this->data['screenLocked'] = 0;
+            $this->store();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 验证用户密码。
+     *
+     * @param string $password
+     *
+     * @return bool
+     */
+    protected function verifyPasswd($password) {
         return true;
     }
 
