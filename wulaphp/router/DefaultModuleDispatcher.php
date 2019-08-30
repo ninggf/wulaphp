@@ -18,7 +18,7 @@ class DefaultModuleDispatcher implements IURLDispatcher {
 
     public function __construct(IURLDispatcher $dispatcher, $defaultModule) {
         $this->dd            = $dispatcher;
-        $this->defaultModule = App::id2dir($defaultModule);
+        $this->defaultModule = $defaultModule;
     }
 
     public function dispatch($url, $router, $parsedInfo) {

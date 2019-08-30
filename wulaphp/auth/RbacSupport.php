@@ -12,16 +12,16 @@ use wulaphp\util\Annotation;
  *
  * @package wulaphp\auth
  *
- * @property-read  Passport          $passport
- * @property-read  \ReflectionObject $reflectionObj
- * @property-read  bool              $loginBack
+ * @property-read  Passport   $passport
+ * @property-read  Annotation $ann
+ * @property-read  bool       $loginBack
  */
 trait RbacSupport {
     protected $globalRbacSetting = ['login' => false];
 
     protected function onInitRbacSupport() {
-        if ($this->reflectionObj instanceof \ReflectionObject) {
-            $ann                               = new Annotation($this->reflectionObj);
+        if ($this->ann instanceof Annotation) {
+            $ann                               = $this->ann;
             $this->globalRbacSetting['login']  = $this->globalRbacSetting['login'] || $ann->has('login');
             $this->globalRbacSetting['roles']  = $ann->getArray('roles');
             $this->globalRbacSetting['acl']    = $ann->getArray('acl');

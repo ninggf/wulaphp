@@ -17,6 +17,7 @@ use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\View;
 use wulaphp\router\DefaultDispatcher;
 use wulaphp\router\Router;
+use wulaphp\util\ObjectCaller;
 
 /**
  * 仅供内部使用,千万不要继承它。
@@ -26,6 +27,8 @@ use wulaphp\router\Router;
  * @internal
  */
 class SubModuleRouter extends Controller {
+    public $prefix = null;
+
     public function __construct(Module $module) {
         parent::__construct($module);
         $this->slag = 'index';
@@ -48,7 +51,7 @@ class SubModuleRouter extends Controller {
                 break;
             default:
                 $subname = array_shift($args);
-                $fParam  = $action = array_shift($args);
+                $action  = array_shift($args);
         }
         if (empty($subname) || empty($action)) {
             return null;
@@ -66,7 +69,7 @@ class SubModuleRouter extends Controller {
         }
         if ($app) {
             list ($controllerClz, $action, $pms, , $controllerSlag, $actionSlag) = $app;
-            if (in_array($action, ['beforerun', 'afterrun', 'geturlprefix'])) {
+            if (in_array($action, ['beforerun', 'afterrun'])) {
                 return null;
             }
             if ($nc) {
@@ -76,6 +79,18 @@ class SubModuleRouter extends Controller {
                 $clz = new $controllerClz ($this->module);
 
                 if ($clz instanceof Controller && $clz->slag == $controllerSlag) {
+                    $cprefix = '';
+                    $prefix  = $this->prefix;
+                    if (method_exists($clz->clzName, 'urlGroup')) {
+                        $tmpPrefix = ObjectCaller::callClzMethod($clz->clzName, 'urlGroup');
+                        $cprefix   = $tmpPrefix && isset($tmpPrefix[1]) ? $tmpPrefix[1] : '';
+                    }
+                    if (($cprefix || $prefix) && $cprefix != $prefix) {
+                        RtCache::ldelete($ckey);
+
+                        return null;
+                    }
+
                     $rqMethod = strtolower($_SERVER ['REQUEST_METHOD']);
                     $rm       = ucfirst($rqMethod);
                     // 存在index_get,index_post,add_get add_post这新的方法.
@@ -113,6 +128,26 @@ class SubModuleRouter extends Controller {
                         if ($paramsCount < count($pms)) {
                             return null;
                         }
+
+                        $args = []; # 获取URL参数
+                        if ($paramsCount) {
+                            $idx = 0;
+                            foreach ($params as $p) {
+                                $name  = $p->getName();
+                                $def   = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
+                                $value = rqst($name, $def, true);
+                                if ($value !== null) {
+                                    $args [] = is_array($value) ? array_map(function ($v) {
+                                        return is_array($v) ? $v : urldecode($v);
+                                    }, $value) : urldecode($value);
+                                    $idx++;
+                                }
+                            }
+                            if ($paramsCount != $idx) {
+                                return null;
+                            }
+                        }
+
                         $rtn = $clz->beforeRun($action, $method);
 
                         $module .= '/' . $subname;
@@ -122,20 +157,7 @@ class SubModuleRouter extends Controller {
 
                             return $rtn;
                         }
-                        $args = [];
 
-                        if ($paramsCount) {
-                            $idx = 0;
-                            foreach ($params as $p) {
-                                $name    = $p->getName();
-                                $def     = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
-                                $value   = rqst($name, $def, true);
-                                $args [] = is_array($value) ? array_map(function ($v) {
-                                    return is_array($v) ? $v : urldecode($v);
-                                }, $value) : urldecode($value);
-                                $idx++;
-                            }
-                        }
                         $view = $clz->{$action}(...$args);
                         if ($view !== null) {
                             if (is_array($view)) {

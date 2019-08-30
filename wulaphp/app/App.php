@@ -113,6 +113,13 @@ class App {
         if ($moduleLoader instanceof ModuleLoader) {
             $this->moduleLoader = $moduleLoader;
             $this->moduleLoader->load();
+            $alias = $this->configs ['default']->geta('alias');
+            if ($alias) {
+                foreach ($alias as $m => $a) {
+                    self::$maps ['dir2id'] [ $a ] = $m;
+                    self::$maps ['id2dir'] [ $m ] = $a;
+                }
+            }
         } else {
             throw new \Exception('No ModuleLoader found!');
         }
@@ -717,7 +724,7 @@ class App {
             }
         }
         if ($defaultModule === false) {
-            if (defined('DEFAULT_MODULE')) {
+            if (defined('DEFAULT_MODULE') && DEFAULT_MODULE) {
                 $defaultModule = self::id2dir(DEFAULT_MODULE);
             } else {
                 $defaultModule = null;
@@ -808,10 +815,7 @@ class App {
         }
 
         if (!isset($prefixes[ $clz ])) {
-            $clzs    = explode('\\', $clz);
-            $id      = $clzs[0];
-            $clzs[0] = App::id2dir($id);//将dir转换为dir
-            $file    = MODULES_PATH . implode(DS, $clzs) . '.php';
+            $file = MODULES_PATH . $clz . '.php';
             if (!is_file($file)) {
                 return '#';
             } else {
@@ -820,6 +824,8 @@ class App {
                     return '#';
                 }
             }
+            $clzs = explode('\\', $clz);
+            $id   = $clzs[0];
             if (($host = App::getModuleDomain($id))) {
                 $clzs[0] = '';
             } else {
@@ -870,10 +876,7 @@ class App {
                 $static_url = WWWROOT_DIR;
             }
         }
-        $url     = ltrim($res, '/');
-        $urls    = explode('/', $url);
-        $urls[0] = App::id2dir($urls[0]);
-        $url     = implode('/', $urls);
+        $url = ltrim($res, '/');
         if ($min || APP_MODE == 'pro') {
             $url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
             if (is_file(MODULES_PATH . '/' . $url1)) {
@@ -1017,9 +1020,6 @@ class App {
                 if (!isset(self::$modules[ $module ])) {
                     return null;
                 }
-            }
-            if (isset (self::$maps ['id2dir'] [ $module ])) {
-                $pkg [0] = self::$maps ['id2dir'] [ $module ];
             }
             $file = implode(DS, $pkg) . '.php';
 

@@ -49,7 +49,11 @@ class Router {
         }
         //路由表分发器
         $this->register(new RouteTableDispatcher (), 2);
-        fire('router\registerDispatcher', $this);
+        try {
+            fire('router\registerDispatcher', $this);
+        } catch (\Exception $e) {
+            log_warn($e->getMessage());
+        }
         // 仅以开发服务器运行时才需要注册静态资源分发器
         if (PHP_SAPI == 'cli-server') {
             $this->register(new ModuleResDispatcher(), 1000);

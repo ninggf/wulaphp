@@ -58,7 +58,7 @@ class ModuleCommand extends ArtisanCommand {
                 echo $this->cell('Version', $verLen), " | ", $this->cell('Status', 10), " | Name\n";
                 echo str_pad('-', '80', '-'), "\n";
                 foreach ($modules as $id => $module) {
-                    echo $this->cell($id, $idLen), ' | ', $this->cell($module->getDirname(), $dirLen), ' | ';
+                    echo $this->cell($id, $idLen), ' | ', $this->cell(App::id2dir($id), $dirLen), ' | ';
                     if ($module->upgradable) {
                         echo $this->cell($module->installedVersion . ' -> ' . $module->getCurrentVersion(), $verLen);
                     } else {
@@ -162,7 +162,7 @@ class ModuleCommand extends ArtisanCommand {
             }
         }
 
-        return '';
+        return 'Uninstall';
     }
 
     private function colorText($text, Module $module) {
@@ -178,6 +178,6 @@ class ModuleCommand extends ArtisanCommand {
             }
         }
 
-        return '';
+        return $this->color->str($text, 'light_gray');
     }
 }

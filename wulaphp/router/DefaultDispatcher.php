@@ -6,6 +6,7 @@ use wulaphp\app\App;
 use wulaphp\app\Module;
 use wulaphp\cache\RtCache;
 use wulaphp\mvc\controller\Controller;
+use wulaphp\mvc\controller\SubModuleRouter;
 use wulaphp\mvc\view\IModuleView;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
@@ -58,7 +59,7 @@ class DefaultDispatcher implements IURLDispatcher {
             } else if (App::checkUrlPrefix($module)) {
                 $prefix    = $module;
                 $namespace = App::checkUrlPrefix($prefix);
-                $module    = App::id2dir($namespace);
+                $module    = $namespace;
             }
         } else if ($len == 2) {
             $module = $controllers [0];
@@ -88,7 +89,7 @@ class DefaultDispatcher implements IURLDispatcher {
             if ($len == 1 && ($dir = App::checkUrlPrefix($module))) {
                 $prefix    = $module;
                 $namespace = $dir;
-                $module    = App::id2dir($namespace);
+                $module    = $namespace;
                 $action    = 'index';
             } else if ($prefix) {
                 // uri = prefix/action，需要查找module且重置$action
@@ -97,7 +98,7 @@ class DefaultDispatcher implements IURLDispatcher {
                 }
                 $action    = $module;
                 $namespace = App::checkUrlPrefix($prefix);
-                $module    = App::id2dir($namespace);
+                $module    = $namespace;
             }
         }
         if ($namespace) {
@@ -123,7 +124,7 @@ class DefaultDispatcher implements IURLDispatcher {
             }
             if ($app) {
                 list ($controllerClz, $action, $pms, , $controllerSlag, $actionSlag) = $app;
-                if (in_array($action, ['beforerun', 'afterrun', 'geturlprefix'])) {
+                if (in_array($action, ['beforerun', 'afterrun'])) {
                     return null;
                 }
                 if ($nc) {
@@ -133,15 +134,19 @@ class DefaultDispatcher implements IURLDispatcher {
                     $clz = new $controllerClz ($mm);
 
                     if ($clz instanceof Controller && $clz->slag == $controllerSlag) {
-                        $cprefix = '';
-                        if (method_exists($clz->clzName, 'urlGroup')) {
-                            $tmpPrefix = ObjectCaller::callClzMethod($clz->clzName, 'urlGroup');
-                            $cprefix   = $tmpPrefix && isset($tmpPrefix[1]) ? $tmpPrefix[1] : '';
-                        }
-                        if (($cprefix || $prefix) && $cprefix != $prefix) {
-                            RtCache::ldelete($ckey);
+                        if (!$clz instanceof SubModuleRouter) {
+                            $cprefix = '';
+                            if (method_exists($clz->clzName, 'urlGroup')) {
+                                $tmpPrefix = ObjectCaller::callClzMethod($clz->clzName, 'urlGroup');
+                                $cprefix   = $tmpPrefix && isset($tmpPrefix[1]) ? $tmpPrefix[1] : '';
+                            }
+                            if (($cprefix || $prefix) && $cprefix != $prefix) {
+                                RtCache::ldelete($ckey);
 
-                            return null;
+                                return null;
+                            }
+                        } else {
+                            $clz->prefix = $prefix;
                         }
                         if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD']) {
                             $rqMethod = strtolower($_SERVER ['REQUEST_METHOD']);
@@ -274,9 +279,17 @@ class DefaultDispatcher implements IURLDispatcher {
             $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
             $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action];
 
+            $controllerClz   = str_replace('-', '', ucwords($action, '-'));
+            $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
+            $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action];
+
             if (!$isParent || $subnamespace || ($isParent && !is_dir($modulePath . $action . DS . 'controllers'))) {
                 // 默认controller的action方法
                 $controllerClz   = 'IndexController';
+                $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
+                $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, $action, 'index'];
+
+                $controllerClz   = 'Index';
                 $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
                 $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, $action, 'index'];
             }
@@ -305,7 +318,11 @@ class DefaultDispatcher implements IURLDispatcher {
             // 默认Controller的index方法
             $controllerClz   = 'IndexController';
             $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
-            $controllerClz   = $namespace . '\controllers\\' . $controllerClz;
+            if (!is_file($controller_file)) {
+                $controllerClz   = 'Index';
+                $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
+            }
+            $controllerClz = $namespace . '\controllers\\' . $controllerClz;
             if (is_file($controller_file)) {
                 include_once $controller_file;
                 if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
@@ -351,11 +368,7 @@ class DefaultDispatcher implements IURLDispatcher {
             $tpl = $view->getTemplate();
             if ($tpl) {
                 if ($tpl{0} == '~') {
-                    $tpl     = substr($tpl, 1);
-                    $tpls    = explode('/', $tpl);
-                    $tpls[0] = App::id2dir($tpls[0]);
-                    $tpl     = implode('/', $tpls);
-                    unset($tpls[0]);
+                    $tpl = substr($tpl, 1);
                 } else {
                     $tpl = $module . '/views/' . $tpl;
                 }
