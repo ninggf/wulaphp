@@ -815,7 +815,9 @@ class App {
         }
 
         if (!isset($prefixes[ $clz ])) {
-            $file = MODULES_PATH . $clz . '.php';
+            $clzs = explode('\\', $clz);
+            $id   = $clzs[0];
+            $file = MODULES_PATH . implode(DS, $clzs) . '.php';
             if (!is_file($file)) {
                 return '#';
             } else {
@@ -824,8 +826,6 @@ class App {
                     return '#';
                 }
             }
-            $clzs = explode('\\', $clz);
-            $id   = $clzs[0];
             if (($host = App::getModuleDomain($id))) {
                 $clzs[0] = '';
             } else {
