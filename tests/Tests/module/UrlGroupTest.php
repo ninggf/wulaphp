@@ -27,7 +27,8 @@ class UrlGroupTest extends TestCase {
         $this->assertEquals('admin/m2/user is ok', $content);
 
         $content = $curlient->get('http://127.0.0.1:9090/vip/m2/user');
-        $this->assertTrue(strpos($content, 'no route for /vip/m2/user') > 0, $content);
+        $this->assertTrue(empty($content));
+        $this->assertEquals(500, $curlient->errorCode);
 
         $content = $curlient->get('http://127.0.0.1:9090/vip/m1/math/add/1?j=2');
         $this->assertEquals('result = 3', $content);
@@ -46,15 +47,19 @@ class UrlGroupTest extends TestCase {
         $this->assertEquals('abc is ok', $content);
 
         $content = $curlient->get('http://127.0.0.1:9090/m2/abc');
-        $this->assertTrue(strpos($content, 'no route for /m2/abc') > 0, $content);
+        $this->assertTrue(empty($content));
+        $this->assertEquals(500, $curlient->errorCode);
 
         $content = $curlient->get('http://127.0.0.1:9090/m2/user');
-        $this->assertTrue(strpos($content, 'no route for /m2/user') > 0, $content);
+        $this->assertTrue(empty($content));
+        $this->assertEquals(500, $curlient->errorCode);
 
-        $content = $curlient->get('http://127.0.0.1:9090/vip/m2/abc/test/add/1/2');
+        $curlient = CurlClient::getClient(5);
+        $content  = $curlient->get('http://127.0.0.1:9090/vip/m2/abc/test/add/1/2');
         $this->assertEquals('{"result":3}', $content);
 
         $content = $curlient->get('http://127.0.0.1:9090/vip/m2/abc/test/add/1');
-        $this->assertTrue(strpos($content, 'no route for /vip/m2/abc/test/add/1') > 0, $content);
+        $this->assertTrue(empty($content));
+        $this->assertEquals(500, $curlient->errorCode);
     }
 }
