@@ -21,5 +21,8 @@ return [
     ],
     'domains' => [
         'http://login.wulaphp.com:9090' => 'login'
+    ],
+    'alias'   => [
+        'm3' => 'm33'
     ]
 ];

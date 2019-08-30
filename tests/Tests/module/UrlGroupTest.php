@@ -54,8 +54,7 @@ class UrlGroupTest extends TestCase {
         $this->assertTrue(empty($content));
         $this->assertEquals(500, $curlient->errorCode);
 
-        $curlient = CurlClient::getClient(5);
-        $content  = $curlient->get('http://127.0.0.1:9090/vip/m2/abc/test/add/1/2');
+        $content = $curlient->get('http://127.0.0.1:9090/vip/m2/abc/test/add/1/2');
         $this->assertEquals('{"result":3}', $content);
 
         $content = $curlient->get('http://127.0.0.1:9090/vip/m2/abc/test/add/1');
