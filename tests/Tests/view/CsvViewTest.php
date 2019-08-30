@@ -22,7 +22,7 @@ class CsvViewTest extends TestCase {
         $view = new CsvView($data);
 
         $rst = $view->render();
-        $this->assertEquals("1,3,4\n4,5,6", $rst);
+        $this->assertEquals("1,2,3\n4,5,6", $rst);
 
         $view->withHeads($heads);
         $rst = $view->render();

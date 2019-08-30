@@ -46,7 +46,7 @@ class CsvView extends View {
      * @return $this
      */
     public function withHeads(array $heads) {
-        $this->headers = $heads;
+        $this->heads = $heads;
 
         return $this;
     }
