@@ -77,8 +77,11 @@ class DomainBindTest extends TestCase {
         self::assertEquals('http://login.wulaphp.com:9090/test/add', App::url('login/test/add'));
         self::assertEquals('http://login.wulaphp.com:9090/test/add', App::action('login\controllers\TestController::add'));
         self::assertEquals('/testm/add', App::url('testm/add'));
-        self::assertEquals('/sub', App::action('\testm\controllers\TestController::sub'));
         self::assertEquals('/testm/test/add', App::action('\testm\controllers\TestController::add'));
+    }
+
+    public function testURLAlias() {
+        self::assertEquals('/sub', App::action('\testm\controllers\TestController::sub'));
     }
 
     private function httpGet($url, $host) {

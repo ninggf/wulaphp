@@ -1,6 +1,6 @@
 <?php
 /*
- * This file is part of wulacms.
+ * This file is part of wulaphp.
  *
  * (c) Leo Ning <windywany@gmail.com>
  *
@@ -9,6 +9,8 @@
  */
 
 define('DEBUG', 100);
+
+define('DEFAULT_MODULE', 'app');
 
 define('ALIAS_ENABLED', true);
 

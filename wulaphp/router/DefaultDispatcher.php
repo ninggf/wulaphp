@@ -56,14 +56,14 @@ class DefaultDispatcher implements IURLDispatcher {
                 } else {//无模块可
                     return null;
                 }
-            } else if (App::checkUrlPrefix($module)) {
+            } else if (($dir = App::checkUrlPrefix($module))) { # 使用模块URL前缀直接访问
                 $prefix    = $module;
-                $namespace = App::checkUrlPrefix($prefix);
+                $namespace = $dir;
                 $module    = $namespace;
             }
         } else if ($len == 2) {
             $module = $controllers [0];
-            if (App::checkUrlPrefix($module)) {
+            if (App::checkUrlPrefix($module)) { # 前缀
                 $prefix = $module;
                 $module = $controllers[1];
             } else {
@@ -71,7 +71,7 @@ class DefaultDispatcher implements IURLDispatcher {
             }
         } else if ($len > 2) {
             $module = $controllers [0];
-            if (App::checkUrlPrefix($module)) {
+            if (App::checkUrlPrefix($module)) { # 前缀
                 $prefix = $module;
                 $module = $controllers[1];
                 $action = $controllers [2];
@@ -83,24 +83,6 @@ class DefaultDispatcher implements IURLDispatcher {
         }
         $module    = strtolower($module);
         $namespace = App::dir2id($module, true);
-        //查找默认模块
-        if (!$namespace) {
-            // uri=prefix 需要查找module与重置$action为index
-            if ($len == 1 && ($dir = App::checkUrlPrefix($module))) {
-                $prefix    = $module;
-                $namespace = $dir;
-                $module    = $namespace;
-                $action    = 'index';
-            } else if ($prefix) {
-                // uri = prefix/action，需要查找module且重置$action
-                if ($action != 'index') {
-                    array_unshift($pms, $action);
-                }
-                $action    = $module;
-                $namespace = App::checkUrlPrefix($prefix);
-                $module    = $namespace;
-            }
-        }
         if ($namespace) {
             //是否绑定到指定的域名
             $domain = App::getModuleDomain($namespace);
