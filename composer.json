@@ -21,11 +21,9 @@
         "phpoffice/phpspreadsheet": "^1.4"
     },
     "suggest": {
-        "ext-openssl": "*",
-        "ext-mysqlnd": "*",
         "ext-redis": "*",
-        "ext-libxml": "*",
-        "ext-xml": "*",
+        "ext-memcached": "*",
+        "ext-apcu": "*",
         "ext-sockets": "*",
         "ext-posix": "*",
         "ext-pcntl": "*"
@@ -56,7 +54,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "2.0-dev"
+            "dev-master": "3.0-dev"
         }
     },
     "support": {
