@@ -18,6 +18,6 @@ class Index extends Controller {
     }
 
     public function wula() {
-        return 'this ia wula';
+        return pview(['name' => 'this ia wula']);
     }
 }
