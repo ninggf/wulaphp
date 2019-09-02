@@ -4,6 +4,11 @@ namespace wulaphp\util;
 
 use wulaphp\conf\ConfigurationLoader;
 
+/**
+ * Redis Client.
+ *
+ * @package wulaphp\util
+ */
 class RedisClient {
     private static $instances = [];
 
@@ -28,12 +33,12 @@ class RedisClient {
      * 4. int: 从配置文件redis_config.php中读取,并将数据库替换为`$cnf`指定的库.
      *
      * @param string                $prefix key前缀.
-     * @param  int|null             $db     数据库，不为null时将替换配置中的数据库
+     * @param int|null              $db     数据库，不为null时将替换配置中的数据库
      *
      * @return \Redis
      * @throws \Exception when the redis extension is not installed.
      */
-    public static function getRedis($cnf = null, $db = null, $prefix = '') {
+    public static function getRedis($cnf = null, $db = null, $prefix = ''): ?\Redis {
         if (!extension_loaded('redis')) {
             throw new \Exception(__('The redis extension is not installed'));
         }
@@ -108,6 +113,11 @@ class RedisClient {
         return null;
     }
 
+    /**
+     * 关闭Redis连接.
+     *
+     * @param \Redis $redis
+     */
     public static function close(\Redis $redis) {
         if ($redis && $redis->rid) {
             $redis->close();

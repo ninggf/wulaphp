@@ -14,15 +14,15 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 
     protected $name;
 
-    public function __construct($name = 'default') {
+    public function __construct(string $name = 'default') {
         $this->name = $name;
     }
 
-    public function setName($name) {
+    public function setName(string $name) {
         $this->name = $name;
     }
 
-    public function name() {
+    public function name(): string {
         return $this->name;
     }
 
@@ -58,7 +58,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
      *
      * @return mixed
      */
-    public function get($name, $default = '') {
+    public function get(string $name, $default = '') {
         $setting = &$this->settings;
         $names   = explode('.', $name);
         $lname   = array_pop($names);
@@ -80,7 +80,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
      *
      * @return bool
      */
-    public function getb($name, $default = false) {
+    public function getb(string $name, bool $default = false): bool {
         $v = $this->get($name, $default);
 
         return (bool)$v;
@@ -92,7 +92,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
      *
      * @return int
      */
-    public function geti($name, $default = 0) {
+    public function geti(string $name, int $default = 0): int {
         $v = $this->get($name, $default);
 
         return (int)$v;
@@ -104,7 +104,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
      *
      * @return array
      */
-    public function geta($name, array $default = []) {
+    public function geta(string $name, array $default = []): array {
         return (array)$this->get($name, $default);
     }
 
@@ -114,7 +114,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
      * @param string $name 支持通过'.'进行多级设置。
      * @param mixed  $value
      */
-    public function set($name, $value) {
+    public function set(string $name, $value) {
         $setting = &$this->settings;
         $names   = explode('.', $name);
         $lname   = array_pop($names);
@@ -135,7 +135,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
      * @param string $name
      * @param mixed  $value
      */
-    public function setm($name, $value) {
+    public function setm(string $name, $value) {
         if (is_array($value)) {
             $ov    = $this->geta($name);
             $value = array_merge($value, $ov);
@@ -143,14 +143,14 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
         $this->set($name, $value);
     }
 
-    /*
-     * (non-PHPdoc) @see IteratorAggregate::getIterator()
+    /**
+     * @return \ArrayIterator
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return new \ArrayIterator ($this->settings);
     }
 
-    public function toArray() {
+    public function toArray(): array {
         return $this->settings;
     }
 }

@@ -20,7 +20,7 @@ class CommonLogger implements LoggerInterface {
     ];
     private        $file     = '';
 
-    public function __construct($file = 'wula') {
+    public function __construct(string $file = 'wula') {
         $this->file = $file;
     }
 
@@ -84,7 +84,15 @@ class CommonLogger implements LoggerInterface {
         @error_log($msg, 3, LOGS_PATH . $dest_file);
     }
 
-    public static function getLine($info, $i) {
+    /**
+     * 格式化堆栈信息。
+     *
+     * @param array $info
+     * @param int   $i
+     *
+     * @return string
+     */
+    public static function getLine(array $info, int $i): string {
         if (isset($info['class'])) {
             $cls = "{$info['class']}{$info['type']}";
         } else {

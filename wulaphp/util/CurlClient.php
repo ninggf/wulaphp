@@ -54,27 +54,51 @@ class CurlClient {
         }
     }
 
-    public function setReferer($referer = '') {
+    /**
+     * 设置Referer
+     *
+     * @param string $referer
+     */
+    public function setReferer(string $referer = '') {
         if ($this->ch && $referer) {
             curl_setopt($this->ch, CURLOPT_REFERER, $referer);
         }
     }
 
-    public function setCustomData($cdata) {
+    /**
+     * 设置自定义数据.
+     *
+     * @param array $cdata
+     */
+    public function setCustomData(array $cdata) {
         $this->customData = $cdata;
     }
 
-    public function getCustomData() {
+    /**
+     * 获取自定义数据.
+     * @return array
+     */
+    public function getCustomData(): array {
         return $this->customData;
     }
 
-    public function setCharset($charset = 'UTF-8') {
+    /**
+     * 设置编码.
+     *
+     * @param string $charset
+     */
+    public function setCharset(string $charset = 'UTF-8') {
         $this->encoding = $charset;
         if (empty ($this->encoding)) {
             $this->encoding = 'UTF-8';
         }
     }
 
+    /**
+     * 设置代理.
+     *
+     * @param array|string $proxy
+     */
     public function setProxy($proxy) {
         if ($proxy) {
             if (is_array($proxy)) {
@@ -110,7 +134,14 @@ class CurlClient {
         }
     }
 
-    public function onStart($index) {
+    /**
+     * 完成回调.
+     *
+     * @param string|int $index
+     *
+     * @return bool
+     */
+    protected function onStart($index): bool {
         if ($this->mcallback instanceof CurlMultiExeCallback) {
             return $this->mcallback->onStart($index, $this->ch, $this->customData);
         }
@@ -118,7 +149,15 @@ class CurlClient {
         return true;
     }
 
-    public function onFinish($index, $data) {
+    /**
+     * 完成回调.
+     *
+     * @param int|string $index
+     * @param            $data
+     *
+     * @return mixed|null
+     */
+    protected function onFinish($index, string $data) {
         $this->inUsed = false;
         if ($this->mcallback instanceof CurlMultiExeCallback) {
             return $this->mcallback->onFinish($index, $data, $this->ch, $this->customData);
@@ -127,7 +166,14 @@ class CurlClient {
         return null;
     }
 
-    public function onError($index) {
+    /**
+     * 出错回调.
+     *
+     * @param int|string $index
+     *
+     * @return mixed|null
+     */
+    protected function onError($index) {
         $this->inUsed = false;
         if ($this->mcallback instanceof CurlMultiExeCallback) {
             return $this->mcallback->onError($index, $this->ch, $this->customData);
@@ -136,6 +182,11 @@ class CurlClient {
         return null;
     }
 
+    /**
+     * 获取curl channel.
+     *
+     * @return false|resource
+     */
     public function getChannel() {
         return $this->ch;
     }
@@ -307,14 +358,30 @@ class CurlClient {
         return $rst;
     }
 
+    /**
+     * 下载图片.
+     *
+     * @param string $url
+     * @param null   $base
+     *
+     * @return bool|mixed|string|string[]|null
+     */
     public function getImage($url, $base = null) {
         return $this->get($url, $base, false, true);
     }
 
-    public function setDomain($domain) {
+    /**
+     * 设置域名.
+     *
+     * @param $domain
+     */
+    public function setDomain(string $domain) {
         $this->domain = $domain;
     }
 
+    /**
+     * 关闭
+     */
     public function close() {
         if ($this->ch) {
             @curl_close($this->ch);
@@ -324,8 +391,7 @@ class CurlClient {
     /**
      * 并行执行CurlClient请求。
      *
-     * @param array $clients
-     *            array(CurlClient,...)。
+     * @param array $clients array(CurlClient,...)。
      *
      * @return array results for each request. array(0=>success array,1=>failed array,2=>not start).
      */
@@ -339,7 +405,7 @@ class CurlClient {
                     continue;
                 }
                 if ($client->onStart($i)) {
-                    $ch             = $client->getChannel();
+                    $ch             = $client->ch;
                     $handles [ $i ] = ['h' => $ch, 'c' => $client];
                     curl_multi_add_handle($mh, $ch);
                 } else {
@@ -351,7 +417,7 @@ class CurlClient {
                 do {
                     curl_multi_exec($mh, $active);
                     if ($active > 0) {
-                        usleep(50);
+                        usleep(10);
                     }
                 } while ($active > 0);
 
@@ -374,11 +440,25 @@ class CurlClient {
         return $result;
     }
 
-    public static function getClient($timeout = 60, $headers = [], $referer = false) {
+    /**
+     * 获取一个Clientp实例.
+     *
+     * @param int   $timeout
+     * @param array $headers
+     * @param bool  $referer
+     *
+     * @return \wulaphp\util\CurlClient
+     */
+    public static function getClient($timeout = 60, $headers = [], $referer = false): CurlClient {
         return new CurlClient ($timeout, $headers, $referer);
     }
 
-    public static function getUrlInfo($url) {
+    /**
+     * @param string $url
+     *
+     * @return array
+     */
+    public static function getUrlInfo($url): array {
         $here = explode('/', $url);
         array_pop($here);
         $here = implode('/', $here) . '/';
@@ -404,7 +484,15 @@ class CurlClient {
         return ['root' => $root, 'here' => $here, 'path' => trim($path, '/'), 'file' => $file];
     }
 
-    public static function getURL($url, $info) {
+    /**
+     * 解析URL。
+     *
+     * @param string $url
+     * @param array  $info
+     *
+     * @return string
+     */
+    public static function getURL($url, $info): string {
         if (preg_match('#^(htt|ft)ps?://.+#i', $url)) {
             return $url;
         } else if ($url{0} === '/') {

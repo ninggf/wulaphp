@@ -18,7 +18,7 @@ namespace wulaphp\db;
  * @property-read string $originTable
  */
 trait MetaTable {
-    protected function onInitMetaTable() {
+    protected final function onInitMetaTable() {
         if (!isset($this->metaIdField) || !$this->metaIdField) {
             $this->metaIdField = strtolower(preg_replace('/_meta$/', '', $this->originTable)) . '_id';
         }

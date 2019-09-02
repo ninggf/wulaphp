@@ -115,7 +115,7 @@ class Response {
      * @param int      $expire
      * @param int|null $last_modify
      */
-    public static function cache($expire = 3600, $last_modify = null) {
+    public static function cache(int $expire = 3600, ?int $last_modify = null) {
         $time    = time();
         $date    = gmdate('D, d M Y H:i:s', $time) . ' GMT';
         $headers = [
@@ -139,7 +139,7 @@ class Response {
      *
      * @param int $last_modify
      */
-    public static function lastModified($last_modify) {
+    public static function lastModified(int $last_modify) {
         $time    = time();
         $date    = gmdate('D, d M Y H:i:s', $time) . ' GMT';
         $ldate   = gmdate('D, d M Y H:i:s', $last_modify) . ' GMT';
@@ -160,7 +160,7 @@ class Response {
      * @param string|array $args     参数
      * @param int          $status   响应代码
      */
-    public static function redirect($location, $args = "", $status = 302) {
+    public static function redirect(string $location, $args = "", $status = 302) {
         global $is_IIS;
         if (!$location) {
             return;
@@ -196,7 +196,7 @@ class Response {
      *
      * @param string $message
      */
-    public static function error($message) {
+    public static function error(string $message) {
         self::respond(400, $message);
     }
 
@@ -252,7 +252,7 @@ class Response {
      * @param null|string $domain
      * @param null|bool   $security
      */
-    public static function cookie($name, $value = null, $expire = null, $path = null, $domain = null, $security = null) {
+    public static function cookie(string $name, $value = null, $expire = null, $path = null, $domain = null, $security = null) {
         $settings       = App::cfg();
         $cookie_setting = array_merge2([
             'expire'   => 0,
@@ -329,7 +329,10 @@ class Response {
         if ($exit) {
             exit ();
         } else {
-            fire('after_content_output', $this->content);
+            try {
+                fire('after_content_output', $this->content);
+            } catch (\Exception $e) {
+            }
         }
     }
 }

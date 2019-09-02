@@ -30,7 +30,7 @@ class RedisLock {
      *
      * @return bool|mixed  无法获取锁时返回false，成功获取锁后返回$callback的返回值.
      */
-    public static function nblock($lock, \Closure $callback, $timeout = 120) {
+    public static function nblock(string $lock, \Closure $callback, int $timeout = 120) {
         try {
             $redis = RedisClient::getRedis();
             if ($redis) {
@@ -63,7 +63,7 @@ class RedisLock {
      *
      * @return bool|mixed 无法获取锁时返回false，成功获取锁后返回$callback的返回值.
      */
-    public static function lock($lock, \Closure $callback, $timeout = 30) {
+    public static function lock(string $lock, \Closure $callback, int $timeout = 30) {
         try {
             $redis = RedisClient::getRedis();
             if ($redis) {
@@ -110,7 +110,7 @@ class RedisLock {
      *
      * @return bool
      */
-    public static function ulock($lock, $timeout = 30, &$wait = null) {
+    public static function ulock(string $lock, int $timeout = 30, ?bool &$wait = null): bool {
         try {
             $redis = RedisClient::getRedis();
             if ($redis) {
@@ -147,7 +147,7 @@ class RedisLock {
      *
      * @return bool
      */
-    public static function unblock($lock, $timeout = 5) {
+    public static function unblock(string $lock, int $timeout = 5): bool {
         try {
             $redis = RedisClient::getRedis();
             if ($redis) {
@@ -172,7 +172,7 @@ class RedisLock {
      *
      * @deprecated 使用release或unlock
      */
-    public static function uunlock($lock) {
+    public static function uunlock(string $lock) {
         try {
             $redis = RedisClient::getRedis();
             if ($redis) {
@@ -188,7 +188,7 @@ class RedisLock {
      *
      * @param string $lock
      */
-    public static function release($lock) {
+    public static function release(string $lock) {
         try {
             $redis = RedisClient::getRedis();
             if ($redis) {
@@ -204,7 +204,7 @@ class RedisLock {
      *
      * @param string $lock
      */
-    public static function unlock($lock) {
+    public static function unlock(string $lock) {
         try {
             $redis = RedisClient::getRedis();
             if ($redis) {

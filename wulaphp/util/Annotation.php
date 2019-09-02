@@ -5,7 +5,6 @@ namespace wulaphp\util;
 class Annotation {
     const IGNORE = [
         'global'     => 1,
-        'use'        => 1,
         'internal'   => 1,
         'link'       => 1,
         'deprecated' => 1,
@@ -31,7 +30,7 @@ class Annotation {
      *                        {@link \ReflectionFunction}的实例。
      * @param bool             $remove 是否删除换行,默认true
      */
-    public function __construct($obj, $remove = true) {
+    public function __construct($obj, bool $remove = true) {
         $this->remove = $remove;
         if (is_array($obj)) {
             $this->docComment  = '';
@@ -79,14 +78,14 @@ class Annotation {
      *
      * @return bool
      */
-    public function has($annotation) {
+    public function has(string $annotation): bool {
         return isset($this->annotations[ $annotation ]);
     }
 
     /**
      * @return string
      */
-    public function getDoc() {
+    public function getDoc(): ?string {
         return $this->docComment;
     }
 
@@ -96,7 +95,7 @@ class Annotation {
      *
      * @return string|array
      */
-    public function getString($annotation, $default = '') {
+    public function getString(string $annotation, $default = '') {
         return isset($this->annotations[ $annotation ]) ? $this->annotations[ $annotation ] : $default;
     }
 
@@ -106,7 +105,7 @@ class Annotation {
      *
      * @return int|array
      */
-    public function getInt($ann, $default = 0) {
+    public function getInt(string $ann, int $default = 0) {
         return isset($this->annotations[ $ann ]) ? intval(trim($this->annotations[ $ann ])) : $default;
     }
 
@@ -116,7 +115,7 @@ class Annotation {
      *
      * @return array
      */
-    public function getArray($annotation, $default = []) {
+    public function getArray(string $annotation, array $default = []): array {
         $str = $this->getString($annotation);
         if (is_array($str)) {
             return $str;
@@ -137,7 +136,7 @@ class Annotation {
      *
      * @return array
      */
-    public function getMultiValues($annotation, $default = []) {
+    public function getMultiValues(string $annotation, array $default = []): array {
         $str = $this->getString($annotation);
         if (is_array($str)) {
             return $str;
@@ -155,7 +154,7 @@ class Annotation {
      *
      * @return bool
      */
-    public function getBool($name, $default = false) {
+    public function getBool(string $name, bool $default = false): bool {
         if (!$this->has($name)) {
             return $default;
         }
@@ -173,7 +172,7 @@ class Annotation {
      *
      * @return array
      */
-    public function getJsonArray($annotation, $default = []) {
+    public function getJsonArray(string $annotation, array $default = []): array {
         $str = $this->getString($annotation);
         if (is_array($str)) {
             $rst = [];
@@ -216,11 +215,11 @@ class Annotation {
      *
      * @return array
      */
-    public function getAll() {
+    public function getAll(): array {
         return $this->annotations;
     }
 
-    private function text(&$i, $text, $len, $sep = '') {
+    private function text(int &$i, string $text, int $len, string $sep = '') {
         $j = $i + 1;
 
         while ($j < $len) {

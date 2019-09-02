@@ -37,7 +37,7 @@ namespace wulaphp\cache {
          *
          * @return \wulaphp\cache\Cache
          */
-        public static function init($force = false) {
+        public static function init(bool $force = false) {
             if (RtCache::$CACHE == null || $force) {
                 if (!$force && APP_MODE != 'pro') {
                     RtCache::$CACHE = new Cache ();

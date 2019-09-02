@@ -19,7 +19,7 @@ class Cache implements \ArrayAccess {
      *
      * @return Cache
      */
-    public static function getCache($type = '') {
+    public static function getCache(string $type = ''):Cache {
         static $caches = [];
         if (!$type) {
             $loader = new ConfigurationLoader();
@@ -54,7 +54,7 @@ class Cache implements \ArrayAccess {
      * 是否启用
      * @return bool
      */
-    public function enabled() {
+    public function enabled():bool {
         return $this->isEnalbed;
     }
 
