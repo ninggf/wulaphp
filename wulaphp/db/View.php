@@ -31,7 +31,7 @@ abstract class View {
     protected      $tableName;//带前缀表名
     protected      $qualifiedName;//带AS的表名
     protected      $primaryKeys = ['id'];
-    protected      $errors      = null;
+    protected      $errors      = '';
     protected      $lastSQL     = null;
     protected      $lastValues  = null;
     protected      $dumpSQL     = null;
