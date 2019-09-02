@@ -147,9 +147,9 @@ class QueryBuilderTest extends TestCase {
         $q1->left('item AS IT', 'IT.tid', 'T.id');
 
         $sql = $q1 . '';
-        self::assertEquals('DELETE T FROM table AS T LEFT JOIN  item AS IT ON (`IT`.`tid` = `T`.`id`) WHERE `id` > :id_0 AND `name` <> :name_0', $sql);
+        self::assertEquals('DELETE T FROM table AS T LEFT JOIN  item AS IT ON (`IT`.`tid`=`T`.`id`) WHERE `id` > :id_0 AND `name` <> :name_0', $sql);
 
         $sql = $q1->getSqlString();
-        self::assertEquals('DELETE T FROM table AS T LEFT JOIN  item AS IT ON (`IT`.`tid` = `T`.`id`) WHERE `id` > 0 AND `name` <> \'\'', $sql);
+        self::assertEquals('DELETE T FROM table AS T LEFT JOIN  item AS IT ON (`IT`.`tid`=`T`.`id`) WHERE `id` > 0 AND `name` <> \'\'', $sql);
     }
 }
