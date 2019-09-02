@@ -31,7 +31,7 @@ use wulaphp\util\Annotation;
  * @package wulaphp\mvc\controller
  */
 trait BreadCrumbSupport {
-    protected function beforeRunInBreadCrumbSupport($method, $view) {
+    protected final function beforeRunInBreadCrumbSupport($method, $view) {
         /**@var Annotation $ann */
         $ann = $this->methodAnn;
         if (($id = $ann->getString('restoreArgs'))) {
@@ -59,7 +59,7 @@ trait BreadCrumbSupport {
      *
      * @return \wulaphp\mvc\view\View
      */
-    protected function afterRunInBreadCrumbSupport($action, $view, $method) {
+    protected final function afterRunInBreadCrumbSupport($action, $view, $method) {
         /**@var Annotation $ann */
         $ann = $this->methodAnn;
         if ($view instanceof View) {

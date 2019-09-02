@@ -15,7 +15,7 @@ trait LayoutSupport {
      *
      * @return \wulaphp\mvc\view\View
      */
-    protected function render($tpl = null, array $data = []) {
+    protected final function render($tpl = null, array $data = []) {
         if ($this instanceof Controller) {
             if (is_array($tpl)) {
                 $data = $tpl;

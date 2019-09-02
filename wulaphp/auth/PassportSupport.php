@@ -13,8 +13,9 @@ use wulaphp\util\Annotation;
  * 注：此特性依赖SessionSupport.
  *
  * @package wulaphp\auth
- * @property-read  string     $passportType
+ * @property       string     $passportType
  * @property-read  Annotation $ann
+ * @property-read  Annotation $methodAnn
  */
 trait PassportSupport {
     /**
@@ -40,12 +41,19 @@ trait PassportSupport {
      *
      * @return mixed
      */
-    protected function beforeRunInPassportSupport(\Reflector $method, $view) {
-        if ($this->passport->uid && !$this->passport->status) {
-            if ($this->passport->status) {
+    protected final function beforeRunInPassportSupport(\Reflector $method, $view) {
+        //不需要登录
+        $nologin = $this->methodAnn->has('nologin');
+        if ($nologin) {
+            return $view;
+        }
+        //用户登录
+        if ($this->passport->uid) {
+            if ($this->passport->status != 1) { //1为正常，其它值为锁定状态。
                 return $this->onLocked($view);
             }
-            if ($this->passport->screenLocked) {
+            $unlock = $this->methodAnn->has('unlock');
+            if (!$unlock && $this->passport->screenLocked) { //不是解锁方法且用户已经锁屏。
                 return $this->onScreenLocked($view);
             }
         }
@@ -53,7 +61,7 @@ trait PassportSupport {
         return $view;
     }
 
-    protected function afterRunInPassportSupport($action, $view, $method) {
+    protected final function afterRunInPassportSupport($action, $view, $method) {
         if ($view instanceof SmartyView || $view instanceof ThemeView) {
             $view->assign('myPassport', $this->passport);
         }
@@ -69,7 +77,7 @@ trait PassportSupport {
      * @return mixed
      */
     protected function onLocked($view) {
-        return $view;
+        return $view ? $view : 'user is locked';
     }
 
     /**
@@ -80,6 +88,6 @@ trait PassportSupport {
      * @return mixed
      */
     protected function onScreenLocked($view) {
-        return $view;
+        return $view ? $view : 'screen is locked';
     }
 }

@@ -19,7 +19,7 @@ use wulaphp\router\Router;
  * @property-read \wulaphp\util\Annotation $methodAnn
  */
 trait CacheSupport {
-    protected function afterRunInCacheSupport($action, View $view, $method) {
+    protected final function afterRunInCacheSupport($action, View $view, $method) {
         $annotation = $this->methodAnn;
         if ($annotation->has('expire')) {
             $expire = $annotation->getInt('expire');

@@ -264,7 +264,7 @@ class Passport implements \ArrayAccess {
      * @return bool
      */
     protected function verifyPasswd($password) {
-        return true;
+        return false;
     }
 
     /**

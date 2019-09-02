@@ -18,12 +18,12 @@ use wulaphp\util\Annotation;
  * @property-read  bool                    $loginBack
  */
 trait RbacSupport {
-    protected $globalRbacSetting = ['login' => false];
+    private $globalRbacSetting = [];
 
-    protected function onInitRbacSupport() {
+    protected final function onInitRbacSupport() {
         if ($this->ann instanceof Annotation) {
             $ann                               = $this->ann;
-            $this->globalRbacSetting['login']  = $this->globalRbacSetting['login'] || $ann->has('login');
+            $this->globalRbacSetting['login']  = $ann->has('login');
             $this->globalRbacSetting['roles']  = $ann->getArray('roles');
             $this->globalRbacSetting['acl']    = $ann->getArray('acl');
             $this->globalRbacSetting['aclmsg'] = $ann->getString('aclmsg');
@@ -39,7 +39,7 @@ trait RbacSupport {
      *
      * @return mixed
      */
-    protected function beforeRunInRbacSupport(\Reflector $method, $view) {
+    protected final function beforeRunInRbacSupport(\Reflector $method, $view) {
         if ($this->passport instanceof Passport) {
             $annotation = $this->methodAnn;
 

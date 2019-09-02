@@ -11,6 +11,7 @@
 
 namespace login;
 
+use login\classes\VipTestPassport;
 use wulaphp\app\App;
 use wulaphp\app\Module;
 
@@ -25,6 +26,18 @@ class LoginModule extends Module {
 
     public function getHomePageURL() {
         return 'http://www.wulaphp.com/';
+    }
+
+    /**
+     * @param \wulaphp\auth\Passport $passport
+     *
+     * @filter passport\newViptestPassport
+     * @return \wulaphp\auth\Passport
+     */
+    public static function vipPassport($passport) {
+        $passport = new VipTestPassport();
+
+        return $passport;
     }
 }
 
