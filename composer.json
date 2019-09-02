@@ -52,11 +52,6 @@
             "bootstrap.php"
         ]
     },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "3.0-dev"
-        }
-    },
     "support": {
         "issues": "https://github.com/ninggf/wulaphp/issues"
     },
