@@ -144,7 +144,7 @@ class QueryBuilderTest extends TestCase {
         self::assertEquals('DELETE FROM table WHERE `id` > 0 AND `name` <> \'\'', $sql);
 
         $q1 = self::$con->delete()->from('table AS T')->where(['id >' => 0, 'name <>' => '']);
-        $q1->left('item AS IT', 'IT.tid = T.id');
+        $q1->left('item AS IT', 'IT.tid', 'T.id');
 
         $sql = $q1 . '';
         self::assertEquals('DELETE T FROM table AS T LEFT JOIN  item AS IT ON (`IT`.`tid = T`.`id`=``) WHERE `id` > :id_0 AND `name` <> :name_0', $sql);

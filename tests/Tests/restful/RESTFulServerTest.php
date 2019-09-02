@@ -27,6 +27,7 @@ class RESTFulServerTest extends TestCase {
         $signer             = new DefaultSignChecker();
         $sign               = $signer->sign($arg, '123', 'md5');
         $arg['sign']        = $sign;
+        self::assertNotEmpty($sign);
 
         return $arg;
     }
@@ -43,6 +44,7 @@ class RESTFulServerTest extends TestCase {
         $signer             = new DefaultSignChecker();
         $sign               = $signer->sign($arg, '123', 'md5');
         $arg['sign']        = $sign;
+        self::assertNotEmpty($sign);
 
         return $arg;
     }
@@ -59,6 +61,7 @@ class RESTFulServerTest extends TestCase {
         $signer             = new DefaultSignChecker();
         $sign               = $signer->sign($arg, '123', 'md5');
         $arg['sign']        = $sign;
+        self::assertNotEmpty($sign);
 
         return $arg;
     }

@@ -132,7 +132,7 @@ SQL;
 
         $cate = new CateModel(self::$con);
         $rst  = $cate->adds($cs);
-        self::assertTrue(is_array($rst), $cate->lastError());
+        self::assertTrue(is_array($rst), $cate->lastError() ? $cate->lastError() : '');
         self::assertEquals(1, count($rst));
         self::assertContains(5, $rst);
 

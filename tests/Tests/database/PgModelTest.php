@@ -95,14 +95,14 @@ SQL;
         $c['deleted'] = 0;
         $c['name']    = 'C1';
         $rst          = $cate->add($c);
-        self::assertEquals(1, $rst, $cate->lastError());
+        self::assertEquals(1, $rst, $cate->lastError() ? $cate->lastError() : '');
 
         $cateItem   = new CateItemTable(self::$con);
         $ci['id']   = 1;
         $ci['cid']  = 1;
         $ci['name'] = 'C1-Item1';
         $rst        = $cateItem->add($ci);
-        self::assertEquals(1, $rst, $cateItem->lastError());
+        self::assertEquals(1, $rst, $cateItem->lastError() ? $cateItem->lastError() : '');
     }
 
     /**
@@ -377,7 +377,6 @@ SQL;
         self::assertEquals('5,4,3,2,1', $gq, $ci->lastError());
         $ghq = $ci->select('cid')->groupBy('cid')->having('count(*) = 1')->desc('cid')->limit(0, 2)->implode('cid');
         self::assertEquals('5,4', $ghq, $ci->lastError());
-
 
         return $ci;
     }
