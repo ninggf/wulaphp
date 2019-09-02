@@ -15,6 +15,7 @@ use wulaphp\io\Request;
 use wulaphp\io\Response;
 use wulaphp\io\Session;
 use wulaphp\mvc\view\JsonView;
+use wulaphp\mvc\view\View;
 use wulaphp\mvc\view\XmlView;
 
 class RESTFulServer {
@@ -34,7 +35,7 @@ class RESTFulServer {
      * @param string                        $format         默认响应格式，支持json和xml
      * @param int                           $session_expire session过期时间(单位秒)
      */
-    public function __construct($secretChecker, $signChecker, $format = 'json', $session_expire = 300) {
+    public function __construct(ISecretCheck $secretChecker, ISignCheck $signChecker, string $format = 'json', int $session_expire = 300) {
         $this->secretChecker = $secretChecker;
         $this->signChecker   = $signChecker;
         $this->format        = $format == 'xml' ? 'xml' : 'json';
@@ -50,7 +51,7 @@ class RESTFulServer {
      * @return null|\wulaphp\mvc\view\View
      * @throws
      */
-    public function run($debug = false) {
+    public function run(bool $debug = false): ?View {
         $this->debug    = $debug;
         $rqMethod       = strtolower($_SERVER ['REQUEST_METHOD']);
         $this->rqMehtod = ucfirst($rqMethod);
@@ -268,16 +269,25 @@ class RESTFulServer {
      *
      * @return \wulaphp\mvc\view\View
      */
-    private function generateResult($format, $data, $trigger = true) {
+    private function generateResult(string $format, array $data, bool $trigger = true): View {
         $etime = time();
         if ($trigger) {
             if (isset($data['error'])) {
                 if ($this->api) {
-                    fire('restful\errApi', $this->api, $etime, $data);
+                    try {
+                        fire('restful\errApi', $this->api, $etime, $data);
+                    } catch (\Exception $e) {
+                    }
                 }
-                fire('restful\callError', $etime, $data);
+                try {
+                    fire('restful\callError', $etime, $data);
+                } catch (\Exception $e) {
+                }
             }
-            fire('restful\endCall', $etime, $data);
+            try {
+                fire('restful\endCall', $etime, $data);
+            } catch (\Exception $e) {
+            }
         }
         if ($format == 'json') {
             return new JsonView(['response' => $data]);
@@ -292,7 +302,7 @@ class RESTFulServer {
      * @param string|int $status 状态
      * @param string     $message
      */
-    private function httpout($status, $message = '') {
+    private function httpout(int $status, string $message = '') {
         status_header($status);
         if ($message) {
             echo $message;

@@ -64,7 +64,7 @@ class Router {
      * 获取路由器实例.
      * @return \wulaphp\router\Router
      */
-    public static function getRouter() {
+    public static function getRouter(): Router {
         if (self::$INSTANCE == null) {
             self::$INSTANCE = new Router();
         }
@@ -77,7 +77,7 @@ class Router {
      *
      * @return string|null
      */
-    public static function getURI() {
+    public static function getURI(): ?string {
         if (isset($_SERVER ['REQUEST_URI'])) {
             if (WWWROOT_DIR != '/') {
                 $uri = substr($_SERVER ['REQUEST_URI'], strlen(WWWROOT_DIR) - 1);
@@ -98,7 +98,7 @@ class Router {
      *
      * @return null|string
      */
-    public static function getFullURI($noRU = false) {
+    public static function getFullURI(bool $noRU = false): ?string {
         if (!$noRU && isset($_SERVER ['REQUEST_URI'])) {
             return VISITING_HOST . $_SERVER ['REQUEST_URI'];
         }
@@ -114,7 +114,7 @@ class Router {
      *
      * @return bool
      */
-    public static function is($url, $regexp = false) {
+    public static function is(string $url, bool $regexp = false): bool {
         $r = self::getRouter();
         if ($regexp) {
             return preg_match('`^' . $url . '$`', $r->requestURL);
@@ -130,7 +130,7 @@ class Router {
      *
      * @return bool|array 匹配结果.
      */
-    public static function match($pattern) {
+    public static function match(string $pattern) {
         $r = self::getRouter();
         if (preg_match($pattern, $r->requestURL, $ms)) {
             return $ms;
@@ -233,7 +233,7 @@ class Router {
      *
      * @return \wulaphp\router\UrlParsedInfo
      */
-    public function getParsedInfo() {
+    public function getParsedInfo(): UrlParsedInfo {
         return $this->urlParsedInfo;
     }
 
@@ -242,19 +242,19 @@ class Router {
      *
      * @return array
      */
-    public function getDispatchers() {
+    public function getDispatchers(): array {
         return ['before' => $this->preDispatchers, 'disp' => $this->dispatchers, 'post' => $this->postDispatchers];
     }
 
     /**
      * 取URL中的位置参数
      *
-     * @param int    $pos
-     * @param string $default
+     * @param int          $pos
+     * @param string|mixed $default
      *
      * @return mixed|string
      */
-    public function getParam($pos = 0, $default = '') {
+    public function getParam(int $pos = 0, $default = '') {
         $pos = intval($pos);
 
         return isset($this->urlParams[ $pos ]) ? $this->urlParams[ $pos ] : $default;
@@ -266,7 +266,7 @@ class Router {
      * @param IURLDispatcher $dispatcher
      * @param int            $index
      */
-    public function register(IURLDispatcher $dispatcher, $index = 10) {
+    public function register(IURLDispatcher $dispatcher, int $index = 10) {
         $this->dispatchers [ $index ] [] = $dispatcher;
         ksort($this->dispatchers, SORT_NUMERIC);
     }
@@ -277,7 +277,7 @@ class Router {
      * @param IURLPreDispatcher $dispatcher
      * @param int               $index
      */
-    public function registerPreDispatcher(IURLPreDispatcher $dispatcher, $index = 10) {
+    public function registerPreDispatcher(IURLPreDispatcher $dispatcher, int $index = 10) {
         $this->preDispatchers [ $index ] [] = $dispatcher;
         ksort($this->preDispatchers, SORT_NUMERIC);
     }
@@ -288,7 +288,7 @@ class Router {
      * @param IURLPostDispatcher $dispatcher
      * @param int                $index
      */
-    public function registerPostDispatcher(IURLPostDispatcher $dispatcher, $index = 10) {
+    public function registerPostDispatcher(IURLPostDispatcher $dispatcher, int $index = 10) {
         $this->postDispatchers [ $index ] [] = $dispatcher;
         ksort($this->postDispatchers, SORT_NUMERIC);
     }
@@ -395,7 +395,7 @@ class Router {
      *
      * @return string 转换后的字符.
      */
-    public static function removeSlash($string) {
+    public static function removeSlash(string $string): string {
         return preg_replace_callback('/-([a-z])/', function ($ms) {
             return strtoupper($ms[1]);
         }, $string);
@@ -408,7 +408,7 @@ class Router {
      *
      * @return string 转换后的字符.
      */
-    public static function addSlash($string) {
+    public static function addSlash(string $string): string {
         $string = lcfirst($string);
 
         return preg_replace_callback('#[A-Z]#', function ($r) {
@@ -423,7 +423,7 @@ class Router {
      *
      * @return string
      */
-    public static function mimeContentType($filename) {
+    public static function mimeContentType(string $filename): string {
         static $mime_types = [
             'html'    => 'text/html;charset=UTF-8',
             'htm'     => 'text/html;charset=UTF-8',
@@ -556,7 +556,7 @@ class Router {
      *
      * @return string 转换后的URL
      */
-    private function transform($url) {
+    private function transform(string $url): string {
         $domains = App::acfg('domains@default');
         if (isset($domains[ VISITING_HOST ]) && $domains[ VISITING_HOST ]) {
             $dir = App::id2dir($domains[ VISITING_HOST ]);

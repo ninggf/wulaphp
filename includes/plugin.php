@@ -29,20 +29,20 @@ $__ksg_sorted_hooks = [];
  * @param int          $priority      优先级
  * @param int          $accepted_args 接受参数个数
  *
- * @return boolean|string 失败返回false,成功返回hook_func的ID，可用于unbind
+ * @return string 失败返回'',成功返回hook_func的ID，可用于unbind
  */
-function bind($hook, $hook_func, $priority = 10, $accepted_args = 1) {
+function bind(string $hook, $hook_func, int $priority = 10, int $accepted_args = 1): string {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
 
     if (empty ($hook)) {
         log_error('the hook name must not be empty!', 'plugin');
 
-        return false;
+        return '';
     }
     if (empty ($hook_func)) {
         log_error('the hook function must not be empty!', 'plugin');
 
-        return false;
+        return '';
     }
 
     $hook     = __rt_real_hook($hook);
@@ -69,15 +69,15 @@ function bind($hook, $hook_func, $priority = 10, $accepted_args = 1) {
  * 移除一个HOOK回调函数
  *
  * @param string $hook
- * @param mixed  $hook_func 回调函数或bind返回的ID
- * @param int    $priority  优先级
+ * @param string $hookId   bind返回的ID
+ * @param int    $priority 优先级
  *
  * @return boolean
  */
-function unbind($hook, $hook_func, $priority = 10) {
+function unbind(string $hook, string $hookId, int $priority = 10) {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
     $hook = __rt_real_hook($hook);
-    $idx  = __rt_hook_unique_id($hook_func);
+    $idx  = __rt_hook_unique_id($hookId);
 
     $r = isset ($__ksg_rtk_hooks [ $hook ] [ $priority ] [ $idx ]);
 
@@ -100,7 +100,7 @@ function unbind($hook, $hook_func, $priority = 10) {
  *
  * @return bool
  */
-function unbind_all($hook, $priority = false) {
+function unbind_all(string $hook, $priority = false): bool {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
     $hook = __rt_real_hook($hook);
     if (isset ($__ksg_rtk_hooks [ $hook ])) {
@@ -129,7 +129,7 @@ function unbind_all($hook, $priority = false) {
  * @global array $__ksg_rtk_hooks    系统所有HOOK的回调
  * @global array $__ksg_sorted_hooks 当前的HOOK回调是否已经排序
  */
-function fire($hook, $arg = '') {
+function fire(string $hook, $arg = '') {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
     __rt_scan_hook($hook); // 懒加载
     $hook = __rt_real_hook($hook);
@@ -188,7 +188,7 @@ function fire($hook, $arg = '') {
  *
  * @return mixed The filtered value after all hooked functions are applied to it.
  */
-function apply_filter($filter, $value) {
+function apply_filter(string $filter, $value) {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
     __rt_scan_hook($filter); // 懒加载
     $filter = __rt_real_hook($filter);
@@ -238,7 +238,7 @@ function apply_filter($filter, $value) {
  *
  * @return bool|string
  */
-function hook(Closure $handler, $accepted_args = 1, $priority = 10) {
+function hook(Closure $handler, int $accepted_args = 1, int $priority = 10) {
     global $__rt_hook_name;
     if ($__rt_hook_name) {
         $id             = bind($__rt_hook_name, $handler, $priority, $accepted_args);
@@ -253,22 +253,18 @@ function hook(Closure $handler, $accepted_args = 1, $priority = 10) {
 /**
  * Check if any hook has been registered.
  *
- * @param string        $hook
- * @param bool|callable $function_to_check optional. If specified, return the priority of that function on this
+ * @param string $hook
+ * @param string $function_to_check        optional. If specified, return the priority of that function on this
  *                                         hook or false if not attached.
  *
  * @return int boolean returns the priority on that hook for the specified function.
- * @global array        $__ksg_rtk_hooks   Stores all of the hooks
- * @see      wordpress has_filter
- * @internal
- * @global array        $__ksg_rtk_hooks   Stores all of the hooks
- *
+ * @global array $__ksg_rtk_hooks          Stores all of the hooks
  */
-function has_hook($hook, $function_to_check = false) {
+function has_hook(string $hook, string $function_to_check = '') {
     global $__ksg_rtk_hooks;
     $hook = __rt_real_hook($hook);
     $has  = !empty ($__ksg_rtk_hooks [ $hook ]);
-    if (false === $function_to_check || false == $has) {
+    if ('' === $function_to_check || false == $has) {
         return $has;
     }
     if (($idx = __rt_hook_unique_id($function_to_check)) == false) {
@@ -312,14 +308,14 @@ function __rt_hook_unique_id($function) {
 }
 
 // real hook name
-function __rt_real_hook($hook) {
+function __rt_real_hook(string $hook): string {
     $hook = ucwords(ltrim($hook, '\\'), '\\');
 
     return lcfirst($hook);
 }
 
 // scan hook handlers
-function __rt_scan_hook($hook) {
+function __rt_scan_hook(string $hook) {
     global $__rt_hook_name;
     static $hooks = [], $modules = null;
     if (!$modules || !defined('WULA_BOOTSTRAPPED')) {

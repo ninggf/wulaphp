@@ -25,7 +25,7 @@ class ApiController extends Controller {
 }
 
 class SecretChecker implements ISecretCheck {
-    public function check($appId) {
+    public function check(string $appId): string {
         return $appId;
     }
 }

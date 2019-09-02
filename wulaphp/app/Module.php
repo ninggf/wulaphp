@@ -26,7 +26,6 @@ abstract class Module {
     protected $namespace;
     protected $path;
     protected $dirname;
-    protected $bound = false;
     protected $currentVersion;
 
     private $subEnabled = false;
@@ -127,46 +126,6 @@ abstract class Module {
         $v ['1.0.0'] = '第一个版本';
 
         return $v;
-    }
-
-    /**
-     * 注册事件处理器.
-     * @throws
-     */
-    public final function autoBind() {
-        if ($this->bound) {
-            return;
-        }
-        $this->bound = true;
-        // 批量绑定
-        $this->bind();
-        // 根据注解进行绑定
-        $ms = $this->reflection->getMethods(\ReflectionMethod::IS_STATIC);
-        foreach ($ms as $m) {
-            if (!$m->isPublic()) {
-                continue;
-            }
-            $annotation = new Annotation($m);
-            $bind       = $annotation->getArray('bind');
-            if ($bind) {
-                $name     = $m->getName();
-                $argc     = $m->getNumberOfParameters();
-                $priority = isset($bind[1]) ? intval($bind[1]) : 10;
-                bind($bind[0], [$this->clzName, $name], $priority, $argc);
-            } else {
-                $filter = $annotation->getArray('filter');
-                if ($filter) {
-                    $name = $m->getName();
-                    $argc = $m->getNumberOfParameters();
-                    if ($argc > 0) {
-                        $priority = isset($filter[1]) ? intval($filter[1]) : 10;
-                        bind($filter[0], [$this->clzName, $name], $priority, $argc);
-                    } else {
-                        throw_exception('the method ' . $name . ' of ' . $this->clzName . ' must at least have one parameter.');
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -283,12 +242,6 @@ abstract class Module {
      */
     public function getDefinedTables($dialect) {
         return [];
-    }
-
-    /**
-     * 批量事件处理器注册.
-     */
-    protected function bind() {
     }
 
     /**

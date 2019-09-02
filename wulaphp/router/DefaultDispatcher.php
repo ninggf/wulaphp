@@ -31,7 +31,7 @@ class DefaultDispatcher implements IURLDispatcher {
      * @return \wulaphp\mvc\view\View
      * @throws \Exception
      */
-    public function dispatch($url, $router, $parsedInfo) {
+    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {
         $controllers = explode('/', $url);
         $pms         = [];
         $len         = count($controllers);
@@ -241,7 +241,7 @@ class DefaultDispatcher implements IURLDispatcher {
      *
      * @return array array ($controllerClz,$action,$params )
      */
-    public static function findApp($module, $action, $params, $namespace, $subnamespace = '') {
+    public static function findApp(string $module, string $action, array $params, string $namespace, string $subnamespace = ''): ?array {
         if (is_numeric($action)) {
             array_unshift($params, $action);
             $action = 'index';
@@ -345,7 +345,7 @@ class DefaultDispatcher implements IURLDispatcher {
      * @param \wulaphp\mvc\controller\Controller $clz
      * @param string                             $action
      */
-    public static function prepareView($view, $module, $clz, $action) {
+    public static function prepareView($view, string $module, Controller $clz, string $action) {
         if ($view instanceof IModuleView) {
             $tpl = $view->getTemplate();
             if ($tpl) {

@@ -21,5 +21,5 @@ interface ISignCheck {
      *
      * @return string 签名
      */
-    public function sign(array $args, $appSecret, $type = 'sha1', $server = false);
+    public function sign(array $args, string $appSecret, string $type = 'sha1', bool $server = false): string;
 }

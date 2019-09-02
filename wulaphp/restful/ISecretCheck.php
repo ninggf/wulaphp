@@ -18,5 +18,5 @@ interface ISecretCheck {
      *
      * @return string
      */
-    public function check($appId);
+    public function check(string $appId):string ;
 }

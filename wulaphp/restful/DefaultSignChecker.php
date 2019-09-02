@@ -11,7 +11,7 @@
 namespace wulaphp\restful;
 
 class DefaultSignChecker implements ISignCheck {
-    public function sign(array $args, $appSecret, $type = 'sha1', $server = false) {
+    public function sign(array $args, string $appSecret, string $type = 'sha1', bool $server = false): string {
         $args = self::checkArgs($args);
         if (isset($args['sign_method'])) {
             $type = $args['sign_method'];
@@ -70,7 +70,7 @@ class DefaultSignChecker implements ISignCheck {
      *
      * @return array mixed
      */
-    private static function checkArgs(array $args) {
+    private static function checkArgs(array $args): array {
         if ($_FILES) {
             foreach ($_FILES as $key => $f) {
                 if (is_array($f['name'])) {
@@ -91,7 +91,7 @@ class DefaultSignChecker implements ISignCheck {
      *
      * @return string
      */
-    private static function getfileSha1($value) {
+    private static function getfileSha1(string $value): string {
         $file = trim(substr($value, 1), '"');
         if (is_file($file)) {
             return sha1_file($file);

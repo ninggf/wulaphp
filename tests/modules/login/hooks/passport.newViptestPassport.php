@@ -8,10 +8,10 @@
  * file that was distributed with this source code.
  */
 
-namespace wulaphp\restful;
+use login\classes\VipTestPassport;
 
-class RestException extends \Exception {
-    public function __construct(string $message, int $code = 500) {
-        parent::__construct($message, $code, null);
-    }
-}
+return hook(function ($passport) {
+    $passport = new VipTestPassport();
+
+    return $passport;
+});

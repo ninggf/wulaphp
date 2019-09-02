@@ -21,7 +21,7 @@ class Condition implements \ArrayAccess, \Countable {
     private $uniques    = [];
     private $alias      = null;
 
-    public function __construct($con = [], $alias = null) {
+    public function __construct(array $con = [], ?string $alias = null) {
         $this->alias = $alias;
         if ($con && is_array($con)) {
             foreach ($con as $key => $value) {
@@ -37,7 +37,7 @@ class Condition implements \ArrayAccess, \Countable {
      *
      * @return string
      */
-    public static function safeField($field) {
+    public static function safeField(string $field): string {
         return str_replace(['`', '"', '.'], ['', '', '_'], $field);
     }
 
@@ -48,7 +48,7 @@ class Condition implements \ArrayAccess, \Countable {
      *
      * @return string
      */
-    public static function cleanField($field) {
+    public static function cleanField(string $field): string {
         if ('*' == $field) {
             return $field;
         }
@@ -82,7 +82,7 @@ class Condition implements \ArrayAccess, \Countable {
      *
      * @return string
      */
-    public function getWhereCondition(DatabaseDialect $dialect, $values) {
+    public function getWhereCondition(DatabaseDialect $dialect, BindValues $values): string {
         /*
          * || - or
          * @  - exist
@@ -133,7 +133,7 @@ class Condition implements \ArrayAccess, \Countable {
      *
      * @return array
      */
-    public static function parseSearchExpression($expression, $defines) {
+    public static function parseSearchExpression(string $expression, array $defines): array {
         $where = [];
         if ($expression && $defines && is_array($defines)) {
             $expressions = explode('&&', $expression);

@@ -59,7 +59,7 @@ class Response {
      *
      * @return Response
      */
-    public static function getInstance() {
+    public static function getInstance(): Response {
         if (self::$INSTANCE == null) {
             new Response ();
         }
@@ -72,10 +72,8 @@ class Response {
      *
      * @param View $view
      */
-    public function setView($view) {
-        if ($view instanceof View) {
-            $this->view = $view;
-        }
+    public function setView(View $view) {
+        $this->view = $view;
     }
 
     /**
@@ -208,7 +206,7 @@ class Response {
      * @param int          $status respond status code.
      * @param string|array $message
      */
-    public static function respond($status = 404, $message = '') {
+    public static function respond(int $status = 404, $message = '') {
         http_response_code($status);
         if (Request::isAjaxRequest()) {
             @header('ajax: 1');

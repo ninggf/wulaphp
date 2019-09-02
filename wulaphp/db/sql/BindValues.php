@@ -2,6 +2,8 @@
 
 namespace wulaphp\db\sql;
 
+use phpDocumentor\Reflection\DocBlock\Tags\Param;
+
 /**
  * bind values for Pdo PrepareStatement.
  *
@@ -27,7 +29,7 @@ class BindValues implements \IteratorAggregate {
      *
      * @return string
      */
-    public function addValue($field, $value) {
+    public function addValue(string $field, $value):string {
         $rfield = str_replace(['`', '"'], '', $field);
         $field  = Condition::safeField($field);
         $index  = isset ($this->names [ $field ]) ? $this->names [ $field ] : 0;
@@ -62,7 +64,7 @@ class BindValues implements \IteratorAggregate {
      *
      * @return bool
      */
-    public function has($name) {
+    public function has(string $name):bool {
         $field = Condition::safeField($name);
 
         return isset ($this->names [ $field ]);

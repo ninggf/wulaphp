@@ -26,7 +26,7 @@ abstract class API {
      * @param string $appKey appkey
      * @param string $ver    版本.
      */
-    public function __construct($appKey, $ver = '') {
+    public function __construct(string $appKey, string $ver = '') {
         $this->appKey = $appKey;
         $this->ver    = $ver;
     }
@@ -54,7 +54,7 @@ abstract class API {
      *
      * @throws \wulaphp\restful\RestException
      */
-    protected final function error($code, $message = null) {
+    protected final function error(int $code, ?string $message = null) {
         if (empty($message) && is_string($code)) {
             $msg = explode('@', $code);
             if (count($msg) >= 2) {

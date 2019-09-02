@@ -19,7 +19,7 @@ trait CudTrait {
      *
      * @return bool
      */
-    public function success() {
+    public function success(): bool {
         return empty ($this->error) ? true : false;
     }
 
@@ -28,7 +28,7 @@ trait CudTrait {
      *
      * @return bool
      */
-    public function go() {
+    public function go(): bool {
         return $this->exec();
     }
 
@@ -45,7 +45,7 @@ trait CudTrait {
      * @return boolean|int|mixed
      * @throws \PDOException
      */
-    public function exec($checkNum = false) {
+    public function exec(?bool $checkNum = false) {
         $cnt = $this->count();
         if ($cnt === false) {
             if ($this->exception instanceof \PDOException) {
@@ -78,7 +78,7 @@ trait CudTrait {
      *
      * @return int
      */
-    public function affected() {
+    public function affected(): int {
         return $this->exec(null);
     }
 

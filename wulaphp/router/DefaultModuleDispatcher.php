@@ -16,12 +16,12 @@ class DefaultModuleDispatcher implements IURLDispatcher {
     private $dd = null;
     private $defaultModule;
 
-    public function __construct(IURLDispatcher $dispatcher, $defaultModule) {
+    public function __construct(IURLDispatcher $dispatcher, string $defaultModule) {
         $this->dd            = $dispatcher;
         $this->defaultModule = $defaultModule;
     }
 
-    public function dispatch($url, $router, $parsedInfo) {
+    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {
         if ($url == 'index.html') {
             $url = '';
         }

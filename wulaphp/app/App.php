@@ -131,7 +131,7 @@ class App {
      * @return \wulaphp\conf\ConfigurationLoader
      * @throws
      */
-    public static function cfgLoader() {
+    public static function cfgLoader(): ?ConfigurationLoader {
         if (!self::$app) {
             new App ();
         }
@@ -145,7 +145,7 @@ class App {
      * @return \wulaphp\app\ModuleLoader
      * @throws
      */
-    public static function moduleLoader() {
+    public static function moduleLoader(): ?ModuleLoader {
         if (!self::$app) {
             new App ();
         }
@@ -158,7 +158,7 @@ class App {
      *
      * @return null|int
      */
-    public static function serverId() {
+    public static function serverId(): ?int {
         return env('server_id', null);
     }
 
@@ -168,7 +168,7 @@ class App {
      * @return App
      * @throws
      */
-    public static function start() {
+    public static function start(): ?App {
         if (!self::$app) {
             new App ();
         }
@@ -206,7 +206,6 @@ class App {
                         self::registerUrlGroup($prefix, $module->getNamespace());
                     }
                 }
-                $module->autoBind();
             }
         }
         fire('app\started');
@@ -251,7 +250,7 @@ class App {
      *
      * @return \wulaphp\app\Module[]
      */
-    public static function modules($status = 'installed') {
+    public static function modules(string $status = 'installed'): array {
         switch ($status) {
             case 'uninstalled':
                 $modules = array_filter(self::$modules, function (Module $m) {
@@ -297,8 +296,7 @@ class App {
      * @return DatabaseConnection
      * @throws \Exception
      */
-    public static function db($name = 'default') {
-
+    public static function db($name = 'default'): ?DatabaseConnection {
         return DatabaseConnection::connect($name);
     }
 
@@ -310,7 +308,7 @@ class App {
      *
      * @return \wulaphp\db\SimpleTable|null
      */
-    public static function table($table, $db = 'default') {
+    public static function table(string $table, $db = 'default'): ?SimpleTable {
         /**@var \wulaphp\db\SimpleTable[][] $tables */
         static $tables = [];
         try {
@@ -335,7 +333,7 @@ class App {
      *
      * @return \wulaphp\conf\Configuration
      */
-    public static function config($config, $file = false) {
+    public static function config(string $config, bool $file = false): Configuration {
         $app = self::$app;
         if (isset ($app->configs [ $config ]) && !$file) {
             $confObj = $app->configs [ $config ];
@@ -358,7 +356,7 @@ class App {
      *
      * @return \wulaphp\conf\Configuration
      */
-    public static function reloadCfg($config, $file = false) {
+    public static function reloadCfg(string $config, bool $file = false): Configuration {
         $app = self::$app;
         unset($app->configs[ $config ]);
 
@@ -373,7 +371,7 @@ class App {
      *
      * @return mixed 配置值.
      */
-    public static function cfg($name = '@default', $default = '') {
+    public static function cfg(string $name = '@default', $default = '') {
         $app  = self::$app;
         $keys = null;
         if ($name != null) {
@@ -425,7 +423,7 @@ class App {
      *
      * @return bool
      */
-    public static function bcfg($name, $default = false) {
+    public static function bcfg(string $name, bool $default = false): bool {
         if ($name == null) {
             return false;
         } else {
@@ -449,7 +447,7 @@ class App {
      *
      * @return int
      */
-    public static function icfg($name, $default = 0) {
+    public static function icfg(string $name, int $default = 0): int {
         if ($name == null) {
             return $default;
         } else {
@@ -467,7 +465,7 @@ class App {
      *
      * @return int
      */
-    public static function icfgn($name, $default = 0) {
+    public static function icfgn(string $name, int $default = 0): int {
         $val = self::icfg($name, $default);
         if (!$val) {
             return $default;
@@ -484,7 +482,7 @@ class App {
      *
      * @return array
      */
-    public static function acfg($name, array $default = []) {
+    public static function acfg(string $name, array $default = []): array {
         $value = self::cfg($name);
         if ($value) {
             if (is_string($value)) {
@@ -542,7 +540,7 @@ class App {
      *
      * @return Module|null 未找到时返回Null
      */
-    public static function getModule($module) {
+    public static function getModule(string $module): ?Module {
         $info = null;
         if (isset (self::$modules [ $module ])) {
             return self::$modules [ $module ];
@@ -558,7 +556,7 @@ class App {
      *
      * @return string|null
      */
-    public static function getModuleDomain($id) {
+    public static function getModuleDomain(string $id): ?string {
         static $domains = null;
         if ($domains === null) {
             $domain  = App::acfg('domains@default');
@@ -578,7 +576,7 @@ class App {
      *
      * @return Module|null
      */
-    public static function getModuleById($id) {
+    public static function getModuleById(string $id): ?Module {
         return self::getModule($id);
     }
 
@@ -589,7 +587,7 @@ class App {
      *
      * @return Module|null
      */
-    public static function getModuleByDir($dir) {
+    public static function getModuleByDir(string $dir): ?Module {
         $id = self::dir2id($dir);
 
         return self::getModule($id);
@@ -603,7 +601,7 @@ class App {
      *
      * @return string|null 未找到时返回null.
      */
-    public static function dir2id($dir, $check = false) {
+    public static function dir2id(string $dir, bool $check = false): ?string {
         if (isset (self::$maps ['dir2id'] [ $dir ])) {
             return self::$maps ['dir2id'] [ $dir ];
         } else if (!$check) {
@@ -622,7 +620,7 @@ class App {
      *
      * @return string|string[]
      */
-    public static function id2dir($id = null) {
+    public static function id2dir(?string $id = null) {
         if ($id === null) {
             return self::$maps ['id2dir'];
         }
@@ -637,7 +635,7 @@ class App {
      * @param array  $prefix
      * @param string $namespace
      */
-    private static function registerUrlGroup(array $prefix, $namespace) {
+    private static function registerUrlGroup(array $prefix, string $namespace) {
         if (isset($prefix[0]) && isset($prefix[1])) {
             $char = $prefix[0];
             if (!in_array($char, ['~', '!', '@', '#', '%', '^', '&', '*'])) {
@@ -665,7 +663,7 @@ class App {
      *
      * @return null|string
      */
-    public static function checkUrlPrefix($prefix) {
+    public static function checkUrlPrefix(string $prefix): ?string {
         return isset(self::$prefix['check'][ $prefix ]) ? self::$prefix['check'][ $prefix ] : null;
     }
 
@@ -675,7 +673,7 @@ class App {
      * @param string     $url
      * @param array|null $args [optional]
      */
-    public static function redirect($url, $args = null) {
+    public static function redirect(string $url, ?array $args = null) {
         if (strpos($url, '\\') !== false) {
             $url = self::action($url);
         } else {
@@ -694,7 +692,7 @@ class App {
      *
      * @return string
      */
-    public static function base($url) {
+    public static function base(string $url): string {
         if (preg_match('#^(/|(ht|f)tps?://).+#', $url)) {
             return $url;
         }
@@ -711,7 +709,7 @@ class App {
      *
      * @return string
      */
-    public static function url($url, $replace = true) {
+    public static function url($url, $replace = true): string {
         static $alias = false, $defaultModule = false;
         if ($alias === false) {
             if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
@@ -790,7 +788,7 @@ class App {
      *
      * @return string
      */
-    public static function hash($url, $replace = true) {
+    public static function hash(string $url, bool $replace = true): string {
         return "#" . self::url($url, $replace);
     }
 
@@ -799,7 +797,7 @@ class App {
      *
      * @return string
      */
-    public static function action($url) {
+    public static function action(string $url): string {
         static $prefixes = [];
 
         $clz = trim($url);
@@ -868,7 +866,7 @@ class App {
      *
      * @return string
      */
-    public static function res($res, $min = '') {
+    public static function res(string $res, string $min = ''): string {
         static $static_url = false;
         if ($static_url === false) {
             $static_url = App::cfg('static_base');
@@ -894,7 +892,7 @@ class App {
      *
      * @return string
      */
-    public static function src($src) {
+    public static function src(string $src): string {
         static $static_url = false;
         if ($static_url === false) {
             $static_url = App::cfg('static_base');
@@ -920,7 +918,7 @@ class App {
      *
      * @return string
      */
-    public static function assets($res, $min = '', $appendArg = true) {
+    public static function assets(string $res, string $min = '', bool $appendArg = true): string {
         static $static_url = false;
         if ($static_url === false) {
             $static_url = App::cfg('static_base');
@@ -955,7 +953,7 @@ class App {
      *
      * @return string
      */
-    public static function cdn($res, $min = '') {
+    public static function cdn(string $res, string $min = ''): string {
         static $static_url = false;
         if ($static_url === false) {
             $static_url = App::cfg('cdn_base');
@@ -981,7 +979,7 @@ class App {
      *
      * @return string
      */
-    public static function vendor($res, $min = '') {
+    public static function vendor(string $res, string $min = ''): string {
         static $static_url = false;
         if ($static_url === false) {
             $static_url = App::cfg('static_base');
@@ -1012,7 +1010,7 @@ class App {
      *
      * @return mixed 类文件全路径.
      */
-    public static function loadClass($cls) {
+    public static function loadClass(string $cls): ?string {
         $pkg = explode('\\', $cls);
         if (count($pkg) > 1) {
             $module = $pkg [0];

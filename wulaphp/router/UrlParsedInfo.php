@@ -24,7 +24,7 @@ class UrlParsedInfo implements \ArrayAccess {
     private $urls        = [];
     private $pageData    = [];
 
-    public function __construct($uri, $url, $params = []) {
+    public function __construct(string $uri, string $url, array $params = []) {
         $this->url    = $url;
         $this->uri    = ltrim($uri, '/');
         $this->params = $params;
@@ -39,7 +39,7 @@ class UrlParsedInfo implements \ArrayAccess {
      *
      * @return string
      */
-    public function base($page) {
+    public function base($page): string {
         if (!$this->urls) {
             $urls = [];
             if ($this->ogpath) {
@@ -92,7 +92,7 @@ class UrlParsedInfo implements \ArrayAccess {
      *
      * @param array $data
      */
-    public function setPageData($data) {
+    public function setPageData(array $data) {
         $this->pageData = $data;
     }
 
@@ -100,7 +100,7 @@ class UrlParsedInfo implements \ArrayAccess {
      * 获取当前URL对应的页面数据.
      * @return array
      */
-    public function getPageData() {
+    public function getPageData(): array {
         return $this->pageData;
     }
 

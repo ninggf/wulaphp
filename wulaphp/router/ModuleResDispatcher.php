@@ -18,7 +18,7 @@ use wulaphp\mvc\view\StaticFileView;
  * @package wulaphp\router
  */
 class ModuleResDispatcher implements IURLDispatcher {
-    public function dispatch($url, $router, $parsedInfo) {
+    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {
         $chunk = explode('/', $url);
         if (in_array($chunk[0], apply_filter('allowed_res_dirs', [
                 MODULE_DIR,

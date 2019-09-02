@@ -19,7 +19,7 @@ use wulaphp\io\Session;
  * @package wulaphp\router
  */
 class RouteTableDispatcher implements IURLDispatcher {
-    public function dispatch($url, $router, $parsedInfo) {
+    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {
         $route = RouteTableDispatcher::parseURL($parsedInfo);
         //解析不了
         if (!$route) {
@@ -83,7 +83,7 @@ class RouteTableDispatcher implements IURLDispatcher {
      *
      * @return string
      */
-    public static function parseURL($parsedInfo) {
+    public static function parseURL(UrlParsedInfo $parsedInfo):string {
         $pageSet = false;
         if (preg_match('#.+?\.$#', $parsedInfo->url)) {
             return false;

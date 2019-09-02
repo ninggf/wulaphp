@@ -22,9 +22,6 @@
             <directory suffix="Test.php">Tests/auth</directory>
         </testsuite>
         <testsuite name="Cache Test">
-            <php>
-                <const name="foo" value="bar"/>
-            </php>
             <directory suffix="Test.php">Tests/cache</directory>
         </testsuite>
     </testsuites>
