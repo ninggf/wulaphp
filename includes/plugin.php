@@ -6,6 +6,9 @@
  * @name   $__ksg_rtk_hooks
  * @var array
  */
+
+use wulaphp\app\App;
+
 global $__ksg_rtk_hooks;
 $__ksg_rtk_hooks = [];
 /**
@@ -17,15 +20,6 @@ $__ksg_rtk_hooks = [];
  */
 global $__ksg_sorted_hooks;
 $__ksg_sorted_hooks = [];
-/**
- * 正在触发的HOOKS
- *
- * @global array
- * @name   $__ksg_triggering_hooks
- * @var array
- */
-global $__ksg_triggering_hooks;
-$__ksg_triggering_hooks = [];
 
 /**
  * 注册一个HOOK的回调函数
@@ -126,23 +120,20 @@ function unbind_all($hook, $priority = false) {
 /**
  * 触发HOOK
  *
- * @param string $hook                   HOOK名称
- * @param mixed  $arg                    参数
+ * @param string $hook               HOOK名称
+ * @param mixed  $arg                参数
  *
  * @return string
  * @return string
  * @throws \Exception
- * @global array $__ksg_triggering_hooks 正在执行的回调
- * @global array $__ksg_rtk_hooks        系统所有HOOK的回调
- * @global array $__ksg_sorted_hooks     当前的HOOK回调是否已经排序
+ * @global array $__ksg_rtk_hooks    系统所有HOOK的回调
+ * @global array $__ksg_sorted_hooks 当前的HOOK回调是否已经排序
  */
 function fire($hook, $arg = '') {
-    global $__ksg_rtk_hooks, $__ksg_sorted_hooks, $__ksg_triggering_hooks;
-    $hook                      = __rt_real_hook($hook);
-    $__ksg_triggering_hooks [] = $hook;
+    global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
+    __rt_scan_hook($hook); // 懒加载
+    $hook = __rt_real_hook($hook);
     if (!isset ($__ksg_rtk_hooks [ $hook ])) { // 没有该HOOK的回调
-        array_pop($__ksg_triggering_hooks);
-
         return '';
     }
     $args = [];
@@ -182,7 +173,6 @@ function fire($hook, $arg = '') {
     } catch (Exception $e) {
         throw $e;
     } finally {
-        array_pop($__ksg_triggering_hooks);
         $rtn = @ob_get_clean();
     }
 
@@ -199,13 +189,11 @@ function fire($hook, $arg = '') {
  * @return mixed The filtered value after all hooked functions are applied to it.
  */
 function apply_filter($filter, $value) {
-    global $__ksg_rtk_hooks, $__ksg_sorted_hooks, $__ksg_triggering_hooks;
-    $filter                    = __rt_real_hook($filter);
-    $__ksg_triggering_hooks [] = $filter;
+    global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
+    __rt_scan_hook($filter); // 懒加载
+    $filter = __rt_real_hook($filter);
 
     if (!isset ($__ksg_rtk_hooks [ $filter ])) {
-        array_pop($__ksg_triggering_hooks);
-
         return $value;
     }
 
@@ -234,22 +222,40 @@ function apply_filter($filter, $value) {
                 }
             }
         } while (next($__ksg_rtk_hooks [ $filter ]) !== false);
-        array_pop($__ksg_triggering_hooks);
 
         return $value;
     } catch (Exception $e) {
+        return $value;
+    }
+}
 
+/**
+ * 定义一个hook处理器.
+ *
+ * @param \Closure $handler
+ * @param int      $accepted_args
+ * @param int      $priority
+ *
+ * @return bool|string
+ */
+function hook(Closure $handler, $accepted_args = 1, $priority = 10) {
+    global $__rt_hook_name;
+    if ($__rt_hook_name) {
+        $id             = bind($__rt_hook_name, $handler, $priority, $accepted_args);
+        $__rt_hook_name = null;
+
+        return $id;
     }
 
-    return null;
+    return false;
 }
 
 /**
  * Check if any hook has been registered.
  *
  * @param string        $hook
- * @param bool|callable $function_to_check optional. If specified, return the priority of that function on this hook or
- *                                         false if not attached.
+ * @param bool|callable $function_to_check optional. If specified, return the priority of that function on this
+ *                                         hook or false if not attached.
  *
  * @return int boolean returns the priority on that hook for the specified function.
  * @global array        $__ksg_rtk_hooks   Stores all of the hooks
@@ -282,8 +288,8 @@ function has_hook($hook, $function_to_check = false) {
  *
  * @param string $function
  *
- * @return string bool ID for usage as array key or false if $priority === false and $function is an object reference,
- *                and it does not already have a uniqe id.
+ * @return string bool ID for usage as array key or false if $priority === false and $function is an object
+ *                reference, and it does not already have a uniqe id.
  * @see wordpress
  * @global array $__ksg_rtk_hooks Storage for all of the filters and actions
  * @staticvar $filter_id_count
@@ -305,9 +311,30 @@ function __rt_hook_unique_id($function) {
     return false;
 }
 
+// real hook name
 function __rt_real_hook($hook) {
     $hook = ucwords(ltrim($hook, '\\'), '\\');
 
     return lcfirst($hook);
+}
+
+// scan hook handlers
+function __rt_scan_hook($hook) {
+    global $__rt_hook_name;
+    static $hooks = [], $modules = null;
+    if (!$modules || !defined('WULA_BOOTSTRAPPED')) {
+        $modules = App::modules('hasHooks');
+    }
+    $__rt_hook_name = $hook;
+    if (!isset($hooks[ $hook ])) {
+        foreach ($modules as $m) {
+            $hookFile = $m->hookPath . str_replace(['\\', '/', '-'], '.', $hook) . '.php';
+            if (is_file($hookFile)) {
+                include $hookFile;
+            }
+        }
+        $hooks[ $hook ] = 1;
+    }
+    $__rt_hook_name = null;
 }
 // end of file plugin.php

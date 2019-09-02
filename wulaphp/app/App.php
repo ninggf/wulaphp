@@ -4,7 +4,6 @@ namespace wulaphp\app;
 
 use wulaphp\conf\Configuration;
 use wulaphp\conf\ConfigurationLoader;
-use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\DatabaseConnection;
 use wulaphp\db\SimpleTable;
 use wulaphp\i18n\I18n;
@@ -199,7 +198,7 @@ class App {
             $extension->autoBind();
         }
         foreach (self::$modules as $id => $module) {
-            if (self::$app->moduleLoader->isEnabled($module)) {
+            if ($module->enabled) {
                 self::$enabledModules[ $id ] = $module;
                 if (method_exists($module->clzName, 'urlGroup')) {
                     $prefix = ObjectCaller::callClzMethod($module->clzName, 'urlGroup');
@@ -265,9 +264,7 @@ class App {
                 });
                 break;
             case 'enabled':
-                $modules = array_filter(self::$modules, function (Module $m) {
-                    return $m->enabled;
-                });
+                $modules = self::$enabledModules;
                 break;
             case 'disabled':
                 $modules = array_filter(self::$modules, function (Module $m) {
@@ -277,6 +274,11 @@ class App {
             case 'upgradable':
                 $modules = array_filter(self::$modules, function (Module $m) {
                     return $m->upgradable && $m->installed;
+                });
+                break;
+            case 'hasHooks':
+                $modules = array_filter(self::$enabledModules, function (Module $m) {
+                    return $m->hasHooks;
                 });
                 break;
             default:
@@ -290,7 +292,7 @@ class App {
     /**
      * 获取数据库连接实例.
      *
-     * @param string|array|DatabaseConfiguration|null $name 数据库配置名/配置数组/配置实例.
+     * @param string|array|\wulaphp\conf\DatabaseConfiguration|null $name 数据库配置名/配置数组/配置实例.
      *
      * @return DatabaseConnection
      * @throws \Exception
@@ -517,13 +519,13 @@ class App {
 
             return;
         }
-        $dir = $module->getDirname();
-        if ($dir != $name) {
-            self::$maps ['dir2id'] [ $dir ]  = $name;
-            self::$maps ['id2dir'] [ $name ] = $dir;
-        }
-        self::$modules [ $name ] = $module;
+        //$dir = $module->getDirname();
+        //if ($dir != $name) {
+        //    self::$maps ['dir2id'] [ $dir ]  = $name;
+        //    self::$maps ['id2dir'] [ $name ] = $dir;
+        //}
         $module->enabled         = self::$app->moduleLoader->isEnabled($module);
+        self::$modules [ $name ] = $module;
     }
 
     /**

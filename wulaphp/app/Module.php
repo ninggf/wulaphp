@@ -19,6 +19,8 @@ abstract class Module {
     public $upgradable       = false;
     public $installedVersion = '0.0.0';
     public $group            = '';
+    public $hasHooks         = false;
+    public $hookPath         = null;
     public $isKernel         = true;
 
     protected $namespace;
@@ -42,6 +44,8 @@ abstract class Module {
         $this->subEnabled       = $ann->has('subEnabled');
         $this->namespace        = implode('\\', $ns);
         $this->path             = dirname($ref->getFileName());
+        $this->hookPath         = $this->path . DS . 'hooks' . DS;
+        $this->hasHooks         = is_dir($this->hookPath);
         $this->dirname          = basename($this->path);
         $vs                     = $this->getVersionList();
         $keys                   = array_keys($vs);

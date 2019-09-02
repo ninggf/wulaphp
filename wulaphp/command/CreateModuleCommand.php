@@ -22,7 +22,7 @@ class CreateModuleCommand extends ArtisanCommand {
 
             return 1;
         }
-        $namespace = isset($options['n']) ? $options['n'] : $dir;
+        $namespace = $dir;
         $name      = aryget('name', $options, $dir);
         if (!preg_match('#^[a-z][a-z_\-\d]*$#', $dir)) {
             $this->error('illegal module name: ' . $this->color->str($dir, 'white', 'red'));
@@ -104,7 +104,7 @@ class CreateModuleCommand extends ArtisanCommand {
     }
 
     protected function getOpts() {
-        return ['n::namespace' => 'the namespace of the module', 'c' => 'create composer.json for module'];
+        return ['c' => 'create composer.json for module'];
     }
 
     protected function getLongOpts() {
