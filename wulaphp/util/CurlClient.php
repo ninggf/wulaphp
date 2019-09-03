@@ -224,12 +224,13 @@ class CurlClient {
     /**
      * POST提交数据.
      *
-     * @param string $url
-     * @param array  $data
+     * @param string $url      URL
+     * @param array  $data     数据
+     * @param bool   $jsonData 数据类型
      *
      * @return bool|mixed
      */
-    public function post($url, $data) {
+    public function post(string $url, array $data, bool $jsonData = false) {
         foreach ($data as $key => $v) {
             if (is_array($v)) {
                 foreach ($v as $k => $vv) {
@@ -237,16 +238,23 @@ class CurlClient {
                         $data[ $key ][ $k ] = new \CURLFile(substr($vv, 1));
                     }
                 }
-            } else if ($v{0} == '@') {
+            } else if (is_string($v) && $v{0} == '@') {
                 $data[ $key ] = new \CURLFile(substr($v, 1));
             }
         }
+
+        if ($jsonData) {
+            $data = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            curl_setopt($this->ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        }
+
         $options = [
             CURLOPT_URL            => $url,
             CURLOPT_POST           => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS     => $data
         ];
+
         curl_setopt_array($this->ch, $options);
         $rst = curl_exec($this->ch);
         if ($rst === false) {

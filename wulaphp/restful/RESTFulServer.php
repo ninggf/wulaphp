@@ -55,10 +55,7 @@ class RESTFulServer {
         $this->debug    = $debug;
         $rqMethod       = strtolower($_SERVER ['REQUEST_METHOD']);
         $this->rqMehtod = ucfirst($rqMethod);
-        if ($rqMethod != 'Get') {
-            Request::getInstance()->addJsonPostBody();
-        }
-        $this->format = rqst('format', $this->format);
+        $this->format   = rqst('format', $this->format);
         if (!$this->format) {
             $this->format = 'json';
         }

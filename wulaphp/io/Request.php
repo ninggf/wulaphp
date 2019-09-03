@@ -35,6 +35,7 @@ class Request implements \ArrayAccess {
             self::$santitized = true;
             $this->sanitizeGlobals();
         }
+        $this->addJsonPostBody();
     }
 
     /**
@@ -42,7 +43,7 @@ class Request implements \ArrayAccess {
      *
      * @return Request
      */
-    public static function getInstance():Request {
+    public static function getInstance(): Request {
         if (defined('ARTISAN_TASK_PID')) {
             $pid = @posix_getpid();
             if (!isset(self::$INSTANCE[ $pid ])) {
@@ -64,7 +65,7 @@ class Request implements \ArrayAccess {
      *
      * @return bool 如果是通过ajax请求的返回true,反之返回false
      */
-    public static function isAjaxRequest():bool {
+    public static function isAjaxRequest(): bool {
         return isset ($_SERVER ["HTTP_X_AJAX_TYPE"]) || (isset ($_SERVER ['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER ['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
     }
 
@@ -73,7 +74,7 @@ class Request implements \ArrayAccess {
      *
      * @return bool 如果是通过ajax请求的返回true,反之返回false
      */
-    public static function isAjax():bool {
+    public static function isAjax(): bool {
         return isset ($_SERVER ["HTTP_X_AJAX_TYPE"]) || (isset ($_SERVER ['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER ['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
     }
 
@@ -82,7 +83,7 @@ class Request implements \ArrayAccess {
      *
      * @return bool
      */
-    public static function isHttps():bool {
+    public static function isHttps(): bool {
         return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off';
     }
 
@@ -90,7 +91,7 @@ class Request implements \ArrayAccess {
      * 是不是GET请求
      * @return bool
      */
-    public static function isGet():bool {
+    public static function isGet(): bool {
         return strtoupper($_SERVER ['REQUEST_METHOD']) == 'GET';
     }
 
@@ -99,7 +100,7 @@ class Request implements \ArrayAccess {
      *
      * @return bool
      */
-    public static function isPost():bool {
+    public static function isPost(): bool {
         return strtoupper($_SERVER ['REQUEST_METHOD']) == 'POST';
     }
 
@@ -108,7 +109,7 @@ class Request implements \ArrayAccess {
      *
      * @return string
      */
-    public static function contentType():string {
+    public static function contentType(): string {
         //检测请求头
         $contentType = '';
         // Look for the content type header
@@ -162,7 +163,7 @@ class Request implements \ArrayAccess {
      *
      * @return array
      */
-    public function requests(bool $xss_clean = true):array {
+    public function requests(bool $xss_clean = true): array {
         return array_merge($xss_clean ? $_REQUEST : $this->requestData, $this->userData);
     }
 
@@ -173,7 +174,7 @@ class Request implements \ArrayAccess {
      * @param bool  $reset
      * @param bool  $override 是否重写原请求参数
      */
-    public function addUserData(array $data = [],bool $reset = false,bool $override = false) {
+    public function addUserData(array $data = [], bool $reset = false, bool $override = false) {
         if ($data && is_array($data)) {
             if ($override) {
                 $data = array_diff_key($data, $_REQUEST);
@@ -217,7 +218,7 @@ class Request implements \ArrayAccess {
      *
      * @return array
      */
-    public function getUserData():array {
+    public function getUserData(): array {
         return $this->userData;
     }
 
@@ -225,7 +226,7 @@ class Request implements \ArrayAccess {
      * IP
      * @return string
      */
-    public static function getIp():string {
+    public static function getIp(): string {
         static $cip = null;
         if ($cip === null) {
             if ((isset($_SERVER['IAMPROXIED']) || env('app_proxied')) && !empty ($_SERVER ['HTTP_X_REAL_IP'])) {
@@ -259,7 +260,7 @@ class Request implements \ArrayAccess {
      *
      * @return string
      */
-    public static function getUUID():string {
+    public static function getUUID(): string {
         if (self::$UUID) {
             return self::$UUID;
         }
