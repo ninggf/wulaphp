@@ -1,4 +1,8 @@
 <?php
+
+use wulaphp\auth\Passport;
+use wulaphp\db\sql\ImmutableValue;
+
 /**
  * 取数据.
  *
@@ -8,7 +12,7 @@
  *
  * @return mixed
  */
-function rqst($name, $default = '', $xss_clean = true) {
+function rqst(string $name, $default = '', bool $xss_clean = true) {
     global $__rqst;
     if (defined('ARTISAN_TASK_PID')) {
         $__rqst = \wulaphp\io\Request::getInstance();
@@ -28,7 +32,7 @@ function rqst($name, $default = '', $xss_clean = true) {
  *
  * @return array
  */
-function rqsts(array $names, $xss_clean = true, array $map = []) {
+function rqsts(array $names, bool $xss_clean = true, array $map = []): array {
     global $__rqst;
     if (defined('ARTISAN_TASK_PID')) {
         $__rqst = \wulaphp\io\Request::getInstance();
@@ -58,21 +62,21 @@ function rqsts(array $names, $xss_clean = true, array $map = []) {
  *
  * @return mixed
  */
-function param($pos = 0, $default = '') {
+function param(int $pos = 0, string $default = '') {
     return \wulaphp\router\Router::getRouter()->getParam($pos, $default);
 }
 
 /**
  * 取数据.
  *
- * @see rqst
- *
  * @param string $name
  * @param mixed  $default
  *
  * @return mixed
+ * @see rqst
+ *
  */
-function arg($name, $default = '') {
+function arg(string $name, $default = '') {
     global $__rqst;
     if (defined('ARTISAN_TASK_PID')) {
         $__rqst = \wulaphp\io\Request::getInstance();
@@ -90,7 +94,7 @@ function arg($name, $default = '') {
  *
  * @return bool
  */
-function rqset($name) {
+function rqset(string $name): bool {
     global $__rqst;
     if (defined('ARTISAN_TASK_PID')) {
         $__rqst = \wulaphp\io\Request::getInstance();
@@ -109,7 +113,7 @@ function rqset($name) {
  *
  * @return int
  */
-function irqst($name, $default = 0) {
+function irqst(string $name, int $default = 0): int {
     return intval(rqst($name, $default, true));
 }
 
@@ -121,7 +125,7 @@ function irqst($name, $default = 0) {
  *
  * @return float
  */
-function frqst($name, $default = 0.0) {
+function frqst(string $name, float $default = 0.0): float {
     return floatval(rqst($name, $default, true));
 }
 
@@ -131,7 +135,7 @@ function frqst($name, $default = 0.0) {
  * @param string $message
  * @param string $file
  */
-function log_debug($message, $file = '') {
+function log_debug(string $message, string $file = '') {
     $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, $trace, DEBUG_DEBUG, $file);
 }
@@ -142,8 +146,8 @@ function log_debug($message, $file = '') {
  * @param string $message
  * @param string $file
  */
-function log_info($message, $file = '') {
-    $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+function log_info(string $message, string $file = '') {
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
     log_message($message, $trace, DEBUG_INFO, $file);
 }
 
@@ -153,7 +157,7 @@ function log_info($message, $file = '') {
  * @param string $message
  * @param string $file
  */
-function log_warn($message, $file = '') {
+function log_warn(string $message, string $file = '') {
     $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
     log_message($message, $trace, DEBUG_WARN, $file);
 }
@@ -164,8 +168,8 @@ function log_warn($message, $file = '') {
  * @param string $message
  * @param string $file
  */
-function log_error($message, $file = '') {
-    $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+function log_error(string $message, string $file = '') {
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, $trace, DEBUG_ERROR, $file);
 }
 
@@ -174,7 +178,7 @@ function log_error($message, $file = '') {
  *
  * @return string
  */
-function log_last_msg() {
+function log_last_msg(): ?string {
     global $_wula_last_msg;
 
     return $_wula_last_msg;
@@ -190,7 +194,7 @@ function log_last_msg() {
  *
  * @filter logger\getLogger $logger $level $file
  */
-function log_message($message, array $trace_info, $level, $file = 'wula') {
+function log_message(string $message, array $trace_info, int $level, string $file = 'wula') {
     global $_wula_last_msg;
     /**@var \Psr\Log\LoggerInterface[][] $loggers */
     static $loggers = [];
@@ -238,7 +242,7 @@ function log_message($message, array $trace_info, $level, $file = 'wula') {
  * @return string
  * @filter  get_session_name session_name
  */
-function get_session_name() {
+function get_session_name(): string {
     return apply_filter('get_session_name', 'phpsid');
 }
 
@@ -250,7 +254,7 @@ function get_session_name() {
  *
  * @return \wulaphp\db\sql\ImmutableValue
  */
-function imv($val, $alias = null) {
+function imv(string $val, string $alias = null): ImmutableValue {
     return new \wulaphp\db\sql\ImmutableValue ($val, $alias);
 }
 
@@ -259,7 +263,7 @@ function imv($val, $alias = null) {
  *
  * @return string
  */
-function get_unique_id($obj) {
+function get_unique_id($obj): ?string {
     if (is_string($obj) || is_numeric($obj) || empty($obj)) {
         return $obj;
     } else if (is_array($obj)) {
@@ -278,7 +282,7 @@ function get_unique_id($obj) {
  *
  * @return \wulaphp\auth\Passport
  */
-function whoami($type = 'default') {
+function whoami(string $type = 'default'): Passport {
     return \wulaphp\auth\Passport::get($type);
 }
 
