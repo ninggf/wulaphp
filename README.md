@@ -75,7 +75,7 @@
 
 ### Windows 系统
 
-1. 点击此处[下载](https://www.wulaphp.com/wulaphp-latest.zip)最新版本的wulaphp。
+1. 点击此处[下载](http://down.wulaphp.com/wulaphp-latest.zip)最新版本的wulaphp。
 2. 解压到相应的目录即可。
 
 ### 类 Unix 系统
