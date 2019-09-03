@@ -19,16 +19,16 @@ trait UploadSupport {
     /**
      * 保存通过Plupload上传的文件.
      *
-     * @param string|\wulaphp\io\UploadFile|null $dest                  目标目录或文件定义
-     * @param int                                $maxSize               最大上传体积
-     * @param bool                               $canUpload             是否可以上传
-     * @param \wulaphp\io\IUploader              $uploader              使用指定文件上传器.
-     * @param \Closure                           $fileMetaDataExtractor 上传之前的解析文件数据的回调
-     * @param array                              $allowed               允许的域名
+     * @param string|UploadFile|null $dest                  目标目录或文件定义
+     * @param int                    $maxSize               最大上传体积
+     * @param bool                   $canUpload             是否可以上传
+     * @param \wulaphp\io\IUploader  $uploader              使用指定文件上传器.
+     * @param \Closure               $fileMetaDataExtractor 上传之前的解析文件数据的回调function($path, $size, $width, $height).
+     * @param array                  $allowed               允许的域名,默认使用allowd方法检测.
      *
-     * @return array
+     * @return array 上传结果
      */
-    protected final function upload($dest = null, $maxSize = 10000000, $canUpload = true, $uploader = null, $fileMetaDataExtractor = null, $allowed = []) {
+    protected final function upload($dest = null, $maxSize = 10000000, $canUpload = true, $uploader = null, \Closure $fileMetaDataExtractor = null, $allowed = []) {
         $rtn   = ['jsonrpc' => '2.0', 'done' => 0];
         $water = null;
         if ($dest instanceof UploadFile) {
