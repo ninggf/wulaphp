@@ -45,8 +45,6 @@
 }
 ```
 
-> wulaphp `v2.10.x`版本可以运行在`PHP 5.6.9`及更高的版本上。
-
 # 安装
 
 ## Composer 方式
@@ -111,4 +109,4 @@
 
 # License
 
-[MIT](https://github.com/ninggf/wulaphp/blob/v2.0/LICENSE) License.
+[MIT](https://github.com/ninggf/wulaphp/blob/master/LICENSE) License.
