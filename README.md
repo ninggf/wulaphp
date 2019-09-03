@@ -1,17 +1,15 @@
 <p align="center"><img src="https://d33wubrfki0l68.cloudfront.net/images/1d83c09b2f0cd8231a54f2a8a6eaee9754b802fb/logo.png" width="140" height="140"></p>
 <p align="center">
-<a href="https://travis-ci.org/ninggf/wulaphp"><img src="https://travis-ci.org/ninggf/wulaphp.svg?branch=master" alt="Build Status"></a>
+<a href="https://travis-ci.org/ninggf/wulaphp"><img src="https://travis-ci.org/ninggf/wulaphp.svg?branch=v3.0.1-dev" alt="Build Status"></a>
 <a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/d/total.svg" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/v/stable.svg" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/license.svg" alt="License"></a>
 </p>
 
 
-
-
 # wulaphp
 
-它是一个PHP开发框架，名来自《异星战场》里那个速度极快的火星狗狗，它确实很快：学习快、开发快、运行快！
+它的名来自《异星战场》里那个速度极快的火星狗狗，可以用它开发`WEB`应用和`命令行`应用。它确实很快：学习快、开发快、运行快！
 
 # 依赖
 
