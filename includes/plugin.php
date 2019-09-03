@@ -9,13 +9,19 @@
 
 use wulaphp\app\App;
 
+/**
+ * 绑定表.
+ *
+ * @global $__ksg_rtk_hooks
+ * @var array
+ */
 global $__ksg_rtk_hooks;
 $__ksg_rtk_hooks = [];
+
 /**
  * 已经排序的插件
  *
  * @global array
- * @name   $__ksg_sorted_hooks
  * @var array
  */
 global $__ksg_sorted_hooks;
@@ -28,10 +34,11 @@ $__ksg_sorted_hooks = [];
  * @param mixed        $hook_func     回调函数
  * @param int          $priority      优先级
  * @param int          $accepted_args 接受参数个数
+ * @param bool         $ex
  *
  * @return string 失败返回'',成功返回hook_func的ID，可用于unbind
  */
-function bind(string $hook, $hook_func, int $priority = 10, int $accepted_args = 1): string {
+function bind(string $hook, $hook_func, int $priority = 10, int $accepted_args = 1, bool $ex = true): string {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
 
     if (empty ($hook)) {
@@ -47,7 +54,7 @@ function bind(string $hook, $hook_func, int $priority = 10, int $accepted_args =
 
     $hook     = __rt_real_hook($hook);
     $priority = $priority ? $priority : 10;
-    $extra    = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
+    $extra    = $ex ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0] : null;
     if (is_string($hook_func) && $hook_func{0} == '&') {
         $hook_func = ltrim($hook_func, '&');
         $hook_func = [$hook_func, str_replace(['.', '\\', '/', '-'], ['_', ''], $hook)];
@@ -124,7 +131,6 @@ function unbind_all(string $hook, $priority = false): bool {
  * @param mixed  $arg                参数
  *
  * @return string
- * @return string
  * @throws \Exception
  * @global array $__ksg_rtk_hooks    系统所有HOOK的回调
  * @global array $__ksg_sorted_hooks 当前的HOOK回调是否已经排序
@@ -158,13 +164,16 @@ function fire(string $hook, $arg = '') {
         do {
             foreach (( array )current($__ksg_rtk_hooks [ $hook ]) as $the_) {
                 if (!is_null($the_ ['func'])) {
+                    $params = array_slice($args, 0, $the_['accepted_args']);
                     if (is_array($the_['func'])) {
-                        \wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], $args);
+                        if (is_object($the_['func'][0])) {
+                            $the_['func'][0]->{$the_['func'][1]}(...$params);
+                        } else {
+                            $the_['func'][0]::{$the_['func'][1]}(...$params);
+                        }
                     } else if ($the_ ['func'] instanceof Closure) {
-                        $params = array_slice($args, 0, ( int )$the_ ['accepted_args']);
                         $the_ ['func'](...$params);
                     } else if (is_callable($the_ ['func'])) {
-                        $params = array_slice($args, 0, ( int )$the_ ['accepted_args']);
                         $the_ ['func'](...$params);
                     }
                 }
@@ -210,14 +219,17 @@ function apply_filter(string $filter, $value) {
             foreach (( array )current($__ksg_rtk_hooks [ $filter ]) as $the_) {
                 if (!is_null($the_ ['func'])) {
                     $args [1] = $value;
+                    $params   = array_slice($args, 1, $the_['accepted_args']);
                     if (is_array($the_['func'])) {
-                        $value = \wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], array_slice($args, 1));
+                        if (is_object($the_['func'][0])) {
+                            $value = $the_['func'][0]->{$the_['func'][1]}(...$params);
+                        } else {
+                            $value = $the_['func'][0]::{$the_['func'][1]}(...$params);
+                        }
                     } else if ($the_ ['func'] instanceof Closure) {
-                        $params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
-                        $value  = $the_ ['func'](...$params);
+                        $value = $the_ ['func'](...$params);
                     } else if (is_callable($the_ ['func'])) {
-                        $params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
-                        $value  = $the_ ['func'](...$params);
+                        $value = $the_ ['func'](...$params);
                     }
                 }
             }
@@ -241,7 +253,7 @@ function apply_filter(string $filter, $value) {
 function hook(Closure $handler, int $accepted_args = 1, int $priority = 10) {
     global $__rt_hook_name;
     if ($__rt_hook_name) {
-        $id             = bind($__rt_hook_name, $handler, $priority, $accepted_args);
+        $id             = bind($__rt_hook_name, $handler, $priority, $accepted_args, false);
         $__rt_hook_name = null;
 
         return $id;
@@ -282,16 +294,14 @@ function has_hook(string $hook, string $function_to_check = '') {
 /**
  * Build Unique ID for storage and retrieval.
  *
- * @param string $function
+ * @param mixed  $function
  *
- * @return string bool ID for usage as array key or false if $priority === false and $function is an object
+ * @return string ID for usage as array key or false if $priority === false and $function is an object
  *                reference, and it does not already have a uniqe id.
- * @see wordpress
  * @global array $__ksg_rtk_hooks Storage for all of the filters and actions
- * @staticvar $filter_id_count
  *
  */
-function __rt_hook_unique_id($function) {
+function __rt_hook_unique_id($function): ?string {
     if (is_string($function)) {
         return $function;
     } else if (is_array($function)) {
@@ -304,7 +314,7 @@ function __rt_hook_unique_id($function) {
         return spl_object_hash($function);
     }
 
-    return false;
+    return null;
 }
 
 // real hook name
