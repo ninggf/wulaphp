@@ -1,30 +1,15 @@
 <p align="center"><img src="https://d33wubrfki0l68.cloudfront.net/images/1d83c09b2f0cd8231a54f2a8a6eaee9754b802fb/logo.png" width="140" height="140"></p>
 <p align="center">
-<a href="https://travis-ci.org/ninggf/wulaphp"><img src="https://travis-ci.org/ninggf/wulaphp.svg?branch=v2.0" alt="Build Status"></a>
+<a href="https://travis-ci.org/ninggf/wulaphp"><img src="https://travis-ci.org/ninggf/wulaphp.svg?branch=v2.10.10" alt="Build Status"></a>
 <a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/d/total.svg" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/v/stable.svg" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/wula/wulaphp"><img src="https://poser.pugx.org/wula/wulaphp/license.svg" alt="License"></a>
 </p>
 
 
-假设您：
-
-1. php的基础知识非常扎实。
-    * 面向对象知识必须扎实，不扎实的请绕道。
-    * 深刻理解"低耦合，高内聚"的涵义，不然请绕道。
-2. 可以熟练使用`composer`。
-3. 可以熟练配置`nginx`或`apache`
-
-如果以上假设不成立，请不要浪费您宝贵的时间，立即停止阅读以下内容并[离开](https://github.com)。
-
-如果以上假设成立，请让`wulaphp`带你飞！
-
 # wulaphp
 
-1. 她的名来自《异星战场》里那个速度极快的狗狗，`wulaphp`和这条狗狗一样－－`快`！
-2. 除了***快***，她还很***复杂***！
-3. 因为***复杂***，所以她很***难***！
-4. 因为很***难***，所以您可以选择[离开](https://github.com)。
+它的名来自《异星战场》里那个速度极快的火星狗狗，可以用它开发`WEB`应用和`命令行`应用。它确实很快：学习快、开发快、运行快！
 
 # 依赖
 
@@ -40,19 +25,19 @@
         "ext-curl": "*",
         "ext-Reflection": "*",
         "ext-SPL": "*",
-        "ext-zip": "*"
+        "ext-zip": "*",
+        "smarty/smarty": "^3.1",
+        "psr/log": "^1.0",
+        "wula/common": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^5.7",
-        "phpunit/phpunit-mock-objects": "^3.0",
         "phpoffice/phpspreadsheet": "^1.4"
     },
     "suggest": {
-        "ext-openssl": "*",
-        "ext-mysqlnd": "*",
         "ext-redis": "*",
-        "ext-libxml": "*",
-        "ext-xml": "*",
+        "ext-memcached": "*",
+        "ext-apcu": "*",
         "ext-sockets": "*",
         "ext-posix": "*",
         "ext-pcntl": "*"
@@ -62,49 +47,65 @@
 
 # 安装
 
-## 安装
- 
-1. `composer require wula/wulaphp` # 耐心一点
-2. `vendor/bin/wulaphp init`
+## Composer 方式
+
+我们推荐通过`Composer`方式安装`wulaphp`。
+
+### 安装
+
+`# composer require wula/wulaphp:^v2.10 -vvv`
+
+> 国内的小朋友请耐心的等待或多执行几次上边的代码。如果还是安装不成功，请通过[下载](#下载安装)的方式进行安装。
+
+### 初始化
+
+安装命令完成后，执行以下代码进行项目初始化工作:
+
+`# php vendor/bin/wulaphp init`
+
+如果你运行在`类Unix`系统上，还需要执行以下操作将目录变为可读写：
+
+`# chmod 777 storage storage/tmp storage/logs`
+
+## 下载安装
+
+按以下步骤下载并解压到相应目录即可完成安装:
+
+### Windows 系统
+
+1. 点击此处[下载](http://down.wulaphp.com/wulaphp-v2.10.10.zip)最新版本的wulaphp。
+2. 解压到相应的目录即可。
+
+### 类 Unix 系统
+
+`# wget http://down.wulaphp.com/wulaphp-v2.10.10.tar.gz`
+
+`# tar -zxf wulaphp-v2.10.10.tar.gz`
+
+`# cd wulaphp-latest`
+
+`# chmod 777 storage storage/tmp storage/logs`
+
+> 如果你能正常访问`composer`，建议执行一下`#composer update -vvv`将所有依赖包升级到最新版本。
 
 ## 验证
 
-运行`./artisan`:
+打开命令行，进入应用根目录(<small>artisan脚本所在的目录</small>)并执行下边的命令(<small>使用内建服务器运行wulaphp</small>)：
 
-```
-artisan tool for wulaphp
+`php -S 127.0.0.1:8090 -t wwwroot/ wwwroot/index.php`
 
-Usage: #php artisan <command> [options] [args]
+通过浏览器访问<a href="http://127.0.0.1:8090" target="_blank">http://127.0.0.1:8090</a>，看到下边的输出:
 
-Options:
-  -h, --help     display this help message
-  -v             display wulaphp version
+**Hello wula !!**
 
-Commands:
-  admin          administrate tool for wulaphp
-  service        run services in background
+恭喜你，安装完成。
 
-Run  '#php artisan help <command>' for more information on a command.
-```
-
-# 运行
-
-## Development Server
-
-`php -S 127.0.0.1:9090 -t wwwroot/ wwwroot/index.php`
-
-## Nginx
-
-运行`vendor/bin/wulaphp conf nginx` 获取`nginx`配置.
-
-## Apache Httpd
-
-运行`vendor/bin/wulaphp conf apache` 获取`Httpd`配置.
+> 如果未能看到上边的输出，请移步[FQA](https://www.wulaphp.com/fqa.html#install)
 
 # 文档
 
 1. [wiki](https://github.com/ninggf/wulaphp/wiki)
-2. [文档](https://www.wulaphp.com)
+2. [文档](https://www.wulaphp.com/)
 
 # License
 
