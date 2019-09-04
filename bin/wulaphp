@@ -22,6 +22,7 @@ if (isset($argv[1]) && $argv[1]) {
             init();
             break;
         case 'conf':
+        case 'config':
             conf();
             break;
         default:
@@ -120,7 +121,9 @@ function conf() {
     }
 
     $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-
+    if (DIRECTORY_SEPARATOR != '/') {
+        $dir = str_replace(DIRECTORY_SEPARATOR, '/', $dir);
+    }
     if ($type == 'apache' || $type == 'httpd') {
         if ($domains) {
             $domain = 'ServerName ' . implode("\n    ServerName ", $domains);
