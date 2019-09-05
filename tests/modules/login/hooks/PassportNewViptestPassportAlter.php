@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace tests\modules\login\hooks;
+namespace login\hooks;
 
 use login\classes\VipTestPassport;
 use wulaphp\hook\Alter;
