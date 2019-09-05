@@ -7,13 +7,13 @@ class ObjectCaller {
     /**
      * 调用对像的方法，最多10个参数.
      *
-     * @param \stdClass $obj
-     * @param string    $method
-     * @param array     $args
+     * @param object $obj
+     * @param string $method
+     * @param array  $args
      *
      * @return mixed
      */
-    public static function callObjMethod(\stdClass $obj, string $method, array $args = []) {
+    public static function callObjMethod($obj, string $method, array $args = []) {
         return $obj->{$method} (...$args);
     }
 

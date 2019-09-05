@@ -8,6 +8,8 @@
  */
 
 use wulaphp\app\App;
+use wulaphp\hook\Alter;
+use wulaphp\hook\Handler;
 
 /**
  * 绑定表.
@@ -137,7 +139,7 @@ function unbind_all(string $hook, $priority = false): bool {
  */
 function fire(string $hook, $arg = '') {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
-    __rt_scan_hook($hook); // 懒加载
+    __rt_scan_hook($hook, 'Handler'); // 懒加载
     $hook = __rt_real_hook($hook);
     if (!isset ($__ksg_rtk_hooks [ $hook ])) { // 没有该HOOK的回调
         return '';
@@ -199,7 +201,7 @@ function fire(string $hook, $arg = '') {
  */
 function apply_filter(string $filter, $value) {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
-    __rt_scan_hook($filter); // 懒加载
+    __rt_scan_hook($filter, 'Alter'); // 懒加载
     $filter = __rt_real_hook($filter);
 
     if (!isset ($__ksg_rtk_hooks [ $filter ])) {
@@ -239,27 +241,6 @@ function apply_filter(string $filter, $value) {
     } catch (Exception $e) {
         return $value;
     }
-}
-
-/**
- * 定义一个hook处理器.
- *
- * @param \Closure $handler
- * @param int      $accepted_args
- * @param int      $priority
- *
- * @return bool|string
- */
-function hook(Closure $handler, int $accepted_args = 1, int $priority = 10) {
-    global $__rt_hook_name;
-    if ($__rt_hook_name) {
-        $id             = bind($__rt_hook_name, $handler, $priority, $accepted_args, false);
-        $__rt_hook_name = null;
-
-        return $id;
-    }
-
-    return false;
 }
 
 /**
@@ -325,22 +306,25 @@ function __rt_real_hook(string $hook): string {
 }
 
 // scan hook handlers
-function __rt_scan_hook(string $hook) {
-    global $__rt_hook_name;
+function __rt_scan_hook(string $hook, string $suffix) {
     static $hooks = [], $modules = null;
     if (!$modules || !defined('WULA_BOOTSTRAPPED')) {
         $modules = App::modules('hasHooks');
     }
-    $__rt_hook_name = $hook;
     if (!isset($hooks[ $hook ])) {
+        $cls = str_replace(['\\', '/', '-', '_', '.'], '', ucwords($hook, '\\/-_.')) . $suffix;
         foreach ($modules as $m) {
-            $hookFile = $m->hookPath . str_replace(['\\', '/', '-'], '.', $hook) . '.php';
-            if (is_file($hookFile)) {
-                include $hookFile;
+            $mcls = $m->getNamespace() . '\\hooks\\' . $cls;
+            if (class_exists($mcls)) {
+                $impl = new $mcls();
+                if ($impl instanceof Handler) {
+                    bind($hook, [$impl, 'handle'], $impl->getPriority(), $impl->getAcceptArgs(), false);
+                } else if ($impl instanceof Alter) {
+                    bind($hook, [$impl, 'alter'], $impl->getPriority(), $impl->getAcceptArgs(), false);
+                }
             }
         }
         $hooks[ $hook ] = 1;
     }
-    $__rt_hook_name = null;
 }
 // end of file plugin.php

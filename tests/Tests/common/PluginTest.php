@@ -12,6 +12,12 @@ namespace tests\Tests\common;
 
 use PHPUnit\Framework\TestCase;
 
+class MyHook {
+    public function testonAdd($i, $j) {
+        return $i * 2 + $j;
+    }
+}
+
 class PluginTest extends TestCase {
     private static $func1;
     private static $func2;
@@ -32,6 +38,7 @@ class PluginTest extends TestCase {
         bind('common.onAdd', '&\tests\Tests\common\PluginTest', 1, 2);
         bind('common/onAdd', '&\tests\Tests\common\PluginTest', 1, 2);
         bind('common-onAdd', '&\tests\Tests\common\PluginTest', 1, 2);
+        bind('test\onAdd', [new MyHook(), 'testonAdd'], 1, 2);
     }
 
     public function testHas() {
@@ -72,18 +79,20 @@ class PluginTest extends TestCase {
         $var = apply_filter('common\onAdd', 1, 2);
         self::assertEquals(3, $var);
         $var = apply_filter('common.onAdd', 1, 2);
-        self::assertEquals(3, $var);
+        self::assertEquals(5, $var);
         $var = apply_filter('common/onAdd', 1, 2);
         self::assertEquals(3, $var);
         $var = apply_filter('common-onAdd', 1, 2);
         self::assertEquals(3, $var);
+        $var = apply_filter('test\onAdd', 1, 2);
+        self::assertEquals(4, $var);
     }
 
     public function testLzHandler() {
-        $var = apply_filter('test.add', 1, 2);
-        self::assertEquals(3, $var);
-        $var = apply_filter('test\add', 2, 3);
-        self::assertEquals(5, $var);
+        $var = apply_filter('test.add', 1, 2, 3);
+        self::assertEquals(6, $var);
+        $var = apply_filter('test\add', 2, 3, 4);
+        self::assertEquals(9, $var);
     }
 
     public static function commononAdd($a, $b) {
@@ -91,6 +100,6 @@ class PluginTest extends TestCase {
     }
 
     public static function common_onAdd($a, $b) {
-        return $a + $b;
+        return $a + $b * 2;
     }
 }

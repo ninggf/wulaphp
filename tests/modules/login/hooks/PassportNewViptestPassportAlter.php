@@ -8,10 +8,15 @@
  * file that was distributed with this source code.
  */
 
+namespace tests\modules\login\hooks;
+
 use login\classes\VipTestPassport;
+use wulaphp\hook\Alter;
 
-return hook(function ($passport) {
-    $passport = new VipTestPassport();
+class PassportNewViptestPassportAlter extends Alter {
+    public function alter($value, ...$args) {
+        $passport = new VipTestPassport();
 
-    return $passport;
-});
+        return $passport;
+    }
+}
