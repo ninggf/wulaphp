@@ -131,7 +131,6 @@ function unbind_all($hook, $priority = false) {
  */
 function fire($hook, $arg = '') {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
-    __rt_scan_hook($hook); // 懒加载
     $hook = __rt_real_hook($hook);
     if (!isset ($__ksg_rtk_hooks [ $hook ])) { // 没有该HOOK的回调
         return '';
@@ -190,7 +189,6 @@ function fire($hook, $arg = '') {
  */
 function apply_filter($filter, $value) {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
-    __rt_scan_hook($filter); // 懒加载
     $filter = __rt_real_hook($filter);
 
     if (!isset ($__ksg_rtk_hooks [ $filter ])) {
@@ -227,27 +225,6 @@ function apply_filter($filter, $value) {
     } catch (Exception $e) {
         return $value;
     }
-}
-
-/**
- * 定义一个hook处理器.
- *
- * @param \Closure $handler
- * @param int      $accepted_args
- * @param int      $priority
- *
- * @return bool|string
- */
-function hook(Closure $handler, $accepted_args = 1, $priority = 10) {
-    global $__rt_hook_name;
-    if ($__rt_hook_name) {
-        $id             = bind($__rt_hook_name, $handler, $priority, $accepted_args);
-        $__rt_hook_name = null;
-
-        return $id;
-    }
-
-    return false;
 }
 
 /**
@@ -317,24 +294,3 @@ function __rt_real_hook($hook) {
 
     return lcfirst($hook);
 }
-
-// scan hook handlers
-function __rt_scan_hook($hook) {
-    global $__rt_hook_name;
-    static $hooks = [], $modules = null;
-    if (!$modules || !defined('WULA_BOOTSTRAPPED')) {
-        $modules = App::modules('hasHooks');
-    }
-    $__rt_hook_name = $hook;
-    if (!isset($hooks[ $hook ])) {
-        foreach ($modules as $m) {
-            $hookFile = $m->hookPath . str_replace(['\\', '/', '-'], '.', $hook) . '.php';
-            if (is_file($hookFile)) {
-                include $hookFile;
-            }
-        }
-        $hooks[ $hook ] = 1;
-    }
-    $__rt_hook_name = null;
-}
-// end of file plugin.php

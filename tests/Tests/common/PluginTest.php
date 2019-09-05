@@ -79,13 +79,6 @@ class PluginTest extends TestCase {
         self::assertEquals(3, $var);
     }
 
-    public function testLzHandler() {
-        $var = apply_filter('test.add', 1, 2);
-        self::assertEquals(3, $var);
-        $var = apply_filter('test\add', 2, 3);
-        self::assertEquals(5, $var);
-    }
-
     public static function commononAdd($a, $b) {
         return $a + $b;
     }
