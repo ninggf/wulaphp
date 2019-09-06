@@ -284,7 +284,7 @@ class ServiceCommand extends ArtisanCommand {
                     [isset($ser['worker']) ? $ser['worker'] : 1, 7],
                     [isset($ser['sleep']) ? $ser['sleep'] : (isset($ser['interval']) ? $ser['interval'] : 1), 6],
                     [$this->getStatus($ser['status'] ? $ser['status'] : 'enabled'), 20],
-                    [isset($ser['script']) ? $ser['script'] : $ser['jobClass'], 44]
+                    [isset($ser['script']) ? $ser['script'] : $ser['workerClass'], 44]
                 ]));
             }
         }

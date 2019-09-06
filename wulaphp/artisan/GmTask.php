@@ -15,14 +15,14 @@ namespace wulaphp\artisan;
  *
  * @package wulaphp\artisan;
  */
-class GearmanTask {
+class GmTask {
     protected $timeout;
     protected $host;
     protected $port;
     protected $client;
 
     /**
-     * GearmanTask constructor.
+     * GmTask constructor.
      *
      * @param string $host
      * @param int    $port

@@ -10,7 +10,7 @@
 
 namespace wulaphp\command\service;
 
-use wulaphp\artisan\GearmWorker;
+use wulaphp\artisan\GmWorker;
 
 /**
  * Class GearmanService
@@ -28,6 +28,8 @@ class GearmanService extends Service {
     protected $jobClass;
     protected $isJson;
     private   $jobFile;
+    /**@var \wulaphp\artisan\GmWorker */
+    private $workerCls;
 
     public function run() {
         $this->host     = $this->getOption('host', 'localhost');
@@ -42,7 +44,7 @@ class GearmanService extends Service {
 
             return false;
         }
-        $this->jobClass = $this->getOption('worker');
+        $this->jobClass = $this->getOption('workerClass', $this->getOption('script'));
         if (empty($this->jobClass)) {
             $this->loge('no worker specified!');
 
@@ -50,10 +52,12 @@ class GearmanService extends Service {
         }
         if (is_file(APPROOT . $this->jobClass)) {
             $this->jobFile = $this->jobClass;
-        } else if (!is_subclass_of($this->jobClass, GearmWorker::class)) {
-            $this->loge($this->jobClass . ' is not subclass of ' . GearmWorker::class);
+        } else if (!is_subclass_of($this->jobClass, GmWorker::class)) {
+            $this->loge($this->jobClass . ' is not subclass of ' . GmWorker::class);
 
             return false;
+        } else {
+            $this->workerCls = new $this->jobClass();
         }
 
         return $this->execute([]);
@@ -68,7 +72,7 @@ class GearmanService extends Service {
 
         while (!$this->shutdown && $count < $this->count) {
             try {
-                @$worker->work();
+                $worker->work();
                 $status = $worker->returnCode();
                 switch ($status) {
                     case GEARMAN_SUCCESS:
@@ -93,7 +97,7 @@ class GearmanService extends Service {
                         sleep(1);
                 }
             } catch (\Exception $e) {
-                log_error($e->getMessage(), 'gearman.err');
+                $this->loge($e->getMessage());
                 break;
             }
         }
@@ -138,36 +142,48 @@ class GearmanService extends Service {
 
                 return $worker;
             } else {
-                log_error('Cannot connect to Gearmand Server: ' . $worker->error(), 'gearman.err');
+                $this->loge('Cannot connect to Gearmand Server: ' . $worker->error());
             }
         } catch (\Exception $exception) {
-            log_error($exception->getMessage(), 'gearman.err');
+            $this->loge($exception->getMessage());
         }
 
         return null;
     }
 
+    /**
+     * 干活.
+     *
+     * @param string|\GearmanJob $job
+     *
+     * @return string
+     */
     public function doJob($job) {
         if ($job instanceof \GearmanJob) {
-            $wk = $job->workload();
+            $wk    = $job->workload();
+            $jobId = $job->unique();
         } else {
-            $wk = $job;
+            $wk    = $job;
+            $job   = null;
+            $jobId = '0';
         }
-        $this->logd('[workload] ' . $wk);
+        $this->logd('[workload] ' . $jobId . ' => ' . $wk);
         if ($this->jobFile) {
             $cmd  = escapeshellcmd(PHP_BINARY);
-            $args = escapeshellarg($this->jobFile) . ' ' . escapeshellarg($wk);
+            $args = escapeshellarg($this->jobFile) . ' ' . escapeshellarg($wk) . ' ' . escapeshellarg($this->funcName) . ' ' . escapeshellarg($jobId);
             chdir(APPROOT);
+            // 优化为CGI调用.
             @exec($cmd . ' ' . $args, $output, $rtn);
         } else {
-            /**@var \wulaphp\artisan\GearmWorker $cls */
-            $cls    = new $this->jobClass($wk);
-            $rtn    = $cls->run($this->isJson, false);
-            $output = $cls->getOutput();
+            $this->workerCls->setWorkload($wk, $job);
+            $rtn    = $this->workerCls->run($this->isJson, false);
+            $output = $this->workerCls->getOutput();
         }
         if ($job instanceof \GearmanJob) {
             if ($rtn) {
                 $job->sendFail();
+
+                return '';
             }
         }
 

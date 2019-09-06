@@ -272,7 +272,7 @@ class MonitorService extends Service {
                 case 'running':
                     //补齐进程
                     $service['worker'] = intval(isset($service['worker']) ? $service['worker'] : 1);
-                    $serOk             = $this->checkSer($service);
+                    $serOk             = $this->checkSer($service, $msg);
                     if ($serOk) {
                         $forkOk = true;
                         while (count($this->services[ $id ]['pids']) < $service['worker']) {
@@ -308,6 +308,7 @@ class MonitorService extends Service {
                         }
                     } else {
                         $this->services[ $id ]['status'] = 'error';
+                        $this->services[ $id ]['msg']    = $msg;
                     }
                     break;
                 case 'error':
@@ -552,7 +553,7 @@ class MonitorService extends Service {
         }
     }
 
-    private function checkSer(array $config) {
+    private function checkSer(array $config, &$msg = null) {
         $type = isset($config['type']) ? $config['type'] : 'parallel';
         if (!$type) {
             $type = 'parallel';
@@ -560,11 +561,17 @@ class MonitorService extends Service {
         if ($type == 'script') {
             $type = 'parallel';
         } else if ($type == 'gearman' && !extension_loaded('gearman')) {
+            $msg = 'gearman extension not found';
+            $this->logw($msg);
+
             return false;
         }
 
         $typeCls = 'wulaphp\command\service\\' . ucfirst($type) . 'Service';
         if (!class_exists($typeCls)) {
+            $msg = 'unkown service type: ' . $type;
+            $this->logw($msg);
+
             return false;
         }
 
@@ -581,6 +588,8 @@ class MonitorService extends Service {
         }
         $typeCls = 'wulaphp\command\service\\' . ucfirst($type) . 'Service';
         if (!class_exists($typeCls)) {
+            $this->logw('unkown service type: ' . $type);
+
             return null;
         }
         /**@var \wulaphp\command\service\Service $typeClz */
