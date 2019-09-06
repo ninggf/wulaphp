@@ -41,7 +41,7 @@ before_install:
   - mkdir tests/storage/logs
   - docker pull wendal/ssdb
   - docker run --rm -d -p 8888:8888 wendal/ssdb
-  - gearmand -d
+  - gearmand -d -l tests/storage/logs/gm.log
 
 install:
   # install gearman ext
