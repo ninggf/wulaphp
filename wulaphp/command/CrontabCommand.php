@@ -1,5 +1,4 @@
 <?php
-declare(ticks=1);
 /*
  * This file is part of wulacms.
  *
@@ -15,6 +14,13 @@ use wulaphp\artisan\ArtisanMonitoredTask;
 use wulaphp\util\DaemonCrontab;
 use wulaphp\util\ICrontabJob;
 
+pcntl_async_signals(true);
+
+/**
+ * Class CrontabCommand
+ * @package wulaphp\command
+ * @deprecated
+ */
 class CrontabCommand extends ArtisanMonitoredTask {
     private $clz = '';
 

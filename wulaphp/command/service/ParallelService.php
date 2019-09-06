@@ -1,5 +1,4 @@
 <?php
-declare(ticks=1);
 /*
  * This file is part of wulacms.
  *
@@ -56,9 +55,8 @@ class ParallelService extends Service {
                             if ($this->shutdown) {
                                 if (isset($env['loop'])) {
                                     @fwrite($pipes[0], "@shutdown@");
-                                } else {
-                                    @proc_terminate($process, SIGINT);
                                 }
+                                @proc_terminate($process, SIGINT);
                             }
                             usleep(rand(300, 500));
                         } else if ($pid > 0) {//exit

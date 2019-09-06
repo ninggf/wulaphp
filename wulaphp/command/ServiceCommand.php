@@ -1,5 +1,4 @@
 <?php
-declare(ticks=1);
 /*
  * This file is part of wulacms.
  *
@@ -15,6 +14,8 @@ use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
 use wulaphp\command\service\MonitorService;
 use wulaphp\util\ArrayCompare;
+
+pcntl_async_signals(true);
 
 /**
  * 服务命令，让服务优雅地运行在后台.
@@ -117,7 +118,7 @@ class ServiceCommand extends ArtisanCommand {
                         $this->error('[service] could not detach session id.');
                         exit(1);
                     }
-                    $conf = $this->getRuntimeCfg();
+                    $conf    = $this->getRuntimeCfg();
                     $monitor = new MonitorService('monitor', $conf);
                     $monitor->run();
                 } catch (\Exception $e) {

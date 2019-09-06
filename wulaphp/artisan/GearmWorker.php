@@ -10,7 +10,7 @@
 
 namespace wulaphp\artisan;
 
-abstract class GearmJob {
+abstract class GearmWorker {
     private $workload = false;
     private $out      = [];
 
