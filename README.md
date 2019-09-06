@@ -63,6 +63,10 @@
 
 `# php vendor/bin/wulaphp init`
 
+或者在windows上:
+
+`vendor/bin/wulaphp.bat init`
+
 如果你运行在`类Unix`系统上，还需要执行以下操作将目录变为可读写：
 
 `# chmod 777 storage storage/tmp storage/logs`
