@@ -57,6 +57,6 @@ install:
 before_script:
   - php tests/artisan service start
   - php -S 127.0.0.1:9090 -t tests/www/ tests/www/index.php > /dev/null 2>&1 &
-
+  - netstat -naltp | grep 4730
 script:
   - ls -d tests/Tests/**/* | parallel --gnu --keep-order 'echo "Running {} tests"; ./vendor/bin/phpunit -c tests/phpunit.xml.dist --colors=always {} || (echo -e "\e[41mFAILED\e[0m {}" && exit 1);'
