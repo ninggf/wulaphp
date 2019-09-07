@@ -288,13 +288,13 @@ abstract class ArtisanCommand {
 
     protected final function cell($messages, $len = 0, $pad = ' ') {
         if (!is_array($messages)) {
-            $messages = [[$messages, $len]];
+            $messages = [[$messages, $len, 1]];
         }
         $msgs = [];
         foreach ($messages as $message) {
             $l = strlen($message[0]);
             if ($l < $message[1]) {
-                $msgs[] = str_pad($message[0], $message[1], $pad);
+                $msgs[] = str_pad($message[0], $message[1], $pad, $message[2] ?? STR_PAD_RIGHT);
             } else if ($l > $message[1]) {
                 $msgs[] = mb_substr($message[0], 0, $message[1]);
             } else {
@@ -379,8 +379,7 @@ abstract class ArtisanCommand {
      *
      * @return bool
      */
-    protected function argValid(/** @noinspection PhpUnusedParameterInspection */
-        $options) {
+    protected function argValid(/** @noinspection PhpUnusedParameterInspection */ $options) {
         return true;
     }
 
@@ -391,8 +390,7 @@ abstract class ArtisanCommand {
      *
      * @return bool
      */
-    protected function paramValid(/** @noinspection PhpUnusedParameterInspection */
-        $options) {
+    protected function paramValid(/** @noinspection PhpUnusedParameterInspection */ $options) {
         return true;
     }
 

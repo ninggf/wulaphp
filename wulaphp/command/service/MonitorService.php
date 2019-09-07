@@ -140,7 +140,7 @@ class MonitorService extends Service {
             usleep(100);
         }
         if ($this->sockFile) {
-            @unlink($this->sockFile);
+            //@unlink($this->sockFile);
         }
         $this->logi('stopped');
     }
