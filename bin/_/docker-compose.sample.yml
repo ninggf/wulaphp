@@ -15,8 +15,10 @@ services:
   php:
     container_name: wula_php
     depends_on:
-      - "db"
+      - "mysql"
       - "redis"
+      - "memcached"
+      - "gearmand"
     image: wulaphp/php:latest
     volumes:
       - "./:/var/www/html/"
@@ -29,6 +31,8 @@ services:
     links:
       - "mysql"
       - "redis"
+      - "memcached"
+      - "gearmand"
   mysql:
     container_name: wula_db
     image: mysql:5.7.24
@@ -46,7 +50,7 @@ services:
     sysctls:
       net.core.somaxconn: 1024
   memcached:
-    container_name: memcached
+    container_name: wula_memcached
     image: memcached:1.5.10
     expose:
       - "11211"
