@@ -349,7 +349,7 @@ SQL;
         self::assertEquals('INSERT INTO types (`price`,`quantity`,`amount`) VALUES (\'abc\' , 2 , 2.4)', $sql);
         self::assertNotTrue(!!$t, $t . ' is the new id');
         self::assertNotEmpty($err);
-        self::assertContains('\'price\' at row 1', $err);
+        self::assertContains('at row 1', $err);
 
         $data['price']    = '0,1,1),(1';
         $data['quantity'] = 2;
@@ -361,7 +361,7 @@ SQL;
         self::assertNotTrue(!!$t, $t);
         self::assertEquals('INSERT INTO types (`price`,`quantity`,`amount`) VALUES (\'0,1,1),(1\' , 2 , 2.4)', $sql);
         self::assertNotEmpty($err);
-        self::assertContains('\'price\' at row 1', $err);
+        self::assertContains('at row 1', $err);
     }
 
     public static function tearDownAfterClass() {
