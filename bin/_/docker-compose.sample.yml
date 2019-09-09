@@ -36,6 +36,8 @@ services:
   mysql:
     container_name: wula_db
     image: mysql:5.7.24
+    ports:
+      - "3306:3306"
     expose:
       - "3306"
     volumes:
