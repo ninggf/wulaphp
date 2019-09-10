@@ -595,11 +595,17 @@ class DatabaseConnection {
     /**
      * 删除.
      *
+     * @param string $table 表名.
+     * @param string $alias 别名.
+     *
      * @return \wulaphp\db\sql\DeleteSQL
      */
-    public function delete() {
+    public function delete($table = null, $alias = null) {
         $sql = new DeleteSQL();
         $sql->setDialect($this->dialect);
+        if ($table) {
+            $sql->from($table, $alias);
+        }
 
         return $sql;
     }
