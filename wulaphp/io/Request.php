@@ -35,7 +35,6 @@ class Request implements \ArrayAccess {
             self::$santitized = true;
             $this->sanitizeGlobals();
         }
-        $this->addJsonPostBody();
     }
 
     /**

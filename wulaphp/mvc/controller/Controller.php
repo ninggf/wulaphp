@@ -3,6 +3,7 @@
 namespace wulaphp\mvc\controller;
 
 use wulaphp\app\Module;
+use wulaphp\io\Request;
 use wulaphp\mvc\view\View;
 use wulaphp\util\Annotation;
 
@@ -53,10 +54,13 @@ abstract class Controller {
      * @return View
      */
     public function beforeRun($action, $refMethod) {
-        $view          = null;
-        $this->_action = $action;
+        $view             = null;
+        $this->_action    = $action;
+        $this->_methodAnn = new Annotation($refMethod);
+        if ($this->_methodAnn->has('jsonBody')) {
+            Request::getInstance()->addJsonPostBody();
+        }
         if ($this->beforeFeatures) {
-            $this->_methodAnn = new Annotation($refMethod);
             foreach ($this->beforeFeatures as $feature) {
                 $view = $this->$feature($refMethod, $view);
             }
