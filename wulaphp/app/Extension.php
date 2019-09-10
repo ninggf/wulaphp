@@ -5,16 +5,21 @@ namespace wulaphp\app;
 use wulaphp\util\Annotation;
 
 abstract class Extension {
-    public    $clzName;
-    public    $reflection;
-    protected $currentVersion;
-    protected $bound = false;
-    protected $path;
+    public         $clzName;
+    public         $reflection;
+    protected      $currentVersion;
+    protected      $bound = false;
+    protected      $path;
+    protected      $namespace;
+    private static $hooks = [];
 
     public function __construct() {
-        $this->reflection     = $ref = new \ReflectionObject($this);
-        $this->path           = dirname($ref->getFileName());
-        $this->clzName        = get_class($this);
+        $this->reflection = $ref = new \ReflectionObject($this);
+        $this->path       = dirname($ref->getFileName());
+        $this->clzName    = get_class($this);
+        $ns               = explode('\\', $this->clzName);
+        array_pop($ns);
+        $this->namespace      = implode('\\', $ns);
         $vs                   = $this->getVersionList();
         $this->currentVersion = array_pop(array_keys($vs));
     }
@@ -80,6 +85,9 @@ abstract class Extension {
                 }
             }
         }
+        if (is_dir($this->path . DS . 'hooks')) {
+            self::$hooks[] = $this->namespace . '\\hooks\\';
+        }
     }
 
     public function getVersionList() {
@@ -88,15 +96,23 @@ abstract class Extension {
         return $v;
     }
 
+    public final static function getHooks() {
+        return self::$hooks;
+    }
+
     /**
      * 批量事件处理器注册.
      */
     protected function bind() {
     }
 
+    public function getDescription() {
+        return '';
+    }
+
+    public function getHomePageURL() {
+        return '';
+    }
+
     public abstract function getName();
-
-    public abstract function getDescription();
-
-    public abstract function getHomePageURL();
 }

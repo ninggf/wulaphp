@@ -80,13 +80,15 @@ function _copy($dir, $ddir) {
  */
 function upgrade() {
     $file = getDestDir() . 'artisan';
-    if (copy(SDIR . 'artisan', $file)) {
+    if (@copy(SDIR . 'artisan', $file)) {
         @chmod($file, 0777);
         echo "'atrtisan' tool upgraded!\n";
     } else {
         echo "can not upgrade 'atrtisan' tool!\n";
         exit(1);
     }
+    $file = getDestDir() . 'docker-compose.sample.yml';
+    @copy(SDIR . 'docker-compose.sample.yml', $file);
 }
 
 /**
@@ -96,31 +98,21 @@ function conf() {
     global $argv, $argc;
     $domains = [];
     if (isset($argv[2]) && $argv[2]) {
-        if ($argv[2] == '--') {
+        if (!in_array($argv[2], ['httpd', 'apache', 'nginx'])) {
+            for ($i = 2; $i < $argc; $i++) {
+                $domains[] = $argv[ $i ];
+            }
+        } else {
             for ($i = 3; $i < $argc; $i++) {
                 $domains[] = $argv[ $i ];
             }
-            $type = 'nginx';
-        } else {
-            if (isset($argv[3])) {
-                if ($argv[3] == '--') {
-                    for ($i = 4; $i < $argc; $i++) {
-                        $domains[] = $argv[ $i ];
-                    }
-                } else {
-                    for ($i = 3; $i < $argc; $i++) {
-                        $domains[] = $argv[ $i ];
-                    }
-                }
-            }
-
-            $type = $argv[2];
         }
+        $type = $argv[2];
     } else {
         $type = 'nginx';
     }
 
-    $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    $dir = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR;
     if (DIRECTORY_SEPARATOR != '/') {
         $dir = str_replace(DIRECTORY_SEPARATOR, '/', $dir);
     }
@@ -226,17 +218,7 @@ ETC;
  * @internal
  */
 function getDestDir() {
-    global $argv;
-    if (isset($argv[2]) && $argv[2]) {
-        $dir = rtrim($argv[2], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-    } else {
-        $dir = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-    }
-
-    if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
-        echo "cannot create $dir\n";
-        exit(1);
-    }
+    $dir = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR;
 
     return $dir;
 }
@@ -245,12 +227,12 @@ function getDestDir() {
  * @internal
  */
 function wulaHint() {
-    echo 'wulaphp 2.8.0 by Leo Ning and contributors.', "\n\n";
-    echo 'Usage: wulaphp <init|upgrade> [dir]', "\n";
-    echo '       wulaphp conf [nginx|apache] [-- domain1 domain2 ...]', "\n\n";
+    echo 'wulaphp 2.0 by Leo Ning and contributors.', "\n\n";
+    echo 'Usage: wulaphp <init|upgrade>', "\n";
+    echo '       wulaphp conf [nginx|apache] [domain1 domain2 ...]', "\n\n";
     echo "Commands:\n";
-    echo "       init [dir]           init a wulaphp project\n";
-    echo "       upgrade [dir]        upgrade artisan tool\n";
+    echo "       init                 init a wulaphp project\n";
+    echo "       upgrade              upgrade artisan tool\n";
     echo "       conf [nginx|apache]  show configuration for nginx or apache\n";
 }
 // end of wulaphp

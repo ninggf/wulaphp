@@ -8,6 +8,9 @@
  */
 
 use wulaphp\app\App;
+use wulaphp\app\Extension;
+use wulaphp\hook\Alter;
+use wulaphp\hook\Handler;
 
 global $__ksg_rtk_hooks;
 $__ksg_rtk_hooks = [];
@@ -28,10 +31,11 @@ $__ksg_sorted_hooks = [];
  * @param mixed        $hook_func     回调函数
  * @param int          $priority      优先级
  * @param int          $accepted_args 接受参数个数
+ * @param bool         $ex
  *
  * @return boolean|string 失败返回false,成功返回hook_func的ID，可用于unbind
  */
-function bind($hook, $hook_func, $priority = 10, $accepted_args = 1) {
+function bind($hook, $hook_func, $priority = 10, $accepted_args = 1, $ex = true) {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
 
     if (empty ($hook)) {
@@ -47,7 +51,7 @@ function bind($hook, $hook_func, $priority = 10, $accepted_args = 1) {
 
     $hook     = __rt_real_hook($hook);
     $priority = $priority ? $priority : 10;
-    $extra    = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
+    $extra    = $ex ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0] : null;
     if (is_string($hook_func) && $hook_func{0} == '&') {
         $hook_func = ltrim($hook_func, '&');
         $hook_func = [$hook_func, str_replace(['.', '\\', '/', '-'], ['_', ''], $hook)];
@@ -131,6 +135,8 @@ function unbind_all($hook, $priority = false) {
  */
 function fire($hook, $arg = '') {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
+    __rt_scan_hook($hook, 'Handler'); // 懒加载
+
     $hook = __rt_real_hook($hook);
     if (!isset ($__ksg_rtk_hooks [ $hook ])) { // 没有该HOOK的回调
         return '';
@@ -157,13 +163,16 @@ function fire($hook, $arg = '') {
         do {
             foreach (( array )current($__ksg_rtk_hooks [ $hook ]) as $the_) {
                 if (!is_null($the_ ['func'])) {
+                    $params = array_slice($args, 0, $the_['accepted_args']);
                     if (is_array($the_['func'])) {
-                        \wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], $args);
+                        if (is_object($the_['func'][0])) {
+                            $the_['func'][0]->{$the_['func'][1]}(...$params);
+                        } else {
+                            $the_['func'][0]::{$the_['func'][1]}(...$params);
+                        }
                     } else if ($the_ ['func'] instanceof Closure) {
-                        $params = array_slice($args, 0, ( int )$the_ ['accepted_args']);
                         $the_ ['func'](...$params);
                     } else if (is_callable($the_ ['func'])) {
-                        $params = array_slice($args, 0, ( int )$the_ ['accepted_args']);
                         $the_ ['func'](...$params);
                     }
                 }
@@ -189,8 +198,9 @@ function fire($hook, $arg = '') {
  */
 function apply_filter($filter, $value) {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
-    $filter = __rt_real_hook($filter);
+    __rt_scan_hook($filter, 'Alter'); // 懒加载
 
+    $filter = __rt_real_hook($filter);
     if (!isset ($__ksg_rtk_hooks [ $filter ])) {
         return $value;
     }
@@ -208,14 +218,17 @@ function apply_filter($filter, $value) {
             foreach (( array )current($__ksg_rtk_hooks [ $filter ]) as $the_) {
                 if (!is_null($the_ ['func'])) {
                     $args [1] = $value;
+                    $params   = array_slice($args, 1, $the_['accepted_args']);
                     if (is_array($the_['func'])) {
-                        $value = \wulaphp\util\ObjectCaller::callClzMethod($the_['func'][0], $the_['func'][1], array_slice($args, 1));
+                        if (is_object($the_['func'][0])) {
+                            $value = $the_['func'][0]->{$the_['func'][1]}(...$params);
+                        } else {
+                            $value = $the_['func'][0]::{$the_['func'][1]}(...$params);
+                        }
                     } else if ($the_ ['func'] instanceof Closure) {
-                        $params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
-                        $value  = $the_ ['func'](...$params);
+                        $value = $the_ ['func'](...$params);
                     } else if (is_callable($the_ ['func'])) {
-                        $params = array_slice($args, 1, ( int )$the_ ['accepted_args']);
-                        $value  = $the_ ['func'](...$params);
+                        $value = $the_ ['func'](...$params);
                     }
                 }
             }
@@ -293,4 +306,39 @@ function __rt_real_hook($hook) {
     $hook = ucwords(ltrim($hook, '\\'), '\\');
 
     return lcfirst($hook);
+}
+
+// scan hook handlers
+function __rt_scan_hook($hook, $suffix) {
+    static $hooks = [], $modules = [], $exts = [];
+    if (defined('WULA_BOOTSTRAPPED') && !$modules) {
+        $modules = App::modules('hasHooks');
+        $exts    = Extension::getHooks();
+    }
+    if (!isset($hooks[ $hook ])) {
+        $cls = str_replace(['\\', '/', '-', '_', '.'], '', ucwords($hook, '\\/-_.')) . $suffix;
+        foreach ($modules as $m) {
+            $mcls = $m->getNamespace() . '\\hooks\\' . $cls;
+            if (class_exists($mcls)) {
+                $impl = new $mcls();
+                if ($impl instanceof Handler) {
+                    bind($hook, [$impl, 'handle'], $impl->getPriority(), $impl->getAcceptArgs(), false);
+                } else if ($impl instanceof Alter) {
+                    bind($hook, [$impl, 'alter'], $impl->getPriority(), $impl->getAcceptArgs(), false);
+                }
+            }
+        }
+        foreach ($exts as $ns) {
+            $mcls = $ns . $cls;
+            if (class_exists($mcls)) {
+                $impl = new $mcls();
+                if ($impl instanceof Handler) {
+                    bind($hook, [$impl, 'handle'], $impl->getPriority(), $impl->getAcceptArgs(), false);
+                } else if ($impl instanceof Alter) {
+                    bind($hook, [$impl, 'alter'], $impl->getPriority(), $impl->getAcceptArgs(), false);
+                }
+            }
+        }
+        $hooks[ $hook ] = 1;
+    }
 }
