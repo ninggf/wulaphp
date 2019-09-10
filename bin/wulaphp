@@ -227,7 +227,7 @@ function getDestDir() {
  * @internal
  */
 function wulaHint() {
-    echo 'wulaphp ', WULA_VERSION, ' by Leo Ning and contributors.', "\n\n";
+    echo 'wulaphp 3.0 by Leo Ning and contributors.', "\n\n";
     echo 'Usage: wulaphp <init|upgrade>', "\n";
     echo '       wulaphp conf [nginx|apache] [domain1 domain2 ...]', "\n\n";
     echo "Commands:\n";
