@@ -10,7 +10,11 @@ declare(ticks=1);
  */
 
 namespace wulaphp\artisan;
-
+/**
+ * Class ArtisanMonitoredTask
+ * @package wulaphp\artisan
+ * @deprecated
+ */
 abstract class ArtisanMonitoredTask extends ArtisanCommand {
     protected $workerCount = 2;
     protected $shutdown    = false;
@@ -203,8 +207,7 @@ abstract class ArtisanMonitoredTask extends ArtisanCommand {
     }
 
     // 准备任务
-    protected function setUp(/** @noinspection PhpUnusedParameterInspection */
-        &$options) {
+    protected function setUp(/** @noinspection PhpUnusedParameterInspection */ &$options) {
         $this->workerCount = 2;
     }
 

@@ -71,6 +71,7 @@ class CronService extends Service {
      *
      * @param string     $script
      * @param array|null $env
+     *
      * @return int
      */
     private function cron($script, array $env) {
@@ -89,9 +90,8 @@ class CronService extends Service {
                         if ($this->shutdown) {
                             if (isset($env['loop'])) {
                                 @fwrite($pipes[0], "@shutdown@");
-                            } else {
-                                @proc_terminate($process, SIGINT);
                             }
+                            @proc_terminate($process, SIGINT);
                         }
                         usleep(rand(300, 500));
                     } else if ($pid > 0) {//exit

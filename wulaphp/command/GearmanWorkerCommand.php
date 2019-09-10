@@ -11,17 +11,20 @@
 namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanMonitoredTask;
-use wulaphp\artisan\GearmanCommand;
-use wulaphp\artisan\GearmJob;
+use wulaphp\artisan\GmWorker;
 
+/**
+ * Class GearmanWorkerCommand
+ * @package wulaphp\command
+ * @deprecated
+ */
 class GearmanWorkerCommand extends ArtisanMonitoredTask {
-    use GearmanCommand;
     private $func;
     private $file;
     private $isScript = false;
     private $isJson   = false;
     /**
-     * @var GearmJob
+     * @var GmWorker
      */
     private $cls;
 
@@ -146,7 +149,7 @@ class GearmanWorkerCommand extends ArtisanMonitoredTask {
             $args = escapeshellarg($this->file) . ' ' . escapeshellarg($wk);
             @exec($cmd . ' ' . $args, $output, $rtn);
         } else {
-            /**@var GearmJob $cls */
+            /**@var GmWorker $cls */
             $cls    = new $this->file($wk);
             $rtn    = $cls->run($this->isJson, false);
             $output = $cls->getOutput();

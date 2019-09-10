@@ -105,6 +105,37 @@ class ServiceCommand extends ArtisanCommand {
                 $this->output($this->getStatus($rtn['status']));
             }
         } else {
+            $config   = App::config('service', true);
+            $bind     = $config->get('bind', 'unix:' . TMP_PATH . 'service.sock');
+            $binds    = explode(':', $bind);
+            $sockFile = null;
+            if ($binds[0] == 'unix') {
+                $sockFile = substr($bind, 5);
+                if (!$sockFile) {
+                    $sockFile = TMP_PATH . 'service.sock';
+                }
+                if (file_exists($sockFile)) {
+                    $sock = @socket_create(AF_UNIX, SOCK_STREAM, 0);
+                    if (!$sock) {
+                        $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
+                        exit(-1);
+                    }
+                    @socket_set_timeout($sock, 3);
+                    $rtn = @socket_connect($sock, $sockFile);
+                    if (!$rtn) {
+                        $error_no = socket_last_error();
+                        if ($error_no == 61 || $error_no == 2) {
+                            @unlink($sockFile);
+                        }
+                        unset($sock);
+                    } else {
+                        @socket_close($sock);
+                        unset($sock);
+                        $this->output($this->color->str('service daemon is running', 'green'));
+                        exit(0);
+                    }
+                }
+            }
             //启动service monitor process
             $pid = @pcntl_fork();
             if ($pid > 0) {//主程序退出
@@ -117,7 +148,7 @@ class ServiceCommand extends ArtisanCommand {
                         $this->error('[service] could not detach session id.');
                         exit(1);
                     }
-                    $conf = $this->getRuntimeCfg();
+                    $conf    = $this->getRuntimeCfg();
                     $monitor = new MonitorService('monitor', $conf);
                     $monitor->run();
                 } catch (\Exception $e) {
@@ -220,20 +251,24 @@ class ServiceCommand extends ArtisanCommand {
                 $services = $rtn['services'];
                 $this->output($this->cell([
                     ['Service', 20],
-                    ['Type', 16],
-                    ['Worker', 10],
+                    ['Type', 8],
+                    ['Worker', 8],
                     ['Status', 20],
-                    ['Message', 44]
+                    ['', 44]
                 ]));
                 $this->output($this->cell('-', 80, '-'));
                 foreach ($services as $id => $ser) {
                     $this->output($this->cell([
                         [$id, 20],
-                        [$ser['type'], 16],
-                        [isset($ser['worker']) ? $ser['worker'] : 1, 10],
+                        [$ser['type'], 8],
+                        [isset($ser['worker']) ? $ser['worker'] : 1, 8, STR_PAD_BOTH],
                         [$this->getStatus($ser['status']), 20],
-                        [isset($ser['msg']) ? $ser['msg'] : '', 44]
-                    ]));
+                    ]), false);
+                    if ($ser['status'] == 'error') {
+                        $this->output(aryget('msg', $ser, aryget('script', $ser, aryget('workerClass', $ser))));
+                    } else {
+                        $this->output(aryget('script', $ser, aryget('workerClass', $ser)));
+                    }
                 }
             }
         } else {
@@ -283,7 +318,7 @@ class ServiceCommand extends ArtisanCommand {
                     [isset($ser['worker']) ? $ser['worker'] : 1, 7],
                     [isset($ser['sleep']) ? $ser['sleep'] : (isset($ser['interval']) ? $ser['interval'] : 1), 6],
                     [$this->getStatus($ser['status'] ? $ser['status'] : 'enabled'), 20],
-                    [isset($ser['script']) ? $ser['script'] : $ser['jobClass'], 44]
+                    [isset($ser['script']) ? $ser['script'] : $ser['workerClass'], 44]
                 ]));
             }
         }
@@ -350,6 +385,7 @@ class ServiceCommand extends ArtisanCommand {
             if (!$sockFile) {
                 $sockFile = TMP_PATH . 'service.sock';
             }
+            @socket_set_timeout($sock, 5);
             $rtn = @socket_connect($sock, $sockFile);
         } else {
             $addr = isset($binds[0]) ? $binds[0] : '127.0.0.1';
@@ -360,6 +396,7 @@ class ServiceCommand extends ArtisanCommand {
                 exit(-1);
             }
             @socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
+            @socket_set_timeout($sock, 10);
             $rtn = @socket_connect($sock, $addr, $port);
         }
 

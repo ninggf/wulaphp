@@ -1,4 +1,5 @@
 <?php
+declare(ticks=1);
 /*
  * This file is part of wulacms.
  *
@@ -28,10 +29,16 @@ abstract class LoopScript {
     public function start() {
         if (!@stream_set_blocking(STDIN, 0)) {
             echo 'cannot set STDIN to noblock mode';
-            exit(1);
+            exit(1); // 退出，不会被拉起
         }
         if ($this->setUp()) {
-            do {
+            $signals = [SIGTERM, SIGINT, SIGHUP, SIGUSR1, SIGTSTP, SIGTTOU];
+            $onSig   = \Closure::fromCallable([$this, 'onSignal']);
+            foreach (array_unique($signals) as $signal) {
+                @pcntl_signal($signal, $onSig);
+            }
+
+            while ($this->running) {
                 try {
                     $rst = $this->run();
                     if ($rst === self::DONE) {
@@ -41,7 +48,7 @@ abstract class LoopScript {
                     }
                 } catch (\Exception $e) {
                     echo $e->getMessage();
-                    exit(1);
+                    exit(1); // 退出，不会被拉起
                 }
                 $line = @fgets(STDIN);
                 if ($line) {
@@ -50,7 +57,7 @@ abstract class LoopScript {
                 if ($this->command === '@shutdown@') {
                     $this->running = false;
                 }
-            } while ($this->running);
+            }
             exit(0);
         } else {
             if ($this->error) {
@@ -58,7 +65,7 @@ abstract class LoopScript {
             } else {
                 echo 'setUp fail';
             }
-            exit(1);
+            exit(1); // 退出，不会被拉起
         }
     }
 
@@ -83,13 +90,18 @@ abstract class LoopScript {
         return aryget($name, $_SERVER, $default);
     }
 
+    /**
+     * @return bool 是否运行.
+     */
     protected final function isRunning() {
-        $line = @fgets(STDIN);
-        if ($line) {
-            $this->command .= trim($line);
-        }
-        if ($this->command === '@shutdown@') {
-            $this->running = false;
+        if ($this->running) {
+            $line = @fgets(STDIN);
+            if ($line) {
+                $this->command .= trim($line);
+            }
+            if ($this->command === '@shutdown@') {
+                $this->running = false;
+            }
         }
 
         return $this->running;
@@ -100,4 +112,8 @@ abstract class LoopScript {
      * @return bool 成功返回true,反之返回false.
      */
     protected abstract function run();
+
+    private function onSignal($sig) {
+        $this->running = false;
+    }
 }

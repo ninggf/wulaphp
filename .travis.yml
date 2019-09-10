@@ -17,6 +17,8 @@ addons:
   apt:
     packages:
       - parallel
+      - gearman-job-server
+      - libgearman-dev
 
 php:
   - "5.6"
@@ -41,15 +43,22 @@ before_install:
   - mkdir tests/storage/logs
   - docker pull wendal/ssdb
   - docker run --rm -d -p 8888:8888 wendal/ssdb
+  - gearmand -d -l tests/storage/logs/gm.log
 
 install:
+  - wget https://github.com/wcgallego/pecl-gearman/archive/gearman-2.0.6.tar.gz
+  - tar -zxf gearman-2.0.6.tar.gz
+  - pushd pecl-gearman-gearman-2.0.6/ && phpize && ./configure && make && make install && popd
+  - echo "extension = gearman.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   # flags to pass to install
   - flags="--prefer-dist --no-interaction --optimize-autoloader --no-suggest --no-progress"
   # install dependencies using system provided composer binary
   - composer install $flags
 
 before_script:
+  - php tests/artisan service start
   - php -S 127.0.0.1:9090 -t tests/www/ tests/www/index.php > /dev/null 2>&1 &
+  - netstat -naltp | grep 4730
 
 script:
   - ls -d tests/Tests/**/* | parallel --gnu --keep-order 'echo "Running {} tests"; ./vendor/bin/phpunit -c tests/phpunit.xml.dist --colors=always {} || (echo -e "\e[41mFAILED\e[0m {}" && exit 1);'

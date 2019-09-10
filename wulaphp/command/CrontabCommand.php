@@ -15,6 +15,11 @@ use wulaphp\artisan\ArtisanMonitoredTask;
 use wulaphp\util\DaemonCrontab;
 use wulaphp\util\ICrontabJob;
 
+/**
+ * Class CrontabCommand
+ * @package wulaphp\command
+ * @deprecated
+ */
 class CrontabCommand extends ArtisanMonitoredTask {
     private $clz = '';
 
