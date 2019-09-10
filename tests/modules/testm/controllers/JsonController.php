@@ -13,7 +13,10 @@ namespace testm\controllers;
 use wulaphp\mvc\controller\Controller;
 
 class JsonController extends Controller {
-
+    /**
+     * @jsonBody
+     * @return array
+     */
     public function index() {
         $name = rqst('name');
         $age  = rqst('age');

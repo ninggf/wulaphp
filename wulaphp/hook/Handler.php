@@ -18,16 +18,11 @@ abstract class Handler {
     private $acceptArgs = 1;
     private $priority   = 10;
 
-    public function __construct($acceptArgs = 1, $priority = 10) {
-        $this->priority   = intval($priority);
-        $this->acceptArgs = intval($acceptArgs);
-    }
-
-    public final function getPriority() {
+    public final function getPriority(): int {
         return $this->priority;
     }
 
-    public final function getAcceptArgs() {
+    public final function getAcceptArgs(): int {
         return $this->acceptArgs;
     }
 

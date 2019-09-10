@@ -18,11 +18,11 @@ abstract class Alter {
     protected $acceptArgs = 1;
     protected $priority   = 10;
 
-    public final function getPriority() {
+    public final function getPriority(): int {
         return $this->priority;
     }
 
-    public final function getAcceptArgs() {
+    public final function getAcceptArgs(): int {
         return $this->acceptArgs;
     }
 
