@@ -36,7 +36,7 @@ class DatabaseConnection {
      *
      * @throws
      */
-    private function __construct($dialect, $config) {
+    private function __construct(DatabaseDialect $dialect, $config) {
         if (!$dialect instanceof DatabaseDialect) {
             throw new \Exception('the dialect is not instance of DatabaseDialect');
         }
@@ -52,7 +52,7 @@ class DatabaseConnection {
      * @return DatabaseConnection
      * @throws \Exception
      */
-    public static function connect($name = 'default') {
+    public static function connect($name = 'default'): DatabaseConnection {
         if ($name instanceof DatabaseConnection) {
             return $name;
         }
@@ -101,7 +101,7 @@ class DatabaseConnection {
     /**
      * 断开数据库连接.
      *
-     * @param string $name
+     * @param string|array|DatabaseConfiguration $name
      */
     public static function disconnect($name = 'default') {
         if (is_null($name)) {
@@ -143,7 +143,7 @@ class DatabaseConnection {
      *
      * @return \wulaphp\db\dialect\DatabaseDialect|null
      */
-    public function getDialect() {
+    public function getDialect(): ?DatabaseDialect {
         return $this->dialect;
     }
 
@@ -186,7 +186,7 @@ class DatabaseConnection {
      *
      * @return boolean
      */
-    public function start() {
+    public function start(): bool {
         if ($this->dialect) {
             //允许事务嵌套
             $this->transLevel += 1;
@@ -211,7 +211,7 @@ class DatabaseConnection {
      *
      * @return bool
      */
-    public function commit() {
+    public function commit(): bool {
         if ($this->dialect) {
             $dialect = $this->dialect;
             if ($dialect->inTransaction()) {
@@ -244,7 +244,7 @@ class DatabaseConnection {
      * rollback a transaction
      * @return bool
      */
-    public function rollback() {
+    public function rollback(): bool {
         if ($this->dialect) {
             $dialect = $this->dialect;
             if ($dialect->inTransaction()) {
@@ -274,7 +274,7 @@ class DatabaseConnection {
      *
      * @return bool
      */
-    public function inTrans() {
+    public function inTrans(): bool {
         if ($this->dialect) {
             return $this->dialect->inTransaction();
         }
@@ -346,7 +346,7 @@ class DatabaseConnection {
      *
      * @return bool
      */
-    public function exec($sql) {
+    public function exec(string $sql): bool {
         $dialect = $this->dialect;
         if (is_null($dialect)) {
             $this->error = 'dialect is null [' . $sql . ']';
@@ -374,7 +374,7 @@ class DatabaseConnection {
      *
      * @return null|string
      */
-    public function lastInsertId($name = null) {
+    public function lastInsertId(string $name = null): ?string {
         $dialect = $this->dialect;
         if (is_null($dialect)) {
             return null;
@@ -392,7 +392,7 @@ class DatabaseConnection {
      *
      * @return int|null
      */
-    public function cud($sql, ...$args) {
+    public function cud(string $sql, ...$args): ?int {
         if (is_null($this->dialect)) {
             $this->error = 'dialect is null [' . $sql . ']';
 
@@ -449,7 +449,7 @@ class DatabaseConnection {
      *
      * @return bool 只要不报错，即使只一行数据未删除也算成功.
      */
-    public function cudx($sql, ...$args) {
+    public function cudx(string $sql, ...$args): bool {
         $rst = $this->cud($sql, ...$args);
         if ($rst === null) {
             return false;
@@ -467,7 +467,7 @@ class DatabaseConnection {
      *
      * @return array
      */
-    public function query($sql, ...$args) {
+    public function query(string $sql, ...$args): array {
         $rst = $this->fetch($sql, ...$args);
         if ($rst) {
             $result = $rst->fetchAll(\PDO::FETCH_ASSOC);
@@ -487,7 +487,7 @@ class DatabaseConnection {
      *
      * @return null|\PDOStatement
      */
-    public function fetch($sql, ...$args) {
+    public function fetch(string $sql, ...$args): ?\PDOStatement {
         if (is_null($this->dialect)) {
             $this->error = 'dialect is null. [' . $sql . ']';
 
@@ -544,7 +544,7 @@ class DatabaseConnection {
      *
      * @return array
      */
-    public function queryOne($sql, ...$args) {
+    public function queryOne(string $sql, ...$args): array {
         if (is_null($this->dialect)) {
             $this->error = 'cannot connect to the database';
 
@@ -571,7 +571,7 @@ class DatabaseConnection {
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function select(...$fields) {
+    public function select(...$fields): Query {
         $sql = new Query(...$fields);
         $sql->setDialect($this->dialect);
 
@@ -585,7 +585,7 @@ class DatabaseConnection {
      *
      * @return \wulaphp\db\sql\UpdateSQL
      */
-    public function update(...$table) {
+    public function update(...$table): UpdateSQL {
         $sql = new UpdateSQL($table);
         $sql->setDialect($this->dialect);
 
@@ -595,11 +595,17 @@ class DatabaseConnection {
     /**
      * 删除.
      *
+     * @param string $table 表名.
+     * @param string $alias 别名.
+     *
      * @return \wulaphp\db\sql\DeleteSQL
      */
-    public function delete() {
+    public function delete(?string $table = null, ?string $alias = null): DeleteSQL {
         $sql = new DeleteSQL();
         $sql->setDialect($this->dialect);
+        if ($table) {
+            $sql->from($table, $alias);
+        }
 
         return $sql;
     }
@@ -612,7 +618,7 @@ class DatabaseConnection {
      *
      * @return \wulaphp\db\sql\InsertSQL
      */
-    public function insert(array $data, $batch = false) {
+    public function insert(array $data, bool $batch = false): InsertSQL {
         $sql = new InsertSQL($data, $batch);
         $sql->setDialect($this->dialect);
 
@@ -626,7 +632,7 @@ class DatabaseConnection {
      *
      * @return \wulaphp\db\sql\InsertSQL
      */
-    public function inserts(array $datas) {
+    public function inserts(array $datas): InsertSQL {
         return $this->insert($datas, true);
     }
 
@@ -637,7 +643,7 @@ class DatabaseConnection {
      *
      * @return string
      */
-    public function getTableName($name) {
+    public function getTableName(string $name): string {
         if ($this->dialect) {
             return $this->dialect->getTableName($name);
         }
