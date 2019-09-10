@@ -11,11 +11,9 @@
 namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanMonitoredTask;
-use wulaphp\artisan\GmTask;
 use wulaphp\artisan\GmWorker;
 
 class GearmanWorkerCommand extends ArtisanMonitoredTask {
-    use GmTask;
     private $func;
     private $file;
     private $isScript = false;
