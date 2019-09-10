@@ -8,6 +8,7 @@
  */
 
 use wulaphp\app\App;
+use wulaphp\app\Extension;
 use wulaphp\hook\Alter;
 use wulaphp\hook\Handler;
 
@@ -307,14 +308,26 @@ function __rt_real_hook(string $hook): string {
 
 // scan hook handlers
 function __rt_scan_hook(string $hook, string $suffix) {
-    static $hooks = [], $modules = null;
+    static $hooks = [], $modules = null, $exts = null;
     if (!$modules || !defined('WULA_BOOTSTRAPPED')) {
         $modules = App::modules('hasHooks');
+        $exts    = Extension::getHooks();
     }
     if (!isset($hooks[ $hook ])) {
         $cls = str_replace(['\\', '/', '-', '_', '.'], '', ucwords($hook, '\\/-_.')) . $suffix;
         foreach ($modules as $m) {
             $mcls = $m->getNamespace() . '\\hooks\\' . $cls;
+            if (class_exists($mcls)) {
+                $impl = new $mcls();
+                if ($impl instanceof Handler) {
+                    bind($hook, [$impl, 'handle'], $impl->getPriority(), $impl->getAcceptArgs(), false);
+                } else if ($impl instanceof Alter) {
+                    bind($hook, [$impl, 'alter'], $impl->getPriority(), $impl->getAcceptArgs(), false);
+                }
+            }
+        }
+        foreach ($exts as $ns) {
+            $mcls = $ns . $cls;
             if (class_exists($mcls)) {
                 $impl = new $mcls();
                 if ($impl instanceof Handler) {

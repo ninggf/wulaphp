@@ -2,19 +2,22 @@
 
 namespace wulaphp\app;
 
-use wulaphp\util\Annotation;
-
 abstract class Extension {
-    public    $clzName;
-    public    $reflection;
-    protected $currentVersion;
-    protected $bound = false;
-    protected $path;
+    public         $clzName;
+    public         $reflection;
+    protected      $currentVersion;
+    protected      $bound = false;
+    protected      $path;
+    protected      $namespace;
+    private static $hooks = [];
 
     public function __construct() {
-        $this->reflection     = $ref = new \ReflectionObject($this);
-        $this->path           = dirname($ref->getFileName());
-        $this->clzName        = get_class($this);
+        $this->reflection = $ref = new \ReflectionObject($this);
+        $this->path       = dirname($ref->getFileName());
+        $this->clzName    = get_class($this);
+        $ns               = explode('\\', $this->clzName);
+        array_pop($ns);
+        $this->namespace      = implode('\\', $ns);
         $vs                   = $this->getVersionList();
         $this->currentVersion = array_pop(array_keys($vs));
     }
@@ -53,32 +56,8 @@ abstract class Extension {
             return;
         }
         $this->bound = true;
-
-        // 批量绑定
-        $this->bind();
-        $ms = $this->reflection->getMethods(\ReflectionMethod::IS_STATIC);
-        foreach ($ms as $m) {
-            if (!$m->isPublic()) {
-                continue;
-            }
-            $annotation = new Annotation($m);
-            $bind       = $annotation->getArray('bind');
-            if ($bind) {
-                $name     = $m->getName();
-                $argc     = $m->getNumberOfParameters();
-                $priority = isset($bind[1]) ? intval($bind[1]) : 10;
-                bind($bind[0], [$this->clzName, $name], $priority, $argc);
-            } else {
-                $filter = $annotation->getArray('filter');
-                if ($filter) {
-                    $name = $m->getName();
-                    $argc = $m->getNumberOfParameters();
-                    if ($argc > 0) {
-                        $priority = isset($filter[1]) ? intval($filter[1]) : 10;
-                        bind($filter[0], [$this->clzName, $name], $priority, $argc);
-                    }
-                }
-            }
+        if (is_dir($this->path . DS . 'hooks')) {
+            self::$hooks[] = $this->namespace . '\\hooks\\';
         }
     }
 
@@ -88,15 +67,17 @@ abstract class Extension {
         return $v;
     }
 
-    /**
-     * 批量事件处理器注册.
-     */
-    protected function bind() {
+    public final static function getHooks() {
+        return self::$hooks;
+    }
+
+    public function getDescription() {
+        return '';
+    }
+
+    public function getHomePageURL() {
+        return '';
     }
 
     public abstract function getName();
-
-    public abstract function getDescription();
-
-    public abstract function getHomePageURL();
 }

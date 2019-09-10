@@ -13,7 +13,7 @@ namespace tests\Tests\common;
 use PHPUnit\Framework\TestCase;
 
 class MyHook {
-    public function testonAdd($i, $j) {
+    public function testOnAdd($i, $j) {
         return $i * 2 + $j;
     }
 }
@@ -93,6 +93,8 @@ class PluginTest extends TestCase {
         self::assertEquals(6, $var);
         $var = apply_filter('test\add', 2, 3, 4);
         self::assertEquals(9, $var);
+        $var = apply_filter('test.sub', 4, 3);
+        self::assertEquals(1, $var);
     }
 
     public static function commononAdd($a, $b) {
