@@ -43,7 +43,7 @@ services:
     volumes:
       - "./storage/mysql:/var/lib/mysql"
     environment:
-      MYSQL_ROOT_PASSWORD:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
   redis:
     container_name: wula_edis
     image: redis:4.0.11
