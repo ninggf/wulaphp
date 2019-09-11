@@ -76,6 +76,7 @@ class MonitorService extends Service {
         $this->initSignal();
         $this->output('.', false);
         $this->output($this->color->str('Done', 'green'));
+        $this->output('');
     }
 
     public function __destruct() {

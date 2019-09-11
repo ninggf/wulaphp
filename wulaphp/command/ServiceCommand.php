@@ -104,6 +104,7 @@ class ServiceCommand extends ArtisanCommand {
             if ($rtn) {
                 $this->output($this->getStatus($rtn['status']));
             }
+            $this->output('');
         } else {
             $config   = App::config('service', true);
             $bind     = $config->get('bind', 'unix:' . TMP_PATH . 'service.sock');
@@ -124,7 +125,7 @@ class ServiceCommand extends ArtisanCommand {
                     $rtn = @socket_connect($sock, $sockFile);
                     if (!$rtn) {
                         $error_no = socket_last_error();
-                        if ($error_no == 61 || $error_no == 2) {
+                        if ($error_no == 61 || $error_no == 2 || $error_no = 111) {
                             @unlink($sockFile);
                         }
                         unset($sock);
