@@ -282,20 +282,23 @@ class ServiceCommand extends ArtisanCommand {
         $user     = aryget('user', $cfg);
         $group    = aryget('group', $cfg);
         $verbose  = aryget('verbose', $cfg, 'vvv');
+        $bind     = aryget('bind',$cfg,'unix:'.STORAGE_DIR.'/tmp/service.sock');
         $services = aryget('services', $cfg, []);
 
         $this->output($this->cell([
-            ['Verbose', 20],
-            ['User', 16],
-            ['Group', 16]
+            ['Verbose', 10],
+            ['User', 10],
+            ['Group', 10],
+            ['Bind',50]
         ]));
 
         $this->output(str_pad('-', 80, '-'));
         $this->output($this->cell([
-            [$verbose, 20],
-            [$user, 16],
-            [$group, 16]
-        ]));
+            [$verbose, 10],
+            [$user, 10],
+            [$group, 10]
+        ]),false);
+        $this->output($bind);
 
         $this->output(str_pad('=', 80, '='));
 
