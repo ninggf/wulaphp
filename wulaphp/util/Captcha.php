@@ -100,12 +100,12 @@ class Captcha {
      *
      * @param string $sessionName
      */
-    public function __construct(string $sessionName = 'auth_code') {
-        $this->setCode(null);
-        $this->setMolestation(null);
-        $this->setBgColor(null);
-        $this->setImage(null);
-        $this->setFont(null); // code, image 两部分必须在 font 之前定义
+    public function __construct($sessionName = 'auth_code') {
+        $this->setCode([]);
+        $this->setMolestation([]);
+        $this->setBgColor([]);
+        $this->setImage([]);
+        $this->setFont([]); // code, image 两部分必须在 font 之前定义
         $this->setSession($sessionName);
     }
 
@@ -185,7 +185,7 @@ class Captcha {
      *
      * @return \wulaphp\util\Captcha
      */
-    public function setSession(string $session) {
+    public function setSession($session) {
         if (!empty ($session)) {
             $this->session = $session;
         } else {
@@ -325,7 +325,7 @@ class Captcha {
      *
      * @return string|null
      */
-    public function paint(string $filename = '') {
+    public function paint($filename = '') {
         $colors = [];
         // 创建图像
         $im = imagecreatetruecolor($this->image ['width'], $this->image ['height']);
@@ -415,7 +415,7 @@ class Captcha {
      *
      * @return boolean 正确返回 true
      */
-    public function validate(string $input, bool $is_match_case = true, bool $remove = true) {
+    public function validate($input, $is_match_case = true, $remove = true) {
         if ($is_match_case) {
             $rst = strcmp($_SESSION [ $this->session ], md5($input)) == 0;
         } else {
@@ -509,7 +509,7 @@ class Captcha {
      *
      * @return mixed 错误时返回 false
      */
-    private function getImageType(string $extension) {
+    private function getImageType($extension) {
         switch (strtolower($extension)) {
             case 'png' :
                 $information ['mime'] = image_type_to_mime_type(IMAGETYPE_PNG);
