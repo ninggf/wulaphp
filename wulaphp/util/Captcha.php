@@ -353,12 +353,11 @@ class Captcha {
             } else {
                 $font_color = $colors[ $colorId ];
             }
-            //imagerectangle($im, $current_left, $current_top - $this->font['size'], $current_left + $this->font['size'], $current_top, $font_color);
-            if ($code[ $i ]['angle'] == 180) {
+            if ($code[ $i ]['angle1'] == 180) {
                 $reflect[] = 1;
                 $top       = $current_top - $this->font['size'] + 5;
                 $left      = $current_left + $this->font['size'] + 5;
-                imagettftext($im, $this->font ['size'], 180, $left, $top, $font_color, $this->font ['file'], $code [ $i ] ['char']);
+                imagettftext($im, $this->font ['size'], $code [ $i ] ['angle'], $left, $top, $font_color, $this->font ['file'], $code [ $i ] ['char']);
             } else {
                 $reflect[] = 0;
                 imagettftext($im, $this->font ['size'], $code [ $i ] ['angle'], $current_left, $current_top, $font_color, $this->font ['file'], $code [ $i ] ['char']);
@@ -476,20 +475,22 @@ class Captcha {
         $code = [];
         $i    = 0;
         while ($i < $this->code ['length']) {
-            $index                = mt_rand(0, count($array_allow) - 1);
-            $code [ $i ] ['char'] = $array_allow [ $index ];
+            $index                  = mt_rand(0, count($array_allow) - 1);
+            $code [ $i ] ['char']   = $array_allow [ $index ];
+            $code [ $i ] ['angle1'] = 0;
             if ($this->code ['deflect']) {
                 $code [ $i ] ['angle'] = mt_rand(-30, 30);
             } else {
                 $code [ $i ] ['angle'] = 0;
             }
             if ($this->code['reflect'] && rand(0, 99) > 50) {
-                $code [ $i ] ['angle'] = 180;
+                $code [ $i ] ['angle1'] = 180;
+                $code [ $i ] ['angle']  = rand(150, 210);
             }
             if ($this->code ['multicolor']) {
-                $code [ $i ] ['color'] ['r'] = mt_rand(0, 255);
-                $code [ $i ] ['color'] ['g'] = mt_rand(0, 255);
-                $code [ $i ] ['color'] ['b'] = mt_rand(0, 255);
+                $code [ $i ] ['color'] ['r'] = mt_rand(50, 255);
+                $code [ $i ] ['color'] ['g'] = mt_rand(50, 255);
+                $code [ $i ] ['color'] ['b'] = mt_rand(50, 255);
             } else {
                 $code [ $i ] ['color'] ['r'] = $this->fg_color ['r'];
                 $code [ $i ] ['color'] ['g'] = $this->fg_color ['g'];
