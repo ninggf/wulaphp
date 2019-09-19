@@ -101,11 +101,11 @@ class Captcha {
      * @param string $sessionName
      */
     public function __construct(string $sessionName = 'auth_code') {
-        $this->setCode(null);
-        $this->setMolestation(null);
-        $this->setBgColor(null);
-        $this->setImage(null);
-        $this->setFont(null); // code, image 两部分必须在 font 之前定义
+        $this->setCode();
+        $this->setMolestation();
+        $this->setBgColor();
+        $this->setImage();
+        $this->setFont(); // code, image 两部分必须在 font 之前定义
         $this->setSession($sessionName);
     }
 
@@ -146,7 +146,7 @@ class Captcha {
      *
      * @return \wulaphp\util\Captcha
      */
-    public function setCode(array $code) {
+    public function setCode(array $code = null) {
         $this->code = [
             'characters' => 'A-H,K-N,P-R,U-Y,2-4,6-9',
             'length'     => 4,
@@ -202,7 +202,7 @@ class Captcha {
      *
      * @return \wulaphp\util\Captcha
      */
-    public function setBgColor(array $color) {
+    public function setBgColor(array $color = null) {
         if ($this->isColor($color)) {
             $this->bg_color = $color;
         } else {
@@ -228,7 +228,7 @@ class Captcha {
      *
      * @return \wulaphp\util\Captcha
      */
-    public function setMolestation(array $molestation) {
+    public function setMolestation(array $molestation = null) {
         $this->molestation = ['type' => 'point', 'density' => 'normal'];
         if (is_array($molestation)) {
             if (isset ($molestation ['type']) && in_array($molestation['type'], ['line', 'point', 'both'])) {
@@ -253,7 +253,7 @@ class Captcha {
      *
      * @return \wulaphp\util\Captcha
      */
-    public function setFont(array $font) {
+    public function setFont(array $font = null) {
         $this->font = [
             'size' => 12,
             'file' => __DIR__ . '/fonts/arial.ttf',
@@ -284,7 +284,7 @@ class Captcha {
      *
      * @return \wulaphp\util\Captcha
      */
-    public function setImage(array $image) {
+    public function setImage(array $image = null) {
         $information = $this->getImageType('png');
         $this->image = [
             'type'   => 'png',
@@ -306,11 +306,13 @@ class Captcha {
             } else {
                 $this->image['alpha'] = false;
             }
-            $information = $this->getImageType($image ['type']);
-            if (is_array($information)) {
-                $this->image['type']  = $image['type'];
-                $this->image ['mime'] = $information ['mime'];
-                $this->image ['func'] = $information ['func'];
+            if (isset($image['type'])) {
+                $information = $this->getImageType($image ['type']);
+                if (is_array($information)) {
+                    $this->image['type']  = $image['type'];
+                    $this->image ['mime'] = $information ['mime'];
+                    $this->image ['func'] = $information ['func'];
+                }
             }
         }
 
@@ -436,7 +438,7 @@ class Captcha {
      *
      * @return \wulaphp\util\Captcha
      */
-    private function setFgColor(array $color) {
+    private function setFgColor(array $color = null) {
         if ($this->isColor($color)) {
             $this->fg_color = $color;
         } else {
@@ -618,7 +620,7 @@ class Captcha {
      *
      * @return bool
      */
-    private function isColor($color) {
+    private function isColor(array $color = null) {
         return is_array($color) && is_numeric($color ['r']) && is_numeric($color ['g']) && is_numeric($color ['b']) && ($color ['r'] >= 0 && $color ['r'] <= 255) && ($color ['g'] >= 0 && $color ['g'] <= 255) && ($color ['b'] >= 0 && $color ['b'] <= 255);
     }
 
