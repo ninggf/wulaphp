@@ -168,7 +168,6 @@ class Captcha {
             }
             if (is_bool($code ['reflect'])) {
                 $this->code ['reflect'] = $code['reflect'];
-                $this->code ['deflect'] = false;
             }
             if (is_bool($code ['multicolor'])) {
                 $this->code ['multicolor'] = $code['multicolor'];
@@ -480,7 +479,7 @@ class Captcha {
             $index                = mt_rand(0, count($array_allow) - 1);
             $code [ $i ] ['char'] = $array_allow [ $index ];
             if ($this->code ['deflect']) {
-                $code [ $i ] ['angle'] = mt_rand(-45, 45);
+                $code [ $i ] ['angle'] = mt_rand(-30, 30);
             } else {
                 $code [ $i ] ['angle'] = 0;
             }
