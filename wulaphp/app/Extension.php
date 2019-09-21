@@ -20,8 +20,8 @@ abstract class Extension {
         $ns               = explode('\\', $this->clzName);
         array_pop($ns);
         $this->namespace      = implode('\\', $ns);
-        $vs                   = $this->getVersionList();
-        $this->currentVersion = array_pop(array_keys($vs));
+        $vs                   = array_keys($this->getVersionList());
+        $this->currentVersion = array_pop($vs);
     }
 
     public function getCurrentVersion() {
