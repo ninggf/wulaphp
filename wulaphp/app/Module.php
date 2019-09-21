@@ -54,7 +54,7 @@ abstract class Module {
     /**
      * @return string 命名空间.
      */
-    public final function getNamespace() {
+    public final function getNamespace(): string {
         return $this->namespace;
     }
 
@@ -64,7 +64,7 @@ abstract class Module {
      *
      * @return string 路径
      */
-    public final function getPath($file = null, $absolute = true) {
+    public final function getPath(?string $file = null, bool $absolute = true): string {
         if ($absolute) {
             return $this->path . ($file ? DS . $file : '');
         }
@@ -79,7 +79,7 @@ abstract class Module {
      *
      * @return string
      */
-    public final function getRelativePath($file = null) {
+    public final function getRelativePath(?string $file = null): string {
         return $file ? MODULE_DIR . DS . $this->dirname . DS . ($file ? $file : '') : $this->path . DS;
     }
 
@@ -88,21 +88,23 @@ abstract class Module {
      *
      * @param string $file
      *
-     * @return bool|string
+     * @return string
      */
-    public final function loadFile($file) {
+    public final function loadFile(string $file): ?string {
         $f = $this->getPath($file);
         if (is_file($f) && is_readable($f)) {
-            return @file_get_contents($f);
+            $cnt = file_get_contents($f);
+
+            return $cnt === false ? null : $cnt;
         }
 
-        return false;
+        return null;
     }
 
     /**
      * @return string 目录名
      */
-    public final function getDirname() {
+    public final function getDirname(): string {
         return $this->dirname;
     }
 
@@ -111,7 +113,7 @@ abstract class Module {
      *
      * @return string
      */
-    public final function getCurrentVersion() {
+    public final function getCurrentVersion(): string {
         return $this->currentVersion;
     }
 
@@ -131,7 +133,7 @@ abstract class Module {
      *
      * @return array
      */
-    public function info() {
+    public function info(): array {
         $info = get_object_vars($this);
         unset($info['reflection'], $info['clzName'], $info['bound']);
         $info['name']   = $this->getName();
@@ -181,7 +183,7 @@ abstract class Module {
      *
      * @return bool
      */
-    public function install($con, $kernel = 0) {
+    public function install(DatabaseConnection $con, int $kernel = 0) {
         return true;
     }
 
