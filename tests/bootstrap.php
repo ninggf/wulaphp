@@ -22,8 +22,8 @@ if (isset($_REQUEST['_PRO_'])) {
     define('APP_MODE', 'pro');
 }
 
-if (defined('PHPUNIT_COMPOSER_INSTALL')) {
-    require APPROOT . '../bootstrap.php';
-} else {
+if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
+    # require APPROOT . '../bootstrap.php';
+    # } else {
     require APPROOT . '../vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 }
