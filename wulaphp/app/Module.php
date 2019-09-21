@@ -46,11 +46,9 @@ abstract class Module {
         $this->hookPath         = $this->path . DS . 'hooks' . DS;
         $this->hasHooks         = is_dir($this->hookPath);
         $this->dirname          = basename($this->path);
-        $vs                     = $this->getVersionList();
-        $keys                   = array_keys($vs);
-        $this->currentVersion   = array_pop($keys);
+        $vs                     = array_keys($this->getVersionList());
+        $this->currentVersion   = array_pop($vs);
         $this->installedVersion = $this->currentVersion;
-        unset($ns, $ann, $vs, $keys);
     }
 
     /**
