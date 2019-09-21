@@ -295,7 +295,7 @@ class DatabaseConnection {
      *
      * @return mixed|null  事务过程函数的返回值或null
      */
-    public function trans(\Closure $trans, &$error = null, ILock $lock = null) {
+    public function trans(\Closure $trans, ?string &$error = null, ?ILock $lock = null) {
         try {
             $rst = $this->start();
 
@@ -314,9 +314,9 @@ class DatabaseConnection {
                     }
                 }
                 if ($lock) {
-                    $rst = $trans($this, $data);
+                    $rst = $trans(...[$this, $data]);
                 } else {
-                    $rst = $trans($this);
+                    $rst = $trans(...[$this]);
                 }
                 if (empty($rst)) {
                     $this->rollback();
