@@ -15,14 +15,11 @@
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
+@error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 define('WULA_STARTTIME', microtime(true));
 # 项目根目录检测
 if (!defined('APPROOT')) {
-    if (defined('PHPUNIT_COMPOSER_INSTALL')) {
-        return;
-    } else {
-        !trigger_error('define "APPROOT" first', E_USER_ERROR) or exit(1);
-    }
+    !trigger_error('define "APPROOT" first', E_USER_ERROR) or exit(1);
 }
 $gzip = @ini_get('zlib.output_compression');
 if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib')) {
@@ -34,7 +31,6 @@ define('WULA_VERSION', '3.0.7');
 define('WULA_RELEASE', 'RC');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
-@error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 if (version_compare('7.1', phpversion(), '>')) {
     !trigger_error(sprintf('Your php version is %s,but wulaphp required PHP 7.1 or higher', phpversion()), E_USER_ERROR) or exit(1);
 }
@@ -54,6 +50,7 @@ defined('TMP_DIR') or define('TMP_DIR', 'tmp');
 defined('LOGS_DIR') or define('LOGS_DIR', 'logs');
 defined('WWWROOT') or define('WWWROOT', APPROOT . PUBLIC_DIR . DIRECTORY_SEPARATOR);
 defined('STORAGE_PATH') or define('STORAGE_PATH', APPROOT . STORAGE_DIR . DS);
+defined('DEFAULT_MODULE') or define('DEFAULT_MODULE', 'app');
 define('WEB_ROOT', WWWROOT);//alias of WWWROOT
 define('EXTENSIONS_PATH', APPROOT . EXTENSION_DIR . DS);
 define('LIBS_PATH', APPROOT . LIBS_DIR . DS);

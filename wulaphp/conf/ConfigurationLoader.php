@@ -44,20 +44,12 @@ class ConfigurationLoader extends BaseConfigurationLoader {
                 $debug = DEBUG_OFF;
             }
             define('DEBUG', $debug);
-            if (DEBUG == DEBUG_OFF) {
-                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING);
-                @ini_set('display_errors', 0);
-            } else if (DEBUG == DEBUG_DEBUG) {
-                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE);
-                @ini_set('display_errors', 1);
-            } else {
-                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
-                @ini_set('display_errors', 1);
-            }
-            error_reporting(KS_ERROR_REPORT_LEVEL);
         }
 
-        return $config;
+        // 再给用户一次机会
+        $cfg = function_exists('apply_filter') ? apply_filter('on_load_' . $name . '_config', $config) : $config;
+
+        return $cfg instanceof Configuration ? $cfg : $config;
     }
 
     /**

@@ -81,6 +81,17 @@ class App {
             $configLoader->beforeLoad();
             $this->configs ['default'] = $configLoader->loadConfig();
             $configLoader->postLoad();
+            if (DEBUG == DEBUG_OFF) {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING);
+                @ini_set('display_errors', 0);
+            } else if (DEBUG == DEBUG_DEBUG) {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE);
+                @ini_set('display_errors', 1);
+            } else {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+                @ini_set('display_errors', 1);
+            }
+            error_reporting(KS_ERROR_REPORT_LEVEL);
             if (!defined('TIMEZONE')) {
                 $timezone = $this->configs ['default']->get('timezone', 'Asia/Shanghai');
                 // 时区设置
