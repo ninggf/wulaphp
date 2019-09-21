@@ -40,7 +40,7 @@ class RedisLock {
                 }
                 $redis->setTimeout($lock, $timeout);
                 try {
-                    return $callback($redis);
+                    return $callback(...[$redis]);
                 } catch (\Exception $e) {
                     log_warn($e->getMessage(), 'redis_lock');
                 } finally {
@@ -85,7 +85,7 @@ class RedisLock {
                 }
                 $redis->setTimeout($lock, $timeout * 2);//防止死锁
                 try {
-                    return $callback($wait, $redis);
+                    return $callback(...[$wait, $redis]);
                 } catch (\Exception $e) {
                     log_warn($e->getMessage(), 'redis_lock');
 

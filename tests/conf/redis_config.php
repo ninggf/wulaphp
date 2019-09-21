@@ -13,5 +13,5 @@ return [
     'port'    => env('redis.port', 6379),
     'db'      => env('redis.db', 8),
     'auth'    => env('redis.auth', ''),
-    'timeout' => env('redis.timeout', 5)
+    'timeout' => env('redis.timeout', 15)
 ];

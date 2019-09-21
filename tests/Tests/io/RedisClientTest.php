@@ -44,14 +44,17 @@ class RedisClientTest extends TestCase {
         $redis->del('testK');
     }
 
+    /**
+     * @depends testGet
+     */
     public function testRedisLockbLock() {
         $wait1 = true;
-        $rst   = RedisLock::lock('lock-abc', function ($wait, $redis) use (&$wait1) {
+        $rst   = RedisLock::lock('lock-abc', function ($wait) use (&$wait1) {
             $wait1 = $wait;
 
             return 'every this is ok';
         });
-        self::assertEquals('every this is ok', $rst);
+        self::assertEquals('every this is ok', $rst, log_last_msg());
         self::assertTrue(!$wait1);
     }
 
@@ -59,16 +62,16 @@ class RedisClientTest extends TestCase {
      * @depends testRedisLockbLock
      */
     public function testRedisLockbLock1() {
-        $locked = RedisLock::ulock('lock-abc', 2, $wait);
+        $locked = RedisLock::ulock('lock-abc', 1, $wait);
         self::assertTrue($locked);
         self::assertTrue(!$wait);
         $wait1 = true;
-        $rst   = RedisLock::lock('lock-abc', function ($wait, $redis) use (&$wait1) {
+        $rst   = RedisLock::lock('lock-abc', function ($wait) use (&$wait1) {
             $wait1 = $wait;
 
             return 'every this is ok';
         });
-        self::assertEquals('every this is ok', $rst);
+        self::assertEquals('every this is ok', $rst, log_last_msg());
         self::assertTrue($wait1);
     }
 
@@ -76,32 +79,38 @@ class RedisClientTest extends TestCase {
      * @depends testRedisLockbLock1
      */
     public function testRedisLockbLock2() {
-        $locked = RedisLock::ulock('lock-abc', 2, $wait);
+        $locked = RedisLock::ulock('lock-abc', 1, $wait);
         self::assertTrue($locked);
         self::assertTrue(!$wait);
         RedisLock::release('lock-abc');
         $wait1 = true;
-        $rst   = RedisLock::lock('lock-abc', function ($wait, $redis) use (&$wait1) {
+        $rst   = RedisLock::lock('lock-abc', function ($wait) use (&$wait1) {
             $wait1 = $wait;
 
             return 'every this is ok';
         });
-        self::assertEquals('every this is ok', $rst);
+        self::assertEquals('every this is ok', $rst, log_last_msg());
         self::assertTrue(!$wait1);
     }
 
+    /**
+     * @depends testRedisLockbLock2
+     */
     public function testRedisLockbLock3() {
-        $locked = RedisLock::ulock('lock-abc1', 2, $wait);
+        $locked = RedisLock::ulock('lock-abc1', 1, $wait);
         self::assertTrue($locked);
         self::assertTrue(!$wait);
-        $rst = RedisLock::nblock('lock-abc1', function ($redis) {
+        $rst = RedisLock::nblock('lock-abc1', function () {
             return 'every this is ok';
         });
         self::assertNotTrue($rst);
     }
 
+    /**
+     * @depends testRedisLockbLock3
+     */
     public function testRedisLockbLock4() {
-        $locked = RedisLock::ulock('lock-abc2', 2, $wait);
+        $locked = RedisLock::ulock('lock-abc2', 1, $wait);
         self::assertTrue($locked);
         self::assertTrue(!$wait);
         $rst = RedisLock::unblock('lock-abc2');

@@ -178,10 +178,10 @@ function log_error(string $message, string $file = '') {
  *
  * @return string
  */
-function log_last_msg(): ?string {
+function log_last_msg(): string {
     global $_wula_last_msg;
 
-    return $_wula_last_msg;
+    return $_wula_last_msg ? $_wula_last_msg : '';
 }
 
 /**
