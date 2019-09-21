@@ -1,6 +1,6 @@
 language: php
 
-if: tag IS present
+if: tag IS present OR (branch = master AND env(TRAVIS_EVENT_TYPE) = cron)
 
 cache:
   directories:
