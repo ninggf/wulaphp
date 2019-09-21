@@ -24,12 +24,12 @@ php:
   - "7.1"
   - "7.2"
   - "7.3"
-  - hhvm
+  - nightly
 
 matrix:
   fast_finish: true
   allow_failures:
-    - php: hhvm
+    - php: nightly
 
 before_install:
   # disable xdebug if available
