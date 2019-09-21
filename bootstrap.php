@@ -19,7 +19,11 @@ use wulaphp\cache\RtCache;
 define('WULA_STARTTIME', microtime(true));
 # 项目根目录检测
 if (!defined('APPROOT')) {
-    trigger_error('define "APPROOT" first', E_USER_ERROR) or exit(1);
+    if (defined('PHPUNIT_COMPOSER_INSTALL')) {
+        return;
+    } else {
+        !trigger_error('define "APPROOT" first', E_USER_ERROR) or exit(1);
+    }
 }
 $gzip = @ini_get('zlib.output_compression');
 if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib')) {
