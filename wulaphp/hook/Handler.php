@@ -15,8 +15,8 @@ namespace wulaphp\hook;
  * @package wulaphp\hook
  */
 abstract class Handler {
-    private $acceptArgs = 1;
-    private $priority   = 10;
+    protected $acceptArgs = 0;
+    protected $priority   = 10;
 
     public final function getPriority(): int {
         return $this->priority;

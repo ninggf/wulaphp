@@ -95,6 +95,8 @@ class PluginTest extends TestCase {
         self::assertEquals(9, $var);
         $var = apply_filter('test.sub', 4, 3);
         self::assertEquals(1, $var);
+        $var = apply_filter('app\math\test.sub', 5, 3);
+        self::assertEquals(2, $var);
     }
 
     public static function commononAdd($a, $b) {

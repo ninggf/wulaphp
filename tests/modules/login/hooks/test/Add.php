@@ -8,14 +8,13 @@
  * file that was distributed with this source code.
  */
 
-namespace login\hooks;
+namespace login\hooks\test;
 
-use wulaphp\hook\Alter;
+use wulaphp\hook\Alter3;
 
-class TestAddAlter extends Alter {
-    protected $acceptArgs = 3;
+class Add extends Alter3 {
 
-    public function alter($value, ...$args) {
-        return $value + $args[0] + $args[1];
+    public function doAlter($value, $arg1, $arg2) {
+        return $value + $arg1 + $arg2;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Project:     Wulaphp: another mvc framework of php based on php 5.6.9+
+ * Project:     Wulaphp: another mvc framework of php based on php 7.1.+
  * File:        bootstrap.php
  *
  * 此文件用于引导wulaphp framework.
@@ -8,13 +8,14 @@
  * @link      https://www.wulaphp.com/
  * @author    leo <windywany@163.com>
  * @package   wulaphp
- * @version   2.0.0
+ * @version   3.0
  * @since     1.0.0
  */
 
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
+define('WULA_STARTTIME', microtime(true));
 # 项目根目录检测
 if (!defined('APPROOT')) {
     if (defined('PHPUNIT_COMPOSER_INSTALL')) {
@@ -26,11 +27,10 @@ if (!defined('APPROOT')) {
 $gzip = @ini_get('zlib.output_compression');
 if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib')) {
     @ini_set('zlib.output_compression', 1);
-    @ini_set('zlib.output_compression_level', 5);
+    @ini_set('zlib.output_compression_level', 7);
 }
 @ob_start();
-define('WULA_STARTTIME', microtime(true));
-define('WULA_VERSION', '3.0.3');
+define('WULA_VERSION', '3.0.7');
 define('WULA_RELEASE', 'RC');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
@@ -102,13 +102,10 @@ if (!function_exists('mb_internal_encoding')) {
     !trigger_error('mb_string extension is required!') or exit(1);
 }
 if (!function_exists('json_decode')) {
-    !@trigger_error('json extension is required!') or exit(1);
+    !trigger_error('json extension is required!') or exit(1);
 }
 if (!function_exists('spl_autoload_register')) {
     !trigger_error('SPL extension is required!') or exit(1);
-}
-if (!function_exists('curl_init')) {
-    !trigger_error('curl extension is required!') or exit(1);
 }
 // 全局环境配置
 @ini_set('session.bug_compat_warn', 0);
@@ -124,9 +121,6 @@ global $_wula_namespace_classpath;
 $_wula_namespace_classpath [] = WULA_ROOT;
 if (is_dir(EXTENSIONS_PATH)) {
     $_wula_namespace_classpath [] = EXTENSIONS_PATH;
-}
-if (is_dir(WEB_ROOT . VENDOR_DIR)) {
-    $_wula_namespace_classpath [] = WEB_ROOT . VENDOR_DIR . DS;
 }
 $_wula_namespace_classpath [] = WULA_ROOT . 'vendors' . DS;
 $_wula_classpath []           = WULA_ROOT . 'vendors' . DS;
@@ -205,8 +199,5 @@ if (is_file(LIBS_PATH . 'common.php')) {
 }
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
-try {
-    fire('wula\bootstrapped');
-} catch (Exception $e) {
-}
+fire('wula\bootstrapped');
 //end of bootstrap.php

@@ -8,12 +8,12 @@
  * file that was distributed with this source code.
  */
 
-namespace login\hooks;
+namespace login\hooks\passport;
 
 use login\classes\VipTestPassport;
 use wulaphp\hook\Alter;
 
-class PassportNewViptestPassportAlter extends Alter {
+class NewViptestPassport extends Alter {
     public function alter($value, ...$args) {
         $passport = new VipTestPassport();
 

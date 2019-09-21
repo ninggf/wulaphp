@@ -140,7 +140,7 @@ function unbind_all(string $hook, $priority = false): bool {
  */
 function fire(string $hook, $arg = '') {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
-    __rt_scan_hook($hook, 'Handler'); // 懒加载
+    __rt_scan_hook($hook); // 懒加载
     $hook = __rt_real_hook($hook);
     if (!isset ($__ksg_rtk_hooks [ $hook ])) { // 没有该HOOK的回调
         return '';
@@ -202,7 +202,7 @@ function fire(string $hook, $arg = '') {
  */
 function apply_filter(string $filter, $value) {
     global $__ksg_rtk_hooks, $__ksg_sorted_hooks;
-    __rt_scan_hook($filter, 'Alter'); // 懒加载
+    __rt_scan_hook($filter); // 懒加载
     $filter = __rt_real_hook($filter);
 
     if (!isset ($__ksg_rtk_hooks [ $filter ])) {
@@ -307,16 +307,19 @@ function __rt_real_hook(string $hook): string {
 }
 
 // scan hook handlers
-function __rt_scan_hook(string $hook, string $suffix) {
+function __rt_scan_hook(string $hook) {
     static $hooks = [], $modules = null, $exts = null;
     if (!$modules || !defined('WULA_BOOTSTRAPPED')) {
         $modules = App::modules('hasHooks');
         $exts    = Extension::getHooks();
     }
     if (!isset($hooks[ $hook ])) {
-        $cls = str_replace(['\\', '/', '-', '_', '.'], '', ucwords($hook, '\\/-_.')) . $suffix;
+        $clzs   = preg_split('#[/\\\\]#', $hook);
+        $cls    = array_pop($clzs);
+        $clzs[] = str_replace(['-', '_', '.'], '', ucwords($cls, '-_.'));
+        $cls    = implode('\\', $clzs);
         foreach ($modules as $m) {
-            $mcls = $m->getNamespace() . '\\hooks\\' . $cls;
+            $mcls = $m->getNamespace() . '\hooks\\' . $cls;
             if (class_exists($mcls)) {
                 $impl = new $mcls();
                 if ($impl instanceof Handler) {

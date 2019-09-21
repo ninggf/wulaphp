@@ -237,8 +237,11 @@ namespace {
      * @return mixed
      */
     function env($key, $default = '') {
+        global $_ENV;
         static $envs = null;
-
+        if (isset($_ENV[ $key ])) {
+            $default = $_ENV[ $key ];
+        }
         if ($envs === null) {
             $evnf = CONFIG_PATH . '.env';
             $ckey = 'rt@.env';

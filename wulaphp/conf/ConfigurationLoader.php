@@ -14,8 +14,8 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      * 加载配置.
      * {@inheritDoc}
      *
-     * @see \wulaphp\conf\BaseConfigurationLoader::loadConfig()
      * @return \wulaphp\conf\Configuration
+     * @see \wulaphp\conf\BaseConfigurationLoader::loadConfig()
      */
     public function loadConfig($name = 'default') {
         $config = new Configuration($name);
@@ -37,10 +37,27 @@ class ConfigurationLoader extends BaseConfigurationLoader {
             }
         }
         unset ($_wula_config_file, $wula_cfg_fiels);
-        // 再给用户一次机会
-        $cfg = function_exists('apply_filter') ? apply_filter('on_load_' . $name . '_config', $config) : $config;
 
-        return $cfg instanceof Configuration ? $cfg : $config;
+        if ($name == 'default' && !defined('DEBUG')) {
+            $debug = intval($config->get('debug', DEBUG_ERROR));
+            if ($debug > 1000 || $debug < 0) {
+                $debug = DEBUG_OFF;
+            }
+            define('DEBUG', $debug);
+            if (DEBUG == DEBUG_OFF) {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING);
+                @ini_set('display_errors', 0);
+            } else if (DEBUG == DEBUG_DEBUG) {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE);
+                @ini_set('display_errors', 1);
+            } else {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+                @ini_set('display_errors', 1);
+            }
+            error_reporting(KS_ERROR_REPORT_LEVEL);
+        }
+
+        return $config;
     }
 
     /**
@@ -90,9 +107,6 @@ class ConfigurationLoader extends BaseConfigurationLoader {
         }
         unset ($_wula_config_file, $wula_cfg_fiels);
 
-        // 再给用户一次机会
-        $cfg = function_exists('apply_filter') ? apply_filter('on_load_' . $name . '_dbconfig', $config) : $config;
-
-        return $cfg instanceof DatabaseConfiguration ? $cfg : $config;
+        return $config;
     }
 }

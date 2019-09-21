@@ -10,8 +10,6 @@
 
 define('DEBUG', 100);
 
-define('DEFAULT_MODULE', 'app');
-
 define('ALIAS_ENABLED', true);
 
 define('PUBLIC_DIR', 'www');
@@ -22,8 +20,6 @@ if (isset($_REQUEST['_PRO_'])) {
     define('APP_MODE', 'pro');
 }
 
-if (defined('PHPUNIT_COMPOSER_INSTALL')) {
-    require APPROOT . '../bootstrap.php';
-} else {
-    require APPROOT . '../vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
+    include APPROOT . '../vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 }
