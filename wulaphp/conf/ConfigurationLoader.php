@@ -14,8 +14,8 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      * 加载配置.
      * {@inheritDoc}
      *
-     * @see \wulaphp\conf\BaseConfigurationLoader::loadConfig()
      * @return \wulaphp\conf\Configuration
+     * @see \wulaphp\conf\BaseConfigurationLoader::loadConfig()
      */
     public function loadConfig($name = 'default') {
         $config = new Configuration($name);
@@ -37,6 +37,15 @@ class ConfigurationLoader extends BaseConfigurationLoader {
             }
         }
         unset ($_wula_config_file, $wula_cfg_fiels);
+
+        if ($name == 'default' && !defined('DEBUG')) {
+            $debug = intval($config->get('debug', DEBUG_ERROR));
+            if ($debug > 1000 || $debug < 0) {
+                $debug = DEBUG_OFF;
+            }
+            define('DEBUG', $debug);
+        }
+
         // 再给用户一次机会
         $cfg = function_exists('apply_filter') ? apply_filter('on_load_' . $name . '_config', $config) : $config;
 
@@ -90,9 +99,6 @@ class ConfigurationLoader extends BaseConfigurationLoader {
         }
         unset ($_wula_config_file, $wula_cfg_fiels);
 
-        // 再给用户一次机会
-        $cfg = function_exists('apply_filter') ? apply_filter('on_load_' . $name . '_dbconfig', $config) : $config;
-
-        return $cfg instanceof DatabaseConfiguration ? $cfg : $config;
+        return $config;
     }
 }

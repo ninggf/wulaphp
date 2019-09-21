@@ -309,16 +309,19 @@ function __rt_real_hook($hook) {
 }
 
 // scan hook handlers
-function __rt_scan_hook($hook, $suffix) {
+function __rt_scan_hook($hook) {
     static $hooks = [], $modules = [], $exts = [];
     if (defined('WULA_BOOTSTRAPPED') && !$modules) {
         $modules = App::modules('hasHooks');
         $exts    = Extension::getHooks();
     }
     if (!isset($hooks[ $hook ])) {
-        $cls = str_replace(['\\', '/', '-', '_', '.'], '', ucwords($hook, '\\/-_.')) . $suffix;
+        $clzs   = preg_split('#[/\\\\]#', $hook);
+        $cls    = array_pop($clzs);
+        $clzs[] = str_replace(['-', '_', '.'], '', ucwords($cls, '-_.'));
+        $cls    = implode('\\', $clzs);
         foreach ($modules as $m) {
-            $mcls = $m->getNamespace() . '\\hooks\\' . $cls;
+            $mcls = $m->getNamespace() . '\hooks\\' . $cls;
             if (class_exists($mcls)) {
                 $impl = new $mcls();
                 if ($impl instanceof Handler) {

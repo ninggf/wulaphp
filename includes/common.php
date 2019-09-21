@@ -65,12 +65,12 @@ function param($pos = 0, $default = '') {
 /**
  * 取数据.
  *
- * @see rqst
- *
  * @param string $name
  * @param mixed  $default
  *
  * @return mixed
+ * @see rqst
+ *
  */
 function arg($name, $default = '') {
     global $__rqst;
@@ -143,7 +143,7 @@ function log_debug($message, $file = '') {
  * @param string $file
  */
 function log_info($message, $file = '') {
-    $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
     log_message($message, $trace, DEBUG_INFO, $file);
 }
 
@@ -165,7 +165,7 @@ function log_warn($message, $file = '') {
  * @param string $file
  */
 function log_error($message, $file = '') {
-    $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, $trace, DEBUG_ERROR, $file);
 }
 
@@ -177,7 +177,7 @@ function log_error($message, $file = '') {
 function log_last_msg() {
     global $_wula_last_msg;
 
-    return $_wula_last_msg;
+    return $_wula_last_msg ? $_wula_last_msg : '';
 }
 
 /**

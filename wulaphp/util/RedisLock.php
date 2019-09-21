@@ -38,9 +38,9 @@ class RedisLock {
                 if ($cnt != 1) {
                     return false;
                 }
-                $redis->setTimeout($lock, $timeout);
+                $redis->expire($lock, $timeout);
                 try {
-                    return $callback($redis);
+                    return $callback(...[$redis]);
                 } catch (\Exception $e) {
                     log_warn($e->getMessage(), 'redis_lock');
                 } finally {
@@ -83,9 +83,9 @@ class RedisLock {
                 if ($cnt != 1) {
                     return false;
                 }
-                $redis->setTimeout($lock, $timeout * 2);//防止死锁
+                $redis->expire($lock, $timeout * 2);//防止死锁
                 try {
-                    return $callback($wait, $redis);
+                    return $callback(...[$wait, $redis]);
                 } catch (\Exception $e) {
                     log_warn($e->getMessage(), 'redis_lock');
 
@@ -127,7 +127,7 @@ class RedisLock {
                     }
                 }
                 if ($cnt == 1) {
-                    $redis->setTimeout($lock, $timeout * 2);//设置超时，防止死锁
+                    $redis->expire($lock, $timeout * 2);//设置超时，防止死锁
 
                     return true;
                 }
@@ -153,7 +153,7 @@ class RedisLock {
             if ($redis) {
                 $cnt = $redis->incr($lock);
                 if ($cnt == 1) {
-                    $redis->setTimeout($lock, $timeout);//设置超时，防止死锁
+                    $redis->expire($lock, $timeout);//设置超时，防止死锁
 
                     return true;
                 }

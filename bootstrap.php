@@ -15,26 +15,22 @@
 use wulaphp\app\App;
 use wulaphp\cache\RtCache;
 
+@error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+define('WULA_STARTTIME', microtime(true));
 # 项目根目录检测
 if (!defined('APPROOT')) {
-    if (defined('PHPUNIT_COMPOSER_INSTALL')) {
-        return;
-    } else {
-        !trigger_error('define "APPROOT" first', E_USER_ERROR) or exit(1);
-    }
+    trigger_error('define "APPROOT" first', E_USER_ERROR) or exit(1);
 }
 $gzip = @ini_get('zlib.output_compression');
 if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib')) {
     @ini_set('zlib.output_compression', 1);
-    @ini_set('zlib.output_compression_level', 5);
+    @ini_set('zlib.output_compression_level', 7);
 }
 @ob_start();
-define('WULA_STARTTIME', microtime(true));
-define('WULA_VERSION', '2.9.1');
+define('WULA_VERSION', '2.10.11');
 define('WULA_RELEASE', 'RC');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
-@error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 if (version_compare('5.6.9', phpversion(), '>')) {
     !trigger_error(sprintf('Your php version is %s,but wulaphp required PHP 5.6.9 or higher', phpversion()), E_USER_ERROR) or exit(1);
 }
@@ -107,9 +103,6 @@ if (!function_exists('json_decode')) {
 }
 if (!function_exists('spl_autoload_register')) {
     !trigger_error('SPL extension is required!') or exit(1);
-}
-if (!function_exists('curl_init')) {
-    !trigger_error('curl extension is required!') or exit(1);
 }
 // 全局环境配置
 @ini_set('session.bug_compat_warn', 0);

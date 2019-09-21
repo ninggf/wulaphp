@@ -314,9 +314,9 @@ class DatabaseConnection {
                     }
                 }
                 if ($lock) {
-                    $rst = $trans($this, $data);
+                    $rst = $trans(...[$this, $data]);
                 } else {
-                    $rst = $trans($this);
+                    $rst = $trans(...[$this]);
                 }
                 if (empty($rst)) {
                     $this->rollback();

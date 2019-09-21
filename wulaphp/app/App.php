@@ -81,6 +81,43 @@ class App {
             $configLoader->beforeLoad();
             $this->configs ['default'] = $configLoader->loadConfig();
             $configLoader->postLoad();
+            if (DEBUG == DEBUG_OFF) {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING);
+                @ini_set('display_errors', 0);
+            } else if (DEBUG == DEBUG_DEBUG) {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE);
+                @ini_set('display_errors', 1);
+            } else {
+                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+                @ini_set('display_errors', 1);
+            }
+            error_reporting(KS_ERROR_REPORT_LEVEL);
+            if (!defined('TIMEZONE')) {
+                $timezone = $this->configs ['default']->get('timezone', 'Asia/Shanghai');
+                // 时区设置
+                define('TIMEZONE', $timezone);
+                date_default_timezone_set(TIMEZONE);
+            }
+            //检测语言
+            if (!defined('LANGUAGE')) {
+                $lang        = isset($_COOKIE['language']) ? $_COOKIE['language'] : null;
+                $defaultLang = $this->configs ['default']->get('language');
+                if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
+                    //用户通过cookie设置
+                    define('LANGUAGE', $lang);
+                } else if ($defaultLang && preg_match('/^[a-z]{2,3}(-[a-z]{2,8})?$/i', $defaultLang)) {
+                    //系统默认
+                    define('LANGUAGE', $defaultLang);
+                } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) && $_SERVER['HTTP_ACCEPT_LANGUAGE']) {
+                    //浏览器默认
+                    define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
+                } else {
+                    //框架默认
+                    define('LANGUAGE', 'en');
+                }
+            }
+            //加载语言文件
+            I18n::addLang(WULA_ROOT . 'lang');
         } else {
             throw new \Exception('no ConfigurationLoader found!');
         }
@@ -132,9 +169,7 @@ class App {
      * @throws
      */
     public static function cfgLoader() {
-        if (!self::$app) {
-            new App ();
-        }
+        self::$app || new App();
 
         return self::$app->configLoader;
     }
@@ -146,9 +181,7 @@ class App {
      * @throws
      */
     public static function moduleLoader() {
-        if (!self::$app) {
-            new App ();
-        }
+        self::$app || new App();
 
         return self::$app->moduleLoader;
     }
@@ -169,79 +202,30 @@ class App {
      * @throws
      */
     public static function start() {
-        if (!self::$app) {
-            new App ();
-        }
-        if (!defined('DEBUG')) {
-            $debug = App::icfg('debug', DEBUG_ERROR);
-            if ($debug > 1000 || $debug < 0) {
-                $debug = DEBUG_OFF;
-            }
-            define('DEBUG', $debug);
-            if (DEBUG == DEBUG_OFF) {
-                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING);
-                @ini_set('display_errors', 0);
-            } else if (DEBUG == DEBUG_DEBUG) {
-                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE);
-                @ini_set('display_errors', 1);
-            } else {
-                define('KS_ERROR_REPORT_LEVEL', E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
-                @ini_set('display_errors', 1);
-            }
-            error_reporting(KS_ERROR_REPORT_LEVEL);
-        }
-        $timezone = App::cfg('timezone', 'Asia/Shanghai');
-        // 时区设置
-        define('TIMEZONE', $timezone);
-        date_default_timezone_set(TIMEZONE);
+        self::$app || new App();
+
         foreach (self::$extensions as $extension) {
             $extension->autoBind();
-        }
-        foreach (self::$modules as $id => $module) {
-            if ($module->enabled) {
-                self::$enabledModules[ $id ] = $module;
-                if (method_exists($module->clzName, 'urlGroup')) {
-                    $prefix = ObjectCaller::callClzMethod($module->clzName, 'urlGroup');
-                    if ($prefix && $prefix[0]) {
-                        self::registerUrlGroup($prefix, $module->getNamespace());
-                    }
-                }
-                $module->autoBind();
-            }
-        }
-        fire('app\started');
-        //检测语言
-        if (!defined('LANGUAGE')) {
-            $lang        = isset($_COOKIE['language']) ? $_COOKIE['language'] : null;
-            $defaultLang = self::$app->configs ['default']->get('language');
-            if (preg_match('/^[a-z]{2,3}(-[A-Z]{2,8})?$/i', $lang)) {
-                //用户通过cookie设置
-                define('LANGUAGE', $lang);
-            } else if ($defaultLang && preg_match('/^[a-z]{2,3}(-[a-z]{2,8})?$/i', $defaultLang)) {
-                //系统默认
-                define('LANGUAGE', $defaultLang);
-            } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) && $_SERVER['HTTP_ACCEPT_LANGUAGE']) {
-                //浏览器默认
-                define('LANGUAGE', explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]);
-            } else {
-                //框架默认
-                define('LANGUAGE', 'en');
-            }
-        }
-        //加载语言
-        I18n::addLang(WULA_ROOT . 'lang');
-        foreach (self::$enabledModules as $module) {
-            $lang = $module->getPath('lang');
-            if (is_dir($lang)) {//加载语言
-                I18n::addLang($lang);
-            }
-        }
-        foreach (self::$extensions as $extension) {
             $lang = $extension->getPath('lang');
             if (is_dir($lang)) {//加载语言
                 I18n::addLang($lang);
             }
         }
+        foreach (self::$enabledModules as $id => $module) {
+            self::$enabledModules[ $id ] = $module;
+            if (method_exists($module->clzName, 'urlGroup')) {
+                $prefix = ObjectCaller::callClzMethod($module->clzName, 'urlGroup');
+                if ($prefix && $prefix[0]) {
+                    self::registerUrlGroup($prefix, $module->getNamespace());
+                }
+            }
+            $module->autoBind();
+            $lang = $module->getPath('lang');
+            if (is_dir($lang)) {//加载语言
+                I18n::addLang($lang);
+            }
+        }
+        fire('app\started');
 
         return self::$app;
     }
@@ -519,13 +503,11 @@ class App {
 
             return;
         }
-        //$dir = $module->getDirname();
-        //if ($dir != $name) {
-        //    self::$maps ['dir2id'] [ $dir ]  = $name;
-        //    self::$maps ['id2dir'] [ $name ] = $dir;
-        //}
         $module->enabled         = self::$app->moduleLoader->isEnabled($module);
         self::$modules [ $name ] = $module;
+        if ($module->enabled) {
+            self::$enabledModules[ $name ] = $module;
+        }
     }
 
     /**
