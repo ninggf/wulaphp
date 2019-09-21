@@ -3,7 +3,6 @@
 namespace wulaphp\router;
 
 use wulaphp\app\App;
-use wulaphp\app\Module;
 use wulaphp\cache\RtCache;
 use wulaphp\mvc\controller\Controller;
 use wulaphp\mvc\controller\SubModuleRouter;
@@ -43,23 +42,10 @@ class DefaultDispatcher implements IURLDispatcher {
         } else if ($len == 1 && !empty ($controllers [0])) {
             $module = $controllers [0];
             if ($module == 'index.html') {
-                $dm     = App::getModule('home') ? 'home' : null;
-                $module = apply_filter('module_for_homepage', $dm);
-                if ($module instanceof View) {
-                    return $module;
-                } else if ($module) {
-                    if ($module instanceof Module) {
-                        $module = $module->getDirname();
-                    } else if (!is_string($module)) {
-                        return null;
-                    }
-                } else {//无模块可
-                    return null;
-                }
+                $module = DEFAULT_MODULE;
             } else if (($dir = App::checkUrlPrefix($module))) { # 使用模块URL前缀直接访问
-                $prefix    = $module;
-                $namespace = $dir;
-                $module    = $namespace;
+                $prefix = $module;
+                $module = $dir;
             }
         } else if ($len == 2) {
             $module = $controllers [0];

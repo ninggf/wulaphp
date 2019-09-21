@@ -1,6 +1,6 @@
 <?php
 
-namespace home\controllers;
+namespace app\controllers;
 
 use wulaphp\mvc\controller\Controller;
 
