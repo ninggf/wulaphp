@@ -11,9 +11,9 @@ class {$module}Controller extends Controller {
      * 默认控制方法.
      */
 	public function index() {
-	    $data = ['module'=>'{$module}'];
-		// 你的代码写在这里
+        // TODO: 你的代码写在这里
+	    $data = ['module' => '{$module}'];
 
-		return view($data);
-	}
+        return view($data);
+    }
 }
