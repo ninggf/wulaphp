@@ -119,9 +119,6 @@ $_wula_namespace_classpath [] = WULA_ROOT;
 if (is_dir(EXTENSIONS_PATH)) {
     $_wula_namespace_classpath [] = EXTENSIONS_PATH;
 }
-if (is_dir(WEB_ROOT . VENDOR_DIR)) {
-    $_wula_namespace_classpath [] = WEB_ROOT . VENDOR_DIR . DS;
-}
 $_wula_namespace_classpath [] = WULA_ROOT . 'vendors' . DS;
 $_wula_classpath []           = WULA_ROOT . 'vendors' . DS;
 // 基础类文件加载
