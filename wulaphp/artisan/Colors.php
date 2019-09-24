@@ -5,7 +5,7 @@ namespace wulaphp\artisan;
 class Colors {
 	private $foreground_colors = array();
 	private $background_colors = array();
-
+    private $isColor = false;
 	public function __construct() {
 		$this->foreground_colors['black']        = '0;30';
 		$this->foreground_colors['dark_gray']    = '1;30';
@@ -32,12 +32,14 @@ class Colors {
 		$this->background_colors['magenta']    = '45';
 		$this->background_colors['cyan']       = '46';
 		$this->background_colors['light_gray'] = '47';
+
+		$this->isColor = $this->isColorSupport();
 	}
 
 	// Returns colored string
 	public function str($string, $foreground_color = null, $background_color = null) {
 		$colored_string = "";
-		if (isset($_SERVER['TERM']) && $_SERVER['TERM'] == 'xterm-256color') {
+		if ($this->isColor) {
 			// Check if given foreground color found
 			if (isset($this->foreground_colors[ $foreground_color ])) {
 				$colored_string .= "\033[" . $this->foreground_colors[ $foreground_color ] . "m";
@@ -55,4 +57,12 @@ class Colors {
 
 		return $colored_string;
 	}
+
+    private function isColorSupport() {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            return '10.0.10586' === PHP_WINDOWS_VERSION_MAJOR . '.' . PHP_WINDOWS_VERSION_MINOR . '.' . PHP_WINDOWS_VERSION_BUILD || false !== getenv('ANSICON') || 'ON' === getenv('ConEmuANSI') || 'xterm' === getenv('TERM');
+        }
+
+        return function_exists('posix_isatty') && @posix_isatty(STDOUT);
+    }
 }
