@@ -91,7 +91,7 @@ class CreateModuleCommand extends ArtisanCommand {
             // 测试
             $phpunit = file_get_contents(__DIR__ . '/tpl/phpunit.xml');
             $phpunit = str_replace('{$module}', $namespace, $phpunit);
-            file_put_contents($modulePath . 'phpunit.xml', $phpunit);
+            file_put_contents($modulePath . 'phpunit.xml.dist', $phpunit);
 
             // 添加.gitattributes
             file_put_contents($modulePath . '.gitattributes', "tests/ export-ignore\nphpunit.xml export-ignore\n");
