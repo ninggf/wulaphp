@@ -22,6 +22,7 @@ use wulaphp\artisan\GmWorker;
  * @property-read bool   $json     内容是否是json格式
  * @property-read string $job      任务
  * @property-read string $jobClass 任务类
+ * @internal
  */
 class GearmanService extends Service {
     protected $funcName;

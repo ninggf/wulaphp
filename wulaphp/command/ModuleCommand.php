@@ -14,6 +14,11 @@ use wulaphp\app\App;
 use wulaphp\app\Module;
 use wulaphp\artisan\ArtisanCommand;
 
+/**
+ * Class ModuleCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class ModuleCommand extends ArtisanCommand {
     public function cmd() {
         return 'module';

@@ -12,6 +12,11 @@ namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanCommand;
 
+/**
+ * Class AdminCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class AdminCommand extends ArtisanCommand {
     public function cmd() {
         return 'admin';
@@ -22,14 +27,10 @@ class AdminCommand extends ArtisanCommand {
     }
 
     protected function execute($options) {
-        echo var_export($options, 1), "\n";
-
         return 0;
     }
 
     protected function subCommands() {
-        $this->subCmds['create-module'] = new CreateModuleCommand('admin');
-        $this->subCmds['create-ext']    = new CreateExtensionCommand('admin');
         $this->subCmds['module']        = new ModuleCommand('admin');
         $this->subCmds['router']        = new RouterCommand('admin');
         $this->subCmds['hook']          = new HookCommand('admin');

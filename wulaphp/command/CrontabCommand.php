@@ -20,6 +20,7 @@ pcntl_async_signals(true);
  * Class CrontabCommand
  * @package wulaphp\command
  * @deprecated
+ * @internal
  */
 class CrontabCommand extends ArtisanMonitoredTask {
     private $clz = '';

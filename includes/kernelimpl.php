@@ -1,7 +1,8 @@
 <?php
-/**
- * for redis cache
- */
+
+use wulaphp\command\AdminCommand;
+use wulaphp\command\CreateComamnd;
+
 bind('get_redis_cache', function ($cache, $cfg) {
     if (!$cache) {
         $cache = \wulaphp\cache\RedisCache::getInstance($cfg);
@@ -9,9 +10,7 @@ bind('get_redis_cache', function ($cache, $cfg) {
 
     return $cache;
 }, 100, 2);
-/**
- * for memcached cache
- */
+
 bind('get_memcached_cache', function ($cache, $cfg) {
     if (!$cache) {
         $cache = \wulaphp\cache\MemcachedCache::getInstance($cfg);
@@ -21,7 +20,8 @@ bind('get_memcached_cache', function ($cache, $cfg) {
 }, 100, 2);
 
 bind('artisan\getCommands', function ($cmds) {
-    $cmds['admin'] = new \wulaphp\command\AdminCommand();
+    $cmds['admin']  = new AdminCommand();
+    $cmds['create'] = new CreateComamnd();
 
     if (function_exists('pcntl_fork') && function_exists('posix_getpid')) {
         if (function_exists('socket_create')) {

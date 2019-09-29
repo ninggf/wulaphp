@@ -13,6 +13,12 @@ namespace wulaphp\command;
 use wulaphp\artisan\ArtisanMonitoredTask;
 use wulaphp\artisan\GmWorker;
 
+/**
+ * Class GearmanWorkerCommand
+ * @package wulaphp\command
+ * @deprecated
+ * @internal
+ */
 class GearmanWorkerCommand extends ArtisanMonitoredTask {
     private $func;
     private $file;

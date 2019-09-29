@@ -14,6 +14,11 @@ use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
 use wulaphp\router\Router;
 
+/**
+ * Class RouterCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class RouterCommand extends ArtisanCommand {
     public function cmd() {
         return 'router';

@@ -4,13 +4,18 @@ namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanCommand;
 
+/**
+ * Class CreateExtensionCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class CreateExtensionCommand extends ArtisanCommand {
     public function cmd() {
-        return 'create-ext';
+        return 'extension';
     }
 
     public function desc() {
-        return 'Create standard extension structure';
+        return 'Create an extension';
     }
 
     protected function execute($options) {

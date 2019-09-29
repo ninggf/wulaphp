@@ -5,13 +5,18 @@ namespace wulaphp\command;
 use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
 
+/**
+ * Class CreateModuleCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class CreateModuleCommand extends ArtisanCommand {
     public function cmd() {
-        return 'create-module';
+        return 'module';
     }
 
     public function desc() {
-        return 'Create standard module structure';
+        return 'Create a module';
     }
 
     protected function execute($options) {
@@ -23,7 +28,8 @@ class CreateModuleCommand extends ArtisanCommand {
             return 1;
         }
         $namespace = $dir;
-        $name      = aryget('name', $options, $dir);
+        $name      = aryget('n', $options, $dir);
+        $name      = aryget('name', $options, $name);
         if (!preg_match('#^[a-z][a-z_\-\d]*$#', $dir)) {
             $this->error('illegal module name: ' . $this->color->str($dir, 'white', 'red'));
 
@@ -50,7 +56,6 @@ class CreateModuleCommand extends ArtisanCommand {
         }
         while (true) {
             //创建目录
-
             if (!mkdir($modulePath)) {
                 $this->error('cannot create dir for module: ' . $modulePath);
                 $rtn = 1;
@@ -60,8 +65,8 @@ class CreateModuleCommand extends ArtisanCommand {
             mkdir($modulePath . 'controllers');
             mkdir($modulePath . 'views');
             mkdir($modulePath . 'views' . DS . 'index');
-            mkdir($modulePath . 'classes');
-            mkdir($modulePath . 'tests');
+            #mkdir($modulePath . 'classes');
+            #mkdir($modulePath . 'tests');
             $ns     = explode('\\', $namespace);
             $module = ucfirst($ns[0]);
             // 创建引导文件
@@ -75,7 +80,11 @@ class CreateModuleCommand extends ArtisanCommand {
 
             // 创建默认控制器.
             $bootstrap = file_get_contents(__DIR__ . '/tpl/controller.tpl');
-            $bootstrap = str_replace(['{$namespace}', '{$module}'], [$namespace, 'Index'], $bootstrap);
+            $bootstrap = str_replace(['{$namespace}', '{$module}', '{$vfunc}'], [
+                $namespace,
+                'Index',
+                'return view($data)'
+            ], $bootstrap);
             file_put_contents($modulePath . 'controllers/IndexController.php', $bootstrap);
 
             //视图
@@ -94,8 +103,8 @@ class CreateModuleCommand extends ArtisanCommand {
             file_put_contents($modulePath . 'phpunit.xml.dist', $phpunit);
 
             // 添加.gitattributes
-            file_put_contents($modulePath . '.gitattributes', "tests/ export-ignore\nphpunit.xml export-ignore\n");
-            file_put_contents($modulePath . 'schema.sql.php', "<?php\n@defined('APPROOT') or header('Page Not Found', true, 404) || die();\n\n//table DDL\n//" . '$tables [\'1.0.0\'] [] = "";' . "\n");
+            #file_put_contents($modulePath . '.gitattributes', "tests/ export-ignore\nphpunit.xml export-ignore\n");
+            #file_put_contents($modulePath . 'schema.sql.php', "<?php\n@defined('APPROOT') or header('Page Not Found', true, 404) || die();\n\n//table DDL\n//" . '$tables [\'1.0.0\'] [] = "";' . "\n");
             $this->success('The module ' . $this->color->str($dir, 'blue') . ' is created successfully.');
             break;
         }
@@ -104,7 +113,7 @@ class CreateModuleCommand extends ArtisanCommand {
     }
 
     protected function getOpts() {
-        return ['c' => 'create composer.json for module'];
+        return ['c' => 'create composer.json for module', 'n::' => 'the name of module'];
     }
 
     protected function getLongOpts() {

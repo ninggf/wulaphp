@@ -13,6 +13,7 @@ namespace wulaphp\command\service;
 /**
  * 定时任务
  * @package wulaphp\command
+ * @internal
  */
 class CronService extends Service {
     private $proc;

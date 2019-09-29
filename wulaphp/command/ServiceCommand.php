@@ -20,6 +20,7 @@ pcntl_async_signals(true);
 /**
  * 服务命令，让服务优雅地运行在后台.
  * @package wulaphp\command
+ * @internal
  */
 class ServiceCommand extends ArtisanCommand {
     public function __construct() {
@@ -282,14 +283,14 @@ class ServiceCommand extends ArtisanCommand {
         $user     = aryget('user', $cfg);
         $group    = aryget('group', $cfg);
         $verbose  = aryget('verbose', $cfg, 'vvv');
-        $bind     = aryget('bind',$cfg,'unix:'.STORAGE_DIR.'/tmp/service.sock');
+        $bind     = aryget('bind', $cfg, 'unix:' . STORAGE_DIR . '/tmp/service.sock');
         $services = aryget('services', $cfg, []);
 
         $this->output($this->cell([
             ['Verbose', 10],
             ['User', 10],
             ['Group', 10],
-            ['Bind',50]
+            ['Bind', 50]
         ]));
 
         $this->output(str_pad('-', 80, '-'));
@@ -297,7 +298,7 @@ class ServiceCommand extends ArtisanCommand {
             [$verbose, 10],
             [$user, 10],
             [$group, 10]
-        ]),false);
+        ]), false);
         $this->output($bind);
 
         $this->output(str_pad('=', 80, '='));

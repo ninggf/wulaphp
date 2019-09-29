@@ -12,6 +12,11 @@ namespace wulaphp\command\service;
 
 use wulaphp\artisan\Colors;
 
+/**
+ * Class Service
+ * @package wulaphp\command\service
+ * @internal
+ */
 abstract class Service {
     protected $pid;
     protected $name;

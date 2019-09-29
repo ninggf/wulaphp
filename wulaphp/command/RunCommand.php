@@ -12,6 +12,12 @@ namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanMonitoredTask;
 
+/**
+ * Class RunCommand
+ * @package wulaphp\command
+ * @deprecated
+ * @internal
+ */
 class RunCommand extends ArtisanMonitoredTask {
     private $script;
     private $logfile;

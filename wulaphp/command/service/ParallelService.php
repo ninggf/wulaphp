@@ -14,6 +14,7 @@ namespace wulaphp\command\service;
  * @package wulaphp\command\service
  * @property-read int    $sleep
  * @property-read string $script
+ * @internal
  */
 class ParallelService extends Service {
     public function run() {

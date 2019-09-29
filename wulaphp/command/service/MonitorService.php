@@ -16,6 +16,7 @@ use wulaphp\conf\ConfigurationLoader;
  * 监控服务.
  *
  * @package wulaphp\command\service
+ * @internal
  */
 class MonitorService extends Service {
     private $sock;
