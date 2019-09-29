@@ -6,8 +6,6 @@
         "ext-json": "*",
         "ext-pcre": "*",
         "ext-mbstring": "*",
-        "ext-PDO": "*",
-        "ext-pdo_mysql": "*",
         "ext-Reflection": "*",
         "ext-SPL": "*",
         "smarty/smarty": "^3.1",
