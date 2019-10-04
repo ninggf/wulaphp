@@ -12,16 +12,16 @@ use Psr\Log\LoggerInterface;
  * @author  Leo Ning <windywany@gmail.com>
  */
 class CommonLogger implements LoggerInterface {
-    private static $log_name = [
+    protected static $log_name = [
         DEBUG_INFO  => 'INFO',
         DEBUG_WARN  => 'WARN',
         DEBUG_DEBUG => 'DEBUG',
         DEBUG_ERROR => 'ERROR'
     ];
-    private        $file     = '';
+    protected $channel     = '';
 
     public function __construct(string $file = 'wula') {
-        $this->file = $file;
+        $this->channel = $file;
     }
 
     public function emergency($message, array $context = []) {
@@ -57,7 +57,7 @@ class CommonLogger implements LoggerInterface {
     }
 
     public function log($level, $message, array $trace_info = []) {
-        $file = $this->file;
+        $file = $this->channel;
 
         $ln = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
         if (defined('ARTISAN_TASK_PID')) {
