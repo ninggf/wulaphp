@@ -132,8 +132,11 @@ function frqst($name, $default = 0.0) {
  * @param string $file
  */
 function log_debug($message, $file = '') {
+    if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
+        return;
+    }
     $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-    log_message($message, $trace, DEBUG_DEBUG, $file);
+    log_message($message, DEBUG_DEBUG, $file, $trace);
 }
 
 /**
@@ -143,8 +146,11 @@ function log_debug($message, $file = '') {
  * @param string $file
  */
 function log_info($message, $file = '') {
+    if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
+        return;
+    }
     $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-    log_message($message, $trace, DEBUG_INFO, $file);
+    log_message($message, DEBUG_INFO, $file, $trace);
 }
 
 /**
@@ -154,8 +160,11 @@ function log_info($message, $file = '') {
  * @param string $file
  */
 function log_warn($message, $file = '') {
+    if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
+        return;
+    }
     $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-    log_message($message, $trace, DEBUG_WARN, $file);
+    log_message($message, DEBUG_WARN, $file, $trace);
 }
 
 /**
@@ -165,36 +174,31 @@ function log_warn($message, $file = '') {
  * @param string $file
  */
 function log_error($message, $file = '') {
+    if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
+        return;
+    }
     $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-    log_message($message, $trace, DEBUG_ERROR, $file);
-}
-
-/**
- * 最后记录的日志信息.
- *
- * @return string
- */
-function log_last_msg() {
-    global $_wula_last_msg;
-
-    return $_wula_last_msg ? $_wula_last_msg : '';
+    log_message($message, DEBUG_ERROR, $file, $trace);
 }
 
 /**
  * log.
  *
  * @param string $message
- * @param array  $trace_info
  * @param int    $level debug,info,warn,error
  * @param string $file
+ * @param array  $trace_info
  *
  * @filter logger\getLogger $logger $level $file
  */
-function log_message($message, array $trace_info, $level, $file = 'wula') {
+function log_message($message, $level, $file = 'wula', array $trace_info = []) {
     global $_wula_last_msg;
     /**@var \Psr\Log\LoggerInterface[][] $loggers */
     static $loggers = [];
     $_wula_last_msg = $message;
+    if (!$trace_info) {
+        $trace_info = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    }
     if (!defined('DEBUG')) {
         $dumps = '[' . gmdate('Y-m-d H:i:s') . ' GMT] ' . $message . "\n";
         for ($i = 0; $i < 10; $i++) {
@@ -211,8 +215,9 @@ function log_message($message, array $trace_info, $level, $file = 'wula') {
 
         return;
     }
+
     //记录关闭.
-    if (DEBUG == DEBUG_OFF || empty ($trace_info)) {
+    if (DEBUG == DEBUG_OFF) {
         return;
     }
 
@@ -230,6 +235,17 @@ function log_message($message, array $trace_info, $level, $file = 'wula') {
     if ($level >= DEBUG && $loggers[ $level ][ $file ]) {
         $loggers[ $level ][ $file ]->log($level, $message, $trace_info);
     }
+}
+
+/**
+ * 最后记录的日志信息.
+ *
+ * @return string
+ */
+function log_last_msg() {
+    global $_wula_last_msg;
+
+    return $_wula_last_msg ? $_wula_last_msg : '';
 }
 
 /**
