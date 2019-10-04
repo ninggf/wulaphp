@@ -110,7 +110,7 @@ class LocaleUploader implements IUploader {
      *
      * @return string
      */
-    public final function getDestDir($path = null) {
+    public function getDestDir($path = null) {
         if (!$path) {
             $dir = App::icfg('dir@media', App::icfg('upload.dir', 1));
             switch ($dir) {

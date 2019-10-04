@@ -66,7 +66,10 @@ abstract class Uploader implements IUploader {
         static $uploaders = [];
         if (!$uploaders) {
             $uploaders['file'] = new LocaleUploader();
-            $uploaders         = apply_filter('upload\regUploaders', $uploaders);
+            if (extension_loaded('ftp')) {
+                $uploaders['ftp'] = new FtpUploader();
+            }
+            $uploaders = apply_filter('upload\regUploaders', $uploaders);
         }
 
         return $uploaders;
