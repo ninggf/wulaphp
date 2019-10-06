@@ -31,13 +31,13 @@ class RESTFulServer {
      * RESTFulServer constructor.
      *
      * @param \wulaphp\restful\ISecretCheck $secretChecker  密钥校验器
-     * @param \wulaphp\restful\ISignCheck   $signChecker    签名校验器
+     * @param \wulaphp\restful\ISignCheck   $signChecker    签名校验器,默认为DefaultSignChecker
      * @param string                        $format         默认响应格式，支持json和xml
      * @param int                           $session_expire session过期时间(单位秒)
      */
-    public function __construct(ISecretCheck $secretChecker, ISignCheck $signChecker, string $format = 'json', int $session_expire = 300) {
+    public function __construct(ISecretCheck $secretChecker, ISignCheck $signChecker = null, string $format = 'json', int $session_expire = 300) {
         $this->secretChecker = $secretChecker;
-        $this->signChecker   = $signChecker;
+        $this->signChecker   = $signChecker ? $signChecker : new DefaultSignChecker();
         $this->format        = $format == 'xml' ? 'xml' : 'json';
         $this->expire        = intval($session_expire);
         if (!$this->expire) {
@@ -247,7 +247,11 @@ class RESTFulServer {
 
                 return $this->generateResult($format, ['error' => ['code' => 40007, 'msg' => $e->getMessage()]]);
             } finally {
-                $clz->tearDown();
+                try {
+                    $clz->tearDown();
+                } catch (\Exception $e) {
+
+                }
                 fire('restful\endApi', $api, time(), $args);
             }
         }

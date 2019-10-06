@@ -13,6 +13,21 @@ namespace testm\api\v1;
 use wulaphp\restful\API;
 
 class HelloApi extends API {
+    /**
+     * 打招呼API
+     *
+     * @apiName Greeting
+     *
+     * @param string $name (required) 姓名
+     *
+     * @paramo  string greeting 招呼信息
+     *
+     * @error   5001 => 演示的错误用的
+     *
+     * @return array {
+     *  "greeting":"Hello Leo"
+     * }
+     */
     public function greeting($name) {
         return ['greeting' => 'Hello ' . $name];
     }
