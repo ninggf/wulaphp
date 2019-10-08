@@ -28,8 +28,6 @@ class AdminCommand extends ArtisanCommand {
     }
 
     protected function subCommands() {
-        $this->subCmds['create-module'] = new CreateModuleCommand('admin');
-        $this->subCmds['create-ext']    = new CreateExtensionCommand('admin');
         $this->subCmds['module']        = new ModuleCommand('admin');
         $this->subCmds['router']        = new RouterCommand('admin');
         $this->subCmds['hook']          = new HookCommand('admin');

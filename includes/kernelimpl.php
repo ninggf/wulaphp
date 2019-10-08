@@ -21,7 +21,9 @@ bind('get_memcached_cache', function ($cache, $cfg) {
 }, 100, 2);
 
 bind('artisan\getCommands', function ($cmds) {
-    $cmds['admin'] = new \wulaphp\command\AdminCommand();
+    $cmds['admin']  = new \wulaphp\command\AdminCommand();
+    $cmds['create'] = new \wulaphp\command\CreateComamnd();
+    $cmds['serve']  = new \wulaphp\command\ServeCommand();
 
     if (function_exists('pcntl_fork') && function_exists('posix_getpid')) {
         if (function_exists('socket_create')) {

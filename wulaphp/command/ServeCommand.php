@@ -13,28 +13,48 @@ namespace wulaphp\command;
 use wulaphp\artisan\ArtisanCommand;
 
 class ServeCommand extends ArtisanCommand {
+    private $proc;
+    private $descriptorspec;
+
     public function cmd() {
         return 'serve';
     }
 
     public function desc() {
-        return 'run build-in server for development';
+        return 'run php built-in Development server';
     }
 
-    public function getOpts() {
-        return ['p::port' => 'TCP port to listen on (default: 9090)'];
+    protected function argDesc() {
+        return '[[host:]port]';
     }
 
     protected function execute($options) {
-        $port           = intval(aryget('p', $options, 9090));
-        $cmd            = escapeshellcmd(PHP_BINARY);
-        $wwwroot        = trailingslashit(PUBLIC_DIR . WWWROOT_DIR);
-        $arg            = escapeshellarg("-S '127.0.0.1:{$port}' -t " . $wwwroot . ' ' . $wwwroot . 'index.php');
-        $descriptorspec = [
-            0 => ["pipe", "r"],  // 标准输入，子进程从此管道中读取数据
-            1 => ["pipe", "w"],  // 标准输出，子进程向此管道中写入数据
-            2 => ["pipe", "w"] // 标准错误，写入到一个文件
+        $opt = $this->opt(0);
+        $cmd = escapeshellcmd(PHP_BINARY);
+
+        if ($opt) {
+            $arg = escapeshellarg($opt) . ' index.php';
+        } else {
+            $arg = escapeshellarg('127.0.0.1:8080') . ' index.php';
+        }
+
+        $this->proc           = $cmd . ' -S ' . $arg;
+        $this->descriptorspec = [
+            0 => STDIN,
+            1 => STDOUT,
+            2 => STDERR
         ];
-        echo $cmd, ' ', $arg, "\n";
+
+        if (($r = proc_open($this->proc, $this->descriptorspec, $pipes, WWWROOT))) {
+            while (true) {
+                sleep(5);
+                $status = proc_get_status($r);
+                if (!$status || !$status['running']) {
+                    break;
+                }
+            }
+        }
+
+        return 0;
     }
 }
