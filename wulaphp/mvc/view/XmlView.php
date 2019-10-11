@@ -9,7 +9,10 @@
  */
 
 namespace wulaphp\mvc\view;
-
+/**
+ * Xml View
+ * @package wulaphp\mvc\view
+ */
 class XmlView extends View {
     protected $root = 'root';
     protected $fileName;

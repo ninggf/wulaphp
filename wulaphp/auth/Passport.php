@@ -3,7 +3,8 @@
 namespace wulaphp\auth;
 
 /**
- * Class Passport
+ * 通行证.
+ *
  * @package wulaphp\auth
  * @property-read int $pid          父ID
  * @property-read int $status       状态

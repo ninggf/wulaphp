@@ -2,7 +2,7 @@
 
 namespace wulaphp\artisan;
 /**
- * 命令.
+ * artisan命令基类.
  *
  * @author  leo <windywany@gmail.com>
  * @package wulaphp\artisan

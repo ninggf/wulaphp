@@ -6,7 +6,7 @@ namespace wulaphp\cache;
  * APC Cache.
  *
  * @author guangfeng.ning
- *
+ * @internal
  */
 class ApcCacher extends Cache {
 

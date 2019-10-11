@@ -42,6 +42,11 @@ define("EXIF_COPYRIGHT_STRING", "116");
 define("EXIF_CAPTION", "120");
 define("EXIF_LOCAL_CAPTION", "121");
 
+/**
+ * 解析JPEG图片meta数据类.
+ *
+ * @package wulaphp\io
+ */
 class JpegExifMeta {
     private $meta = [];
     private $file = null;

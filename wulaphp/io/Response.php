@@ -8,11 +8,11 @@ use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\View;
 
 /**
+ * 响应.
  *
  * @author  Windywany
  * @package io
  * @date    12-9-16 下午5:53
- *          $Id$
  */
 class Response {
     private        $before_out = null;

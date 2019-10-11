@@ -99,6 +99,8 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
     }
 
     /**
+     * 获取`array`配置值.
+     *
      * @param string $name
      * @param array  $default
      *

@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\restful;
-
+/**
+ * RESTFul 客户端.
+ *
+ * @package wulaphp\restful
+ */
 class RESTFulClient {
     private $url;
     private $ver;

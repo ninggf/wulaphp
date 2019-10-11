@@ -13,6 +13,7 @@ namespace wulaphp\auth;
  * @property-read string $defaultOp
  * @property-read array  $operations
  * @property-read array  $items
+ * @internal
  */
 class AclResource implements \ArrayAccess {
     private $uri;

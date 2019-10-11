@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\io;
-
+/**
+ * 本地存储器.
+ *
+ * @package wulaphp\io
+ */
 class LocaleStorage extends StorageDriver {
     private $dir;
 

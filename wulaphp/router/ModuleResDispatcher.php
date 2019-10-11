@@ -16,6 +16,7 @@ use wulaphp\mvc\view\StaticFileView;
  * 分发模块的静态资源.
  *
  * @package wulaphp\router
+ * @internal
  */
 class ModuleResDispatcher implements IURLDispatcher {
     public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {

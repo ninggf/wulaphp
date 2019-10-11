@@ -12,7 +12,7 @@ namespace wulaphp\util;
 /**
  * 基于Redis实现的简单的锁(利用Redis的incr操作的原子性实现).
  *
- * 使用Redis锁必须提供redis_config.php:
+ * 使用Redis锁必须提供`redis_config.php`:
  *
  * ```php
  * return ['host'=>'localhost','port'=>6379,'db'=>0,'auth'=>'','timeout'=>5]

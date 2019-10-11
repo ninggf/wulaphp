@@ -12,6 +12,11 @@ namespace wulaphp\db;
 
 use wulaphp\db\sql\Query;
 
+/**
+ * 基于`select forupdate`的锁。
+ *
+ * @package wulaphp\db
+ */
 class TableLocker implements ILock {
 	/**
 	 * @var Query

@@ -16,7 +16,7 @@ use wulaphp\util\ObjectCaller;
  * 默认分发器.
  *
  * @author Leo Ning.
- *
+ * @internal
  */
 class DefaultDispatcher implements IURLDispatcher {
 

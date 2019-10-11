@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\form\providor;
-
+/**
+ * 请求参数式数据提供器。
+ *
+ * @package wulaphp\form\providor
+ */
 class ParamDataProvidor extends FieldDataProvidor {
     public function getData($search = false) {
         if ($this->option) {

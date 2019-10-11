@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\mvc\view;
-
+/**
+ * php 模板视图.
+ *
+ * @package wulaphp\mvc\view
+ */
 class HtmlView extends View implements IModuleView {
 
     /**

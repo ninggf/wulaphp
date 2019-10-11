@@ -17,6 +17,7 @@ use wulaphp\router\Router;
  * 静态资源视图。
  *
  * @package wulaphp\mvc\view
+ * @internal
  */
 class StaticFileView extends View {
     private $mtime;

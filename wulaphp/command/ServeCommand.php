@@ -12,6 +12,11 @@ namespace wulaphp\command;
 
 use wulaphp\artisan\ArtisanCommand;
 
+/**
+ * Class ServeCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class ServeCommand extends ArtisanCommand {
     private $proc;
     private $descriptorspec;

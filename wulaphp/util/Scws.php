@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\util;
-
+/**
+ * 分词器.
+ *
+ * @package wulaphp\util
+ */
 class Scws {
     public static $dict;
 

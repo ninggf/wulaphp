@@ -8,6 +8,8 @@ use wulaphp\mvc\view\JsonView;
  * Ajax Response with wula standard.
  *
  * the json is:
+ *
+ * ```json
  *  {
  *      code:200,
  *      action:'',
@@ -16,15 +18,19 @@ use wulaphp\mvc\view\JsonView;
  *      target:'',
  *      args: {}
  *  }
+ * ```
  *
  *  code 与 action 是肯定有的，message,target,args根据不同的action而不同,style定义message的显示样式.
  *  message 可以有两种格式：
  *  1. 字符串
  *  2. 对象
- *     {
- *          "title":"消息提示标题",
- *          "message":"消息正文"
- *      }
+ *
+ * ```json
+ *  {
+ *     "title":"消息提示标题",
+ *     "message":"消息正文"
+ *  }
+ * ```
  *
  * @author  Leo Ning <windywany@gmail.com>
  * @package wulaphp\io

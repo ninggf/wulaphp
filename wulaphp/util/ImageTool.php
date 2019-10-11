@@ -14,6 +14,11 @@ use wulaphp\app\App;
 
 include WULA_ROOT . 'vendors/third/image.class.php';
 
+/**
+ * 图片工具.
+ *
+ * @package wulaphp\util
+ */
 class ImageTool {
     public static  $MIMES     = [
         'image/bmp'                => 'bmp',

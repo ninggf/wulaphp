@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\util;
-
+/**
+ * 注解.
+ *
+ * @package wulaphp\util
+ */
 class Annotation {
     const IGNORE = [
         'global'     => 1,

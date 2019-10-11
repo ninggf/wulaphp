@@ -10,7 +10,8 @@
 
 namespace wulaphp\util;
 /**
- * Class Captcha
+ * 验证码类。
+ *
  * @package wulaphp\util
  * @property-read string $codes    验证码
  * @property array       $reflect  倒置顺序

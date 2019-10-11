@@ -5,6 +5,11 @@ namespace wulaphp\command;
 use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
 
+/**
+ * Class CreCtrlCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class CreCtrlCommand extends ArtisanCommand {
     public function cmd() {
         return 'controller';

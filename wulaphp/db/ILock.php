@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\db;
-
+/**
+ * SQL锁。
+ *
+ * @package wulaphp\db
+ */
 interface ILock {
 	/**
 	 * 锁定.

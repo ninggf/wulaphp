@@ -15,22 +15,44 @@ namespace wulaphp\hook;
  * @package wulaphp\hook
  */
 abstract class Alter {
+    /**
+     * 需要参数个数.
+     *
+     * @var int
+     */
     protected $acceptArgs = 1;
-    protected $priority   = 10;
+    /**
+     * 优先级.
+     *
+     * @var int
+     */
+    protected $priority = 10;
 
+    /**
+     * 优先级.
+     *
+     * @return int
+     */
     public final function getPriority(): int {
         return $this->priority;
     }
 
+    /**
+     * 需要参数个数.
+     *
+     * @return int
+     */
     public final function getAcceptArgs(): int {
         return $this->acceptArgs;
     }
 
     /**
-     * @param mixed $value
-     * @param mixed ...$args
+     * 修改.
      *
-     * @return mixed
+     * @param mixed $value
+     * @param mixed $args
+     *
+     * @return mixed 修改后的值
      */
     public abstract function alter($value, ...$args);
 }

@@ -12,6 +12,11 @@ namespace wulaphp\form;
 
 use wulaphp\mvc\view\Renderable;
 
+/**
+ * 表单绘制器。
+ *
+ * @package wulaphp\form
+ */
 abstract class FormRender implements Renderable {
 	/**
 	 * 要绘制的表单.

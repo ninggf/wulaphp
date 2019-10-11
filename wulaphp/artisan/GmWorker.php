@@ -9,16 +9,30 @@
  */
 
 namespace wulaphp\artisan;
-
+/**
+ * Gearman Worker
+ *
+ * @package wulaphp\artisan
+ */
 abstract class GmWorker {
     private $workload = false;
     private $out      = null;
     private $rst      = null;
     /**
+     * 获取到的GearmanJob实例.
+     *
      * @var \GearmanJob
      */
     protected $job     = null;
+    /**
+     * 工作（任务）名
+     * @var string|null
+     */
     protected $jobName = null;
+    /**
+     * 工作（任务）ID
+     * @var string|null
+     */
     protected $jobId   = null;
 
     public function __construct() {
@@ -168,7 +182,9 @@ abstract class GmWorker {
     }
 
     /**
-     * @param array|string $workload
+     * 工作.
+     *
+     * @param array|string $workload 工作负载
      *
      * @return bool
      */

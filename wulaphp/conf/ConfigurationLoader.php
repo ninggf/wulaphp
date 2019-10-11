@@ -12,7 +12,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 
     /**
      * 加载配置.
-     * {@inheritDoc}
+     * @param string $name 配置名.
      *
      * @return \wulaphp\conf\Configuration
      * @see \wulaphp\conf\BaseConfigurationLoader::loadConfig()

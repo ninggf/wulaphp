@@ -4,6 +4,11 @@ namespace wulaphp\cache;
 
 use wulaphp\conf\Configuration;
 
+/**
+ * Class MemcachedCache
+ * @package wulaphp\cache
+ * @internal
+ */
 class MemcachedCache extends Cache {
     /**
      * @var \Memcached

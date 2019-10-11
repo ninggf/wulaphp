@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\util;
-
+/**
+ * Class DaemonCrontab
+ * @package wulaphp\util
+ * @deprecated
+ */
 abstract class DaemonCrontab implements ICrontabJob {
 	protected $singleton = false;
 	public    $timeout   = 120;

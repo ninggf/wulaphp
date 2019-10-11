@@ -17,6 +17,7 @@ use wulaphp\io\Session;
  * 基于路由表的分发器.
  *
  * @package wulaphp\router
+ * @internal
  */
 class RouteTableDispatcher implements IURLDispatcher {
     public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {

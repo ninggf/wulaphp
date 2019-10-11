@@ -12,6 +12,11 @@ namespace wulaphp\util;
 
 use wulaphp\app\App;
 
+/**
+ * Curl 封装.
+ *
+ * @package wulaphp\util
+ */
 class CurlClient {
     private static $agent      = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36';
     private        $ch;

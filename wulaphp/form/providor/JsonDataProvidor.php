@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\form\providor;
-
+/**
+ * JSON格式数据提供器。
+ *
+ * @package wulaphp\form\providor
+ */
 class JsonDataProvidor extends FieldDataProvidor {
     public function getData($search = false) {
         return (array)$this->optionAry;

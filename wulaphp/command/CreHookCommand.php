@@ -5,6 +5,11 @@ namespace wulaphp\command;
 use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
 
+/**
+ * Class CreHookCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class CreHookCommand extends ArtisanCommand {
     public function cmd() {
         return 'hook';

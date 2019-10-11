@@ -18,6 +18,7 @@ use wulaphp\util\Annotation;
 /**
  * 基于session的面包屑特性。不支持同一个登录(SESSION)开多窗口（会导致导航错乱）。
  * 使用方法:
+ *
  * 1. 在方法上添加crumb或crumbd注解
  * 2. crumb注解格式:
  *      2.1 @crumb group-1

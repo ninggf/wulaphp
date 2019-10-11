@@ -56,6 +56,7 @@ class GmTask {
     }
 
     /**
+     * 后台运行.
      *
      * @param string       $job
      * @param string|array $args
@@ -72,6 +73,8 @@ class GmTask {
     }
 
     /**
+     * 高优先级任务.
+     *
      * @param string       $job
      * @param array|string $args
      * @param string       $id
@@ -87,6 +90,7 @@ class GmTask {
     }
 
     /**
+     * 高优先级后台任务.
      *
      * @param string       $job
      * @param string|array $args

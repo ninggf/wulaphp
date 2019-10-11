@@ -4,6 +4,11 @@ namespace wulaphp\app;
 
 use wulaphp\cache\RtCache;
 
+/**
+ * 默认的扩展加载器。
+ *
+ * @package wulaphp\app
+ */
 class ExtensionLoader {
 	public function load() {
 		$extensions = $this->scanExtensions();

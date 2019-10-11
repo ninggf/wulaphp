@@ -15,6 +15,11 @@ use wulaphp\io\Uploader;
 use wulaphp\io\UploadFile;
 use wulaphp\util\ImageTool;
 
+/**
+ * 文件上传特性.
+ *
+ * @package wulaphp\mvc\controller
+ */
 trait UploadSupport {
     /**
      * 保存通过Plupload上传的文件.

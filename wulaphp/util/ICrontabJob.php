@@ -10,7 +10,11 @@
  */
 
 namespace wulaphp\util;
-
+/**
+ * Interface ICrontabJob
+ * @package wulaphp\util
+ * @deprecated
+ */
 interface ICrontabJob {
 	public function run();
 }

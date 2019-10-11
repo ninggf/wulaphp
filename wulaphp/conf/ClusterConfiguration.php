@@ -6,7 +6,11 @@
  */
 
 namespace wulaphp\conf;
-
+/**
+ * 集群运行时缓存配置。
+ *
+ * @package wulaphp\conf
+ */
 class ClusterConfiguration extends Configuration {
 
 	public function __construct() {

@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\cache;
-
+/**
+ * Class XCacheCacher
+ * @package wulaphp\cache
+ * @internal
+ */
 class XCacheCacher extends Cache {
 	public function getName() {
 		return 'XCache';

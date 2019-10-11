@@ -8,6 +8,7 @@ use wulaphp\db\sql\Query;
  * ORM解析类.
  *
  * @package wulaphp\db
+ * @internal
  */
 class Orm {
     private        $view;

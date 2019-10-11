@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\auth;
-
+/**
+ * ACL额外检查器,通过继承该类可以实现自定义权限检测。
+ *
+ * @package wulaphp\auth
+ */
 abstract class AclExtraChecker {
     /**
      * @var AclExtraChecker
@@ -44,7 +48,7 @@ abstract class AclExtraChecker {
     }
 
     /**
-     * 校验.
+     * 自定义校验。
      *
      * @param Passport $passport 通行证
      * @param string   $op       操作

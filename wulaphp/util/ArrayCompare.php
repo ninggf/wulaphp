@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\util;
-
+/**
+ * 数组比较器,可用于数组排序.
+ *
+ * @package wulaphp\util
+ */
 class ArrayCompare {
 	private $key;
 	private $order;

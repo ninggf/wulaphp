@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\util;
-
+/**
+ * Class ResourceCombinater
+ * @package wulaphp\util
+ * @internal
+ */
 class ResourceCombinater {
 
 	public static function combinateJS($files, $destFile) {

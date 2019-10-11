@@ -18,6 +18,11 @@ use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\View;
 use wulaphp\mvc\view\XmlView;
 
+/**
+ * RESTFul 服务器.
+ *
+ * @package wulaphp\restful
+ */
 class RESTFulServer {
     protected $secretChecker;
     protected $signChecker;

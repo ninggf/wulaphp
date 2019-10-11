@@ -5,6 +5,11 @@ namespace wulaphp\conf;
 define('CACHE_TYPE_REDIS', 'redis');
 define('CACHE_TYPE_MEMCACHED', 'memcached');
 
+/**
+ * 缓存配置.
+ *
+ * @package wulaphp\conf
+ */
 class CacheConfiguration extends Configuration {
 	public function __construct() {
 		parent::__construct('cache');

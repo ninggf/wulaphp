@@ -13,6 +13,10 @@ namespace wulaphp\mvc\view;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use wulaphp\io\Response;
 
+/**
+ * Excel View
+ * @package wulaphp\mvc\view
+ */
 class ExcelView extends View implements IModuleView {
     private   $fileName;
     private   $saveFileName;

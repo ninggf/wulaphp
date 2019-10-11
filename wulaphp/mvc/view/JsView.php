@@ -9,7 +9,10 @@
  */
 
 namespace wulaphp\mvc\view;
-
+/**
+ * js view
+ * @package wulaphp\mvc\view
+ */
 class JsView extends View {
 	/**
 	 *

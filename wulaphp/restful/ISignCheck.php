@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\restful;
-
+/**
+ * 签名器接口.
+ *
+ * @package wulaphp\restful
+ */
 interface ISignCheck {
     /**
      * 签名.

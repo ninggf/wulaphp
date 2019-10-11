@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\artisan;
-
+/**
+ * Class ArtisanHelpCommand
+ * @package wulaphp\artisan
+ * @internal
+ */
 class ArtisanHelpCommand extends ArtisanCommand {
     public function help($message = '') {
         $color = new Colors();

@@ -6,7 +6,7 @@ use wulaphp\db\DatabaseConnection;
 use wulaphp\util\Annotation;
 
 /**
- * 模块基类.
+ * 模块基类。所有模块都必须在引导文件`bootstrap.php`中实现一个模块类继承自它，并将其实例注册到框架。
  *
  * @package wulaphp\app
  */
@@ -52,6 +52,8 @@ abstract class Module {
     }
 
     /**
+     * 获取模块的命名空间.
+     *
      * @return string 命名空间.
      */
     public final function getNamespace(): string {
@@ -59,6 +61,8 @@ abstract class Module {
     }
 
     /**
+     * 获取模块里的路径。
+     *
      * @param string|null $file     文件名.
      * @param bool        $absolute 是否是绝对路径
      *
@@ -102,6 +106,8 @@ abstract class Module {
     }
 
     /**
+     * 模块目录名。
+     *
      * @return string 目录名
      */
     public final function getDirname(): string {
@@ -160,6 +166,8 @@ abstract class Module {
     }
 
     /**
+     * 作者。
+     *
      * @return string
      */
     public function getAuthor() {

@@ -14,7 +14,8 @@ use wulaphp\mvc\view\View;
 use wulaphp\router\Router;
 
 /**
- * Trait CacheSupport
+ * 缓存特性,与控制器配合使用。
+ *
  * @package wulaphp\cache
  * @property-read \wulaphp\util\Annotation $methodAnn
  */

@@ -16,6 +16,11 @@ use wulaphp\db\sql\Condition;
 use wulaphp\db\sql\ImmutableValue;
 use wulaphp\db\sql\Query;
 
+/**
+ * Class SQLiteDialect
+ * @package wulaphp\db\dialect
+ * @internal
+ */
 class SQLiteDialect extends DatabaseDialect {
     /**
      * @param array      $fields

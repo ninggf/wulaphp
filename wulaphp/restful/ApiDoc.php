@@ -13,6 +13,11 @@ namespace wulaphp\restful;
 use wulaphp\app\App;
 use wulaphp\util\Annotation;
 
+/**
+ * 接口文档生成类.
+ *
+ * @package wulaphp\restful
+ */
 class ApiDoc {
     /**
      * 获取API文档.

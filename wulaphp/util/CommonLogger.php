@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
  * @package wulaphp\util
  * @since   1.1.0
  * @author  Leo Ning <windywany@gmail.com>
+ * @internal
  */
 class CommonLogger implements LoggerInterface {
     protected static $log_name = [

@@ -12,6 +12,11 @@ namespace wulaphp\router;
 
 use wulaphp\app\App;
 
+/**
+ * Class DefaultModuleDispatcher
+ * @package wulaphp\router
+ * @internal
+ */
 class DefaultModuleDispatcher implements IURLDispatcher {
     private $dd = null;
     private $defaultModule;

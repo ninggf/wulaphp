@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\mvc\view;
-
+/**
+ * csv 视图.
+ *
+ * @package wulaphp\mvc\view
+ */
 class CsvView extends View {
     private $fileName;
     private $heads   = null;

@@ -1,9 +1,14 @@
 <?php
 
 namespace wulaphp\io;
-// use cookie for session id
+
 use wulaphp\app\App;
 
+/**
+ * 会话类.
+ *
+ * @package wulaphp\io
+ */
 class Session {
     private $session_id;
     private $expire = 0;

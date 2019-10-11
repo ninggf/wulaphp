@@ -1,7 +1,10 @@
 <?php
 
 namespace wulaphp\mvc\view;
-
+/**
+ * json view
+ * @package wulaphp\mvc\view
+ */
 class JsonView extends View {
 
     /**

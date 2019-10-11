@@ -10,9 +10,14 @@ namespace wulaphp\form\providor;
 use wulaphp\db\SimpleTable;
 
 /**
+ * 数据库数据提供器。
+ *
+ * ```json
  * dsCfg:{
  *
  * }
+ * ```
+ *
  * @package wulaphp\form\providor
  */
 class TableDataProvidor extends FieldDataProvidor {

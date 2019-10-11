@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\io;
-
+/**
+ * 上传器接口.
+ *
+ * @package wulaphp\io
+ */
 interface IUploader {
     /**
      * @return string

@@ -4,10 +4,25 @@ namespace wulaphp\cache;
 
 use wulaphp\conf\ConfigurationLoader;
 
+/**
+ * 缓存基类，自定义缓存类要继承此类。
+ *
+ * @package wulaphp\cache
+ */
 class Cache implements \ArrayAccess {
+    /**
+     * 缓存时间
+     *
+     * @var int
+     */
     public  $expire    = 0;
     private $isEnalbed = true;
 
+    /**
+     * 缓存名称.
+     *
+     * @return string
+     */
     public function getName() {
         return '未启用';
     }
@@ -17,7 +32,7 @@ class Cache implements \ArrayAccess {
      *
      * @param string $type 缓存类型
      *
-     * @return Cache
+     * @return \wulaphp\cache\Cache 缓存实例.
      */
     public static function getCache(string $type = ''):Cache {
         static $caches = [];

@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\restful;
-
+/**
+ * HTTP 异常响应.
+ *
+ * @package wulaphp\restful
+ */
 class HttpException extends \Exception {
     public function __construct($message, $code = 500) {
         parent::__construct($message, $code, null);

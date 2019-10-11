@@ -16,7 +16,8 @@ namespace wulaphp\cache {
     }
 
     /**
-     * Class RtCache - runtime cache
+     * 运行时缓存。
+     *
      * @package wulaphp\cache
      */
     class RtCache {
@@ -28,6 +29,10 @@ namespace wulaphp\cache {
          * @var Cache
          */
         private static $LOCAL_CACHE;
+        /**
+         * 缓存前缀.
+         * @var string
+         */
         public static  $PREFIX;
 
         /**

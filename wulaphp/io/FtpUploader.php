@@ -12,6 +12,11 @@ namespace wulaphp\io;
 
 use wulaphp\app\App;
 
+/**
+ * Ftp 文件上传器。
+ *
+ * @package wulaphp\io
+ */
 class FtpUploader extends LocaleUploader {
     private $host;
     private $port;

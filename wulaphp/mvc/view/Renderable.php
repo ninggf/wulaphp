@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\mvc\view;
-
+/**
+ * 绘制接口.
+ *
+ * @package wulaphp\mvc\view
+ */
 interface Renderable {
 
 	/**

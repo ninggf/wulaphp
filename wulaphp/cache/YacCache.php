@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\cache;
-
+/**
+ * Class YacCache
+ * @package wulaphp\cache
+ * @internal
+ */
 class YacCache extends Cache {
 	private $yac = null;
 

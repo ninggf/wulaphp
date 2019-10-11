@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\util;
-
+/**
+ * Class ObjectCaller
+ * @package wulaphp\util
+ * @internal
+ */
 class ObjectCaller {
 
     /**

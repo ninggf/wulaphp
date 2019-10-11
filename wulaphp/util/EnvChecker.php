@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\util;
-
+/**
+ * 环境检测器.
+ *
+ * @package wulaphp\util
+ */
 abstract class EnvChecker {
     /**
      * 检测名称.

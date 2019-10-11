@@ -12,6 +12,7 @@ use wulaphp\db\sql\Query;
  * MySQL Dialect.
  *
  * @author NingGuangfeng
+ * @internal
  *
  */
 class MySQLDialect extends DatabaseDialect {

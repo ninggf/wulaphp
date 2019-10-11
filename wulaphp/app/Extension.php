@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\app;
-
+/**
+ * 扩展基类，通过继承该类使用自定义的扩展类。
+ *
+ * @package wulaphp\app
+ */
 abstract class Extension {
     public         $clzName;
     public         $reflection;

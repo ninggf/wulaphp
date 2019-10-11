@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\restful;
-
+/**
+ * app_key 与 app_secret配对检测器.
+ *
+ * @package wulaphp\restful
+ */
 interface ISecretCheck {
     /**
      * 根据appId返回appSecret。

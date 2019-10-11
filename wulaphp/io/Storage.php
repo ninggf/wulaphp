@@ -12,7 +12,12 @@ namespace wulaphp\io;
 
 use wulaphp\app\App;
 
-final class  Storage extends StorageDriver {
+/**
+ * 存储器
+ *
+ * @package wulaphp\io
+ */
+final class Storage extends StorageDriver {
     private static $IMPLS = [];
     /**
      * @var StorageDriver

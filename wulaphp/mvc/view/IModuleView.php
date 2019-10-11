@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\mvc\view;
-
+/**
+ * 模块视图，需要修正模板文件路径。
+ *
+ * @package wulaphp\mvc\view
+ */
 interface IModuleView {
 
 }

@@ -4,7 +4,7 @@ namespace wulaphp\router;
 
 /**
  * 解析后的URL信息.
- * Class UrlParsedInfo
+ *
  * @package wulaphp\router
  */
 class UrlParsedInfo implements \ArrayAccess {

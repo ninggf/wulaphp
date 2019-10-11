@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\io;
-
+/**
+ * SSDB存储器驱动.
+ *
+ * @package wulaphp\io
+ */
 class SSDBStorageDriver extends StorageDriver {
     /**
      * @var \Redis

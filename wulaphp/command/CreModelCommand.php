@@ -5,6 +5,11 @@ namespace wulaphp\command;
 use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
 
+/**
+ * Class CreModelCommand
+ * @package wulaphp\command
+ * @internal
+ */
 class CreModelCommand extends ArtisanCommand {
     public function cmd() {
         return 'model';

@@ -12,6 +12,11 @@ namespace wulaphp\io;
 
 use wulaphp\app\App;
 
+/**
+ * 本地文件上传器,将文件上传到本地目录.
+ *
+ * @package wulaphp\io
+ */
 class LocaleUploader implements IUploader {
     protected $last_error       = '';
     protected $upload_root_path = '';

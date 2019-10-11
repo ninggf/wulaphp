@@ -12,6 +12,11 @@ namespace wulaphp\form\providor;
 
 use wulaphp\form\FormTable;
 
+/**
+ * 表单字段数据提供器。
+ *
+ * @package wulaphp\form\providor
+ */
 class FieldDataProvidor {
     /**
      * 选项.

@@ -5,6 +5,11 @@ namespace wulaphp\cache;
 use wulaphp\conf\Configuration;
 use wulaphp\util\RedisClient;
 
+/**
+ * Class RedisCache
+ * @package wulaphp\cache
+ * @internal
+ */
 class RedisCache extends Cache {
     /**
      * @var \Redis

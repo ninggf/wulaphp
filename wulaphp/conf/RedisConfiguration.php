@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\conf;
-
+/**
+ * Redis配置.
+ *
+ * @package wulaphp\conf
+ */
 class RedisConfiguration extends Configuration {
 
 	public function __construct() {

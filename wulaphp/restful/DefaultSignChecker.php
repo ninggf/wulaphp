@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\restful;
-
+/**
+ * 默认签名器.
+ *
+ * @package wulaphp\restful
+ */
 class DefaultSignChecker implements ISignCheck {
     public function sign(array $args, string $appSecret, string $type = 'sha1', bool $server = false): string {
         $args = self::checkArgs($args);

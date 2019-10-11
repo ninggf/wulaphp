@@ -1,7 +1,11 @@
 <?php
 
 namespace wulaphp\artisan;
-
+/**
+ * 生成有颜色的字符.
+ *
+ * @package wulaphp\artisan
+ */
 class Colors {
     private $foreground_colors = [];
     private $background_colors = [];

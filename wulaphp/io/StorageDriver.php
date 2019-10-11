@@ -10,7 +10,8 @@
 
 namespace wulaphp\io;
 /**
- * 存储驱动蕨类
+ * 存储驱动基类
+ *
  * @package wulaphp\io
  */
 abstract class StorageDriver {

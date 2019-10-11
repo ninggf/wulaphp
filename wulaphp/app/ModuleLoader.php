@@ -4,6 +4,11 @@ namespace wulaphp\app;
 
 use wulaphp\cache\RtCache;
 
+/**
+ * 默认模块加载器，加载`modules`目录里的所有模块。
+ *
+ * @package wulaphp\app
+ */
 class ModuleLoader {
     /**
      * 加载启动文件bootstrap.php注册模块.
@@ -24,6 +29,7 @@ class ModuleLoader {
 
     /**
      * 扫描模块目录,返回目录名与引导文件数组
+     *
      * @return array
      */
     public function scanModules() {
@@ -54,9 +60,9 @@ class ModuleLoader {
     /**
      * 加载模块下的类.
      *
-     * @param string $file
+     * @param string $file 类文件名
      *
-     * @return string|null
+     * @return string|null 类文件路径。
      */
     public function loadClass($file) {
         $clf = MODULE_ROOT . $file;
@@ -72,7 +78,7 @@ class ModuleLoader {
      *
      * @param \wulaphp\app\Module $module
      *
-     * @return bool
+     * @return bool 启用返回true,反之返回false
      */
     public function isEnabled(Module $module) {
         if ($module) {

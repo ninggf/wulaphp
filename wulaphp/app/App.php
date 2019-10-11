@@ -13,7 +13,7 @@ use wulaphp\router\Router;
 use wulaphp\util\ObjectCaller;
 
 /**
- * 应用程序类,负责加载模块,配置,并启动路由器.
+ * 应用程序类,负责加载模块,配置,并启动框架。可以通过该类和框架进行交互。
  *
  * @package wulaphp\app
  * @author  Leo Ning <windywany@gmail.com>

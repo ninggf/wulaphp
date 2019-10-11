@@ -15,13 +15,33 @@ namespace wulaphp\hook;
  * @package wulaphp\hook
  */
 abstract class Handler {
-    protected $acceptArgs = 0;
-    protected $priority   = 10;
+    /**
+     * 需要参数个数.
+     *
+     * @var int
+     */
+    protected $acceptArgs = 1;
+    /**
+     * 优先级.
+     *
+     * @var int
+     */
+    protected $priority = 10;
 
+    /**
+     * 优先级.
+     *
+     * @return int
+     */
     public final function getPriority(): int {
         return $this->priority;
     }
 
+    /**
+     * 需要参数个数.
+     *
+     * @return int
+     */
     public final function getAcceptArgs(): int {
         return $this->acceptArgs;
     }
@@ -29,7 +49,7 @@ abstract class Handler {
     /**
      * hook处理.
      *
-     * @param mixed ...$args
+     * @param mixed $args
      */
     public abstract function handle(...$args);
 }

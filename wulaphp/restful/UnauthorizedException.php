@@ -9,7 +9,11 @@
  */
 
 namespace wulaphp\restful;
-
+/**
+ * 需要登录异常.
+ *
+ * @package wulaphp\restful
+ */
 class UnauthorizedException extends \Exception {
 
 }

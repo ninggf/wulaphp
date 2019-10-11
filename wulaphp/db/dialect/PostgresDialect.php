@@ -16,6 +16,11 @@ use wulaphp\db\sql\Condition;
 use wulaphp\db\sql\ImmutableValue;
 use wulaphp\db\sql\Query;
 
+/**
+ * Class PostgresDialect
+ * @package wulaphp\db\dialect
+ * @internal
+ */
 class PostgresDialect extends DatabaseDialect {
     private $user;
 
