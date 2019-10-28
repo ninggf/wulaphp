@@ -17,9 +17,13 @@ class ModuleLoader {
         global $_wula_namespace_classpath;
         $_wula_namespace_classpath['tmpmodules'] = MODULES_PATH;
         $modules                                 = $this->scanModules();
-        foreach ($modules as $file) {
+        foreach ($modules as $m => $file) {
             try {
-                include $file;
+                if ($file === true) {
+                    App::register(new DefaultModule($m));
+                } else {
+                    include $file;
+                }
             } catch (\Exception $e) {
                 log_warn($e->getMessage(), 'loader');
             }
@@ -47,6 +51,8 @@ class ModuleLoader {
                         $boot    = MODULE_ROOT . $dirname . '/bootstrap.php';
                         if (is_file($boot)) {
                             $modules[ $dirname ] = $boot;
+                        } else {
+                            $modules[ $dirname ] = true;
                         }
                     }
                 }

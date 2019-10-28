@@ -34,4 +34,24 @@ class ModuleTest extends TestCase {
         $content = $module->loadFile('test.txt');
         $this->assertEquals('this is a test file', $content);
     }
+
+    public function testBuiltModule() {
+        $bm = App::getModule('app1');
+        $this->assertNotNull($bm);
+        $this->assertEquals('App1', $bm->getName());
+        $this->assertEquals('app1', $bm->getNamespace());
+
+        $content = $bm->loadFile('test.txt');
+        $this->assertEquals('this is a test file', $content);
+
+        @ob_start();
+        try {
+            App::run('app1');
+        } catch (\Exception $e) {
+
+        }
+        $page = @ob_get_clean();
+        self::assertNotEmpty($page);
+        self::assertEquals('app1', $page);
+    }
 }
