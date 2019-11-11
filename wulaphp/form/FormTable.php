@@ -7,7 +7,7 @@ use wulaphp\util\Annotation;
 use wulaphp\validator\Validator;
 
 /**
- * 声明了字段的数据表.
+ * 声明了字段的数据表(支持数据验证).
  *
  * @package wulaphp\form
  */
@@ -143,11 +143,12 @@ abstract class FormTable extends Table {
 
     /**
      * 从数据库加载数据.
-     * @see  \wulaphp\form\FormTable::inflateFromDB()
      *
      * @param array $where
      *
      * @return array
+     * @see  \wulaphp\form\FormTable::inflateFromDB()
+     *
      */
     protected function loadFromDb($where) {
         $data = $this->select($this->defaultQueryFields)->where($where)->get(0);
@@ -288,7 +289,7 @@ abstract class FormTable extends Table {
         if ($sfields) {
             $this->defaultQueryFields = implode(',', $sfields);
         }
-        fire(get_class($this) . '::onParseFields', $this);
+        fire(get_class($this) . '.onParseFields', $this);
         unset($refobj);
     }
 
@@ -312,7 +313,7 @@ abstract class FormTable extends Table {
      *
      * @return string 字段名,非本表字段时请返回null。
      */
-    public function addField($fname, $ann, $default = '') {
+    public function addField($fname, $ann, $default = ''): string {
         if (is_array($ann)) {
             $ann = new Annotation($ann);
         }
@@ -351,9 +352,11 @@ abstract class FormTable extends Table {
      * @param array  $options 字段属性.
      */
     public function alterFieldOptions($name, &$options) {
-
     }
 
+    /**
+     * 创建控件之前调用。
+     */
     protected function beforeCreateWidgets() {
     }
 
@@ -362,7 +365,7 @@ abstract class FormTable extends Table {
      *
      * @return array|null 组件列表.
      */
-    public final function createWidgets() {
+    public final function createWidgets(): ?array {
         if ($this->_widgets !== null) {
             return $this->_widgets;
         }
