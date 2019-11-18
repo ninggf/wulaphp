@@ -84,7 +84,7 @@ trait RbacSupport {
                 return $this->onDenied($msg ? $msg : $this->globalRbacSetting['aclmsg'], $view);
             }
         } else {
-            return $this->onDenied($this->globalRbacSetting['aclmsg'], $view);
+            return $this->needLogin($view);
         }
 
         return $view;

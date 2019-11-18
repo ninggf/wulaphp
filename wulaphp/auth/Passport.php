@@ -39,16 +39,17 @@ class Passport implements \ArrayAccess {
      *
      * @return Passport
      */
-    public final static function get(string $type = 'default'):Passport {
+    public final static function get(string $type = 'default'): Passport {
         if (!isset(self::$INSTANCES[ $type ])) {
             $defaultPassport = apply_filter('passport\new' . ucfirst($type) . 'Passport', new Passport());
             $passport        = sess_get(self::SESSION_NAME . '_' . $type);
             if ($passport) {
-                if (function_exists('igbinary_unserialize')) {
-                    self::$INSTANCES[ $type ] = @igbinary_unserialize($passport);
+                if (extension_loaded('igbinary') && ini_get('session.save_handler') == 'redis') {
+                    $pp = @igbinary_unserialize($passport);
                 } else {
-                    self::$INSTANCES[ $type ] = @unserialize($passport);
+                    $pp = @unserialize($passport);
                 }
+                self::$INSTANCES[ $type ] = $pp ? $pp : $defaultPassport;
             } else {
                 $defaultPassport->type    = $type;
                 self::$INSTANCES[ $type ] = $defaultPassport;
@@ -67,7 +68,7 @@ class Passport implements \ArrayAccess {
      * @see password_hash
      *
      */
-    public static function passwd(string $password):string {
+    public static function passwd(string $password): string {
         return password_hash($password, PASSWORD_DEFAULT);
     }
 
@@ -81,7 +82,7 @@ class Passport implements \ArrayAccess {
      * @see password_verify
      *
      */
-    public static function verify(string $password,string $hash):bool {
+    public static function verify(string $password, string $hash): bool {
         return password_verify($password, $hash);
     }
 
@@ -105,7 +106,7 @@ class Passport implements \ArrayAccess {
      *
      * @return array
      */
-    public function info():array {
+    public function info(): array {
         $info             = $this->data;
         $info['id']       = $this->uid;
         $info['username'] = $this->username;
@@ -122,11 +123,12 @@ class Passport implements \ArrayAccess {
      * @return bool
      */
     public function store() {
-        if (function_exists('igbinary_serialize')) {
+        if (extension_loaded('igbinary') && ini_get('session.save_handler') == 'redis') {
             $s = @igbinary_serialize($this);
         } else {
             $s = @serialize($this);
         }
+
         if ($s) {
             $_SESSION[ self::SESSION_NAME . '_' . $this->type ] = $s;
         }
@@ -157,7 +159,7 @@ class Passport implements \ArrayAccess {
      * @return bool
      * @throws \Exception
      */
-    public final function login($data = null):bool {
+    public final function login($data = null): bool {
         $this->isLogin = $this->doAuth($data);
         if ($this->isLogin) {
             fire('passport\on' . ucfirst($this->type) . 'PassportLogin', $this);
@@ -170,12 +172,12 @@ class Passport implements \ArrayAccess {
     /**
      * 用户是否有权限操作。
      *
-     * @param string $opRes 操作资源
-     * @param null|array   $extra
+     * @param string     $opRes 操作资源
+     * @param null|array $extra
      *
      * @return bool
      */
-    public final function cando(string $opRes,?array $extra = null):bool {
+    public final function cando(string $opRes, ?array $extra = null): bool {
         $resid = explode(':', $opRes);
         $op    = $resid[0];
         if (!isset($resid[1])) {
