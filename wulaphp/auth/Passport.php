@@ -40,16 +40,17 @@ class Passport implements \ArrayAccess {
      */
     public final static function get($type = 'default') {
         if (!isset(self::$INSTANCES[ $type ])) {
-            $defaultPassport = apply_filter('passport\new' . ucfirst($type) . 'Passport', new Passport());
-            $passport        = sess_get(self::SESSION_NAME . '_' . $type);
+            $defaultPassport       = apply_filter('passport\new' . ucfirst($type) . 'Passport', new Passport());
+            $defaultPassport->type = $type;
+            $passport              = sess_get(self::SESSION_NAME . '_' . $type);
             if ($passport) {
-                if (function_exists('igbinary_unserialize')) {
-                    self::$INSTANCES[ $type ] = @igbinary_unserialize($passport);
+                if (extension_loaded('igbinary') && ini_get('session.save_handler') == 'redis') {
+                    $pp = @igbinary_unserialize($passport);
                 } else {
-                    self::$INSTANCES[ $type ] = @unserialize($passport);
+                    $pp = @unserialize($passport);
                 }
+                self::$INSTANCES[ $type ] = $pp ? $pp : $defaultPassport;
             } else {
-                $defaultPassport->type    = $type;
                 self::$INSTANCES[ $type ] = $defaultPassport;
             }
         }
@@ -121,7 +122,7 @@ class Passport implements \ArrayAccess {
      * @return bool
      */
     public function store() {
-        if (function_exists('igbinary_serialize')) {
+        if (extension_loaded('igbinary') && ini_get('session.save_handler') == 'redis') {
             $s = @igbinary_serialize($this);
         } else {
             $s = @serialize($this);
