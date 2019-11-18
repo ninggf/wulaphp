@@ -41,8 +41,9 @@ class Passport implements \ArrayAccess {
      */
     public final static function get(string $type = 'default'): Passport {
         if (!isset(self::$INSTANCES[ $type ])) {
-            $defaultPassport = apply_filter('passport\new' . ucfirst($type) . 'Passport', new Passport());
-            $passport        = sess_get(self::SESSION_NAME . '_' . $type);
+            $defaultPassport       = apply_filter('passport\new' . ucfirst($type) . 'Passport', new Passport());
+            $defaultPassport->type = $type;
+            $passport              = sess_get(self::SESSION_NAME . '_' . $type);
             if ($passport) {
                 if (extension_loaded('igbinary') && ini_get('session.save_handler') == 'redis') {
                     $pp = @igbinary_unserialize($passport);
@@ -51,7 +52,6 @@ class Passport implements \ArrayAccess {
                 }
                 self::$INSTANCES[ $type ] = $pp ? $pp : $defaultPassport;
             } else {
-                $defaultPassport->type    = $type;
                 self::$INSTANCES[ $type ] = $defaultPassport;
             }
         }
