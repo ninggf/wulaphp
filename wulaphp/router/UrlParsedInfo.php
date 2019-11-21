@@ -141,7 +141,7 @@ class UrlParsedInfo implements \ArrayAccess {
      * 解析URL
      */
     protected function parseURL() {
-        $cc     = explode('/', $this->uri);
+        $cc     = explode('/', $this->url);
         $chunks = [];
         foreach ($cc as $chunk) {
             $chunks[] = urldecode($chunk);
