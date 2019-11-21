@@ -9,18 +9,22 @@
  */
 
 return [
-    'mul.html' => [
+    'mul.html'    => [
         'template'     => 'mul.tpl',
         'expire'       => 100,
         'func'         => function ($data) {
-            $data['num1'] = 20 * $data['base'];
+            if (rqset('i')) {
+                $data['num1'] = irqst('i') * $data['base'];
+            } else {
+                $data['num1'] = 20 * $data['base'];
+            }
 
             return $data;
         },
         'Content-Type' => 'text/html',
         'data'         => ['base' => 10]
     ],
-    'math/add.do'     => [
+    'math/add.do' => [
         'template'     => 'mul.tpl',
         'expire'       => 100,
         'func'         => function ($data) {

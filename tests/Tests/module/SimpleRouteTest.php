@@ -84,4 +84,12 @@ class SimpleRouteTest extends TestCase {
 
         $this->assertEquals('result is 200', $content);
     }
+
+    public function testTableRouteWithParams() {
+        $curlient = CurlClient::getClient(5);
+
+        $content = $curlient->get('http://127.0.0.1:9090/testm/mul.html?i=3');
+
+        self::assertEquals('result is 30', $content);
+    }
 }
