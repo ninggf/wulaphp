@@ -187,7 +187,7 @@ class Passport implements \ArrayAccess {
         $rst = $this->checkAcl($op, $resid[1], $extra);
         if ($rst) {
             //额外权限检测
-            $aclExtraChecker = apply_filter('rbac\getExtraChecker\\' . $rid, null);
+            $aclExtraChecker = apply_filter('rbac\checker\\' . $rid, null);
             if ($aclExtraChecker instanceof AclExtraChecker) {
                 $rst = $aclExtraChecker->check($this, $op, $extra);
             }
