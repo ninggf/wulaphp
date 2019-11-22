@@ -85,7 +85,7 @@ class PassportTest extends TestCase {
 
             return $p;
         });
-        bind('rbac\getExtraChecker\site', function ($checker) {
+        bind('rbac\checker\site', function ($checker) {
             $siteChecker = new SiteChecker();
             if ($checker) {
                 $siteChecker->next($checker);
