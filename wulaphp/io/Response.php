@@ -2,7 +2,6 @@
 
 namespace wulaphp\io;
 
-use wulaphp\app\App;
 use wulaphp\mvc\view\JsonView;
 use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\View;
@@ -15,13 +14,18 @@ use wulaphp\mvc\view\View;
  * @date    12-9-16 下午5:53
  */
 class Response {
-    private        $before_out = null;
-    private        $content    = '';
-    private        $view       = null;
-    private static $INSTANCE   = null;
-
-    private $bufferLevel = 0;
-    private $bufferName;
+    private static $INSTANCE    = null;
+    private        $before_out  = null;
+    private        $content     = '';
+    private        $view        = null;
+    private        $bufferLevel = 0;
+    private        $bufferName;
+    /**
+     * cookies
+     *
+     * @var \wulaphp\io\Cookie[]
+     */
+    private static $cookies = [];
 
     /**
      * 初始化.
@@ -39,6 +43,11 @@ class Response {
                         return '<!--' . $this->before_out . '-->' . $this->content;
                     } else {
                         log_warn($this->before_out, 'bootstrap');
+                    }
+                }
+                if (self::$cookies) {
+                    foreach (self::$cookies as $cookie) {
+                        @setcookie($cookie['name'], $cookie['value'], $cookie['expire'], $cookie['path'], $cookie['domain'], $cookie['security'], $cookie['httponly']);
                     }
                 }
 
@@ -250,32 +259,27 @@ class Response {
      * @param null|int    $expire
      * @param null|string $path
      * @param null|string $domain
-     * @param null|bool   $security
+     *
+     * @return \wulaphp\io\Cookie
      */
-    public static function cookie(string $name, $value = null, $expire = null, $path = null, $domain = null, $security = null) {
-        $settings       = App::cfg();
-        $cookie_setting = array_merge2([
-            'expire'   => 0,
-            'path'     => '/',
-            'domain'   => '',
-            'security' => false
-        ], $settings->get('cookie', []));
-        if ($expire == null) {
-            $expire = intval($cookie_setting ['expire']);
+    public static function cookie(string $name, $value = null, ?int $expire = null, ?string $path = null, ?string $domain = null) {
+        $ck = new Cookie($name, $value);
+
+        if ($expire !== null) {
+            $ck->expire($expire);
         }
-        if ($path == null) {
-            $path = $cookie_setting ['path'];
+
+        if ($path !== null) {
+            $ck->path($path);
         }
-        if ($domain == null) {
-            $domain = $cookie_setting ['domain'];
+
+        if ($domain !== null) {
+            $ck->domain($domain);
         }
-        if ($security == null) {
-            $security = $cookie_setting ['security'];
-        }
-        if ($expire != 0) {
-            $expire = time() + $expire;
-        }
-        @setcookie($name, $value, $expire, $path, $domain, $security);
+
+        self::$cookies[ $name ] = $ck;
+
+        return $ck;
     }
 
     /**

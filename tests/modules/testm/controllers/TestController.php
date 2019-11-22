@@ -12,6 +12,7 @@ namespace testm\controllers;
 
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use wulaphp\cache\RtCache;
+use wulaphp\io\Response;
 use wulaphp\mvc\controller\Controller;
 
 class TestController extends Controller {
@@ -41,5 +42,28 @@ class TestController extends Controller {
         RtCache::ladd('rt@test', '11111');
 
         return ['rt' => RtCache::lget('rt@test')];
+    }
+
+    public function scookie() {
+        $value = $_COOKIE['ocookie'];
+        Response::cookie('test-sc', $value)->httponly(true);
+        $ok = rqst('ok', '');
+        if ($ok) {
+            return 'cookie set:' . $ok;
+        }
+
+        return 'cookie set';
+    }
+
+    /**
+     *
+     * @jsonBody
+     * @return string
+     */
+    public function scookiePost() {
+        $value = $_COOKIE['ocookie'];
+        Response::cookie('test-sc', $value)->httponly(true);
+
+        return 'cookie post:' . rqst('testT');
     }
 }

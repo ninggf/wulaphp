@@ -25,38 +25,24 @@ class CurlClient {
     private        $proxy      = null;
     private        $mcallback  = null;
     private        $inUsed     = false;
+    private        $cookies    = null;
+    private        $headers    = null;
+    private        $useJson    = false;
+    private        $timeout    = 30;
+    private        $referer    = '';
     private        $customData = [];
-    public         $error      = null;
-    public         $errorCode  = 0;
 
-    private function __construct($timeout = 30000, $headers = [], $referer = '') {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_HTTPGET, 1);
-        curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($curl, CURLOPT_AUTOREFERER, 1);
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($curl, CURLOPT_MAXREDIRS, 5);
-        if ($referer) {
-            curl_setopt($curl, CURLOPT_REFERER, $referer);
-        }
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_ENCODING, 'gzip, deflate');
-        curl_setopt($curl, CURLOPT_USERAGENT, self::$agent);
+    public $error     = null;
+    public $errorCode = 0;
+
+    protected function __construct(int $timeout = 30000, array $headers = [], string $referer = '') {
+        $this->ch = curl_init();
         if ($headers) {
-            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+            $this->headers = $headers;
         }
-        $this->ch = $curl;
-        $proxy    = App::cfg('proxy.type');
-        if ($proxy) {
-            $proxy = array_merge([
-                'auth' => '',
-                'port' => 0,
-                'host' => ''
-            ], App::acfg('proxy'));
-            $this->setProxy($proxy);
-        }
+        $this->timeout = $timeout;
+        $this->referer = $referer;
+        $this->initCurl();
     }
 
     /**
@@ -158,7 +144,7 @@ class CurlClient {
      * 完成回调.
      *
      * @param int|string $index
-     * @param            $data
+     * @param string     $data
      *
      * @return mixed|null
      */
@@ -168,7 +154,7 @@ class CurlClient {
             return $this->mcallback->onFinish($index, $data, $this->ch, $this->customData);
         }
 
-        return null;
+        return $data;
     }
 
     /**
@@ -184,7 +170,7 @@ class CurlClient {
             return $this->mcallback->onError($index, $this->ch, $this->customData);
         }
 
-        return null;
+        return curl_error($this->ch);
     }
 
     /**
@@ -197,28 +183,43 @@ class CurlClient {
     }
 
     /**
-     * 准备Client给CurlClientHelper使用.
+     * 以json格式传POST数据.
      *
-     * @param string   $url
-     * @param array    $data
-     * @param callback $callback
-     * @param string   $referer
+     * @return $this
+     */
+    public function useJsonBody() {
+        $this->useJson = true;
+
+        return $this;
+    }
+
+    /**
+     * 准备Client给execute方法调用.
+     *
+     * @param string               $url      URL
+     * @param array                $data     数据
+     * @param CurlMultiExeCallback $callback 回调
      *
      * @return CurlClient;
      */
-    public function preparePost($url, $data, $callback = null, $referer = '') {
+    public function preparePost(string $url, array $data = [], ?CurlMultiExeCallback $callback = null) {
         if (!$this->inUsed) {
-            $this->inUsed    = true;
-            $this->mcallback = $callback;
-            $options         = [
+            $this->inUsed = true;
+            if ($this->useJson) {
+                $data                          = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                $this->headers['Content-Type'] = 'application/json';
+            }
+            $options = [
                 CURLOPT_URL         => $url,
                 CURLOPT_POST        => true,
                 CURLOPT_AUTOREFERER => 0,
                 CURLOPT_POSTFIELDS  => $data,
-                CURLOPT_REFERER     => $referer,
                 CURLOPT_HTTPGET     => 0
             ];
             curl_setopt_array($this->ch, $options);
+            $this->dealCookie($this->ch);
+            $this->dealHeader($this->ch);
+            $this->mcallback = $callback;
 
             return $this;
         }
@@ -247,10 +248,10 @@ class CurlClient {
                 $data[ $key ] = new \CURLFile(substr($v, 1));
             }
         }
-
+        $jsonData = $jsonData || $this->useJson;
         if ($jsonData) {
-            $data = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            curl_setopt($this->ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            $data                          = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $this->headers['Content-Type'] = 'application/json';
         }
 
         $options = [
@@ -261,6 +262,8 @@ class CurlClient {
         ];
 
         curl_setopt_array($this->ch, $options);
+        $this->dealCookie($this->ch);
+        $this->dealHeader($this->ch);
         $rst = curl_exec($this->ch);
         if ($rst === false) {
             $this->error     = curl_error($this->ch);
@@ -279,15 +282,14 @@ class CurlClient {
     }
 
     /**
-     * 准备Client给CurlClientHelper使用.
+     * 准备Client给execute方法使用.
      *
-     * @param string   $url
-     * @param callback $callback
-     * @param string   $referer
+     * @param string               $url
+     * @param CurlMultiExeCallback $callback
      *
      * @return CurlClient
      */
-    public function prepareGet($url, $callback = null, $referer = '') {
+    public function prepareGet($url, ?CurlMultiExeCallback $callback = null) {
         if (!$this->inUsed) {
             $this->inUsed = true;
             $options      = [
@@ -295,10 +297,11 @@ class CurlClient {
                 CURLOPT_POST        => 0,
                 CURLOPT_AUTOREFERER => 1,
                 CURLOPT_POSTFIELDS  => null,
-                CURLOPT_REFERER     => $referer,
                 CURLOPT_HTTPGET     => 1
             ];
             curl_setopt_array($this->ch, $options);
+            $this->dealCookie($this->ch);
+            $this->dealHeader($this->ch);
             $this->mcallback = $callback;
 
             return $this;
@@ -311,13 +314,13 @@ class CurlClient {
      * GET请求数据.
      *
      * @param string      $url   URL.
-     * @param string|null $base  基础目录
-     * @param bool        $re    重用
+     * @param string|null $base  保存目录
+     * @param bool        $reuse 重用
      * @param bool        $isImg 是否是图片
      *
      * @return bool|mixed|null|string|string[]
      */
-    public function get($url, $base = null, $re = false, $isImg = false) {
+    public function get($url, $base = null, $reuse = false, $isImg = false) {
         set_time_limit(0);
         if ($base) {
             $uinfo = CurlClient::getUrlInfo($url);
@@ -335,7 +338,7 @@ class CurlClient {
 
             $tmpName = $ip . $uinfo ['file'];
             if (file_exists($tmpName)) {
-                if ($re) {
+                if ($reuse) {
                     return @file_get_contents($tmpName);
                 } else {
                     return true;
@@ -343,6 +346,8 @@ class CurlClient {
             }
         }
         $curl = $this->ch;
+        $this->dealCookie($curl);
+        $this->dealHeader($curl);
         curl_setopt($curl, CURLOPT_URL, $url);
         $rst = curl_exec($curl);
         if ($rst === false) {
@@ -372,6 +377,112 @@ class CurlClient {
     }
 
     /**
+     * 设置请求cookie并获取响应中的cookie。
+     *
+     * @param array $cookies
+     *
+     * @return $this
+     */
+    public function withCookies(?array &$cookies = null) {
+        if ($cookies === null) {
+            $cookies = [];
+        }
+        $this->cookies = &$cookies;
+
+        return $this;
+    }
+
+    /**
+     * 设置请求头，并获取响应头.
+     *
+     * @param array|null $headers
+     *
+     * @return $this
+     */
+    public function withHeaders(?array &$headers = null) {
+        if ($headers === null) {
+            $headers = [];
+        }
+        $headers = array_merge($this->headers ? $this->headers : [], $headers);
+
+        if ($this->cookies === null) {
+            $this->cookies = [];
+        }
+        $this->headers = &$headers;
+
+        return $this;
+    }
+
+    /**
+     * 使用指定网卡.
+     *
+     * @param string $eth
+     *
+     * @return $this
+     */
+    public function useAdapter(string $eth) {
+        curl_setopt($this->ch, CURLOPT_INFILE, $eth);
+
+        return $this;
+    }
+
+    public function userAgent(string $agent) {
+        curl_setopt($this->ch, CURLOPT_USERAGENT, $agent);
+
+        return $this;
+    }
+
+    /**
+     * 设置代理.
+     *
+     * @param $proxy
+     *
+     * @return $this
+     */
+    public function useProxy(string $proxy) {
+        $this->setProxy($proxy);
+
+        return $this;
+    }
+
+    /**
+     * 设置代理.
+     *
+     * @param array $proxy
+     *
+     * @return $this
+     */
+    public function useProxyByAry(array $proxy) {
+        $this->setProxy($proxy);
+
+        return $this;
+    }
+
+    /**
+     * 设置referer。
+     *
+     * @param string $referer
+     *
+     * @return $this
+     */
+    public function referer(string $referer) {
+        curl_setopt($this->ch, CURLOPT_REFERER, $referer);
+
+        return $this;
+    }
+
+    /**
+     * ajax方式请求.
+     *
+     * @return $this
+     */
+    public function ajax() {
+        $this->headers['X-Requested-With'] = 'XMLHttpRequest';
+
+        return $this;
+    }
+
+    /**
      * 下载图片.
      *
      * @param string $url
@@ -398,6 +509,115 @@ class CurlClient {
     public function close() {
         if ($this->ch) {
             @curl_close($this->ch);
+            $this->ch = null;
+        }
+    }
+
+    /**
+     * 重置客户端设置。
+     */
+    public function reset() {
+        if ($this->ch) {
+            curl_reset($this->ch);
+        } else {
+            $this->ch = curl_init();
+        }
+        $this->headers    = null;
+        $this->cookies    = null;
+        $this->useJson    = false;
+        $this->domain     = '';
+        $this->inUsed     = false;
+        $this->customData = [];
+        $this->initCurl();
+
+        return true;
+    }
+
+    /**
+     * 处理Cookie.
+     *
+     * @param resource $curl
+     */
+    private function dealCookie($curl) {
+        if (is_array($this->cookies)) {
+            if ($this->cookies) {
+                $tmp_ary = [];
+                foreach ($this->cookies as $name => $val) {
+                    $name       = trim($name);
+                    $tmp_ary [] = $name . '=' . urlencode($val->value);
+                }
+                $cks = implode('; ', $tmp_ary);
+                curl_setopt($curl, CURLOPT_COOKIE, $cks);
+            }
+
+            curl_setopt($curl, CURLOPT_HEADERFUNCTION, function ($c, $header) {
+                $len     = strlen($header);
+                $headers = explode(':', $header, 2);
+                if (count($headers) < 2) { // ignore invalid headers
+                    return $len;
+                }
+                $name = trim($headers[0]);
+                if ($name == 'Set-Cookie') {
+                    $cookie                        = trim($headers[1]);
+                    $this->headers['Set-Cookie'][] = $cookie;
+
+                    if (preg_match('#^([^;]+?)=([^;]+)(;.*)?#', $cookie, $cok)) {
+                        $ck                       = new \stdClass();
+                        $ck->value                = urldecode($cok[2]);
+                        $ck->option               = trim($cok[3], '; ');
+                        $this->cookies[ $cok[1] ] = $ck;
+                    }
+                } else {
+                    $this->headers[ $name ] = trim($headers[1]);
+                }
+
+                return $len;
+            });
+        }
+    }
+
+    /**
+     * 设置请求头.
+     *
+     * @param resource $curl
+     */
+    private function dealHeader($curl) {
+        if ($this->headers) {
+            $headers = $this->headers;
+            array_walk($headers, function (&$v, $k) {
+                if (!is_numeric($k)) {
+                    $v = "$k: " . $v;
+                }
+            });
+            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+            $this->headers = [];
+        }
+    }
+
+    private function initCurl() {
+        $curl = $this->ch;
+        curl_setopt($curl, CURLOPT_HTTPGET, 1);
+        curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
+        curl_setopt($curl, CURLOPT_AUTOREFERER, 1);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($curl, CURLOPT_MAXREDIRS, 5);
+        if ($this->referer) {
+            curl_setopt($curl, CURLOPT_REFERER, $this->referer);
+        }
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_ENCODING, 'gzip, deflate');
+        curl_setopt($curl, CURLOPT_USERAGENT, self::$agent);
+
+        $proxy = App::cfg('proxy.type');
+        if ($proxy) {
+            $proxy = array_merge([
+                'auth' => '',
+                'port' => 0,
+                'host' => ''
+            ], App::acfg('proxy'));
+            $this->setProxy($proxy);
         }
     }
 
@@ -415,6 +635,7 @@ class CurlClient {
             $handles = [];
             foreach ($clients as $i => $client) {
                 if (!($client instanceof CurlClient)) {
+                    $result[1][ $i ] = 'client is not a instance of CurlClient';
                     continue;
                 }
                 if ($client->onStart($i)) {

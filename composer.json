@@ -17,6 +17,7 @@
         "phpoffice/phpspreadsheet": "^1.4"
     },
     "suggest": {
+        "ext-curl": "*",
         "ext-redis": "*",
         "ext-memcached": "*",
         "ext-apcu": "*",
