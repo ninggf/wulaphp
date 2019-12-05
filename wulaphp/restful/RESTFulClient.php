@@ -294,7 +294,7 @@ class RESTFulClient {
      */
     private function preparePostData(array &$data) {
         foreach ($data as $key => &$val) {
-            if (is_string($val) && $val{0} == '@' && is_file(trim(substr($val, 1), '"'))) {
+            if (is_string($val) && $val[0] == '@' && is_file(trim(substr($val, 1), '"'))) {
                 $data [ $key ] = new \CURLFile(realpath(trim(substr($val, 1), '"')));
             } else if (is_array($val)) {
                 $this->preparePostData($val);

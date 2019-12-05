@@ -25,7 +25,7 @@ class DefaultSignChecker implements ISignCheck {
         foreach ($args as $key => $v) {
             if (is_array($v)) {
                 foreach ($v as $k => $v1) {
-                    if (!$server && $v1{0} == '@') {
+                    if (!$server && $v1[0] == '@') {
                         $sign [] = $key . "[{$k}]" . self::getfileSha1($v1);
                     } else if ($v1 || is_numeric($v1)) {
                         $sign [] = $key . "[{$k}]" . $v1;
@@ -33,7 +33,7 @@ class DefaultSignChecker implements ISignCheck {
                         $sign [] = $key . "[{$k}]";
                     }
                 }
-            } else if (!$server && $v{0} == '@') {
+            } else if (!$server && $v[0] == '@') {
                 $sign [] = $key . self::getfileSha1($v);
             } else if ($v || is_numeric($v)) {
                 $sign [] = $key . $v;

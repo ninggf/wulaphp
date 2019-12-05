@@ -234,7 +234,7 @@ class Annotation {
             } else {
                 $val = trim($val);
             }
-            if ($ov && $ov{0} == '@') {
+            if ($ov && $ov[0] == '@') {
                 $j--;//归位
                 break;
             } else {

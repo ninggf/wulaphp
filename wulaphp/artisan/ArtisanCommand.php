@@ -334,7 +334,7 @@ abstract class ArtisanCommand {
             $cmd = null;
             for ($i = 2; $i < $argc; $i++) {
                 $_cmd = $argv[ $i ];
-                if ($_cmd{0} != '-') {
+                if ($_cmd[0] != '-') {
                     $cmd = $_cmd;
                     break;
                 }

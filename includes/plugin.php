@@ -58,7 +58,7 @@ function bind(string $hook, $hook_func, int $priority = 10, int $accepted_args =
     $hook     = __rt_real_hook($hook);
     $priority = $priority ? $priority : 10;
     $extra    = $ex ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0] : null;
-    if (is_string($hook_func) && $hook_func{0} == '&') {
+    if (is_string($hook_func) && $hook_func[0] == '&') {
         $hook_func = ltrim($hook_func, '&');
         $hook_func = [$hook_func, str_replace(['.', '\\', '/', '-'], ['_', ''], $hook)];
     }

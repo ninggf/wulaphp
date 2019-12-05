@@ -135,9 +135,9 @@ class LocaleUploader implements IUploader {
             }
         }
         $uploadPath = App::cfg('upload.path', 'files');
-        if ($path{0} == '@') {
+        if ($path[0] == '@') {
             return substr($path, 1);
-        } else if ($path{0} == '~') {
+        } else if ($path[0] == '~') {
             $save_path = App::cfg('save_path@media', $uploadPath);
             if (!$save_path) {
                 $save_path = 'files';

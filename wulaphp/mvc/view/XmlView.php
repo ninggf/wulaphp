@@ -59,7 +59,7 @@ class XmlView extends View {
                     }
                     $this->addNode($nn, $v);
                 }
-            } else if ($k{0} == '@') {
+            } else if ($k[0] == '@') {
                 $node->addAttribute(substr($k, 1), $v);
             } else {
                 $node->addChild($k, $v);

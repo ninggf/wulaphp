@@ -140,7 +140,7 @@ class Condition implements \ArrayAccess, \Countable {
             foreach ($expressions as $exp) {
                 if (preg_match("#^'([^']+)'\s+([^\s]+)\s+(.*)#", trim($exp), $ms)) {
                     if (isset($defines[ $ms[1] ])) {
-                        if ($defines[ $ms[1] ]{0} == '@') {
+                        if ($defines[ $ms[1] ][0] == '@') {
                             $t     = true;
                             $field = substr($defines[ $ms[1] ], 1) . ($ms[2] == '=' ? '' : ' ' . $ms[2]);
                         } else {

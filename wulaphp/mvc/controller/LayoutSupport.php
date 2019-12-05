@@ -23,7 +23,7 @@ trait LayoutSupport {
             }
             $layout = '~' . $this->layout;
             $data   = $this->onInitLayoutData($data);
-            if ($tpl && $tpl{0} == '~') {
+            if ($tpl && $tpl[0] == '~') {
                 $tpl = substr($tpl, 1);
                 $tpl = $tpl . '.tpl';
             } else if ($tpl) {

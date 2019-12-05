@@ -335,7 +335,7 @@ class DefaultDispatcher implements IURLDispatcher {
         if ($view instanceof IModuleView) {
             $tpl = $view->getTemplate();
             if ($tpl) {
-                if ($tpl{0} == '~') {
+                if ($tpl[0] == '~') {
                     $tpl = substr($tpl, 1);
                 } else {
                     $tpl = $module . '/views/' . $tpl;

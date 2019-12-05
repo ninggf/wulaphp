@@ -240,11 +240,11 @@ class CurlClient {
         foreach ($data as $key => $v) {
             if (is_array($v)) {
                 foreach ($v as $k => $vv) {
-                    if ($vv{0} == '@') {
+                    if ($vv[0] == '@') {
                         $data[ $key ][ $k ] = new \CURLFile(substr($vv, 1));
                     }
                 }
-            } else if (is_string($v) && $v{0} == '@') {
+            } else if (is_string($v) && $v[0] == '@') {
                 $data[ $key ] = new \CURLFile(substr($v, 1));
             }
         }
@@ -729,7 +729,7 @@ class CurlClient {
     public static function getURL($url, $info): string {
         if (preg_match('#^(htt|ft)ps?://.+#i', $url)) {
             return $url;
-        } else if ($url{0} === '/') {
+        } else if ($url[0] === '/') {
             $root = $info ['root'];
 
             return $root . ltrim($url, '/');

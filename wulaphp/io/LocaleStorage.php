@@ -23,7 +23,7 @@ class LocaleStorage extends StorageDriver {
             return false;
         }
         $ssn = str_replace('/', DS, $ssn);
-        if ($ssn{0} == DS) {
+        if ($ssn[0] == DS) {
             $this->dir = $ssn;
         } else {
             $this->dir = APPROOT . $ssn . DS;

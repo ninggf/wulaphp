@@ -30,7 +30,7 @@ if ($cmd == '-v') {
         exit($exit === 1 ? 0 : $exit);
     }
     $cmdi = new \wulaphp\artisan\ArtisanHelpCommand();
-    if ($cmd{0} == '-') {
+    if ($cmd[0] == '-') {
         $cmdi->help("Unknown Option: " . $cmd);
     } else {
         $cmdi->help("Unknown Command: " . $cmd);
