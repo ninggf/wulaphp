@@ -205,7 +205,7 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
     }
     if (!defined('DEBUG')) {
         $dumps = '[' . gmdate('Y-m-d H:i:s') . ' GMT] ' . $message . "\n";
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 10; $i ++) {
             if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
                 $dumps .= \wulaphp\util\CommonLogger::getLine($trace_info[ $i ], $i);
             }
@@ -271,6 +271,17 @@ function get_session_name(): string {
  */
 function imv(string $val, string $alias = null): ImmutableValue {
     return new \wulaphp\db\sql\ImmutableValue ($val, $alias);
+}
+
+/**
+ * 字段引用.
+ *
+ * @param string $field
+ *
+ * @return \wulaphp\db\sql\Ref
+ */
+function imf(string $field) {
+    return new \wulaphp\db\sql\Ref($field);
 }
 
 /**

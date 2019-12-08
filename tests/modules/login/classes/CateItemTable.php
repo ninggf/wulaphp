@@ -42,16 +42,16 @@ class CateItemTable extends Table {
 
     public function updateByCate() {
         $sql = $this->update()->table('{cate} AS C')->set(['CateItem.deleted' => 1]);
-        $sql->where(['CateItem.cid' => imv('C.id'), 'C.deleted' => 1]);
+        $sql->where(['CateItem.cid' => imf('C.id'), 'C.deleted' => 1]);
 
-        return $sql->exec(null);
+        return $sql->affected();
     }
 
     public function updateByCatePg() {
         $sql = $this->update()->table('{cate} AS C')->set(['deleted' => 1]);
-        $sql->where(['CateItem.cid' => imv('C.id'), 'C.deleted' => 1]);
+        $sql->where(['CateItem.cid' => imf('C.id'), 'C.deleted' => 1]);
 
-        return $sql->exec(null);
+        return $sql->affected();
     }
 
     public function deleteRecycled() {
@@ -59,6 +59,6 @@ class CateItemTable extends Table {
         $sql->left('{cate} AS C', 'CateItem.cid', 'C.id');
         $sql->where(['C.deleted' => 1]);
 
-        return $sql->exec(null);
+        return $sql->affected();
     }
 }

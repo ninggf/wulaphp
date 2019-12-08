@@ -37,7 +37,7 @@ SQL;
 
         foreach ($sqls as $sql) {
             $rst = self::$con->exec($sql);
-            if ($rst) {
+            if (!$rst) {
                 throw new \Exception('cannot execute: ' . $sql);
             }
         }

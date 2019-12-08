@@ -344,6 +344,8 @@ SQL;
     public static function tearDownAfterClass() {
         if (self::$con) {
             self::$con->close();
+            $dbname = self::$dbname;
+            self::$dialect->exec("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$dbname' AND pid <> pg_backend_pid()");
             self::$dialect->exec('drop database ' . self::$dbname);
         }
     }
