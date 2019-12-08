@@ -309,7 +309,7 @@ SQL;
         $t                = $q->newId();
         $sql              = $q->getSqlString();
         self::assertTrue(!!$t);
-        self::assertEquals('INSERT INTO types (price,quantity,amount) VALUES (\'1.25\' , \'4\' , 5)', $sql);
+        self::assertEquals('INSERT INTO types ("price","quantity","amount") VALUES (\'1.25\' , \'4\' , 5)', $sql);
 
         $rdata = $db->queryOne('select * from types where id = ' . $t);
         self::assertEquals(1.25, $rdata['price']);
@@ -323,7 +323,7 @@ SQL;
         $t                = $q->newId();
         $err              = $q->lastError();
         $sql              = $q->getSqlString();
-        self::assertEquals('INSERT INTO types (price,quantity,amount) VALUES (\'abc\' , 2 , 2.4)', $sql);
+        self::assertEquals('INSERT INTO types ("price","quantity","amount") VALUES (\'abc\' , 2 , 2.4)', $sql);
         self::assertNotTrue(!!$t, $t . ' is the new id');
         self::assertNotEmpty($err);
         self::assertContains('invalid input syntax', $err);
@@ -336,7 +336,7 @@ SQL;
         $err              = $q->lastError();
         $sql              = $q->getSqlString();
         self::assertNotTrue(!!$t, $t);
-        self::assertEquals('INSERT INTO types (price,quantity,amount) VALUES (\'0,1,1),(1\' , 2 , 2.4)', $sql);
+        self::assertEquals('INSERT INTO types ("price","quantity","amount") VALUES (\'0,1,1),(1\' , 2 , 2.4)', $sql);
         self::assertNotEmpty($err);
         self::assertContains('invalid input syntax', $err);
     }

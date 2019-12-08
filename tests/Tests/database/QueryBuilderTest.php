@@ -53,28 +53,28 @@ class QueryBuilderTest extends TestCase {
         ])->asc('id')->desc('name')->limit(0, 2);
 
         $sql = $q . '';
-        self::assertEquals('SELECT * FROM `table` AS T WHERE `id` = :id_0 AND `name` LIKE :name_0 ORDER BY `id` ASC , `name` DESC LIMIT :limit_0,:limit_1', $sql);
+        self::assertEquals('SELECT * FROM `table` AS `T` WHERE `id` = :id_0 AND `name` LIKE :name_0 ORDER BY `id` ASC , `name` DESC LIMIT :limit_0,:limit_1', $sql);
         $sql = $q . '';
-        self::assertEquals('SELECT * FROM `table` AS T WHERE `id` = :id_0 AND `name` LIKE :name_0 ORDER BY `id` ASC , `name` DESC LIMIT :limit_0,:limit_1', $sql);
+        self::assertEquals('SELECT * FROM `table` AS `T` WHERE `id` = :id_0 AND `name` LIKE :name_0 ORDER BY `id` ASC , `name` DESC LIMIT :limit_0,:limit_1', $sql);
         $sql = $q->getSqlString();
-        self::assertEquals('SELECT * FROM `table` AS T WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
+        self::assertEquals('SELECT * FROM `table` AS `T` WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
 
         $q->field(imv('a-b'), 'abd');
         $sql = $q->getSqlString();
-        self::assertEquals('SELECT *,a-b AS `abd` FROM `table` AS T WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
+        self::assertEquals('SELECT *,a-b AS `abd` FROM `table` AS `T` WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
 
         $cnt  = self::$con->select(imv('COUNT(*)', 'cnt'))->from('{item} AS IT')->where([
             'IT.tid' => imv('T.id'),
             'name'   => 'abc'
         ]);
         $sql1 = $cnt->getSqlString();
-        self::assertEquals('SELECT COUNT(*) AS `cnt` FROM item AS IT WHERE `IT`.`tid` = T.id AND `name` = \'abc\'', $sql1);
+        self::assertEquals('SELECT COUNT(*) AS `cnt` FROM item AS `IT` WHERE `IT`.`tid` = T.id AND `name` = \'abc\'', $sql1);
 
         $q->field($cnt, 'cntt');
         $sql = $q . '';
-        self::assertEquals('SELECT *,a-b AS `abd`,(SELECT COUNT(*) AS `cnt` FROM item AS IT WHERE `IT`.`tid` = T.id AND `name` = :name_0) AS `cntt` FROM `table` AS T WHERE `id` = :id_0 AND `name` LIKE :name_1 ORDER BY `id` ASC , `name` DESC LIMIT :limit_0,:limit_1', $sql);
+        self::assertEquals('SELECT *,a-b AS `abd`,(SELECT COUNT(*) AS `cnt` FROM item AS `IT` WHERE `IT`.`tid` = T.id AND `name` = :name_0) AS `cntt` FROM `table` AS `T` WHERE `id` = :id_0 AND `name` LIKE :name_1 ORDER BY `id` ASC , `name` DESC LIMIT :limit_0,:limit_1', $sql);
         $sql = $q->getSqlString();
-        self::assertEquals('SELECT *,a-b AS `abd`,(SELECT COUNT(*) AS `cnt` FROM item AS IT WHERE `IT`.`tid` = T.id AND `name` = \'abc\') AS `cntt` FROM `table` AS T WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
+        self::assertEquals('SELECT *,a-b AS `abd`,(SELECT COUNT(*) AS `cnt` FROM item AS `IT` WHERE `IT`.`tid` = T.id AND `name` = \'abc\') AS `cntt` FROM `table` AS `T` WHERE `id` = 1 AND `name` LIKE \'leo%\' ORDER BY `id` ASC , `name` DESC LIMIT 0,2', $sql);
     }
 
     public function testUpdateGetSqlString() {
@@ -97,10 +97,10 @@ class QueryBuilderTest extends TestCase {
         $up->where(['CateItem.cid' => imv('C.id'), 'C.deleted' => 1]);
 
         $sql = $up . '';
-        self::assertEquals('UPDATE cate_item AS CateItem , cate AS C SET `CateItem`.`deleted` = :CateItem_deleted_0 WHERE `CateItem`.`cid` = C.id AND `C`.`deleted` = :C_deleted_0', $sql);
+        self::assertEquals('UPDATE cate_item AS `CateItem` , cate AS `C` SET `CateItem`.`deleted` = :CateItem_deleted_0 WHERE `CateItem`.`cid` = C.id AND `C`.`deleted` = :C_deleted_0', $sql);
 
         $sql = $up->getSqlString();
-        self::assertEquals('UPDATE cate_item AS CateItem , cate AS C SET `CateItem`.`deleted` = 1 WHERE `CateItem`.`cid` = C.id AND `C`.`deleted` = 1', $sql);
+        self::assertEquals('UPDATE cate_item AS `CateItem` , cate AS `C` SET `CateItem`.`deleted` = 1 WHERE `CateItem`.`cid` = C.id AND `C`.`deleted` = 1', $sql);
     }
 
     public function testInsertGetSqlString() {
@@ -147,9 +147,9 @@ class QueryBuilderTest extends TestCase {
         $q1->left('item AS IT', 'IT.tid', 'T.id');
 
         $sql = $q1 . '';
-        self::assertEquals('DELETE T FROM table AS T LEFT JOIN  item AS IT ON (`IT`.`tid`=`T`.`id`) WHERE `id` > :id_0 AND `name` <> :name_0', $sql);
+        self::assertEquals('DELETE `T` FROM table AS `T` LEFT JOIN  item AS `IT` ON (`IT`.`tid`=`T`.`id`) WHERE `id` > :id_0 AND `name` <> :name_0', $sql);
 
         $sql = $q1->getSqlString();
-        self::assertEquals('DELETE T FROM table AS T LEFT JOIN  item AS IT ON (`IT`.`tid`=`T`.`id`) WHERE `id` > 0 AND `name` <> \'\'', $sql);
+        self::assertEquals('DELETE `T` FROM table AS `T` LEFT JOIN  item AS `IT` ON (`IT`.`tid`=`T`.`id`) WHERE `id` > 0 AND `name` <> \'\'', $sql);
     }
 }
