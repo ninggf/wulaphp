@@ -68,9 +68,17 @@ class ImmutableValue {
     }
 
     /**
+     * 获取值.
+     *
+     * @param $dialect
+     *
      * @return string
      */
-    public function getValue(): string {
+    public function getValue(DatabaseDialect $dialect = null): string {
+        if ($dialect) {
+            $this->dialect = $dialect;
+        }
+
         return $this->__toString();
     }
 
@@ -82,7 +90,13 @@ class ImmutableValue {
             $value = trim($dialect->quote($this->value), "'");
         }
         if ($this->alias) {
-            return $value . ' AS `' . $this->alias . '`';
+            if ($dialect) {
+                $alias = $this->dialect->sanitize('`' . $this->alias . '`');
+            } else {
+                $alias = $this->alias;
+            }
+
+            return $value . ' AS ' . $alias;
         } else {
             return $value;
         }

@@ -38,7 +38,7 @@ abstract class Table extends View {
      *
      * @return mixed|null
      */
-    protected final function trans(\Closure $fun, ILock $lock = null) {
+    public final function trans(\Closure $fun, ILock $lock = null) {
         return $this->dbconnection->trans($fun, $this->errors, $lock);
     }
 
@@ -49,16 +49,22 @@ abstract class Table extends View {
      * @param array|null    $con  更新条件
      * @param \Closure|null $cb   数据处理回调
      *
-     * @return bool|int|\wulaphp\db\sql\UpdateSQL
+     * @return bool
      */
-    protected final function save($data, $con = null, $cb = null) {
+    public final function save($data, $con = null, \Closure $cb = null): bool {
         if (!$con) {
-            return $this->insert($data, $cb);
+            $rst = $this->insert($data, $cb);
         } else if ($this->exist($con)) {//存在即修改
-            return $this->update($data, $con, $cb);
+            $rst = $this->update($data, $con, $cb);
         } else {
-            return $this->insert($data, $cb);
+            $rst = $this->insert($data, $cb);
         }
+
+        if ($rst === false) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -70,7 +76,7 @@ abstract class Table extends View {
      * @return bool|int 成功返回true或主键值,失败返回false.
      * @throws
      */
-    protected final function insert($data, $cb = null) {
+    public final function insert(array $data, \Closure $cb = null) {
         if ($cb && $cb instanceof \Closure) {
             $data = $cb ($data, $this);
         }
@@ -86,8 +92,7 @@ abstract class Table extends View {
             $sql = new InsertSQL($data);
             $sql->into($this->table)->setDialect($this->dialect);
             if ($this->autoIncrement) {
-                $sql->autoField($this->primaryKey);
-                $rst = $sql->newId();
+                $rst = $sql->newId($this->primaryKey);
             } else {
                 $rst = $sql->exec(true);
             }
@@ -106,6 +111,106 @@ abstract class Table extends View {
     }
 
     /**
+     * 新增数据，唯一键冲突时则修改相应的数据,如果使用校验器则使用新增数据校验器.
+     *
+     * @param array  $data  数据.
+     * @param array  $data1 修改数据.
+     * @param string $key   冲突键，默认是主键
+     *
+     * @return bool
+     */
+    public final function upsert(array $data, ?array $data1 = null, string $key = null): bool {
+        if ($data) {
+            $this->filterFields($data);
+            if (method_exists($this, 'validateNewData')) {
+                if (isset($this->_formData)) {
+                    $this->validateNewData($this->_formData);
+                } else {
+                    $this->validateNewData($data);
+                }
+            }
+            if (!$key) {
+                $key = $this->primaryKey;
+            }
+            assert($key != '', '未定义冲突键名');
+            $sql = new InsertSQL($data);
+            $sql->into($this->table)->setDialect($this->dialect);
+            $sql->onDuplicate($key, $data1 ? $data1 : $data);
+            $rst = $sql->exec();//不报错就算OK ^_^
+            if ($rst) {
+                return $rst;
+            } else {
+                $this->checkSQL($sql);
+
+                return false;
+            }
+        } else {
+            $this->errors = '数据为空.';
+
+            return false;
+        }
+    }
+
+    /**
+     * 新增数据，唯一键冲突时则修改相应的数据，如果使用校验器则使用新增数据校验器.
+     *
+     * @param array       $datas 批量数据
+     * @param array       $data1 修改操作
+     * @param string|null $key   冲突键
+     *
+     * @return bool
+     */
+    public final function upserts(array $datas, array $data1, string $key = null): bool {
+        if ($datas) {
+            if (!$key) {
+                $key = $this->primaryKey;
+            }
+            assert($key != '', '未定义冲突键名');
+            assert(!empty($data1), '$data1为空');
+            //数据校验
+            if (method_exists($this, 'validateNewData')) {
+                foreach ($datas as &$data) {
+                    $this->filterFields($data);
+                    $this->validateNewData($data);
+                }
+            } else {
+                foreach ($datas as &$data) {
+                    $this->filterFields($data);
+                }
+            }
+
+            $sql = new InsertSQL($datas, true);
+            $sql->into($this->table)->setDialect($this->dialect);
+            $sql->onDuplicate($key, $data1);
+            $rst = $sql->exec();
+            if ($rst) {
+                return $rst;
+            } else {
+                $this->checkSQL($sql);
+
+                return false;
+            }
+        } else {
+            $this->errors = '数据为空.';
+
+            return false;
+        }
+    }
+
+    /**
+     * 新建记录(insert的别名).
+     *
+     * @param array         $data 数据
+     * @param \Closure|null $cb   数据处理器
+     *
+     * @return bool|int
+     * @see \wulaphp\db\Table::insert()
+     */
+    public final function create(array $data, \Closure $cb = null) {
+        return $this->insert($data, $cb);
+    }
+
+    /**
      * 批量插入数据.
      *
      * @param array    $datas 要插入的数据数组.
@@ -114,14 +219,18 @@ abstract class Table extends View {
      * @return bool|array 如果配置了自增键将返回自增键值的数组.
      * @throws
      */
-    protected final function inserts($datas, \Closure $cb = null) {
+    public final function inserts($datas, \Closure $cb = null) {
         if ($cb && $cb instanceof \Closure) {
             $datas = $cb ($datas, $this);
         }
         if ($datas) {
             if (method_exists($this, 'validateNewData')) {
                 foreach ($datas as &$data) {
+                    $this->filterFields($data);
                     $this->validateNewData($data);
+                }
+            } else {
+                foreach ($datas as &$data) {
                     $this->filterFields($data);
                 }
             }
@@ -158,7 +267,7 @@ abstract class Table extends View {
      * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
      * @throws
      */
-    protected final function update($data = null, $con = null, $cb = null) {
+    public final function update(array $data = null, $con = null, \Closure $cb = null) {
         if ($data === null) {
             $sql = new UpdateSQL($this->qualifiedName);
             $sql->setDialect($this->dialect);
@@ -212,7 +321,7 @@ abstract class Table extends View {
      * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
      * @throws
      */
-    protected final function delete($con = null) {
+    public final function delete($con = null) {
         if ($con === null) {
             $sql = new DeleteSQL();
             $sql->from($this->qualifiedName)->setDialect($this->dialect);

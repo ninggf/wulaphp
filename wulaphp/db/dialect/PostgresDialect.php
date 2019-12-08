@@ -72,6 +72,12 @@ SQL;
         return '';
     }
 
+    public function getOnDuplicateSet(string $key): string {
+        $key = $this->sanitize($key);
+
+        return 'ON CONFLICT (' . $key . ') DO UPDATE SET';
+    }
+
     /**
      * @param array      $fields
      * @param array      $from
@@ -261,7 +267,7 @@ SQL;
         $cons    = [];
         $dialect = $this;
         foreach ($conditions as $con) {
-            list ($filed, $value) = $con;
+            [$filed, $value] = $con;
             if (strpos($filed, '||') === 0) {
                 $cons [] = 'OR';
                 $filed   = substr($filed, 2);
@@ -373,13 +379,13 @@ SQL;
             $options = $options->toArray();
         }
         $opts          = array_merge([
-            'encoding'       => 'UTF8',
-            'dbname'         => 'postgres',
-            'host'           => 'localhost',
-            'port'           => 5432,
-            'user'           => 'postgres',
-            'password'       => 'postgres',
-            'options' => []
+            'encoding' => 'UTF8',
+            'dbname'   => 'postgres',
+            'host'     => 'localhost',
+            'port'     => 5432,
+            'user'     => 'postgres',
+            'password' => 'postgres',
+            'options'  => []
         ], $options);
         $charset       = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8';
         $dsn           = "pgsql:dbname={$opts['dbname']};host={$opts['host']};port={$opts['port']}";
@@ -395,7 +401,7 @@ SQL;
      * @return string
      */
     public function sanitize($string) {
-        return str_replace('`', '', $string);
+        return preg_replace('#^`([^`]+)`$#', '\1', $string);
     }
 
     public function getDriverName() {

@@ -48,7 +48,7 @@ class Condition implements \ArrayAccess, \Countable {
      *
      * @return string
      */
-    public static function cleanField(string $field): string {
+    public static function cleanField(string $field, DatabaseDialect $dialect = null): string {
         if ('*' == $field) {
             return $field;
         }
@@ -67,7 +67,7 @@ class Condition implements \ArrayAccess, \Countable {
             $fields [] = implode(' AS ', $fs);
         }
 
-        return implode('.', $fields);
+        return $dialect ? $dialect->sanitize(implode('.', $fields)) : implode('.', $fields);
     }
 
     public function count() {

@@ -212,13 +212,13 @@ class MySQLDialect extends DatabaseDialect {
             $options = $options->toArray();
         }
         $opts    = array_merge([
-            'encoding'       => 'UTF8',
-            'dbname'         => '',
-            'host'           => 'localhost',
-            'port'           => 3306,
-            'user'           => 'root',
-            'password'       => 'root',
-            'options' => [
+            'encoding' => 'UTF8',
+            'dbname'   => '',
+            'host'     => 'localhost',
+            'port'     => 3306,
+            'user'     => 'root',
+            'password' => 'root',
+            'options'  => [
                 \PDO::MYSQL_ATTR_COMPRESS => true
             ]
         ], $options);
@@ -280,6 +280,10 @@ class MySQLDialect extends DatabaseDialect {
         return 'mysql';
     }
 
+    public function getOnDuplicateSet(string $key): string {
+        return 'ON DUPLICATE KEY UPDATE';
+    }
+
     /**
      * @param string $string
      *
@@ -332,7 +336,7 @@ class MySQLDialect extends DatabaseDialect {
         $cons    = [];
         $dialect = $this;
         foreach ($conditions as $con) {
-            list ($filed, $value) = $con;
+            [$filed, $value] = $con;
             if (strpos($filed, '||') === 0) {
                 $cons [] = 'OR';
                 $filed   = substr($filed, 2);

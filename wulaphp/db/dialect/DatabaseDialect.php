@@ -23,7 +23,7 @@ abstract class DatabaseDialect extends \PDO {
     public static  $lastErrorMassge = null;
 
     public function __construct($options) {
-        list ($dsn, $user, $passwd, $attr) = $this->prepareConstructOption($options);
+        [$dsn, $user, $passwd, $attr] = $this->prepareConstructOption($options);
         if (!isset ($attr [ \PDO::ATTR_EMULATE_PREPARES ])) {
             $attr [ \PDO::ATTR_EMULATE_PREPARES ] = false;
         }
@@ -64,7 +64,7 @@ abstract class DatabaseDialect extends \PDO {
                 $dr->cfGname                     = $name;
                 self::$cfgOptions[ $name ]       = $options;
                 self::$lastErrorMassge           = false;
-                self::$INSTANCE[ $pid ][ $name ] = $dr;
+                self::$INSTANCE[ $pid ][ $name ] = &$dr;//此处要使用引用，不然close将不启作用。
             }
 
             return self::$INSTANCE [ $pid ][ $name ];
@@ -105,6 +105,7 @@ abstract class DatabaseDialect extends \PDO {
 
                 return $dr;
             } catch (\Exception $e) {
+                self::$INSTANCE[ $pid ][ $name ] = null;
                 unset(self::$INSTANCE[ $pid ][ $name ]);
             }
         }
@@ -112,6 +113,11 @@ abstract class DatabaseDialect extends \PDO {
         return self::getDialect(self::$cfgOptions[ $name ]);
     }
 
+    /**
+     * 关闭数据库连接.
+     *
+     * @param string $name
+     */
     public function close($name = null) {
         if (defined('ARTISAN_TASK_PID')) {
             $pid = @posix_getpid();
@@ -122,6 +128,7 @@ abstract class DatabaseDialect extends \PDO {
             $name = $this->cfGname;
         }
         if (isset(self::$INSTANCE[ $pid ][ $name ])) {
+            self::$INSTANCE[ $pid ][ $name ] = null;
             unset(self::$INSTANCE[ $pid ][ $name ]);
         }
     }
@@ -133,7 +140,7 @@ abstract class DatabaseDialect extends \PDO {
      *
      * @return string
      */
-    public function getTableName($table) {
+    public function getTableName(string $table): string {
         if (preg_match('#^`?\{[^\}]+\}.*$#', $table)) {
             return $this->sanitize(str_replace(['{', '}'], [$this->tablePrefix, ''], $table));
         } else {
@@ -141,7 +148,12 @@ abstract class DatabaseDialect extends \PDO {
         }
     }
 
-    public function getTablePrefix() {
+    /**
+     * 获取表前缀.
+     *
+     * @return string
+     */
+    public function getTablePrefix(): string {
         return $this->tablePrefix;
     }
 
@@ -208,6 +220,17 @@ abstract class DatabaseDialect extends \PDO {
         }
 
         return '';
+    }
+
+    /**
+     * 获取ON DUPLICATE 子句关键词.
+     *
+     * @param string $key 冲突键.
+     *
+     * @return string
+     */
+    public function getOnDuplicateSet(string $key): string {
+        return null;
     }
 
     /**

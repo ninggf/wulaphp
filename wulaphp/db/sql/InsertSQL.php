@@ -8,8 +8,12 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     private $datas;
     private $batch;
     private $ids      = [];
+    private $idsGot   = false;
+    private $executed = null;
     private $keyField = null;
     private $keySet   = false;
+    private $dupData  = null;//冲突时要更新的数据.
+    private $dupKey   = null;//冲突键.
 
     public function __construct($datas, $batch = false) {
         $this->datas = $datas;
@@ -62,9 +66,14 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
      * @see Countable::count()
      */
     public function count() {
-        $sql    = $this->getSQL();
-        $values = $this->values;
+        if ($this->executed !== null) {
+            return $this->executed;
+        }
+        $this->executed = false;//不为null时即为已经执行。
+        $sql            = $this->getSQL();
+        $values         = $this->values;
         if ($sql) {
+            $statement = null;
             try {
                 $ids = array_keys($this->datas);
                 if ($this->batch && count($this->datas) > 1) {
@@ -75,25 +84,44 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
                         $vstring = [];
                         foreach ($d as $ff => $vv) {
                             if ($vv instanceof ImmutableValue) { // a immutable value
-                                $vv->setDialect($this->dialect);
-                                $vstring [] = $this->sanitize($vv->__toString());
+                                $vstring [] = $vv->getValue($this->dialect);
                             } else if ($vv instanceof Query) { // a sub-select SQL as a value
                                 $vv->setBindValues($values);
                                 $vv->setDialect($this->dialect);
-                                $vstring [] = '(' . $vv->__toString() . ')';
+                                $vstring [] = '(' . $vv . ')';// -> __toString()
                             } else {
                                 $vstring [] = $values->addValue($ff, $vv);
                             }
                         }
                         $sqlValues[] = '(' . implode(' , ', $vstring) . ')';
                     }
-                    $this->sql = $sql = $sql . ',' . implode(' , ', $sqlValues);
+                    $this->sql = $sql = $sql . ',' . implode(', ', $sqlValues);
                 }
+                if ($this->dupKey) {
+                    $ondup = $this->dialect->getOnDuplicateSet($this->dupKey);
+                    if (!$ondup) {
+                        $this->errorSQL    = '';
+                        $this->errorValues = null;
+                        $this->error       = get_class($this->dialect) . ' cannot support upsert!';
 
+                        return false;
+                    }
+                    $upkvs = [];
+                    foreach ($this->dupData as $dk => $dv) {
+                        if ($dv instanceof ImmutableValue) {
+                            $rv = $dv->getValue($this->dialect);
+                        } else {
+                            $rv = $values->addValue($dk, $dv);
+                        }
+                        $upkvs[] = Condition::cleanField($dk, $this->dialect) . ' = ' . $rv;
+                    }
+                    $this->sql = $sql = $sql . ' ' . $ondup . ' ' . implode(', ', $upkvs);
+                }
+                //create prepare statement
                 $statement = $this->dialect->prepare($sql);
-
+                //bind values
                 foreach ($values as $value) {
-                    list ($name, $val, $type) = $value;
+                    [$name, $val, $type] = $value;
                     if (!$statement->bindValue($name, $val, $type)) {
                         $this->errorSQL    = $sql;
                         $this->errorValues = $values->__toString();
@@ -105,28 +133,22 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 
                 $rst = $statement->execute();
                 if ($rst) {
-                    if ($this->keySet) {
-                        $this->fillAutoIds();
-                    } else {
-                        $this->ids [] = $this->dialect->lastInsertId($this->keyField);
-                    }
+                    $this->executed = $statement->rowCount();
 
-                    return $statement->rowCount();
+                    return $this->executed;
                 } else {
+                    $this->error = 'cannot execute ' . $this->getSqlString();
                     $this->dumpSQL($statement);
-                }
-
-                if ($statement) {
-                    $statement->closeCursor();
-                    $statement = null;
                 }
             } catch (\PDOException $e) {
                 $this->exception   = $e;
                 $this->error       = $e->getMessage();
                 $this->errorSQL    = $sql;
                 $this->errorValues = $values->__toString();
-
-                return false;
+            } finally {
+                if ($statement) {
+                    $statement = null;
+                }
             }
         } else {
             $this->error       = 'Can not generate the insert SQL';
@@ -139,11 +161,15 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
 
     /**
      * 获取 insert 语句生成的自增型ID.
+     *
+     * @param string $field 字段名.
+     *
      * @return int
      */
-    public function newId() {
-        $ids = [];
-        $cnt = $this->count();
+    public function newId(string $field = null) {
+        $ids            = [];
+        $this->keyField = $field;
+        $cnt            = $this->count();
         if ($cnt === false) {
             if ($this->exception instanceof \PDOException) {
                 $this->error = $this->exception->getMessage();
@@ -151,7 +177,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
             log_error($this->error . '[' . $this->getSqlString() . ']', 'sql.err');
 
             return 0;
-        } else if ($this instanceof InsertSQL) {
+        } else if ($cnt > 0) {
             $ids = $this->lastInsertIds();
         }
 
@@ -166,7 +192,24 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
         return $this->ids [ $offset ];
     }
 
-    public function lastInsertIds() {
+    /**
+     * 获取最后生成或使用的主键.
+     *
+     * @return array
+     */
+    protected function lastInsertIds() {
+        if (!$this->idsGot) {
+            $this->idsGot = true;
+            if ($this->keySet) {
+                $this->fillAutoIds();
+            } else if (!$this->dupKey) {
+                try {
+                    $this->ids [] = $this->dialect->lastInsertId($this->keyField);
+                } catch (\Exception $e) {
+                }
+            }
+        }
+
         return $this->ids;
     }
 
@@ -177,7 +220,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     }
 
     /**
-     * get the last inserted id
+     * 获取最后生成的自增字段.
      *
      * @param string $field
      *
@@ -196,12 +239,32 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     }
 
     /**
+     * 唯一键冲突时更新数据.
+     *
+     * @param string $key 冲突键.
+     * @param array  $data
+     *
+     * @return $this
+     */
+    public function onDuplicate(string $key, array $data = null) {
+        $this->dupKey  = $key;
+        $this->dupData = $data;
+
+        return $this;
+    }
+
+    /**
      * @return \ArrayIterator
      */
     public function getIterator() {
         return new \ArrayIterator ($this->ids);
     }
 
+    /**
+     * 获取执行后的SQL.
+     *
+     * @return string
+     */
     public function getSqlString() {
         $sql    = $this->getSQL();
         $ids    = array_keys($this->datas);
@@ -230,7 +293,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
         }
         if ($sql && $values) {
             foreach ($values as $value) {
-                list ($name, $val, $type) = $value;
+                [$name, $val, $type] = $value;
                 if ($type == \PDO::PARAM_STR) {
                     $sql = str_replace($name, $this->dialect->quote($val), $sql);
                 } else {
@@ -259,7 +322,8 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
         try {
             $this->checkDialect();
         } catch (\Exception $e) {
-            $this->error = $e->getMessage();
+            $this->exception = $e;
+            $this->error     = $e->getMessage();
 
             return false;
         }

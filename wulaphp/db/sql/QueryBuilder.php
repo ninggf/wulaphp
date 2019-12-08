@@ -389,6 +389,13 @@ abstract class QueryBuilder {
     }
 
     /**
+     * @throws \PDOException
+     */
+    public function lastExp() {
+        return $this->exception;
+    }
+
+    /**
      * 最后出错的SQL.
      *
      * @return string
@@ -431,7 +438,7 @@ abstract class QueryBuilder {
      * @deprecated
      */
     public static function addSqlCount() {
-        self::$sqlCount++;
+        self::$sqlCount ++;
     }
 
     /**

@@ -12,6 +12,7 @@ namespace wulaphp\db\sql;
 /**
  * Trait CudTrait
  * @package wulaphp\db\sql
+ * @property-read \wulaphp\db\dialect\DatabaseDialect $dialect
  */
 trait CudTrait {
     /**
@@ -24,34 +25,55 @@ trait CudTrait {
     }
 
     /**
-     * alias of exec with '$checkNum = false'
+     * 执行update,insert,delete语句.
      *
-     * @return bool
+     * @return bool 影响的行数大于0时返回true,反之返回false；
+     * @throws
      */
     public function go(): bool {
-        return $this->exec();
+        return $this->exec(true);
     }
 
     /**
      * 执行update,insert,delete语句.
      *
-     * @param boolean|null $checkNum    是否检测影响的条数 .
-     *                                  1. false不检测影响的行数，SQL语句执行成功返回true，反之false；
-     *                                  1.1 如果是insert语句执行成功则返回auto_increment ID.
-     *                                  2. true影响的行数大于0时返回true,反之返回false；
-     *                                  3. null直接返回影响的行数；
+     * @return bool 执行成功返回true，失败返回false。
+     */
+    public function execute(): bool {
+        return $this->exec(false);
+    }
+
+    /**
+     * 执行update,insert,delete语句.
+     *
+     * @return int 返回影响的行数.
+     */
+    public function affected(): int {
+        return $this->exec(null);
+    }
+
+    /**
+     * 执行update,insert,delete语句.
+     *
+     * @param boolean|null $checkNum  是否检测影响的条数 .
+     *                                1. false不检测影响的行数，SQL语句执行成功返回true，反之false；
+     *                                1.1 如果是insert语句执行成功则返回auto_increment ID.
+     *                                2. true影响的行数大于0时返回true,反之返回false；
+     *                                3. null直接返回影响的行数；
      *
      *
      * @return boolean|int|mixed
+     *
      * @throws \PDOException
      */
     public function exec(?bool $checkNum = false) {
         $cnt = $this->count();
-        if ($cnt === false) {
+        if ($cnt === false) {//SQL执行失败
             if ($this->exception instanceof \PDOException) {
                 $this->error = $this->exception->getMessage();
             }
-            log_error($this->error . '[' . $this->getSqlString() . ']', 'sql.err');
+            $dn = $this->dialect->getDriverName();
+            log_error($this->error . '[' . $this->getSqlString() . ']', $dn . '.sql.err');
 
             return is_null($checkNum) ? 0 : false;
         } else if ($this instanceof InsertSQL) {
@@ -59,10 +81,10 @@ trait CudTrait {
                 return $cnt > 0;
             } else if (is_null($checkNum)) {
                 return $cnt;
+            } else if ($this->keyField) {
+                return $this->lastInsertIds();
             } else {
-                $ids = $this->lastInsertIds();
-
-                return $ids;
+                return true;
             }
         } else if (is_null($checkNum)) {
             return $cnt;
@@ -71,15 +93,6 @@ trait CudTrait {
         } else {
             return true;
         }
-    }
-
-    /**
-     * 返回影响的行数.
-     *
-     * @return int
-     */
-    public function affected(): int {
-        return $this->exec(null);
     }
 
     /**
@@ -98,7 +111,7 @@ trait CudTrait {
         $sql = $this->getSQL();
         if ($sql && $this->values) {
             foreach ($this->values as $value) {
-                list ($name, $val, $type, , $rkey) = $value;
+                [$name, $val, $type, , $rkey] = $value;
                 if ($this->whereData) {
                     $val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
                 }

@@ -218,13 +218,13 @@ class SQLiteDialect extends DatabaseDialect {
             $options = $options->toArray();
         }
         $opts          = array_merge([
-            'encoding'       => 'UTF8',
-            'dbname'         => ':memory:',
-            'host'           => 'localhost',
-            'port'           => 3306,
-            'user'           => 'root',
-            'password'       => 'root',
-            'options' => []
+            'encoding' => 'UTF8',
+            'dbname'   => ':memory:',
+            'host'     => 'localhost',
+            'port'     => 3306,
+            'user'     => 'root',
+            'password' => 'root',
+            'options'  => []
         ], $options);
         $charset       = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8';
         $dsn           = "sqlite:{$opts['dbname']}";
@@ -253,6 +253,12 @@ class SQLiteDialect extends DatabaseDialect {
 
     public function getDriverName() {
         return 'sqlite';
+    }
+
+    public function getOnDuplicateSet(string $key): string {
+        $key = $this->sanitize($key);
+
+        return 'ON CONFLICT (' . $key . ') DO UPDATE SET';
     }
 
     /**
@@ -307,7 +313,7 @@ class SQLiteDialect extends DatabaseDialect {
         $cons    = [];
         $dialect = $this;
         foreach ($conditions as $con) {
-            list ($filed, $value) = $con;
+            [$filed, $value] = $con;
             if (strpos($filed, '||') === 0) {
                 $cons [] = 'OR';
                 $filed   = substr($filed, 2);
