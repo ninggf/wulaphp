@@ -11,13 +11,13 @@ use wulaphp\db\dialect\DatabaseDialect;
  *
  */
 class ImmutableValue {
-    private $value;
-    private $alias;
-    private $nquote = false;
+    private   $alias;
+    private   $nquote = false;
+    protected $value;
     /**
      * @var DatabaseDialect
      */
-    private $dialect;
+    protected $dialect;
 
     /**
      * ImmutableValue constructor.

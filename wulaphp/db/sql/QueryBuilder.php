@@ -497,8 +497,11 @@ abstract class QueryBuilder {
             $name  = $table [0];
             $alias = trim(array_pop($table));
         }
+        if ($alias) {
+            $alias = '`' . trim($alias, ' `"') . '`';
+        }
 
-        return [trim($name), trim($alias)];
+        return [trim($name), $alias];
     }
 
     /**
@@ -555,14 +558,14 @@ abstract class QueryBuilder {
             if ($field instanceof Query) { // sub-select SQL as field
                 $field->setDialect($this->dialect);
                 $field->setBindValues($values);
-                $as = $field->getAlias();
+                $as = trim($field->getAlias(), '`"');
                 if ($as) {
-                    $_fields [] = '(' . $field . ') AS ' . $this->sanitize('`' . $as . '`');
+                    $_fields [] = '(' . $field . ') AS ' . $this->dialect->sanitize('`' . $as . '`');
                 }
             } else if ($field instanceof ImmutableValue) {
-                $_fields [] = $field->__toString();
+                $_fields [] = $field->getValue($this->dialect);
             } else { // this is simple field
-                $_fields [] = $this->sanitize($field);
+                $_fields [] = $this->dialect->sanitize($field);
             }
         }
         if ($_fields) {

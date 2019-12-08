@@ -85,12 +85,11 @@ class MySQLDialect extends DatabaseDialect {
         foreach ($data as $field => $value) {
             $fields [] = Condition::cleanField($field);
             if ($value instanceof ImmutableValue) { // a immutable value
-                $value->setDialect($this);
-                $_values [] = $this->sanitize($value->__toString());
+                $_values [] = $value->getValue($this);
             } else if ($value instanceof Query) { // a sub-select SQL as a value
                 $value->setBindValues($values);
                 $value->setDialect($this);
-                $_values [] = '(' . $value->__toString() . ')';
+                $_values [] = '(' . $value . ')';
             } else {
                 $_values [] = $values->addValue($field, $value);
             }
@@ -166,16 +165,15 @@ class MySQLDialect extends DatabaseDialect {
 
         $fields = [];
         foreach ($data as $field => $value) {
-            $field = Condition::cleanField($field);
+            $field = Condition::cleanField($field, $this);
             if ($value instanceof Query) {
                 $value->setBindValues($values);
                 $value->setDialect($this);
-                $fields [] = $this->sanitize($field) . ' =  (' . $value->__toString() . ')';
+                $fields [] = $field . ' =  (' . $value . ')';
             } else if ($value instanceof ImmutableValue) {
-                $value->setDialect($this);
-                $fields [] = $this->sanitize($field) . ' =  ' . $this->sanitize($value->__toString());
+                $fields [] = $field . ' =  ' . $value->getValue($this);
             } else {
-                $fields [] = $this->sanitize($field) . ' = ' . $values->addValue($field, $value);
+                $fields [] = $field . ' = ' . $values->addValue($field, $value);
             }
         }
 
@@ -369,8 +367,7 @@ class MySQLDialect extends DatabaseDialect {
                     $value   = new Condition ($value);
                     $cons [] = '(' . $value->getWhereCondition($dialect, $values) . ')';
                 } else if ($value instanceof ImmutableValue) {
-                    $value->setDialect($this);
-                    $cons [] = $this->sanitize($value->__toString());
+                    $cons [] = $value->getValue($this);
                 } else {
                     array_shift($cons);
                 }
@@ -384,7 +381,7 @@ class MySQLDialect extends DatabaseDialect {
                     $filed = implode(' ', $ops);
                 }
                 $op    = strtoupper($op);
-                $filed = Condition::cleanField($filed);
+                $filed = Condition::cleanField($filed, $this);
                 if ($op == '$') { // null or not null
                     if (is_null($value)) {
                         $cons [] = $filed . ' IS NULL';
@@ -401,7 +398,7 @@ class MySQLDialect extends DatabaseDialect {
                     if ($value instanceof Query) { // sub-select as 'IN' or 'NOT IN' values.
                         $value->setBindValues($values);
                         $value->setDialect($dialect);
-                        $cons [] = $filed . ' ' . $op . ' (' . $value->__toString() . ')';
+                        $cons [] = $filed . ' ' . $op . ' (' . $value . ')';
                     } else if (is_array($value)) {
                         $vs = [];
                         foreach ($value as $v) {
@@ -410,7 +407,7 @@ class MySQLDialect extends DatabaseDialect {
                         $cons [] = $filed . ' ' . $op . ' (' . implode(',', $vs) . ')';
                     } else if ($value instanceof ImmutableValue) {
                         $value->setDialect($dialect);
-                        $cons [] = $filed . ' ' . $op . ' (' . $dialect->sanitize($value->__toString()) . ')';
+                        $cons [] = $filed . ' ' . $op . ' (' . $value . ')';
                     } else {
                         array_shift($cons);
                     }
@@ -424,12 +421,11 @@ class MySQLDialect extends DatabaseDialect {
                     $cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
                 } else {
                     if ($value instanceof ImmutableValue) {
-                        $value->setDialect($dialect);
-                        $val = $dialect->sanitize($value->__toString());
+                        $val = $value->getValue($dialect);
                     } else if ($value instanceof Query) {
                         $value->setBindValues($values);
                         $value->setDialect($dialect);
-                        $val = '(' . $value->__toString() . ')';
+                        $val = '(' . $value . ')';
                     } else {
                         $val = $values->addValue($filed, $value);
                     }

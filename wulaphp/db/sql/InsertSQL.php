@@ -277,12 +277,11 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
                 $vstring = [];
                 foreach ($d as $ff => $vv) {
                     if ($vv instanceof ImmutableValue) { // a immutable value
-                        $vv->setDialect($this->dialect);
-                        $vstring [] = $this->sanitize($vv->__toString());
+                        $vstring [] = $vv->getValue($this->dialect);
                     } else if ($vv instanceof Query) { // a sub-select SQL as a value
                         $vv->setBindValues($values);
                         $vv->setDialect($this->dialect);
-                        $vstring [] = '(' . $vv->__toString() . ')';
+                        $vstring [] = '(' . $vv . ')';
                     } else {
                         $vstring [] = $values->addValue($ff, $vv);
                     }

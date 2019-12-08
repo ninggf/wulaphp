@@ -44,11 +44,12 @@ class Condition implements \ArrayAccess, \Countable {
     /**
      * 数据库安全字段.
      *
-     * @param string $field
+     * @param string          $field
+     * @param DatabaseDialect $dialect
      *
      * @return string
      */
-    public static function cleanField(string $field, DatabaseDialect $dialect = null): string {
+    public static function cleanField(string $field, ?DatabaseDialect $dialect = null): string {
         if ('*' == $field) {
             return $field;
         }

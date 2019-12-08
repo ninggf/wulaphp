@@ -138,14 +138,13 @@ SQL;
         $sql    = "INSERT INTO $into (";
         $fields = $_values = [];
         foreach ($data as $field => $value) {
-            $fields [] = $this->sanitize(Condition::cleanField($field));
+            $fields [] = Condition::cleanField($field, $this);
             if ($value instanceof ImmutableValue) { // a immutable value
-                $value->setDialect($this);
-                $_values [] = $this->sanitize($value->__toString());
+                $_values [] = $value->getValue($this);
             } else if ($value instanceof Query) { // a sub-select SQL as a value
                 $value->setBindValues($values);
                 $value->setDialect($this);
-                $_values [] = '(' . $value->__toString() . ')';
+                $_values [] = '(' . $value . ')';
             } else {
                 $_values [] = $values->addValue($field, $value);
             }
@@ -216,16 +215,15 @@ SQL;
 
         $fields = [];
         foreach ($data as $field => $value) {
-            $field = Condition::cleanField($field);
+            $field = Condition::cleanField($field, $this);
             if ($value instanceof Query) {
                 $value->setBindValues($values);
                 $value->setDialect($this);
-                $fields [] = $this->sanitize($field) . ' =  (' . $value->__toString() . ')';
+                $fields [] = $field . ' =  (' . $value . ')';
             } else if ($value instanceof ImmutableValue) {
-                $value->setDialect($this);
-                $fields [] = $this->sanitize($field) . ' =  ' . $this->sanitize($value->__toString());
+                $fields [] = $field . ' =  ' . $value->getValue($this);
             } else {
-                $fields [] = $this->sanitize($field) . ' = ' . $values->addValue($field, $value);
+                $fields [] = $field . ' = ' . $values->addValue($field, $value);
             }
         }
 
@@ -300,8 +298,7 @@ SQL;
                     $value   = new Condition ($value);
                     $cons [] = '(' . $value->getWhereCondition($dialect, $values) . ')';
                 } else if ($value instanceof ImmutableValue) {
-                    $value->setDialect($this);
-                    $cons [] = $this->sanitize($value->__toString());
+                    $cons [] = $value->getValue($this);
                 } else {
                     array_shift($cons);
                 }
@@ -315,7 +312,7 @@ SQL;
                     $filed = implode(' ', $ops);
                 }
                 $op    = strtoupper($op);
-                $filed = $this->sanitize(Condition::cleanField($filed));
+                $filed = Condition::cleanField($filed, $this);
                 if ($op == '$') { // null or not null
                     if (is_null($value)) {
                         $cons [] = $filed . ' IS NULL';
@@ -341,7 +338,7 @@ SQL;
                         $cons [] = $filed . ' ' . $op . ' (' . implode(',', $vs) . ')';
                     } else if ($value instanceof ImmutableValue) {
                         $value->setDialect($dialect);
-                        $cons [] = $filed . ' ' . $op . ' (' . $dialect->sanitize($value->__toString()) . ')';
+                        $cons [] = $filed . ' ' . $op . ' (' . $value . ')';
                     } else {
                         array_shift($cons);
                     }
@@ -352,12 +349,11 @@ SQL;
                     $cons [] = $filed . ' ' . $op . ' ' . $values->addValue($filed, $value);
                 } else {
                     if ($value instanceof ImmutableValue) {
-                        $value->setDialect($dialect);
-                        $val = $dialect->sanitize($value->__toString());
+                        $val = $value->getValue($this);
                     } else if ($value instanceof Query) {
                         $value->setBindValues($values);
                         $value->setDialect($dialect);
-                        $val = '(' . $value->__toString() . ')';
+                        $val = '(' . $value . ')';
                     } else {
                         $val = $values->addValue($filed, $value);
                     }
@@ -401,7 +397,7 @@ SQL;
      * @return string
      */
     public function sanitize($string) {
-        return preg_replace('#^`([^`]+)`$#', '\1', $string);
+        return preg_replace('#`([^`]+)`#', '"\1"', $string);
     }
 
     public function getDriverName() {
