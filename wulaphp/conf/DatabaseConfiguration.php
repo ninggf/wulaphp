@@ -13,13 +13,14 @@ class DatabaseConfiguration extends Configuration {
     public function __construct($name = 'default', $config = []) {
         parent::__construct($name);
         $this->settings = [
-            'driver'   => 'MySQL',
-            'port'     => '3306',
-            'host'     => 'localhost',
-            'dbname'   => '',
-            'user'     => 'root',
-            'password' => '888888',
-            'encoding' => 'UTF8'
+            'driver'     => 'MySQL',
+            'port'       => '3306',
+            'host'       => 'localhost',
+            'dbname'     => '',
+            'user'       => 'root',
+            'password'   => '888888',
+            'encoding'   => 'UTF8',
+            'persistent' => false
         ];
         if ($config) {
             $this->settings = array_merge($this->settings, $config);
@@ -52,6 +53,10 @@ class DatabaseConfiguration extends Configuration {
 
     public function encoding($encoding) {
         $this->settings ['encoding'] = $encoding;
+    }
+
+    public function persistent() {
+        $this->settings['persistent'] = true;
     }
 
     public function options($options) {

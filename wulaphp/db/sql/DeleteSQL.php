@@ -33,10 +33,11 @@ class DeleteSQL extends QueryBuilder {
         $sql    = $this->getSQL();
         $values = $this->values;
         if ($sql) {
+            $statement = null;
             try {
                 $statement = $this->dialect->prepare($sql);
                 foreach ($values as $value) {
-                    list ($name, $val, $type) = $value;
+                    [$name, $val, $type] = $value;
                     if (!$statement->bindValue($name, $val, $type)) {
                         $this->errorSQL    = $sql;
                         $this->errorValues = $values->__toString();
@@ -52,10 +53,6 @@ class DeleteSQL extends QueryBuilder {
                 } else {
                     $this->dumpSQL($statement);
                 }
-                if ($statement) {
-                    $statement->closeCursor();
-                    $statement = null;
-                }
                 QueryBuilder::addSqlCount();
 
                 return $cnt;
@@ -66,6 +63,11 @@ class DeleteSQL extends QueryBuilder {
                 $this->errorValues = $values->__toString();
 
                 return false;
+            } finally {
+                if ($statement) {
+                    $statement->closeCursor();
+                    $statement = null;
+                }
             }
         } else {
             $this->error       = 'Can not generate the delete SQL';

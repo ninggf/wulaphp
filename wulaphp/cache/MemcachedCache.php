@@ -38,8 +38,18 @@ class MemcachedCache extends Cache {
             try {
                 $servers = $cfg->get('memcached');
                 if ($servers) {
-                    $memcache = new \Memcached ();
-                    $memcache->setOption(\Memcached::OPT_CONNECT_TIMEOUT, 3);
+                    $persitent = $cfg->getb('persistent');
+
+                    if ($persitent) {
+                        $memcache = new \Memcached (md5(WWWROOT));
+                        if ($memcache->getServerList()) {
+                            return new MemcachedCache($memcache);
+                        }
+                    } else {
+                        $memcache = new \Memcached ();
+                    }
+
+                    $memcache->setOption(\Memcached::OPT_CONNECT_TIMEOUT, 5);
                     $memcache->setOption(\Memcached::OPT_DISTRIBUTION, \Memcached::DISTRIBUTION_CONSISTENT);
                     $memcache->setOption(\Memcached::OPT_SERVER_FAILURE_LIMIT, 2);
                     $memcache->setOption(\Memcached::OPT_REMOVE_FAILED_SERVERS, true);
@@ -47,12 +57,15 @@ class MemcachedCache extends Cache {
                     if (extension_loaded('igbinary') && defined('MEMCACHED_USE_IGBINARY')) {
                         $memcache->setOption(\Memcached::OPT_SERIALIZER, \Memcached::SERIALIZER_IGBINARY);
                     }
-                    if ($memcache->addServers($servers)) {
+
+                    if ($memcache->addServers($servers) && $memcache->getServerList()) {
                         return new MemcachedCache($memcache);
+                    } else {
+                        log_warn('cannot connect to memcached server:' . var_export($servers, true));
                     }
                 }
             } catch (\Exception $e) {
-                log_error($e->getMessage(), 'cache_memcached');
+                log_warn($e->getMessage());
             }
         }
 

@@ -35,10 +35,11 @@ class RedisCache extends Cache {
         if (extension_loaded('redis')) {
             $redisConfig = $cfg->get('redis');
             if ($redisConfig) {
-                list($host, $port, $db, $timeout, $auth) = $redisConfig;
-                $redis = RedisClient::getRedis([$host, $port, $timeout, $auth, $db]);
-                if ($redis) {
+                [$host, $port, $db, $timeout, $auth] = $redisConfig;
+                try {
+                    $redis = RedisClient::getRedis([$host, $port, $timeout, $auth, $db, $cfg->getb('persistent')]);
                     $cache = new RedisCache($redis);
+                } catch (\Exception $e) {
                 }
             }
         }

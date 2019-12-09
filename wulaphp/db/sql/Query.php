@@ -587,7 +587,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
         $sql = $this->__toString();
         if ($sql && $this->values) {
             foreach ($this->values as $value) {
-                list ($name, $val, $type, , $rkey) = $value;
+                [$name, $val, $type, , $rkey] = $value;
                 if ($this->whereData) {
                     $val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
                 }
@@ -656,7 +656,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * @see \Iterator::next()
      */
     public function next() {
-        $this->resultIdx++;
+        $this->resultIdx ++;
         if ($this->resultIdx <= $this->maxIdx) {
             $this->resultSet = $this->resultSets[ $this->resultIdx ];
         }
@@ -732,7 +732,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
             try {
                 if ($this->values) {
                     foreach ($this->values as $value) {
-                        list ($name, $val, $type, $field, $rkey) = $value;
+                        [$name, $val, $type, $field, $rkey] = $value;
                         if ($this->whereData) {
                             $val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
                         }
@@ -762,6 +762,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
                 $this->error       = $e->getMessage();
                 $this->errorSQL    = $this->sql;
                 $this->errorValues = $this->values->__toString();
+            } finally {
+                $this->statement->closeCursor();
             }
         }
     }
@@ -793,12 +795,13 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
         $group       = $this->sanitize($this->group);
         $sql         = $this->dialect->getCountSelectSQL($fields, $from, $joins, $this->where, $having, $group, $values);
         if ($sql) {
+            $statement = null;
             try {
                 $this->options [ \PDO::ATTR_CURSOR ] = \PDO::CURSOR_SCROLL;
                 $statement                           = $this->dialect->prepare($sql, $this->options);
                 if ($values) {
                     foreach ($values as $value) {
-                        list ($name, $val, $type, $field) = $value;
+                        [$name, $val, $type, $field] = $value;
                         if ($this->whereData) {
                             $val = isset($this->whereData[ $field ]) ? $this->whereData[ $field ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
                         }
@@ -827,6 +830,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
                 $this->count       = 0;
                 $this->errorSQL    = $sql;
                 $this->errorValues = $values->__toString();
+            } finally {
+                if ($statement) {
+                    $statement->closeCursor();
+                    $statement = null;
+                }
             }
         } else {
             $this->count       = 0;

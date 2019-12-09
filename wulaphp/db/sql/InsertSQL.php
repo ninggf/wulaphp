@@ -147,6 +147,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
                 $this->errorValues = $values->__toString();
             } finally {
                 if ($statement) {
+                    $statement->closeCursor();
                     $statement = null;
                 }
             }

@@ -90,15 +90,16 @@ class UpdateSQL extends QueryBuilder {
         $sql    = $this->getSQL();
         $values = $this->values;
         if ($sql) {
+            $statement = null;
             try {
                 $statement = $this->dialect->prepare($sql);
                 $cnt       = false;
                 if ($this->batch) {
                     $cnt = 0;
                     foreach ($this->data as $data) {
-                        list($da, $where) = $data;
+                        [$da, $where] = $data;
                         foreach ($values as $value) {
-                            list ($name, $val, $type, , $rkey) = $value;
+                            [$name, $val, $type, , $rkey] = $value;
                             $rval = isset($where[ $rkey ]) ? $where[ $rkey ] : (isset($da[ $rkey ]) ? $da[ $rkey ] : $val);
                             if (!$statement->bindValue($name, $rval, $type)) {
                                 $this->errorSQL    = $sql;
@@ -121,7 +122,7 @@ class UpdateSQL extends QueryBuilder {
                     }
                 } else {
                     foreach ($values as $value) {
-                        list ($name, $val, $type) = $value;
+                        [$name, $val, $type] = $value;
                         if (!$statement->bindValue($name, $val, $type)) {
                             $this->errorSQL    = $sql;
                             $this->errorValues = $values->__toString();
@@ -140,11 +141,6 @@ class UpdateSQL extends QueryBuilder {
                     }
                 }
 
-                if ($statement) {
-                    $statement->closeCursor();
-                    $statement = null;
-                }
-
                 return $cnt;
             } catch (\PDOException $e) {
                 $this->exception   = $e;
@@ -153,6 +149,11 @@ class UpdateSQL extends QueryBuilder {
                 $this->errorValues = $values->__toString();
 
                 return false;
+            } finally {
+                if ($statement) {
+                    $statement->closeCursor();
+                    $statement = null;
+                }
             }
         } else {
             $this->error       = 'Can not generate the delete SQL';

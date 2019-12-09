@@ -27,6 +27,9 @@ abstract class DatabaseDialect extends \PDO {
         if (!isset ($attr [ \PDO::ATTR_EMULATE_PREPARES ])) {
             $attr [ \PDO::ATTR_EMULATE_PREPARES ] = false;
         }
+        if (isset($options['persistent']) && $options['persistent']) {
+            $attr[ \PDO::ATTR_PERSISTENT ] = true;
+        }
         parent::__construct($dsn, $user, $passwd, $attr);
         $this->tablePrefix = isset ($options ['prefix']) && !empty ($options ['prefix']) ? $options ['prefix'] : '';
     }
