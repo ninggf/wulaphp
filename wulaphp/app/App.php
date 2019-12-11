@@ -216,6 +216,7 @@ class App {
             if (is_dir($lang)) {
                 I18n::addLang($lang);
             }
+            $module->autoBind();
         }
 
         foreach (self::$extensions as $extension) {

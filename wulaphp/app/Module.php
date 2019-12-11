@@ -29,6 +29,7 @@ abstract class Module {
     protected $currentVersion;
 
     private $subEnabled = false;
+    private $bound      = false;
 
     /**
      * Module constructor.
@@ -124,6 +125,52 @@ abstract class Module {
     }
 
     /**
+     * 注册事件处理器.
+     * @throws
+     */
+    public final function autoBind() {
+        if ($this->bound) {
+            return;
+        }
+        $this->bound = true;
+        // 批量绑定
+        $this->bind();
+        // 根据注解进行绑定
+        $ms = $this->reflection->getMethods(\ReflectionMethod::IS_STATIC);
+        foreach ($ms as $m) {
+            if (!$m->isPublic()) {
+                continue;
+            }
+            $annotation = new Annotation($m);
+            $bind       = $annotation->getArray('bind');
+            if ($bind) {
+                $name     = $m->getName();
+                $argc     = $m->getNumberOfParameters();
+                $priority = isset($bind[1]) ? intval($bind[1]) : 10;
+                bind($bind[0], [$this->clzName, $name], $priority, $argc);
+            } else {
+                $filter = $annotation->getArray('filter');
+                if ($filter) {
+                    $name = $m->getName();
+                    $argc = $m->getNumberOfParameters();
+                    if ($argc > 0) {
+                        $priority = isset($filter[1]) ? intval($filter[1]) : 10;
+                        bind($filter[0], [$this->clzName, $name], $priority, $argc);
+                    } else {
+                        throw_exception('the method ' . $name . ' of ' . $this->clzName . ' must at least have one parameter.');
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 自定义勾子绑定
+     */
+    protected function bind() {
+    }
+
+    /**
      * 版本列表.
      *
      * @return array
@@ -159,7 +206,7 @@ abstract class Module {
                 $info['status'] = 0;
             }
         } else {
-            $info['status'] = -1;
+            $info['status'] = - 1;
         }
 
         return $info;
