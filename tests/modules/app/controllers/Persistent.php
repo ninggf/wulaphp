@@ -23,7 +23,7 @@ class Persistent extends Controller {
 
         $redis->set('testPst', 'persitent');
         echo "ok1 => " . date('Y-m-d H:i:s');
-        sleep(60);
+        #sleep(60);
 
         return 'ok => ' . date('Y-m-d H:i:s');
     }
