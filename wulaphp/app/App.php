@@ -203,7 +203,8 @@ class App {
      */
     public static function start(): ?App {
         self::$app || new App();
-
+        //是否启用自动绑定
+        $autoBind = !(defined('AUTOBIND_DISABLED') && AUTOBIND_DISABLED);
         foreach (self::$enabledModules as $id => $module) {
             if (method_exists($module->clzName, 'urlGroup')) {
                 $prefix = ObjectCaller::callClzMethod($module->clzName, 'urlGroup');
@@ -216,7 +217,9 @@ class App {
             if (is_dir($lang)) {
                 I18n::addLang($lang);
             }
-            $module->autoBind();
+            if ($autoBind) {
+                $module->autoBind();
+            }
         }
 
         foreach (self::$extensions as $extension) {

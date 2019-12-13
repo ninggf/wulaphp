@@ -37,6 +37,8 @@ define('GZIP_ENABLED', true);
 # define('CONFIG_LOADER_CLASS', 'wulaphp\conf\ConfigurationLoader');
 /* 如果你要重新定义模块加载器,请 */
 # define('MODULE_LOADER_CLASS', 'wulaphp\app\ModuleLoader');
+/* 是否禁用模块勾子自动绑定 */
+# define('AUTOBIND_DISABLED',true);
 // 以上配置选择性修改
 // //////////////////////////////////////////////////////////////////////////////
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!以下内容不可修改!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -46,6 +48,7 @@ defined('PUBLIC_DIR') or define('PUBLIC_DIR', 'wwwroot');
 if (!defined('WWWROOT')) {
     define('WWWROOT', APPROOT . PUBLIC_DIR . DIRECTORY_SEPARATOR);
 }
+
 if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
     require APPROOT . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 }
