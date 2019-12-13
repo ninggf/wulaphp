@@ -16,8 +16,10 @@ use wulaphp\artisan\GmTask;
 class GearmWorkerTest extends TestCase {
     public function testGmWorker() {
         self::assertTrue(extension_loaded('gearman'));
-        $gm  = new GmTask();
-        $rst = $gm->doHigh('strrev', 'hello');
-        self::assertEquals('olleh', $rst);
+        if (version_compare('7.4', phpversion(), '>')) {
+            $gm  = new GmTask();
+            $rst = $gm->doHigh('strrev', 'hello');
+            self::assertEquals('olleh', $rst);
+        }
     }
 }
