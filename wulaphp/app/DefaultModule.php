@@ -34,4 +34,7 @@ class DefaultModule extends Module {
     public function getDescription() {
         return 'simple module without bootstrap.php file';
     }
+
+    public function autoBind() {
+    }
 }

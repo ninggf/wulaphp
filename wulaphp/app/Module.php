@@ -128,7 +128,7 @@ abstract class Module {
      * 注册事件处理器.
      * @throws
      */
-    public final function autoBind() {
+    public function autoBind() {
         if ($this->bound) {
             return;
         }
