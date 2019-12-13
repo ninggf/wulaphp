@@ -100,11 +100,11 @@ class Annotation {
      * 获取字符串型注解.
      *
      * @param string $annotation
-     * @param string $default
+     * @param string|null $default
      *
-     * @return string
+     * @return string|null
      */
-    public function getString(string $annotation, string $default = ''): string {
+    public function getString(string $annotation, ?string $default = ''): ?string {
         if (isset($this->annotations[ $annotation ])) {
             if (is_array($this->annotations[ $annotation ])) {
                 return $this->annotations[ $annotation ][0];
