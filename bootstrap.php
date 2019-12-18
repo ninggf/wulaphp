@@ -27,7 +27,7 @@ if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib'
     @ini_set('zlib.output_compression_level', 7);
 }
 @ob_start();
-define('WULA_VERSION', '3.0.7');
+define('WULA_VERSION', '3.4.1');
 define('WULA_RELEASE', 'RC');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
