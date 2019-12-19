@@ -12,8 +12,40 @@ use wulaphp\io\Session;
  * @property string $sessionID session id
  */
 trait SessionSupport {
+    /**
+     * @var Session
+     */
+    protected $_session = null;
+
+    /**
+     * 子类中不要显示调用它!!!
+     *
+     * @internal
+     */
     protected final function onInitSessionSupport() {
         $expire          = App::icfg('expire', 0);
-        $this->sessionID = (new Session ($expire))->start($this->sessionID);
+        $this->_session  = new Session ($expire);
+        $this->sessionID = $this->_session->start($this->sessionID);
+    }
+
+    /**
+     * 销毁并更换session id。
+     */
+    protected function changeSessionId() {
+        $this->_session->changeId();
+    }
+
+    /**
+     * 销毁session。
+     */
+    protected final function destorySession() {
+        $this->_session->destory();
+    }
+
+    /**
+     * 关闭session。
+     */
+    protected final function closeSession() {
+        $this->_session->close();
     }
 }
