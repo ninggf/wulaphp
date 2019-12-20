@@ -389,6 +389,14 @@ SQL;
         }
         # 3+4+5+6 = 18
         self::assertEquals(18, $sum);
+        // 指定最小id，不指定最大id
+        $t21 = $ci->traverse(['id' => [3]], 2, 'id,deleted');
+        $sum = 0;
+        foreach ($t21 as $t) {
+            $sum += $t['id'];
+        }
+        # 3+4+5+6+7 = 25
+        self::assertEquals(25, $sum);
 
         $t3  = $ci->traverse(['id' => [2, 7], 'deleted' => 0], 5, 'id,deleted', 'id');
         $sum = 0;

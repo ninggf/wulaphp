@@ -317,9 +317,19 @@ abstract class View {
      * @return \Generator
      */
     public final function traverse($con = [], $num = 100, $fields = '*', $id = 'id') {
-        if (isset($con[ $id ][0]) && isset($con[ $id ][1])) {
+        if (isset($con[ $id ][0])) {
             $rst[0]['minId'] = $con[ $id ][0];
-            $rst[0]['maxId'] = $con[ $id ][1];
+            if (isset($con[ $id ][1])) {
+                $rst[0]['maxId'] = $con[ $id ][1];
+            } else {
+                $ids = "SELECT MAX($id) AS maxId FROM " . $this->tableName;
+                $mst = $this->dbconnection->queryOne($ids);
+                if ($mst) {
+                    $rst[0]['maxId'] = $mst['maxId'];
+                } else {
+                    $rst = null;
+                }
+            }
             unset($con[ $id ]);
         } else {
             $ids = "SELECT MIN($id) AS minId,MAX($id) AS maxId FROM " . $this->tableName;
@@ -337,7 +347,7 @@ abstract class View {
                     return;
                 }
                 foreach ($vs as $value) {
-                    list ($name, $val, $type) = $value;
+                    [$name, $val, $type] = $value;
                     if (!$stmt->bindValue($name, $val, $type)) {
                         return;
                     }
