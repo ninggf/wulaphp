@@ -15,7 +15,8 @@ if (!is_file('vendor/autoload.php')) {
 }
 
 include __DIR__ . '/bootstrap.php';
-if (@ob_get_status()) @ob_end_clean();
+if (@ob_get_status())
+    @ob_end_clean();
 // comand list
 $commands = [];
 /**@var \wulaphp\artisan\ArtisanCommand $cmd */
@@ -44,7 +45,7 @@ if ($cmd == '-v') {
         exit($exit === 1 ? 0 : $exit);
     }
     $cmdi = new \wulaphp\artisan\ArtisanHelpCommand();
-    if ($cmd{0} == '-') {
+    if ($cmd[0] == '-') {
         $cmdi->help("Unknown Option: " . $cmd);
     } else {
         $cmdi->help("Unknown Command: " . $cmd);
