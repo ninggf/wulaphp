@@ -313,7 +313,7 @@ abstract class FormTable extends Table {
      *
      * @return string 字段名,非本表字段时请返回null。
      */
-    public function addField($fname, $ann, $default = ''): string {
+    public function addField($fname, $ann, $default = ''): ?string {
         if (is_array($ann)) {
             $ann = new Annotation($ann);
         }
