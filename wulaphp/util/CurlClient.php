@@ -313,16 +313,34 @@ class CurlClient {
     /**
      * GET请求数据.
      *
-     * @param string      $url   URL.
-     * @param string|null $base  保存目录
-     * @param bool        $reuse 重用
-     * @param bool        $isImg 是否是图片
+     * @param string               $url   URL.
+     * @param string|\Closure|null $base  保存目录或CURL的writefunction或null
+     * @param bool                 $reuse 重用
+     * @param bool                 $isImg 是否是图片
      *
      * @return bool|mixed|null|string|string[]
      */
     public function get($url, $base = null, $reuse = false, $isImg = false) {
         set_time_limit(0);
-        if ($base) {
+
+        $curl = $this->ch;
+        $this->dealCookie($curl);
+        $this->dealHeader($curl);
+        curl_setopt($curl, CURLOPT_URL, $url);
+
+        if ($base instanceof \Closure) {
+            curl_setopt($curl, CURLOPT_TCP_KEEPALIVE, 1);
+            curl_setopt($curl, CURLOPT_TCP_KEEPIDLE, 10);
+            curl_setopt($curl, CURLOPT_TCP_KEEPINTVL, 10);
+            curl_setopt($curl, CURLOPT_WRITEFUNCTION, $base);
+
+            curl_exec($curl);
+            curl_close($curl);
+
+            $this->ch = null;
+
+            return true;
+        } else if ($base) {
             $uinfo = CurlClient::getUrlInfo($url);
             if ($uinfo ['root'] != $this->domain) {
                 $ip = rtrim($base, DS) . DS . 'o_tfs' . DS . ($uinfo ['path'] ? $uinfo ['path'] . DS : '');
@@ -345,10 +363,6 @@ class CurlClient {
                 }
             }
         }
-        $curl = $this->ch;
-        $this->dealCookie($curl);
-        $this->dealHeader($curl);
-        curl_setopt($curl, CURLOPT_URL, $url);
         $rst = curl_exec($curl);
         if ($rst === false) {
             $this->error     = curl_error($this->ch);
