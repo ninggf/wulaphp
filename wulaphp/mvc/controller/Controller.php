@@ -57,9 +57,17 @@ abstract class Controller {
         $view             = null;
         $this->_action    = $action;
         $this->_methodAnn = new Annotation($refMethod);
+
         if ($this->_methodAnn->has('jsonBody')) {
             Request::getInstance()->addJsonPostBody();
         }
+
+        if ($this->_methodAnn->has('nobuffer')) {
+            while (@ob_end_clean()) {
+            };//close output buffers
+            header("X-Accel-Buffering: no");
+        }
+
         if ($this->beforeFeatures) {
             foreach ($this->beforeFeatures as $feature) {
                 $view = $this->$feature($refMethod, $view);
