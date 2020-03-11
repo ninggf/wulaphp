@@ -144,7 +144,7 @@ function conf() {
         Require all granted
     </Directory>
     
-    <LocationMatch "^/(?<DIR>modules|themes)/(?<FILE>.+\.(js|css|jpe?g|png|gif))$">
+    <LocationMatch "^/(?<DIR>modules|themes)/(?<FILE>.+\.(js|css|jpe?g|png|gif|eot|svg|ttf|woff2?))$">
         <IfModule alias_module>
             Alias "{$dir}%{env:MATCH_DIR}/%{env:MATCH_FILE}"
         </IfModule>
@@ -183,7 +183,7 @@ server {
         return 404;
     }
     
-    location ~ ^/(modules|themes)/.+\.(js|css|png|gif|jpe?g)$ {
+    location ~ ^/(modules|themes)/.+\.(js|css|png|gif|jpe?g|eot|svg|ttf|woff2?)$ {
         root {$dir};
         
         gzip on;
