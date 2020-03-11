@@ -865,11 +865,15 @@ class App {
             }
         }
         $url = ltrim($res, '/');
-        if ($min || APP_MODE == 'pro') {
+        if ($min) {
             $url1 = preg_replace('#\.(js|css)$#i', '.min.\1', $url);
             if (is_file(MODULES_PATH . '/' . $url1)) {
                 $url = $url1;
             }
+        }
+
+        if (!env('resource.dev_mode') && preg_match('/\.dev\.(js|css)$/', $url)) {
+            $url = preg_replace('/\.dev\.(js|css)$/', '.\1', $url);
         }
 
         return $static_url . MODULE_DIR . '/' . $url;
