@@ -91,17 +91,31 @@ class Session {
                 }
             }
             @session_name($session_name);
+            ob_start();
             if (!empty ($session_id)) {
-                $this->session_id = $session_id;
-                @session_id($session_id);
-                @session_start();
+                session_id($session_id);
+                if (session_start()) {
+                    $this->session_id = $session_id;
+                } else {
+                    ob_get_clean();
+                    throw new \Exception('"' . $save_handler . '" save handler does not work');
+                }
             } else {
-                @session_start();
-                $this->session_id = session_id();
+                if (session_start()) {
+                    $this->session_id = session_id();
+                } else {
+                    ob_get_clean();
+                    throw new \Exception('"' . $save_handler . '" save handler does not work');
+                }
             }
+            ob_end_clean();
         } catch (\Exception $e) {
             $msg = 'Cannot start session: ' . $e->getMessage();
-            log_error($msg);
+            if (DEBUG < DEBUG_ERROR) {
+                show_exception_page($e);
+            } else {
+                log_error($msg);
+            }
 
             return '';
         }
