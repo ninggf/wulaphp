@@ -94,8 +94,10 @@ class DatabaseConnection {
 
                 return $db;
             }
+            throw new DialectException('cannot connect the database server!');
+        } else {
+            throw new DialectException('config for connecting a database is empty!');
         }
-        throw new DialectException('cannot connect the database server!');
     }
 
     /**
@@ -417,7 +419,7 @@ class DatabaseConnection {
                     } else {
                         $v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
                     }
-                    $params++;
+                    $params ++;
 
                     return $v;
                 }, $sql);
@@ -511,7 +513,7 @@ class DatabaseConnection {
                     } else {
                         $v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
                     }
-                    $params++;
+                    $params ++;
 
                     return $v;
                 }, $sql);

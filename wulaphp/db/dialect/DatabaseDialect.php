@@ -6,7 +6,6 @@ use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\DialectException;
 use wulaphp\db\sql\BindValues;
 use wulaphp\db\sql\Condition;
-use wulaphp\io\Response;
 
 /**
  * deal with the difference between various databases
@@ -72,15 +71,8 @@ abstract class DatabaseDialect extends \PDO {
 
             return self::$INSTANCE [ $pid ][ $name ];
         } catch (\Exception $e) {
-            if (isset($_SERVER['REQUEST_URI'])) {
-                log_error($e->getMessage(), 'database');
-                Response::respond(503, 'Whoops! Database server has gone away ~');
-            } else {
-                throw new DialectException($e->getMessage());
-            }
+            throw new DialectException($e->getMessage());
         }
-
-        return null;
     }
 
     /**

@@ -296,23 +296,20 @@ class App {
      * @param string                    $table 表名.
      * @param string|DatabaseConnection $db    表所在的数据库.
      *
-     * @return \wulaphp\db\SimpleTable|null
+     * @return \wulaphp\db\SimpleTable
+     * @throws \Exception
      */
     public static function table(string $table, $db = 'default'): ?SimpleTable {
         /**@var \wulaphp\db\SimpleTable[][] $tables */
         static $tables = [];
-        try {
-            $dbid = get_unique_id($db);
-            if (!isset($tables[ $dbid ][ $table ])) {
-                $tables[ $dbid ][ $table ] = new SimpleTable($table, $db);
-            } else {
-                $tables[ $dbid ][ $table ]->db(DatabaseConnection::connect($db));
-            }
-
-            return $tables[ $dbid ][ $table ];
-        } catch (\Exception $e) {
-            return null;
+        $dbid = get_unique_id($db);
+        if (!isset($tables[ $dbid ][ $table ])) {
+            $tables[ $dbid ][ $table ] = new SimpleTable($table, $db);
+        } else {
+            $tables[ $dbid ][ $table ]->db(DatabaseConnection::connect($db));
         }
+
+        return $tables[ $dbid ][ $table ];
     }
 
     /**
