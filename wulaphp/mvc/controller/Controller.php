@@ -66,6 +66,7 @@ abstract class Controller {
             while (@ob_end_clean()) {
             };//close output buffers
             header("X-Accel-Buffering: no");
+            header('Content-Type: text/octet-stream');
         }
 
         if ($this->beforeFeatures) {
