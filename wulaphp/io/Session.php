@@ -83,9 +83,9 @@ class Session {
             $save_handler = @ini_get('session.save_handler');
             if ($save_handler == 'redis') {
                 ini_set('redis.session.locking_enabled', 1);//启用锁
-                ini_set('redis.session.lock_expire', 3600);//锁超时1个小时
+                ini_set('redis.session.lock_expire', 120);//锁超时2分钟
                 ini_set('redis.session.lock_retries', - 1);//无限次重试
-                ini_set('redis.session.lock_wait_time', 2000);// 每隔多久重试一次
+                ini_set('redis.session.lock_wait_time', 2);// 每隔多久重试一次
                 if (!$session_expire) {
                     ini_set('session.gc_maxlifetime', 43200);//12个小时
                 }
