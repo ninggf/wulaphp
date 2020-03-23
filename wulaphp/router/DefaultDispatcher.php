@@ -70,6 +70,12 @@ class DefaultDispatcher implements IURLDispatcher {
         $module    = strtolower($module);
         $namespace = App::dir2id($module, true);
         if ($namespace) {
+            //检测是否设置别名
+            $dir = App::id2dir($namespace);
+            if ($dir && $dir != $module) {
+                //模块需要通过别名访问.
+                return null;
+            }
             //是否绑定到指定的域名
             $domain = App::getModuleDomain($namespace);
             if ($domain && $domain != VISITING_HOST) {
@@ -91,7 +97,7 @@ class DefaultDispatcher implements IURLDispatcher {
                 $nc  = true;
             }
             if ($app) {
-                list ($controllerClz, $action, $pms, , $controllerSlag, $actionSlag) = $app;
+                [$controllerClz, $action, $pms, , $controllerSlag, $actionSlag] = $app;
                 if (in_array($action, ['beforerun', 'afterrun'])) {
                     return null;
                 }
@@ -163,7 +169,7 @@ class DefaultDispatcher implements IURLDispatcher {
                             $rtn = $clz->beforeRun($action, $method);
                             //beforeRun可以返回view了
                             if ($rtn instanceof View) {
-                                self::prepareView($rtn, $module, $clz, $action);
+                                self::prepareView($rtn, $namespace, $clz, $action);
 
                                 return $rtn;
                             }
@@ -183,7 +189,7 @@ class DefaultDispatcher implements IURLDispatcher {
                                         $args [] = is_array($value) ? array_map(function ($v) {
                                             return is_array($v) ? $v : urldecode($v);
                                         }, $value) : urldecode($value);
-                                        $idx++;
+                                        $idx ++;
                                     }
                                 }
                             }
@@ -198,7 +204,7 @@ class DefaultDispatcher implements IURLDispatcher {
                                     }
                                     $view = new SimpleView($view);
                                 } else if (!$aryArgs) {
-                                    self::prepareView($view, $module, $clz, $action);
+                                    self::prepareView($view, $namespace, $clz, $action);
                                 }
                             }
 
@@ -263,7 +269,7 @@ class DefaultDispatcher implements IURLDispatcher {
             }
 
             foreach ($files as $file) {
-                list ($controller_file, $controllerClz, $act, $controller) = $file;
+                [$controller_file, $controllerClz, $act, $controller] = $file;
                 if (is_file($controller_file)) {
                     include_once $controller_file;
                     if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
