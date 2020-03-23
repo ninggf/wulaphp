@@ -79,11 +79,16 @@ if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']) {
         $schema = 'http://';
     }
     define('VISITING_HOST', $schema . $_SERVER['HTTP_HOST']);
-    define('VISITING_DOMAIN', @explode(':', $_SERVER['HTTP_HOST'])[0]);
-    unset($schema);
+    $tmp = @explode(':', $_SERVER['HTTP_HOST']);
+    define('VISITING_SCHEMA', $schema);
+    define('VISITING_DOMAIN', $tmp[0]);
+    define('VISITING_PORT', isset($tmp[1]) ? ':' . $tmp[1] : '');
+    unset($schema, $tmp);
 } else {
+    define('VISITING_SCHEMA', 'http://');
     define('VISITING_HOST', '');
     define('VISITING_DOMAIN', '');
+    define('VISITING_PORT', '');
 }
 if (@ini_get('register_globals')) {
     !trigger_error('please close "register_globals" in php.ini file.') or exit(1);
