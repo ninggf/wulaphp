@@ -22,7 +22,7 @@ class TestExtentsion extends Extension {
         return ['math\\add' => ['&\teste\TestExtentsion', 2, 1]];
     }
 
-    public static function math_add($i, $j) {
+    public static function mathAdd($i, $j) {
         return $i + $j;
     }
 }
