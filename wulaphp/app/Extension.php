@@ -55,14 +55,36 @@ abstract class Extension {
         return false;
     }
 
+    /**
+     * 自动绑定
+     */
     public final function autoBind() {
         if ($this->bound) {
             return;
         }
         $this->bound = true;
+        // 批量绑定
+        $hooks = $this->bind();
+        if ($hooks && is_array($hooks)) {
+            foreach ($hooks as $hook => $impl) {
+                if (is_array($impl)) {
+                    [$func, $argc, $priority] = array_pad($impl, 3, null);
+                    bind($hook, $func, $priority ? $priority : 10, $argc ? $argc : 1);
+                } else {
+                    bind($hook, $impl);
+                }
+            }
+        }
         if (is_dir($this->path . DS . 'hooks')) {
             self::$hooks[] = $this->namespace . '\\hooks\\';
         }
+    }
+
+    /**
+     * 绑定勾子
+     * @return array|null
+     */
+    protected function bind() {
     }
 
     public function getVersionList() {

@@ -99,6 +99,12 @@ class PluginTest extends TestCase {
         self::assertEquals(2, $var);
     }
 
+    public function testBindReturn() {
+        $var = apply_filter('math\\add', 2, 3);
+
+        self::assertEquals(18, $var);
+    }
+
     public static function commononAdd($a, $b) {
         return $a + $b;
     }

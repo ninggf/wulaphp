@@ -17,6 +17,14 @@ class TestExtentsion extends Extension {
     public function getName() {
         return 'test extension';
     }
+
+    protected function bind() {
+        return ['math\\add' => ['&\teste\TestExtentsion', 2, 1]];
+    }
+
+    public static function math_add($i, $j) {
+        return $i + $j;
+    }
 }
 
 App::registerExtension(new TestExtentsion());

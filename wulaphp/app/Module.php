@@ -134,7 +134,17 @@ abstract class Module {
         }
         $this->bound = true;
         // 批量绑定
-        $this->bind();
+        $hooks = $this->bind();
+        if ($hooks && is_array($hooks)) {
+            foreach ($hooks as $hook => $impl) {
+                if (is_array($impl)) {
+                    [$func, $argc, $priority] = array_pad($impl, 3, null);
+                    bind($hook, $func, $priority ? $priority : 10, $argc ? $argc : 1);
+                } else {
+                    bind($hook, $impl);
+                }
+            }
+        }
         // 根据注解进行绑定
         $ms = $this->reflection->getMethods(\ReflectionMethod::IS_STATIC);
         foreach ($ms as $m) {
@@ -166,6 +176,8 @@ abstract class Module {
 
     /**
      * 自定义勾子绑定
+     *
+     * @return array|null
      */
     protected function bind() {
     }

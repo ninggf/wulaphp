@@ -26,6 +26,18 @@ class LoginModule extends Module {
     public function getHomePageURL() {
         return 'http://www.wulaphp.com/';
     }
+
+    protected function bind() {
+        return [
+            'math\\add' => [
+                function ($i, $j) {
+                    return ($i + 1) * $j;
+                },
+                2,
+                10
+            ]
+        ];
+    }
 }
 
 App::register(new LoginModule());
