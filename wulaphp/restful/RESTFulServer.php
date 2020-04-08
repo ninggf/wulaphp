@@ -282,7 +282,7 @@ class RESTFulServer {
                 return $cls;
             }
             $v --;
-        } while ($v > 1);
+        } while ($v >= 1);
 
         return null;
     }
