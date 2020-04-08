@@ -32,6 +32,36 @@ class RESTFulServerTest extends TestCase {
         return $arg;
     }
 
+    public function testServerSignV2() {
+        $arg['api']         = 'testm.hello.greeting';
+        $arg['app_key']     = '123';
+        $arg['v']           = 2;
+        $arg['sign_method'] = 'md5';
+        $arg['format']      = 'json';
+        $arg['name']        = 'Leo';
+        $arg['timestamp']   = date('Y-m-d H:i:s');
+        $signer             = new DefaultSignChecker();
+        $sign               = $signer->sign($arg, '123', 'md5');
+        $arg['sign']        = $sign;
+        self::assertNotEmpty($sign);
+
+        return $arg;
+    }
+    public function testServerSign2() {
+        $arg['api']         = 'testm.hello2.greeting';
+        $arg['app_key']     = '123';
+        $arg['v']           = 2;
+        $arg['sign_method'] = 'md5';
+        $arg['format']      = 'json';
+        $arg['name']        = 'Leo';
+        $arg['timestamp']   = date('Y-m-d H:i:s');
+        $signer             = new DefaultSignChecker();
+        $sign               = $signer->sign($arg, '123', 'md5');
+        $arg['sign']        = $sign;
+        self::assertNotEmpty($sign);
+
+        return $arg;
+    } 
     public function testServerSign1() {
         $arg['api']         = 'testm.hello.greeting';
         $arg['app_key']     = '123';
@@ -77,7 +107,28 @@ class RESTFulServerTest extends TestCase {
 
         $this->assertEquals('{"response":{"greeting":"Hello Leo"}}', $rtn);
     }
+    /**
+     * @depends testServerSign2
+     *
+     * @param $args
+     */
+    public function testV2Get($args) {
+        $curlient = CurlClient::getClient(5);
+        $rtn      = $curlient->get('http://127.0.0.1:9090/testm/api?' . http_build_query($args));
 
+        $this->assertEquals('{"response":{"greeting":"Hello2 Leo"}}', $rtn);
+    }
+    /**
+     * @depends testServerSignV2
+     *
+     * @param $args
+     */
+    public function testVerDowngradeGet($args) {
+        $curlient = CurlClient::getClient(5);
+        $rtn      = $curlient->get('http://127.0.0.1:9090/testm/api?' . http_build_query($args));
+
+        $this->assertEquals('{"response":{"greeting":"Hello Leo"}}', $rtn);
+    }
     /**
      * @depends testServerSign
      *
