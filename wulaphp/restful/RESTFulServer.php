@@ -80,7 +80,7 @@ class RESTFulServer {
             $this->httpout(408, 'Request Timeout');//非法请求
         }
         //时间检测结束
-        $v   = irqst('v', 1);
+        $v = $signV   = irqst('v', 1);
         $api = rqst('api');//API
         if (empty($api)) {
             $this->httpout(400, 'Miss API');
@@ -98,13 +98,13 @@ class RESTFulServer {
         if (count($apis) != 3) {
             $this->httpout(406, __('Invalid API@restful'));
         }
-        $namesapce = $apis[0];
-        $module    = App::getModuleById($namesapce);
+        $namespace = $apis[0];
+        $module    = App::getModuleById($namespace);
         if (!$module) {
             $this->httpout(404, __('module not found@restful'));
         }
         // downgrade support
-        $cls = $this->getCls($namesapce, ucfirst($apis[1]) . 'Api', &$v);
+        $cls = $this->getCls($namespace, ucfirst($apis[1]) . 'Api', $v);
         if ($cls) {
             /**@var API $clz */
             $clz = new $cls($app_key, $v);
@@ -176,7 +176,7 @@ class RESTFulServer {
             //签名
             $sign = rqst('sign');
             $args = array_merge($params, [
-                'v'           => $v,
+                'v'           => $signV,
                 'app_key'     => $app_key,
                 'api'         => $api,
                 'timestamp'   => $timestamp,
@@ -218,8 +218,7 @@ class RESTFulServer {
             }
 
             if ($session) {// 启动了session
-                (new Session($this->expire))->start($session);
-                $clz->sessionId = $session;
+                $clz->sessionId = (new Session($this->expire))->start($session);
             }
 
             try {
@@ -275,13 +274,13 @@ class RESTFulServer {
      *
      * @return string 全限定类名
      */
-    private function getCls(string $namespace, string $cls, int $v): ?string {
+    private function getCls(string $namespace, string $cls, int &$v): ?string {
         do {
-            $cls = $namesapce . '\\api\\v' . $v . '\\' . $cls;
-            if (class_exists($cls) && is_subclass_of($cls, API::class)) {
-                return $cls;
+            $clz = $namespace . '\\api\\v' . $v . '\\' . $cls;
+            if (class_exists($clz) && is_subclass_of($clz, API::class)) {
+                return $clz;
             }
-            $v --;
+            $v = $v - 1;
         } while ($v >= 1);
 
         return null;
