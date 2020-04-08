@@ -103,9 +103,9 @@ class RESTFulServer {
         if (!$module) {
             $this->httpout(404, __('module not found@restful'));
         }
-        $cls = ucfirst($apis[1]) . 'Api';
-        $cls = $namesapce . '\\api\\v' . $v . '\\' . $cls;
-        if (class_exists($cls) && is_subclass_of($cls, API::class)) {
+        // downgrade support
+        $cls = $this->getCls($namesapce, ucfirst($apis[1]) . 'Api', &$v);
+        if ($cls) {
             /**@var API $clz */
             $clz = new $cls($app_key, $v);
             $ann = new \ReflectionObject($clz);
@@ -262,6 +262,27 @@ class RESTFulServer {
         }
         // Not Implemented
         $this->httpout(501);
+
+        return null;
+    }
+
+    /**
+     * 获取版本号对应类全限定名.
+     *
+     * @param string $namespace 命名空间
+     * @param string $cls       API类名
+     * @param int    $v         版本号
+     *
+     * @return string 全限定类名
+     */
+    private function getCls(string $namespace, string $cls, int $v): ?string {
+        do {
+            $cls = $namesapce . '\\api\\v' . $v . '\\' . $cls;
+            if (class_exists($cls) && is_subclass_of($cls, API::class)) {
+                return $cls;
+            }
+            $v --;
+        } while ($v > 1);
 
         return null;
     }
