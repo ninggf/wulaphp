@@ -431,7 +431,7 @@ final class Pinyin {
      * @return string 拼音字符串
      */
     public static function convert(string $str, bool $shen = false): string {
-        $str = iconv("utf-8", "gbk", $str);
+        $str = mb_convert_encoding($str, 'gbk');
         $ret = "";
         for ($i = 0; $i < strlen($str); $i ++) {
             $p = ord(substr($str, $i, 1));
