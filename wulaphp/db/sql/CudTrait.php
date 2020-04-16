@@ -55,7 +55,7 @@ trait CudTrait {
     /**
      * 执行update,insert,delete语句.
      *
-     * @param boolean|null $checkNum  是否检测影响的条数 .
+     * @param boolean|null $checkAffected 是否检测影响的条数 .
      *                                1. false不检测影响的行数，SQL语句执行成功返回true，反之false；
      *                                1.1 如果是insert语句执行成功则返回auto_increment ID.
      *                                2. true影响的行数大于0时返回true,反之返回false；
@@ -66,7 +66,7 @@ trait CudTrait {
      *
      * @throws \PDOException
      */
-    public function exec(?bool $checkNum = false) {
+    public function exec(?bool $checkAffected = false) {
         $cnt = $this->count();
         if ($cnt === false) {//SQL执行失败
             if ($this->exception instanceof \PDOException) {
@@ -75,20 +75,20 @@ trait CudTrait {
             $dn = $this->dialect->getDriverName();
             log_error($this->error . '[' . $this->getSqlString() . ']', $dn . '.sql.err');
 
-            return is_null($checkNum) ? 0 : false;
+            return is_null($checkAffected) ? 0 : false;
         } else if ($this instanceof InsertSQL) {
-            if ($checkNum) {
+            if ($checkAffected) {
                 return $cnt > 0;
-            } else if (is_null($checkNum)) {
+            } else if (is_null($checkAffected)) {
                 return $cnt;
             } else if ($this->keyField) {
                 return $this->lastInsertIds();
             } else {
                 return true;
             }
-        } else if (is_null($checkNum)) {
+        } else if (is_null($checkAffected)) {
             return $cnt;
-        } else if ($checkNum) {
+        } else if ($checkAffected) {
             return $cnt > 0;
         } else {
             return true;
