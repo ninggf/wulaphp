@@ -65,7 +65,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return $this
      */
-    public function from($table, $alias = null) {
+    public function from(string $table, ?string $alias = null): Query {
         $this->from [] = self::parseAs($table, $alias);
 
         return $this;
@@ -105,7 +105,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function field($field, $alias = null) {
+    public function field($field, ?string $alias = null) {
         if (is_string($field)) {
             $fields = explode(',', trim($field));
             foreach ($fields as $field) {
@@ -133,7 +133,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function treeKey($key) {
+    public function treeKey(string $key) {
         $this->treeKey = $key;
 
         return $this;
@@ -146,7 +146,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function treepad($pad = true) {
+    public function treepad(bool $pad = true): Query {
         $this->treePad = $pad;
 
         return $this;
@@ -163,7 +163,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * @param int            $from     从哪个节点开始,默认从0（顶级）开始
      * @param int            $level    层级（内部递归时使用)
      */
-    public function tree(&$options, $keyfield = 'id', $upfield = 'upid', $varfield = 'name', $stop = null, $from = 0, $level = 0) {
+    public function tree(array &$options, string $keyfield = 'id', string $upfield = 'upid', string $varfield = 'name', $stop = null, int $from = 0, int $level = 0) {
         $from  = intval($from);
         $level = intval($level);
         if ($stop && !is_array($stop)) {
@@ -209,7 +209,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return boolean
      */
-    public function exist($filed = null) {
+    public function exist(string $filed = null): bool {
         if ($filed) {
             $this->field($filed);
         }
@@ -228,9 +228,9 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return int
      */
-    public function total($field = '*') {
+    public function total(string $field = '*'): int {
         if (!$this->countperformed || $this->whereData) {
-            $this->performCount('*');
+            $this->performCount($field);
         }
 
         return $this->count;
@@ -322,7 +322,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\TableLocker
      */
-    public function locker() {
+    public function locker(): TableLocker {
         return new TableLocker($this);
     }
 
@@ -335,7 +335,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * @return Query|array|null|mixed
      *  $index是数据时返回Query实例;$index是字符时返回null或字符;$index是数字，$field为null时返回array，$field不为null时返回null或字符.
      */
-    public function get($index = 0, $field = null) {
+    public function get($index = 0, ?string $field = null) {
         if ($this->performed) {
             if (is_numeric($index)) {
                 $index = intval($index);
@@ -380,9 +380,9 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @param array $default 默认值.
      *
-     * @return array|mixed
+     * @return array
      */
-    public function first($default = []) {
+    public function first(array $default = []) {
         if (!$this->performed) {
             $this->select();
         }
@@ -396,13 +396,13 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * 将行数据转换为字符.
      *
-     * @param string $field
-     * @param string $sep
-     * @param null   $cb
+     * @param string   $field
+     * @param string   $sep
+     * @param \Closure $cb
      *
      * @return string
      */
-    public function implode($field, $sep = ',', $cb = null) {
+    public function implode(string $field, string $sep = ',', ?\Closure $cb = null): string {
         $rss = [];
         if ($cb instanceof \Closure) {
             foreach ($this->toArray() as $r) {
@@ -427,7 +427,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function toArray($var = null, $key = null, $rows = [], $cb = null) {
+    public function toArray(?string $var = null,?string $key = null,array $rows = [],\Closure $cb = null):array {
         if (!$this->performed) {
             $this->select();
         }
@@ -497,7 +497,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function alterArrayByKey($key, $cb) {
+    public function alterArrayByKey(string $key,\Closure $cb):array {
         return $this->toArray(null, $key, null, $cb);
     }
 
@@ -509,7 +509,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function alterArray($valueField, $cb) {
+    public function alterArray(string $valueField,\Closure $cb):array {
         return $this->toArray($valueField, null, null, $cb);
     }
 
@@ -518,7 +518,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function ary() {
+    public function ary():array {
         if (!$this->performed) {
             $this->select();
         }
@@ -534,7 +534,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * @param string $upkey
      * @param int    $level  内部使用,从0开始
      */
-    public function recurse(&$crumbs, $idkey = 'id', $upkey = 'upid', $level = 0) {
+    public function recurse(array &$crumbs,string $idkey = 'id',string $upkey = 'upid',int $level = 0) {
         if ($this->where) {
             if ($level == 0) {
                 $con = new Condition ([$idkey => $crumbs [0] [ $upkey ]]);
@@ -558,11 +558,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * eager loading fields
      *
-     * @param array ...$fields
+     * @param string ...$fields
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function with(...$fields) {
+    public function with(string ...$fields):Query {
         foreach ($fields as $f) {
             $this->eagerFields[ $f ] = $f;
         }
@@ -583,7 +583,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * @return null|string
      */
-    public function getSqlString() {
+    public function getSqlString():?string {
         $sql = $this->__toString();
         if ($sql && $this->values) {
             foreach ($this->values as $value) {
