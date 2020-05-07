@@ -427,7 +427,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function toArray(?string $var = null,?string $key = null,array $rows = [],\Closure $cb = null):array {
+    public function toArray(?string $var = null,?string $key = null,?array $rows = [],\Closure $cb = null):array {
         if (!$this->performed) {
             $this->select();
         }
