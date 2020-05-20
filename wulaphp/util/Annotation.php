@@ -71,7 +71,7 @@ class Annotation {
                     $i ++;
                 }
                 $i                = 0;
-                $this->docComment = $this->text($i, '', $len, $sep = "\n", false);
+                $this->docComment = $this->text($i, '', $len, $sep = "\n");
             }
         }
     }
