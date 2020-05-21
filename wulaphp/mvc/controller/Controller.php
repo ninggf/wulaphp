@@ -21,16 +21,17 @@ use wulaphp\util\Annotation;
  * @property-read string                   $action              动作
  */
 abstract class Controller {
-    private $_module;  // 所属模块
-    private $_clzName; // 类名
-    private $_ctrName; // 小写类名
-    private $_slag;    // 类名格式化后的URL
-    private $_action;  // 动作
-    private $_reflectionObj;
-    private $_ann;
-    private $_methodAnn;
-    private $beforeFeatures = [];
-    private $afterFeatures  = [];
+    private   $_module;  // 所属模块
+    private   $_clzName; // 类名
+    private   $_ctrName; // 小写类名
+    private   $_slag;    // 类名格式化后的URL
+    private   $_action;  // 动作
+    private   $_reflectionObj;
+    private   $_ann;
+    private   $_methodAnn;
+    private   $beforeFeatures = [];
+    private   $afterFeatures  = [];
+    protected $_session;
 
     public function __construct(Module $module) {
         $this->_clzName       = get_class($this);
@@ -69,6 +70,10 @@ abstract class Controller {
             header('Content-Type: text/octet-stream');
         }
 
+        if ($this->_methodAnn->has('sessWrite') && $this->_session) {
+            $this->_session->start($this->sessionID, false);
+        }
+        
         if ($this->beforeFeatures) {
             foreach ($this->beforeFeatures as $feature) {
                 $view = $this->$feature($refMethod, $view);

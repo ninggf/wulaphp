@@ -12,16 +12,7 @@ use wulaphp\io\Session;
  * @property string $sessionID session id
  */
 trait SessionSupport {
-    /**
-     * @var Session
-     */
-    protected $_session = null;
 
-    /**
-     * 子类中不要显示调用它!!!
-     *
-     * @internal
-     */
     protected final function onInitSessionSupport() {
         $expire          = App::icfg('expire', 0);
         $this->_session  = new Session ($expire);

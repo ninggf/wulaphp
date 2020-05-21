@@ -417,6 +417,7 @@ HTML;
 set_exception_handler('show_exception_page');
 //脚本结束回调
 register_shutdown_function(function () {
+    @session_write_close();# close session
     define('WULA_STOPTIME', microtime(true));
     fire('wula\stop');
 });
