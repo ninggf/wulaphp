@@ -70,14 +70,14 @@ abstract class Controller {
             header('Content-Type: text/octet-stream');
         }
 
-        if ($this->_methodAnn->has('sessWrite') && $this->_session) {
-            $this->_session->start($this->sessionID, false);
-        }
-        
         if ($this->beforeFeatures) {
             foreach ($this->beforeFeatures as $feature) {
                 $view = $this->$feature($refMethod, $view);
             }
+        }
+
+        if (!$this->_methodAnn->has('sessWrite') && $this->_session) {
+            $this->_session->close();
         }
 
         return $view;

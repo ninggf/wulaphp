@@ -30,56 +30,52 @@ class Session {
      * start the session
      *
      * @param string $session_id
-     * @param bool   $readClose
      *
      * @return string session_id
      */
-    public function start(?string $session_id = null, bool $readClose = true) {
-        if ($this->session_id && $readClose) {
+    public function start(?string $session_id = null) {
+        if ($this->session_id) {
             return $this->session_id;
         }
 
         try {
-            $save_handler = @ini_get('session.save_handler');
-            if (!$this->session_id) {
-                $session_expire = $this->expire;
-                $http_only      = true;
-                @ini_set('session.use_cookies', 1);
-                @ini_set('session.cookie_httponly', 1);
-                @session_set_cookie_params($session_expire, '/', '', false, $http_only);
-                if ($session_expire) {
-                    @ini_set('session.gc_maxlifetime', $session_expire + 2);
-                }
-                $session_name = get_session_name();
-                if (empty($session_id)) {
-                    $session_id = isset ($_COOKIE [ $session_name ]) ? $_COOKIE [ $session_name ] : null;
-                    if (empty ($session_id) && isset ($_REQUEST [ $session_name ])) {
-                        $session_id = $_REQUEST [ $session_name ];
-                    }
-                }
-                if ($save_handler == 'redis') {
-                    ini_set('redis.session.locking_enabled', 1);//启用锁
-                    ini_set('redis.session.lock_expire', 120);//锁超时2分钟
-                    ini_set('redis.session.lock_retries', - 1);//无限次重试
-                    ini_set('redis.session.lock_wait_time', 2);// 每隔多久重试一次
-                    if (!$session_expire) {
-                        ini_set('session.gc_maxlifetime', 43200);//12个小时
-                    }
-                }
-                @session_name($session_name);
+            $save_handler   = @ini_get('session.save_handler');
+            $session_expire = $this->expire;
+            $http_only      = true;
+            @ini_set('session.use_cookies', 1);
+            @ini_set('session.cookie_httponly', 1);
+            @session_set_cookie_params($session_expire, '/', '', false, $http_only);
+            if ($session_expire) {
+                @ini_set('session.gc_maxlifetime', $session_expire + 2);
             }
+            $session_name = get_session_name();
+            if (empty($session_id)) {
+                $session_id = isset ($_COOKIE [ $session_name ]) ? $_COOKIE [ $session_name ] : null;
+                if (empty ($session_id) && isset ($_REQUEST [ $session_name ])) {
+                    $session_id = $_REQUEST [ $session_name ];
+                }
+            }
+            if ($save_handler == 'redis') {
+                ini_set('redis.session.locking_enabled', 1);//启用锁
+                ini_set('redis.session.lock_expire', 120);//锁超时2分钟
+                ini_set('redis.session.lock_retries', - 1);//无限次重试
+                ini_set('redis.session.lock_wait_time', 2);// 每隔多久重试一次
+                if (!$session_expire) {
+                    ini_set('session.gc_maxlifetime', 43200);//12个小时
+                }
+            }
+            @session_name($session_name);
             ob_start();
-            $options = $readClose ? ['read_and_close' => true] : [];
             if (!empty ($session_id)) {
                 session_id($session_id);
-                if (session_start($options)) {
+                if (session_start()) {
                     $this->session_id = $session_id;
                 } else {
                     ob_get_clean();
                     throw new \Exception('"' . $save_handler . '" save handler does not work');
                 }
             } else {
-                if (session_start($options)) {
+                if (session_start()) {
                     $this->session_id = session_id();
                 } else {
                     ob_get_clean();
