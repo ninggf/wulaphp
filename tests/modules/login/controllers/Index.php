@@ -26,6 +26,7 @@ class Index extends Controller {
 
     /**
      * @unlock
+     * @sessWrite
      * @return string
      */
     public function index() {
@@ -39,6 +40,7 @@ class Index extends Controller {
     }
 
     /**
+     * @sessWrite
      * @return string
      */
     public function lock() {
@@ -63,7 +65,7 @@ class Index extends Controller {
      * @unlock
      *
      * @param $passwd
-     *
+     * @sessWrite
      * @return string
      */
     public function unlock($passwd) {
