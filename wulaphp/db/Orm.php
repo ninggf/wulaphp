@@ -22,7 +22,7 @@ class Orm {
     public function __construct(View $view, $pk) {
         $this->view       = $view;
         $this->primaryKey = $pk;
-        self::$cnt++;
+        self::$cnt ++;
     }
 
     public function __destruct() {
@@ -67,7 +67,7 @@ class Orm {
             //构建查询
             $con = $this->view->{$field}();
             /**@var Query $query */
-            list($query, $fk, $lk, , $type) = $con;
+            [$query, $fk, $lk, , $type] = $con;
             // 预加载数据，只有belongsTo类型的关系才能预加载.
             if ($eager && $type == 'belongsTo' && !isset($this->ids[ $field ])) {
                 $this->prepareIds($result, $lk, $field);
@@ -84,7 +84,7 @@ class Orm {
 
         if ($con) {
             /**@var Query $query */
-            list($query, $fk, $lk, $one, $type) = $con;
+            [$query, $fk, $lk, $one, $type] = $con;
             if (isset($result[ $index ][ $lk ])) {
                 $idv = $result[ $index ][ $lk ];
                 if (isset($this->eagerDatas[ $field ][ $idv ])) {
@@ -116,21 +116,21 @@ class Orm {
      *
      * @return Query
      */
-    public function getQuery(int $index, string $field, array &$result): Query {
+    public function getQuery(int $index, string $field, array &$result): ?Query {
         $con = null;
         if (isset($this->queries[ $field ])) {
             $con = $this->queries[ $field ];
         } else if (method_exists($this->view, $field)) {
             $con = $this->view->{$field}();
             /**@var Query $query */
-            list($query, $fk, $lk) = $con;
+            [$query, $fk, $lk] = $con;
             $query->where([$fk => $result[ $index ][ $lk ]]);
             $this->queries[ $field ] = $con;
         }
 
         if ($con) {
             /**@var Query $query */
-            list($query, $fk, $lk) = $con;
+            [$query, $fk, $lk] = $con;
             if (isset($result[ $index ][ $lk ])) {
                 $idv = $result[ $index ][ $lk ];
                 $query->updateWhereData([$fk => $idv]);
