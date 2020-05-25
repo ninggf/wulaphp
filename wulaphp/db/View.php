@@ -383,7 +383,7 @@ abstract class View {
     /**
      * 查询.
      *
-     * @param array ...$fileds 字段.
+     * @param string ...$fileds 字段.
      *
      * @return Query
      */

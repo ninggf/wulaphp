@@ -149,9 +149,7 @@ abstract class FormTable extends Table {
      *
      */
     protected function loadFromDb($where) {
-        $data = $this->select($this->defaultQueryFields)->where($where)->get(0);
-
-        return $data;
+        return $this->select($this->defaultQueryFields)->where($where)->get(0);
     }
 
     /**
