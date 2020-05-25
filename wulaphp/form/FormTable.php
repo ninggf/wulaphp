@@ -76,7 +76,7 @@ abstract class FormTable extends Table {
             }
         }
 
-        $this->filterFields($data);
+        $this->skipFields($data);
         $this->_tableData = $data;
         $this->_formData  = $formData;
 
@@ -92,9 +92,7 @@ abstract class FormTable extends Table {
      * @return array
      */
     public final function formData($excepts = '', $useDefault = false) {
-        $this->inflate($excepts, $useDefault);
-
-        return $this->_formData;
+        return $this->inflate($excepts, $useDefault);
     }
 
     public final function tableData() {
@@ -162,7 +160,7 @@ abstract class FormTable extends Table {
      * @param array $data    要过滤的数据.
      * @param bool  $formKey key是否是表单字段名.
      */
-    protected function filterFields(&$data, $formKey = false) {
+    protected function skipFields(&$data, $formKey = false) {
         $keys = array_keys($data);
         foreach ($keys as $key) {
             if ($formKey) {
