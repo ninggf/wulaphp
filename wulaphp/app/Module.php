@@ -179,7 +179,26 @@ abstract class Module {
      *
      * @return array|null
      */
-    protected function bind() {
+    protected function bind(): ?array {
+        return [];
+    }
+
+    /**
+     * 模块菜单定义数据.
+     *
+     * @return array
+     */
+    public function menu(): array {
+        return [];
+    }
+
+    /**
+     * 模块访问权限定义数据.
+     *
+     * @return array
+     */
+    public function acl(): array {
+        return [];
     }
 
     /**
