@@ -9,6 +9,7 @@
  */
 
 namespace wulaphp\restful;
+
 /**
  * RESTFul 客户端.
  *
@@ -23,6 +24,8 @@ class RESTFulClient {
     private $timeout = 15;
     private $cookies = [];
     private $headers = [];
+    private $proxy;
+    private $proxied = false;
     /**
      * @var \wulaphp\restful\ISignCheck
      */
@@ -66,8 +69,20 @@ class RESTFulClient {
     /**
      * @param \wulaphp\restful\ISignCheck $signer
      */
-    public function setSigner($signer) {
+    public function setSigner(ISignCheck $signer) {
         $this->signer = $signer;
+    }
+
+    /**
+     * 使用代理
+     *
+     * @param string     $type
+     * @param string     $host
+     * @param string|int $port
+     * @param string     $auth
+     */
+    public function useProxy(string $type, string $host, int $port, ?string $auth = null) {
+        $this->proxy = ['type' => $type, 'host' => $host, 'port' => $port, 'auth' => $auth];
     }
 
     /**
@@ -326,6 +341,23 @@ class RESTFulClient {
         $params ['sign'] = $this->signer->sign($params, $this->appSecret);
         if (!$this->curl) {
             $this->curl = curl_init();
+            if ($this->proxy) {
+                $proxy = $this->proxy;
+                $type  = @constant('CURLPROXY_' . strtoupper($proxy['type']));
+                if ($type) {
+                    curl_setopt($this->curl, CURLOPT_PROXYTYPE, $type);
+                    $auth = $proxy['auth'];
+                    if ($auth) {
+                        curl_setopt($this->curl, CURLOPT_PROXYAUTH, $auth);
+                    }
+                    $port = intval($proxy['port']);
+                    if ($port) {
+                        curl_setopt($this->curl, CURLOPT_PROXYPORT, $port);
+                    }
+                    $host = $proxy['host'];
+                    curl_setopt($this->curl, CURLOPT_PROXY, $host);
+                }
+            }
         }
         curl_setopt($this->curl, CURLOPT_AUTOREFERER, 1);
         curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
