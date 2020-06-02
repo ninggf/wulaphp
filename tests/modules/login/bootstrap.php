@@ -27,7 +27,7 @@ class LoginModule extends Module {
         return 'http://www.wulaphp.com/';
     }
 
-    protected function bind() {
+    protected function bind(): ?array {
         return [
             'math\\add' => [
                 function ($i, $j) {
