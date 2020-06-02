@@ -15,6 +15,7 @@ namespace wulaphp\db\sql;
  * @property-read \wulaphp\db\dialect\DatabaseDialect $dialect
  */
 trait CudTrait {
+    protected $retriedCnt = 0;
     /**
      * 上次执行是否成功.
      *

@@ -4,6 +4,7 @@ namespace wulaphp\db\sql;
 
 class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate {
     use CudTrait;
+
     private $intoTable;
     private $datas;
     private $batch;
@@ -118,7 +119,31 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
                     $this->sql = $sql = $sql . ' ' . $ondup . ' ' . implode(', ', $upkvs);
                 }
                 //create prepare statement
-                $statement = $this->dialect->prepare($sql);
+                try {
+                    $statement = $this->dialect->prepare($sql);
+                } catch (\Exception $e) {
+                    if ($this->retriedCnt == 0 && $e->getCode() == 'HY000') {
+                        try {
+                            $this->dialect    = $this->dialect->reset();
+                            $this->executed   = null;
+                            $this->retriedCnt = 1;
+
+                            return $this->count();
+                        } catch (\Exception $e1) {
+                            $this->errorSQL    = $sql;
+                            $this->errorValues = $values->__toString();
+                            $this->error       = $e1->getMessage();
+
+                            return false;
+                        }
+                    } else {
+                        $this->errorSQL    = $sql;
+                        $this->errorValues = $values->__toString();
+                        $this->error       = $e->getMessage();
+
+                        return false;
+                    }
+                }
                 //bind values
                 foreach ($values as $value) {
                     [$name, $val, $type] = $value;

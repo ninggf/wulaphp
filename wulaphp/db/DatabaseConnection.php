@@ -196,7 +196,19 @@ class DatabaseConnection {
             if ($dialect->inTransaction()) {
                 return true;
             }
-            $rst = $dialect->beginTransaction();
+            try {
+                $rst = $dialect->beginTransaction();
+            } catch (\Exception $e) {
+                $rst = false;
+                if ($e->getCode() == 'HY000' && $this->transLevel == 1) {
+                    try {
+                        $this->reconnect();
+                        $rst = $this->dialect->beginTransaction();
+                    } catch (\Exception $ee) {
+
+                    }
+                }
+            }
             if ($rst) {
                 return true;
             } else {
@@ -355,14 +367,30 @@ class DatabaseConnection {
 
             return false;
         }
+        if ($sql{0} == '@') {
+            $sql     = mb_substr($sql, 1);
+            $parsing = false;
+        } else {
+            $parsing = true;
+        }
         try {
-            // 表前缀处理
-            $sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
-                return $dialect->getTableName($r[0]);
-            }, $sql);
+            if ($parsing) {
+                // 表前缀处理
+                $sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
+                    return $dialect->getTableName($r[0]);
+                }, $sql);
+            }
 
             return false !== $dialect->exec($sql);
         } catch (\Exception $e) {
+            if ($parsing && $e->getCode() == 'HY000') {
+                try {
+                    $this->reconnect();
+
+                    return $this->exec('@' . $sql);
+                } catch (\Exception $ee) {
+                }
+            }
             $this->error = $e->getMessage();
 
             return false;
@@ -400,34 +428,42 @@ class DatabaseConnection {
 
             return null;
         }
+        if ($sql{0} == '@') {
+            $sql     = mb_substr($sql, 1);
+            $parsing = false;
+        } else {
+            $parsing = true;
+        }
         $dialect = $this->dialect;
         try {
-            // 表前缀处理
-            $sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
-                return $dialect->getTableName($r[0]);
-            }, $sql);
-            if ($args) {
-                // 参数处理
-                $params = 0;
-                $sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
-                    if ($r[1] == 'f') {
-                        $v = floatval($args[ $params ]);
-                    } else if ($r[1] == 'd') {
-                        $v = intval($args[ $params ]);
-                    } else if (is_null($args[ $params ])) {
-                        $v = null;
-                    } else {
-                        $v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
-                    }
-                    $params ++;
-
-                    return $v;
+            if ($parsing) {
+                // 表前缀处理
+                $sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
+                    return $dialect->getTableName($r[0]);
                 }, $sql);
+                if ($args) {
+                    // 参数处理
+                    $params = 0;
+                    $sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+                        if ($r[1] == 'f') {
+                            $v = floatval($args[ $params ]);
+                        } else if ($r[1] == 'd') {
+                            $v = intval($args[ $params ]);
+                        } else if (is_null($args[ $params ])) {
+                            $v = null;
+                        } else {
+                            $v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
+                        }
+                        $params ++;
 
-                if (($argsn = count($args)) != $params) {
-                    $this->error = "needs $params args, but $argsn given. [" . $sql . ']';
+                        return $v;
+                    }, $sql);
 
-                    return null;
+                    if (($argsn = count($args)) != $params) {
+                        $this->error = "needs $params args, but $argsn given. [" . $sql . ']';
+
+                        return null;
+                    }
                 }
             }
             $rst = $dialect->exec($sql);
@@ -437,6 +473,14 @@ class DatabaseConnection {
             $this->error = 'cannot perform sql. [' . $sql . ']';
 
         } catch (\Exception $e) {
+            if ($parsing && $e->getCode() == 'HY000') {
+                try {
+                    $this->reconnect();
+
+                    return $this->cud('@' . $sql);
+                } catch (\Exception $ee) {
+                }
+            }
             $this->error = $e->getMessage() . ' [' . $sql . ']';
         }
 
@@ -446,8 +490,8 @@ class DatabaseConnection {
     /**
      * 删除0行也算成功.
      *
-     * @param string      $sql
-     * @param string|null ...$args
+     * @param string $sql
+     * @param string ...$args
      *
      * @return bool 只要不报错，即使只一行数据未删除也算成功.
      */
@@ -464,8 +508,8 @@ class DatabaseConnection {
      *
      * 执行SQL查询,select a from a where a=%s and %d.
      *
-     * @param string      $sql
-     * @param string|null ...$args
+     * @param string $sql
+     * @param string ...$args
      *
      * @return array
      */
@@ -484,8 +528,8 @@ class DatabaseConnection {
     /**
      * 执行SQL查询,select a from a where a=%s and %d.
      *
-     * @param string      $sql
-     * @param string|null ...$args
+     * @param string $sql
+     * @param string ...$args
      *
      * @return null|\PDOStatement
      */
@@ -495,32 +539,40 @@ class DatabaseConnection {
 
             return null;
         }
+        if ($sql{0} == '@') {
+            $sql     = mb_substr($sql, 1);
+            $parsing = false;
+        } else {
+            $parsing = true;
+        }
         $dialect = $this->dialect;
         try {
-            // 表前缀处理
-            $sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
-                return $dialect->getTableName($r[0]);
-            }, $sql);
-            if ($args) {
-                $params = 0;
-                $sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
-                    if ($r[1] == 'f') {
-                        $v = floatval($args[ $params ]);
-                    } else if ($r[1] == 'd') {
-                        $v = intval($args[ $params ]);
-                    } else if (is_null($args[ $params ])) {
-                        $v = null;
-                    } else {
-                        $v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
-                    }
-                    $params ++;
-
-                    return $v;
+            if ($parsing) {
+                // 表前缀处理
+                $sql = preg_replace_callback('#\{[a-z][a-z0-9_].*\}#i', function ($r) use ($dialect) {
+                    return $dialect->getTableName($r[0]);
                 }, $sql);
-                if (($argsn = count($args)) != $params) {
-                    $this->error = "needs $params args, but $argsn given. [" . $sql . ']';
+                if ($args) {
+                    $params = 0;
+                    $sql    = preg_replace_callback('#%(s|d|f)#', function ($r) use (&$params, $args, $dialect) {
+                        if ($r[1] == 'f') {
+                            $v = floatval($args[ $params ]);
+                        } else if ($r[1] == 'd') {
+                            $v = intval($args[ $params ]);
+                        } else if (is_null($args[ $params ])) {
+                            $v = null;
+                        } else {
+                            $v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
+                        }
+                        $params ++;
 
-                    return null;
+                        return $v;
+                    }, $sql);
+                    if (($argsn = count($args)) != $params) {
+                        $this->error = "needs $params args, but $argsn given. [" . $sql . ']';
+
+                        return null;
+                    }
                 }
             }
             //查询
@@ -531,6 +583,14 @@ class DatabaseConnection {
                 $this->error = 'cannot fetch from database [' . $sql . ']';
             }
         } catch (\Exception $e) {
+            if ($parsing && $e->getCode() == 'HY000') {
+                try {
+                    $this->reconnect();
+
+                    return $this->fetch('@' . $sql);
+                } catch (\Exception $ee) {
+                }
+            }
             $this->error = $e->getMessage() . ' [' . $sql . ']';
         }
 
@@ -541,8 +601,8 @@ class DatabaseConnection {
      *
      * 执行SQL查询且只取一条记录,select a from a where a=%s and %d.
      *
-     * @param string      $sql
-     * @param string|null ...$args
+     * @param string $sql
+     * @param string ...$args
      *
      * @return array
      */

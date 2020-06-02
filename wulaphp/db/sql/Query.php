@@ -427,7 +427,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function toArray(?string $var = null,?string $key = null,?array $rows = [],\Closure $cb = null):array {
+    public function toArray(?string $var = null, ?string $key = null, ?array $rows = [], \Closure $cb = null): array {
         if (!$this->performed) {
             $this->select();
         }
@@ -497,7 +497,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function alterArrayByKey(string $key,\Closure $cb):array {
+    public function alterArrayByKey(string $key, \Closure $cb): array {
         return $this->toArray(null, $key, null, $cb);
     }
 
@@ -509,7 +509,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function alterArray(string $valueField,\Closure $cb):array {
+    public function alterArray(string $valueField, \Closure $cb): array {
         return $this->toArray($valueField, null, null, $cb);
     }
 
@@ -518,7 +518,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function ary():array {
+    public function ary(): array {
         if (!$this->performed) {
             $this->select();
         }
@@ -534,7 +534,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * @param string $upkey
      * @param int    $level  内部使用,从0开始
      */
-    public function recurse(array &$crumbs,string $idkey = 'id',string $upkey = 'upid',int $level = 0) {
+    public function recurse(array &$crumbs, string $idkey = 'id', string $upkey = 'upid', int $level = 0) {
         if ($this->where) {
             if ($level == 0) {
                 $con = new Condition ([$idkey => $crumbs [0] [ $upkey ]]);
@@ -562,7 +562,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function with(string ...$fields):Query {
+    public function with(string ...$fields): Query {
         foreach ($fields as $f) {
             $this->eagerFields[ $f ] = $f;
         }
@@ -583,7 +583,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * @return null|string
      */
-    public function getSqlString():?string {
+    public function getSqlString(): ?string {
         $sql = $this->__toString();
         if ($sql && $this->values) {
             foreach ($this->values as $value) {
@@ -798,7 +798,24 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
             $statement = null;
             try {
                 $this->options [ \PDO::ATTR_CURSOR ] = \PDO::CURSOR_SCROLL;
-                $statement                           = $this->dialect->prepare($sql, $this->options);
+                try {
+                    $statement = $this->dialect->prepare($sql, $this->options);
+                } catch (\Exception $e) {
+                    if ($e->getCode() == 'HY000') {
+                        try {
+                            $this->dialect = $this->dialect->reset();
+                            $statement     = $this->dialect->prepare($sql, $this->options);
+                        } catch (\Exception $ee) {
+                            $this->countperformed = true;
+                            $this->count          = 0;
+                            $this->errorSQL       = $sql;
+                            $this->errorValues    = $values->__toString();
+                            $this->error          = $e->getMessage();
+
+                            return;
+                        }
+                    }
+                }
                 if ($values) {
                     foreach ($values as $value) {
                         [$name, $val, $type, $field] = $value;
@@ -872,12 +889,24 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
 
     /**
      * 准备PDOStatement
+     *
+     * @param bool $first 第一次才会重连
      */
-    private function prepareStatement() {
+    private function prepareStatement(bool $first = true) {
         $this->options [ \PDO::ATTR_CURSOR ] = \PDO::CURSOR_SCROLL;
         try {
             $this->statement = $this->dialect->prepare($this->sql, $this->options);
         } catch (\PDOException $e) {
+            if ($first && $e->getCode() == 'HY000') {
+                try {
+                    $this->dialect = $this->dialect->reset();
+                    $this->prepareStatement(false);
+
+                    return;
+                } catch (\Exception $ee) {
+
+                }
+            }
             $this->exception   = $e;
             $this->error       = $e->getMessage();
             $this->size        = false;

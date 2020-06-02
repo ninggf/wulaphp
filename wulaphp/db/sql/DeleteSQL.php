@@ -35,7 +35,33 @@ class DeleteSQL extends QueryBuilder {
         if ($sql) {
             $statement = null;
             try {
-                $statement = $this->dialect->prepare($sql);
+                try {
+                    $statement = $this->dialect->prepare($sql);
+                } catch (\Exception $e) {
+                    if ($this->retriedCnt == 0 && $e->getCode() == 'HY000') {
+                        try {
+                            $this->dialect    = $this->dialect->reset();
+                            $this->retriedCnt = 1;
+
+                            return $this->count();
+                        } catch (\Exception $e1) {
+                            $this->exception   = $e1;
+                            $this->error       = $e1->getMessage();
+                            $this->errorSQL    = $sql;
+                            $this->errorValues = $values->__toString();
+
+                            return false;
+                        }
+                    } else {
+                        $this->exception   = $e;
+                        $this->error       = $e->getMessage();
+                        $this->errorSQL    = $sql;
+                        $this->errorValues = $values->__toString();
+
+                        return false;
+                    }
+                }
+
                 foreach ($values as $value) {
                     [$name, $val, $type] = $value;
                     if (!$statement->bindValue($name, $val, $type)) {
