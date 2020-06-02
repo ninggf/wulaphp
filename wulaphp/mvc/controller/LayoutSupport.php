@@ -21,20 +21,28 @@ trait LayoutSupport {
                 $data = $tpl;
                 $tpl  = null;
             }
-            $layout = '~' . $this->layout;
-            $data   = $this->onInitLayoutData($data);
+            $ext = ($_SERVER['HTTP_PJAX'] ?? 0) ? '' : '.tpl';
+
             if ($tpl && $tpl[0] == '~') {
                 $tpl = substr($tpl, 1);
-                $tpl = $tpl . '.tpl';
+                $tpl = $tpl . $ext;
             } else if ($tpl) {
                 $path = str_replace(['\\', 'controllers'], [DS, 'views'], $this->reflectionObj->getNamespaceName());
-                $tpl  = $path . DS . $tpl . '.tpl';
+                $tpl  = $path . DS . $tpl . $ext;
             } else {
                 $path = str_replace(['\\', 'controllers'], [DS, 'views'], $this->reflectionObj->getNamespaceName());
-                $tpl  = $path . DS . $this->ctrName . DS . $this->action . '.tpl';
+                $tpl  = $path . DS . $this->ctrName . DS . $this->action . $ext;
             }
-            $data['workspaceView'] = $tpl;
-            $view                  = view($layout, $data);
+
+            if ($ext) {
+                $layout = '~' . $this->layout;
+                $data   = $this->onInitLayoutData($data);
+
+                $data['workspaceView'] = $tpl;
+                $view                  = view($layout, $data);
+            } else {
+                $view = view('~' . $tpl, $data);
+            }
 
             return $view;
         }
