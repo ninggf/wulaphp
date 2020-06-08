@@ -76,10 +76,6 @@ abstract class Controller {
             }
         }
 
-        if (!$this->_methodAnn->has('sessWrite') && $this->_session) {
-            $this->_session->close();
-        }
-
         return $view;
     }
 
