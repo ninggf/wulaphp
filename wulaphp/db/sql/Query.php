@@ -810,10 +810,18 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
                             $this->count          = 0;
                             $this->errorSQL       = $sql;
                             $this->errorValues    = $values->__toString();
-                            $this->error          = $e->getMessage();
+                            $this->error          = $ee->getMessage();
 
                             return;
                         }
+                    } else {
+                        $this->countperformed = true;
+                        $this->count          = 0;
+                        $this->errorSQL       = $sql;
+                        $this->errorValues    = $values->__toString();
+                        $this->error          = $e->getMessage();
+
+                        return;
                     }
                 }
                 if ($values) {
