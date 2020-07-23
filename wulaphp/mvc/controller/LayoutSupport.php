@@ -2,10 +2,15 @@
 
 namespace wulaphp\mvc\controller;
 
+use wulaphp\mvc\view\View;
+use wulaphp\router\DefaultDispatcher;
+
 /**
  * Class LayoutSupport
- * @property-read  string           $layout 布局模板.
- * @property-read  \ReflectionClass $reflectionObj
+ *
+ * @property-read  string                  $layout 布局模板.
+ * @property-read  \ReflectionClass        $reflectionObj
+ * @property-read \wulaphp\util\Annotation $methodAnn
  * @package wulaphp\mvc\controller
  */
 trait LayoutSupport {
@@ -67,6 +72,31 @@ trait LayoutSupport {
         } else {
             throw new \BadMethodCallException('LayoutSupport is not for ' . get_class($this));
         }
+    }
+
+    protected final function afterRunInLayoutSupport($action, $view, $method) {
+        if ($view === null) {
+            $view = $this->render($action);
+            $ns   = implode('/', array_slice(explode('\\', $this->clzName), 0, - 2));
+            DefaultDispatcher::prepareView($view, $ns, $this, $action);
+        }
+        if (isset($_SERVER['HTTP_PJAX']) && $view instanceof View) {
+            $nan   = $this->methodAnn;
+            $title = $nan->getString('title');
+            if ($title) {
+                $data  = $view->getData();
+                $title = preg_replace_callback('#\$\{([^\}]+)\}#', function ($ms) use ($data) {
+
+                    return $data[ $ms[1] ] ?? '';
+
+                }, $title);
+                if ($title) {
+                    header('PageTitle: ' . html_escape($title), true);
+                }
+            }
+        }
+
+        return $view;
     }
 
     /**
