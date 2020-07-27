@@ -92,6 +92,7 @@ trait LayoutSupport {
                 }, $title);
                 if ($title) {
                     header('PageTitle: ' . html_escape($title), true);
+                    $view->assign('page_title', $title);
                 }
             }
         }
