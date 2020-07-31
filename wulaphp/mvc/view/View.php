@@ -85,7 +85,7 @@ abstract class View implements \ArrayAccess, Renderable {
         return $this->tpl;
     }
 
-    public function setTemplate($tpl) {
+    public function setTemplate(string $tpl) {
         $this->tpl = $tpl;
     }
 
@@ -206,7 +206,7 @@ abstract class View implements \ArrayAccess, Renderable {
      *
      * @param string $fileName
      * @param int    $length
-     * @param string $desc
+     * @param string|null $desc
      *
      * @return $this
      */

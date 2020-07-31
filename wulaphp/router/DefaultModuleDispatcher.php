@@ -14,8 +14,9 @@ use wulaphp\app\App;
 
 /**
  * Class DefaultModuleDispatcher
- * @package wulaphp\router
+ * @package    wulaphp\router
  * @internal
+ * @deprecated 不在支持默认模块功能
  */
 class DefaultModuleDispatcher implements IURLDispatcher {
     private $dd = null;

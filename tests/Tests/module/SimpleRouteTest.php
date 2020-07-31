@@ -23,9 +23,6 @@ class SimpleRouteTest extends TestCase {
     public function testModuleLoaded() {
         $testM = App::getModule('testm');
         self::assertNotNull($testM);
-        self::assertTrue(ALIAS_ENABLED);
-        $url = App::url('testm/test/sub');
-        self::assertEquals('/sub', $url);
         self::assertEquals('www', PUBLIC_DIR);
     }
 
@@ -43,16 +40,6 @@ class SimpleRouteTest extends TestCase {
         $page = @ob_get_clean();
         self::assertNotEmpty($page);
         self::assertEquals('3', $page);
-
-        @ob_start();
-        try {
-            App::run('/sub?x=10&y=5');
-        } catch (\Exception $e) {
-            throw $e;
-        }
-        $page = @ob_get_clean();
-        self::assertNotEmpty($page);
-        self::assertEquals('{"result":5}', $page);
     }
 
     public function testTableRoute() {

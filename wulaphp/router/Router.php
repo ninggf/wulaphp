@@ -43,10 +43,6 @@ class Router {
         $this->xssCleaner = new XssCleaner();
         $dd               = new DefaultDispatcher ();
         $this->register($dd, 0);
-        //默认模块分发器
-        if (defined('DEFAULT_MODULE') && DEFAULT_MODULE) {
-            $this->register(new DefaultModuleDispatcher($dd, DEFAULT_MODULE), 1);
-        }
         //路由表分发器
         $this->register(new RouteTableDispatcher (), 2);
         try {
@@ -301,7 +297,6 @@ class Router {
      * @throws \Exception when no router
      */
     public function route() {
-        static $alias = false;
         $response = Response::getInstance();
         $uri      = self::getURI();
         if ($uri == '/' || !$uri) {
@@ -323,20 +318,7 @@ class Router {
             $url = 'index.html';
         }
         //URL转换处理
-        $url = $this->transform($url);
-        if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
-            if ($alias === false) {
-                $aliasFile = MODULES_PATH . 'alias.php';
-                if (is_file($aliasFile)) {
-                    $alias = (array)include $aliasFile;
-                } else {
-                    $alias = [];
-                }
-            }
-            if ($url && isset($alias[ $url ]) && $alias[ $url ]) {
-                $url = $alias[ $url ];
-            }
-        }
+        $url              = $this->transform($url);
         $this->requestURL = $url;
         fire('router\beforeDispatch', $this, $url);
         //预处理

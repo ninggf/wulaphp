@@ -24,7 +24,7 @@ class ModuleResDispatcher implements IURLDispatcher {
         if (in_array($chunk[0], apply_filter('allowed_res_dirs', [
                 MODULE_DIR,
                 THEME_DIR
-            ])) && preg_match('#\.(png|jpe?g|gif|css|js|eot|ttf|woff|svg|json|html?)$#i', $url)) {
+            ])) && preg_match('#\.(png|jpe?g|gif|css|js|eot|ttf|woff2|svg|json|html?)$#i', $url)) {
             $f = APPROOT . $url;
             if (is_file($f) && is_readable($f)) {
                 return new StaticFileView($f);

@@ -42,7 +42,7 @@ class DefaultDispatcher implements IURLDispatcher {
         } else if ($len == 1 && !empty ($controllers [0])) {
             $module = $controllers [0];
             if ($module == 'index.html') {
-                $module = DEFAULT_MODULE;
+                $module = '';
             } else if (($dir = App::checkUrlPrefix($module))) { # 使用模块URL前缀直接访问
                 $prefix = $module;
                 $module = $dir;
@@ -157,7 +157,6 @@ class DefaultDispatcher implements IURLDispatcher {
                             if (!$method->isPublic() || $methodSlag != $actionSlag) {
                                 return null;
                             }
-                            /* @var \ReflectionParameter[] $params */
                             $params      = $method->getParameters();
                             $paramsCount = count($params);// 方法参数个数
                             $argsCount   = count($pms);// 用户通过url传递过来的参数个数

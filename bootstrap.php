@@ -50,7 +50,6 @@ defined('TMP_DIR') or define('TMP_DIR', 'tmp');
 defined('LOGS_DIR') or define('LOGS_DIR', 'logs');
 defined('WWWROOT') or define('WWWROOT', APPROOT . PUBLIC_DIR . DIRECTORY_SEPARATOR);
 defined('STORAGE_PATH') or define('STORAGE_PATH', APPROOT . STORAGE_DIR . DS);
-defined('DEFAULT_MODULE') or define('DEFAULT_MODULE', 'app');
 define('WEB_ROOT', WWWROOT);//alias of WWWROOT
 define('EXTENSIONS_PATH', APPROOT . EXTENSION_DIR . DS);
 define('LIBS_PATH', APPROOT . LIBS_DIR . DS);

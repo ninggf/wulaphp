@@ -695,26 +695,6 @@ class App {
      * @return string
      */
     public static function url($url, $replace = true): string {
-        static $alias = false, $defaultModule = false;
-        if ($alias === false) {
-            if (defined('ALIAS_ENABLED') && ALIAS_ENABLED) {
-                $aliasFile = MODULES_PATH . 'alias.php';
-                if (is_file($aliasFile)) {
-                    $alias = (array)include $aliasFile;
-                } else {
-                    $alias = [];
-                }
-            } else {
-                $alias = [];
-            }
-        }
-        if ($defaultModule === false) {
-            if (defined('DEFAULT_MODULE') && DEFAULT_MODULE) {
-                $defaultModule = self::id2dir(DEFAULT_MODULE);
-            } else {
-                $defaultModule = null;
-            }
-        }
         if (is_array($url)) {
             $host    = $url[0];
             $url     = $url[1];
@@ -747,20 +727,6 @@ class App {
         if (isset($host) && $host) {
             return $host . WWWROOT_DIR . $rurl;
         } else {
-            //检测默认模块
-            if ($defaultModule && preg_match("#^$defaultModule#", $rurl)) {
-                //去掉默认模块路径
-                $rurl = trim(substr($rurl, strlen($defaultModule)), '/');
-            }
-
-            //检测别名
-            if ($rurl) {
-                $key = array_search($rurl, $alias);
-                if ($key) {
-                    $rurl = trim($key, '/');
-                }
-            }
-
             return WWWROOT_DIR . $rurl;
         }
     }

@@ -15,5 +15,7 @@ namespace wulaphp\mvc\view;
  * @package wulaphp\mvc\view
  */
 interface IModuleView {
+    public function getTemplate();
 
+    public function setTemplate(string $tpl);
 }

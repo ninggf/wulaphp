@@ -3,6 +3,8 @@
 use wulaphp\auth\Passport;
 use wulaphp\db\sql\ImmutableValue;
 
+define('CLRF', "\r\n");
+define('CLRF1', "\r\n\r\n");
 /**
  * 取数据.
  *
@@ -332,6 +334,59 @@ function get_thumbnail_filename($filename, $w, $h, $sep = '-') {
         return $shortname . "{$sep}{$w}x{$h}{$ext}";
     } else {
         return $shortname . "{$sep}{$w}{$ext}";
+    }
+}
+
+/**
+ * 通过套接字发送http请求
+ *
+ * @param resource $sock
+ * @param array    $request
+ * @param int|null $size
+ *
+ * @return false|string
+ */
+function http_send($sock, array $request, ?int &$size = 0) {
+    if (empty($sock))
+        return false;
+    $packet = implode(CLRF, $request);
+    $rst    = @fwrite($sock, $packet);
+    if ($rst !== false && $rst > 0) {
+        $i   = 100;
+        $rtn = stream_get_contents($sock);
+        $pos = strpos($rtn, CLRF1);
+        while (!$pos && $i > 0) {//读完头部
+            $i --;
+            $rtn .= stream_get_contents($sock);
+            $pos = strpos($rtn, CLRF1);
+        }
+        if (!$i) {
+            return false;
+        }
+        if ($rtn) {
+            $pos       = strpos($rtn, CLRF1);
+            $headerStr = substr($rtn, 0, $pos);
+            $preg      = '/Content-Length:\s+(\d+)/';
+            if (preg_match($preg, $headerStr, $m)) {
+                $size = $m[1];
+            } else {
+                return substr($rtn, $pos + strlen(CLRF1));
+            }
+            $rst   = substr($rtn, $pos + strlen(CLRF1));
+            $size1 = strlen($rst);
+            $j     = 400;
+            while ($size1 < $size && $j > 0) {
+                $j --;
+                $rst   .= stream_get_contents($sock);
+                $size1 = strlen($rst);
+            }
+
+            return $rst;
+        }
+
+        return false;
+    } else {
+        return false;
     }
 }
 

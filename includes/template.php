@@ -213,11 +213,15 @@ function smarty_modifiercompiler_cdn($params, $compiler) {
 
 function smarty_modifiercompiler_assets($params, $compiler) {
     $min = "''";
+    $arg = "true";
     if (isset($params[1])) {
         $min = $params[1];
+        if (isset($params[2]) && empty($params[2])) {
+            $arg = "false";
+        }
     }
 
-    return "wulaphp\\app\\App::assets({$params[0]},$min)";
+    return "wulaphp\\app\\App::assets({$params[0]},$min,$arg)";
 }
 
 function smarty_modifiercompiler_vendor($params, $compiler) {
