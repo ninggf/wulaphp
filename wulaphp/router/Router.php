@@ -44,7 +44,7 @@ class Router {
         $dd               = new DefaultDispatcher ();
         $this->register($dd, 0);
         //路由表分发器
-        $this->register(new RouteTableDispatcher (), 2);
+        $this->register(new RouteTableDispatcher (), 1);
         try {
             fire('router\registerDispatcher', $this);
         } catch (\Exception $e) {
