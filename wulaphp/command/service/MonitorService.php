@@ -547,7 +547,7 @@ class MonitorService extends Service {
             if (!$buffer) {//出错啦,断开链接
                 @socket_close($socket);
                 unset($this->clients[ $socketId ], $this->msgs[ $socketId ]);
-            } else if ($buffer) {
+            } else {
                 $this->msgs[ $socketId ][] = $buffer;
                 $this->unpackMsg($socketId, $socket);
             }

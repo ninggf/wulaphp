@@ -120,7 +120,7 @@ class ServiceCommand extends ArtisanCommand {
                     $sock = @socket_create(AF_UNIX, SOCK_STREAM, 0);
                     if (!$sock) {
                         $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
-                        exit(-1);
+                        exit(- 1);
                     }
                     @socket_set_timeout($sock, 3);
                     $rtn = @socket_connect($sock, $sockFile);
@@ -150,15 +150,15 @@ class ServiceCommand extends ArtisanCommand {
                         $this->error('[service] could not detach session id.');
                         exit(1);
                     }
-                    $conf    = $this->getRuntimeCfg();
+                    $conf    = self::getRuntimeCfg();
                     $monitor = new MonitorService('monitor', $conf);
                     $monitor->run();
                 } catch (\Exception $e) {
-                    exit(-1);
+                    exit(- 1);
                 }
             } else {//fork 失败
                 $this->error('cannot create process');
-                exit(-1);
+                exit(- 1);
             }
         }
     }
@@ -184,7 +184,7 @@ class ServiceCommand extends ArtisanCommand {
      */
     private function reload($service) {
         $this->output('Reloading ...', false);
-        $this->getRuntimeCfg();
+        self::getRuntimeCfg();
         $rtn = $this->sendCommand('reload', ['service' => $service]);
 
         if ($rtn) {
@@ -204,12 +204,12 @@ class ServiceCommand extends ArtisanCommand {
             $pcnt = count($rtn['ps']);
             $this->output(($pcnt ? '├── ' : '└── ') . $this->color->str($rtn['ssid'], 'green'));
             foreach ($rtn['ps'] as $s => $ids) {
-                $pcnt--;
+                $pcnt --;
                 if ($ids) {
                     $this->output(($pcnt ? '├── ' : '└── ') . $s);
                     $pids = array_keys($ids);
                     $cnt  = count($pids);
-                    for ($i = 0; $i < $cnt - 1; $i++) {
+                    for ($i = 0; $i < $cnt - 1; $i ++) {
                         $this->output(($pcnt ? '│   ├── ' : '    ├── ') . $pids[ $i ]);
                     }
                     $this->output(($pcnt ? '│   └── ' : '    └── ') . $pids[ $cnt - 1 ]);
@@ -279,7 +279,7 @@ class ServiceCommand extends ArtisanCommand {
     }
 
     private function config($service) {
-        $cfg      = $this->getRuntimeCfg();
+        $cfg      = self::getRuntimeCfg();
         $user     = aryget('user', $cfg);
         $group    = aryget('group', $cfg);
         $verbose  = aryget('verbose', $cfg, 'vvv');
@@ -384,7 +384,7 @@ class ServiceCommand extends ArtisanCommand {
             $sock = @socket_create(AF_UNIX, SOCK_STREAM, 0);
             if (!$sock) {
                 $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
-                exit(-1);
+                exit(- 1);
             }
             $sockFile = substr($bind, 5);
             if (!$sockFile) {
@@ -398,7 +398,7 @@ class ServiceCommand extends ArtisanCommand {
             $sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if (!$sock) {
                 $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
-                exit(-1);
+                exit(- 1);
             }
             @socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
             @socket_set_timeout($sock, 10);
@@ -414,13 +414,13 @@ class ServiceCommand extends ArtisanCommand {
             } else {
                 $this->output($this->color->str(socket_strerror($error_no), 'red'));
             }
-            exit(-1);
+            exit(- 1);
         }
 
         $rtn = @socket_write($sock, $payload, strlen($payload));
         if (!$rtn) {
             $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));
-            exit(-1);
+            exit(- 1);
         }
         $msgs = '';
         while (true) {
@@ -436,7 +436,7 @@ class ServiceCommand extends ArtisanCommand {
                 }
             } else {
                 $this->output("\n" . $this->color->str(socket_strerror(socket_last_error()), 'red'));
-                exit(-1);
+                exit(- 1);
             }
         }
 
@@ -453,47 +453,49 @@ class ServiceCommand extends ArtisanCommand {
     }
 
     /**
+     * 获取运行时服务信息.
+     *
      * @return array
      */
-    private function getRuntimeCfg() {
+    public static function getRuntimeCfg() {
         $cfg = App::config('service', true)->toArray();
         $i   = 0;
         $j   = 500;
+
+        $ss = apply_filter('on_register_service', []);
+
+        if ($ss) {
+            $cfg['services'] = array_merge($cfg['services'], $ss);
+        }
+
         if (isset($cfg['enabled']) && $cfg['enabled']) {
             $enabledServices = $cfg['enabled'];
             if (is_string($enabledServices)) {
                 $enabledServices = explode(',', pure_comman_string(trim($enabledServices)));
             }
+        } else {
+            $enabledServices = [];
+        }
 
-            if ($enabledServices && is_array($enabledServices)) {
-                foreach ($cfg['services'] as $id => &$service) {
-                    if (in_array($id, $enabledServices)) {
-                        $service['status'] = 'enabled';
-                        $service['order']  = $i++;
-                    } else {
-                        $service['status'] = 'disabled';
-                        $service['order']  = $j++;
-                    }
-                }
-            }
-        } else if (isset($cfg['disabled']) && $cfg['disabled']) {
+        if (isset($cfg['disabled']) && $cfg['disabled']) {
             $disabledServices = $cfg['disabled'];
             if (is_string($disabledServices)) {
                 $disabledServices = explode(',', pure_comman_string(trim($disabledServices)));
             }
+        } else {
+            $disabledServices = [];
+        }
 
-            if ($disabledServices && is_array($disabledServices)) {
-                foreach ($cfg['services'] as $id => &$service) {
-                    if (in_array($id, $disabledServices)) {
-                        $service['status'] = 'disabled';
-                        $service['order']  = $j++;
-                    } else {
-                        $service['status'] = 'enabled';
-                        $service['order']  = $i++;
-                    }
-                }
+        foreach ($cfg['services'] as $id => &$service) {
+            if (in_array($id, $enabledServices)) {
+                $service['status'] = 'enabled';
+                $service['order']  = $i ++;
+            } else if (in_array($id, $disabledServices)) {
+                $service['status'] = 'disabled';
+                $service['order']  = $j ++;
             }
         }
+
         @file_put_contents(TMP_PATH . '.service.json', @json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
         return $cfg;
