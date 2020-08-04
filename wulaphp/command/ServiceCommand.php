@@ -256,7 +256,7 @@ class ServiceCommand extends ArtisanCommand {
                     ['Type', 8],
                     ['Worker', 8],
                     ['Status', 20],
-                    ['', 44]
+                    ['Msg', 44]
                 ]));
                 $this->output($this->cell('-', 80, '-'));
                 foreach ($services as $id => $ser) {

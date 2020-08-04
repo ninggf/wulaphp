@@ -41,11 +41,11 @@ class MonitorService extends Service {
             if ($uinfo) {
                 if (!@posix_setuid($uinfo['uid'])) {
                     $this->output('cannot run service command by user ' . $user);
-                    exit(-1);
+                    exit(- 1);
                 }
             } else {
                 $this->output('user ' . $user . ' is not found');
-                exit(-1);
+                exit(- 1);
             }
             $group = $this->getOption('group');
             if ($group) {
@@ -54,7 +54,7 @@ class MonitorService extends Service {
                     $gid = $ginfo['gid'];
                 } else {
                     $this->output('group ' . $group . ' is not found');
-                    exit(-1);
+                    exit(- 1);
                 }
             } else {
                 $gid = $uinfo['gid'];
@@ -62,7 +62,7 @@ class MonitorService extends Service {
             if ($gid) {
                 if (!@posix_setgid($gid)) {
                     $this->output('cannot run service command by group ' . $gid);
-                    exit(-1);
+                    exit(- 1);
                 }
             }
         }
@@ -165,7 +165,8 @@ class MonitorService extends Service {
             switch ($command) {
                 case 'stop':
                     if ($service) {
-                        $rst = $this->stopService($service);
+                        $restart = $payload['args']['restart'] ?? false;
+                        $rst     = $this->stopService($service, $restart);
                         $this->response($socket, ['status' => $rst ? 'done' : 'fail']);
                     } else {
                         $this->response($socket, ['status' => 'done']);
@@ -273,7 +274,7 @@ class MonitorService extends Service {
                 case 'running':
                     //补齐进程
                     $service['worker'] = intval(isset($service['worker']) ? $service['worker'] : 1);
-                    $serOk             = $this->checkSer($service, $msg);
+                    $serOk             = $this->checkSer($service, $id,$msg);
                     if ($serOk) {
                         $forkOk = true;
                         while (count($this->services[ $id ]['pids']) < $service['worker']) {
@@ -370,9 +371,11 @@ class MonitorService extends Service {
             $services = isset($config['services']) ? $config['services'] : [];
             if ($service) {
                 if (isset($services[ $service ]) && isset($this->services[ $service ])) {
-                    $this->services[ $service ] = array_merge($this->services[ $service ], $services[ $service ]);
-                    $status                     = isset($services[ $service ]['status']) ? $services[ $service ]['status'] : '';
-                    if (!$status && $this->services[ $service ]['status'] == 'running') {
+                    $c_status                             = $this->services[ $service ]['status'];
+                    $this->services[ $service ]           = array_merge($this->services[ $service ], $services[ $service ]);
+                    $this->services[ $service ]['status'] = $c_status;
+                    $status                               = $services[ $service ]['status'] ?? '';
+                    if ($status != 'disabled' && $c_status == 'running') {
                         $this->services[ $service ]['status'] = 'reload';
                     }
 
@@ -388,12 +391,14 @@ class MonitorService extends Service {
                         $this->services[ $s ]['status'] = 'new';
                     }
                 } else {
-                    $this->services[ $s ] = array_merge($this->services[ $s ], $conf);
-                    $status               = isset($conf['status']) ? $conf['status'] : '';
+                    $c_status                       = $this->services[ $s ]['status'];
+                    $this->services[ $s ]           = array_merge($this->services[ $s ], $conf);
+                    $this->services[ $s ]['status'] = $c_status;
+                    $status                         = isset($conf['status']) ? $conf['status'] : '';
                     if (!$status) {
                         if ($status == 'disabled') {
                             $this->services[ $s ]['status'] = 'disabled';
-                        } else if ($this->services[ $s ]['status'] == 'running') {
+                        } else if ($c_status == 'running') {
                             $this->services[ $s ]['status'] = 'reload';
                         }
                     }
@@ -414,10 +419,14 @@ class MonitorService extends Service {
         return false;
     }
 
-    private function stopService($service) {
+    private function stopService($service, $restart = false) {
         if ($service) {
             if (isset($this->services[ $service ])) {
-                $this->services[ $service ]['status'] = 'stopping';
+                if ($restart) {
+                    $this->services[ $service ]['status'] = 'reload';
+                } else {
+                    $this->services[ $service ]['status'] = 'stopping';
+                }
 
                 return true;
             }
@@ -435,7 +444,8 @@ class MonitorService extends Service {
             $services     = isset($config['services']) ? $config['services'] : [];
             if (isset($services[ $service ])) {
                 $status = isset($services[ $service ]['status']) ? $services[ $service ]['status'] : '';
-                if ($status == 'disabled') return false;
+                if ($status == 'disabled')
+                    return false;
 
                 if (isset($this->services[ $service ])) {
                     $this->services[ $service ] = array_merge($this->services[ $service ], $services[ $service ]);
@@ -462,7 +472,7 @@ class MonitorService extends Service {
             $sock = @socket_create(AF_UNIX, SOCK_STREAM, 0);
             if (!$sock) {
                 $this->output($fail . "\nCannot create administrator socket:" . socket_strerror(socket_last_error()));
-                exit(-1);
+                exit(- 1);
             }
             $sockFile = substr($bind, 5);
             if (!$sockFile) {
@@ -474,7 +484,7 @@ class MonitorService extends Service {
             } else {
                 @socket_close($sock);
                 $this->output($fail . "\n" . 'sock file is empty!');
-                exit(-1);
+                exit(- 1);
             }
         } else {
             $addr = isset($binds[0]) ? $binds[0] : '127.0.0.1';
@@ -482,7 +492,7 @@ class MonitorService extends Service {
             $sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if (!$sock) {
                 $this->output($fail . "\nCannot create administrator socket:" . socket_strerror(socket_last_error()));
-                exit(-1);
+                exit(- 1);
             }
             @socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
             $rtn = @socket_bind($sock, $addr, $port);
@@ -490,13 +500,13 @@ class MonitorService extends Service {
         if (!$rtn) {
             @socket_close($sock);
             $this->output($fail . "\n" . socket_strerror(socket_last_error()));
-            exit(-1);
+            exit(- 1);
         }
         $rst = @socket_listen($sock);
         if (!$rst) {
             @socket_close($sock);
             $this->output($fail . "\n" . socket_strerror(socket_last_error()));
-            exit(-1);
+            exit(- 1);
         }
         $this->sock = $sock;
     }
@@ -542,7 +552,8 @@ class MonitorService extends Service {
         }
         foreach ($this->changed as $key => $socket) {
             $socketId = array_search($socket, $this->clients);
-            if (!$socketId) continue;
+            if (!$socketId)
+                continue;
             $buffer = @socket_read($socket, 2048, PHP_BINARY_READ);
             if (!$buffer) {//出错啦,断开链接
                 @socket_close($socket);
@@ -554,7 +565,7 @@ class MonitorService extends Service {
         }
     }
 
-    private function checkSer(array $config, &$msg = null) {
+    private function checkSer(array $config, $id,&$msg = null) {
         $type = isset($config['type']) ? $config['type'] : 'parallel';
         if (!$type) {
             $type = 'parallel';
@@ -563,7 +574,7 @@ class MonitorService extends Service {
             $type = 'parallel';
         } else if ($type == 'gearman' && !extension_loaded('gearman')) {
             $msg = 'gearman extension not found';
-            $this->logw($msg);
+            $this->loge("[$id] ".$msg);
 
             return false;
         }
@@ -571,7 +582,7 @@ class MonitorService extends Service {
         $typeCls = 'wulaphp\command\service\\' . ucfirst($type) . 'Service';
         if (!class_exists($typeCls)) {
             $msg = 'unkown service type: ' . $type;
-            $this->logw($msg);
+            $this->loge("[$id] ".$msg);
 
             return false;
         }
