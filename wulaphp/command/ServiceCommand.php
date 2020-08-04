@@ -462,9 +462,13 @@ class ServiceCommand extends ArtisanCommand {
         $i   = 0;
         $j   = 500;
 
+        if (!isset($cfg['services']) || !is_array($cfg['services'])) {
+            $cfg['services'] = [];
+        }
+
         $ss = apply_filter('on_register_service', []);
 
-        if ($ss) {
+        if ($ss && is_array($ss)) {
             $cfg['services'] = array_merge($cfg['services'], $ss);
         }
 
