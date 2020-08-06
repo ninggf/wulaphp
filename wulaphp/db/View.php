@@ -54,7 +54,7 @@ abstract class View {
     /**
      * 创建模型实例.
      *
-     * @param string|array|DatabaseConnection|View $db 数据库实例.
+     * @param string|array|DatabaseConnection|View|null $db 数据库实例.
      */
     public function __construct($db = null) {
         if ($this->table !== null) {
@@ -183,17 +183,17 @@ abstract class View {
      * @return string
      * @since v3.5.9
      */
-    public final function fetch($id, $field) {
+    public final function fetch($id, string $field) {
         return $this->findOne($id, $field)[ $field ];
     }
 
     /**
      * 获取列表.
      *
-     * @param array                                       $where  条件.
-     * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段或字段数组.
-     * @param int|null                                    $limit  取多少条数据，默认10条.
-     * @param int                                         $start  开始位置
+     * @param array|null                                       $where  条件.
+     * @param array|string|\wulaphp\db\sql\ImmutableValue|null $fields 字段或字段数组.
+     * @param int|null                                         $limit  取多少条数据，默认10条.
+     * @param int                                              $start  开始位置
      *
      * @return Query 列表查询.
      */
@@ -242,7 +242,7 @@ abstract class View {
     /**
      * 获取全部数据列表.
      *
-     * @param array                                       $where  条件.
+     * @param array|null                                  $where  条件.
      * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段或字段数组.
      *
      * @return Query
@@ -254,10 +254,10 @@ abstract class View {
     /**
      * 获取key/value数组.
      *
-     * @param array  $where      条件.
-     * @param string $valueField value字段.
-     * @param string $keyField   key字段.
-     * @param array  $rows       初始数组.
+     * @param array       $where      条件.
+     * @param string      $valueField value字段.
+     * @param string|null $keyField   key字段.
+     * @param array       $rows       初始数组.
      *
      * @return array 读取后的数组.
      */
@@ -278,25 +278,25 @@ abstract class View {
      *
      * @return int 记数.
      */
-    public final function count($con, $id = null) {
+    public final function count($con, string $id = '*') {
         if ($con && !is_array($con)) {
             $con = [$this->primaryKeys[0] => $con];
         }
         $sql = $this->select();
         $sql->where($con);
 
-        return $sql->count('*');
+        return $sql->count($id);
     }
 
     /**
      * 是否存在满足条件的记录.
      *
      * @param array|string|int $con 条件.
-     * @param string           $id  字段.
+     * @param string           $id  字段,请保持默认的*.
      *
      * @return boolean 有记数返回true,反之返回false.
      */
-    public final function exist($con, $id = null) {
+    public final function exist($con, string $id = '*') {
         return $this->count($con, $id) > 0;
     }
 

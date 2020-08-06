@@ -75,7 +75,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function setDialect($dialect) {
+    public function setDialect(?DatabaseDialect $dialect) {
         $this->dialect = $dialect;
 
         return $this;
@@ -88,7 +88,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function join($table, $on, $type = QueryBuilder::LEFT) {
+    public function join(string $table, string $on, string $type = QueryBuilder::LEFT) {
         $table          = self::parseAs($table);
         $join           = [$table [0], $on, $type . ' JOIN ', $table [1]];
         $this->joins [] = $join;
@@ -99,12 +99,12 @@ abstract class QueryBuilder {
     /**
      * left join.
      *
-     * @param string $table
-     * @param array  ...$on
+     * @param string   $table
+     * @param string[] $on
      *
      * @return $this
      */
-    public function left($table, ...$on) {
+    public function left(string $table, string ...$on) {
         $this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::LEFT);
 
         return $this;
@@ -113,12 +113,12 @@ abstract class QueryBuilder {
     /**
      * right join.
      *
-     * @param string $table
-     * @param array  ...$on
+     * @param string   $table
+     * @param string[] $on
      *
      * @return $this
      */
-    public function right($table, ...$on) {
+    public function right(string $table, string ...$on) {
         $this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::RIGHT);
 
         return $this;
@@ -127,12 +127,12 @@ abstract class QueryBuilder {
     /**
      * inner join.
      *
-     * @param string $table
-     * @param array  ...$on
+     * @param string   $table
+     * @param string[] $on
      *
      * @return $this
      */
-    public function inner($table, ...$on) {
+    public function inner(string $table, string ...$on) {
         $this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::INNER);
 
         return $this;
@@ -222,12 +222,12 @@ abstract class QueryBuilder {
      *
      * 当<code>$field</code>为null时，尝试从请求中读取sort[name]做为$field，sort[dir] 做为$order.
      *
-     * @param string|array $field 排序字段，多个字段使用,分隔.
-     * @param string       $order a or d
+     * @param string|array|null $field 排序字段，多个字段使用,分隔.
+     * @param string            $order a or d
      *
      * @return $this
      */
-    public function sort($field = null, $order = 'a') {
+    public function sort($field = null, string $order = 'a') {
         if ($field === null) {
             $field = rqst('sort.name');
             $order = rqst('sort.dir', 'a');
