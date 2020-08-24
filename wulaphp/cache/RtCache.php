@@ -33,7 +33,7 @@ namespace wulaphp\cache {
          * 缓存前缀.
          * @var string
          */
-        public static  $PREFIX;
+        public static $PREFIX;
 
         /**
          * 初始化运行时缓存.
@@ -242,10 +242,12 @@ namespace {
      * @return mixed
      */
     function env($key, $default = '') {
-        global $_ENV;
-        static $envs = null;
-        if (isset($_ENV[ $key ])) {
-            $default = $_ENV[ $key ];
+        static $envs = null, $senvs = null;
+        if ($senvs === null) {
+            $senvs = getenv();
+        }
+        if (isset($senvs[ $key ])) {
+            $default = $senvs[ $key ];
         }
         if ($envs === null) {
             $evnf = CONFIG_PATH . '.env';
@@ -271,7 +273,10 @@ namespace {
         }
 
         if (isset($envs[ $key ])) {
-            $default = $envs[ $key ];
+            $default = trim($envs[ $key ]);
+            if (preg_match('/^\$\{([^\}]+)\}$/', $default, $ms)) {
+                $default = getenv($ms[1], true);
+            }
         }
 
         return $default;

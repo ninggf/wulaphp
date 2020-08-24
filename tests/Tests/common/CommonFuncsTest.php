@@ -102,6 +102,16 @@ CNT;
         self::assertTrue($rst);
     }
 
+    public function testEnv() {
+        $path = getenv('PATH');
+        self::assertNotEmpty($path);
+        $path1 = env('PATH');
+        self::assertEquals($path, $path1);
+
+        $path2 = env('sys.path');
+        self::assertEquals($path, $path2);
+    }
+
     public static function tearDownAfterClass() {
         @unlink(TMP_PATH);
     }
