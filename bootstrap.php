@@ -194,6 +194,7 @@ spl_autoload_register(function ($clz) {
         include $clz_file;
     }
 });
+define('LOG_DRIVER', env('log.driver'));
 include WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
     include LIBS_PATH . 'common.php';

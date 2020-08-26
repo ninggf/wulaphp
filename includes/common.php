@@ -141,7 +141,7 @@ function log_debug(string $message, string $file = '') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = LOG_DRIVER == 'container' ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_DEBUG, $file, $trace);
 }
 
@@ -155,7 +155,7 @@ function log_info(string $message, string $file = '') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    $trace = LOG_DRIVER == 'container' ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_INFO, $file, $trace);
 }
 
@@ -169,7 +169,7 @@ function log_warn(string $message, string $file = '') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    $trace = LOG_DRIVER == 'container' ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_WARN, $file, $trace);
 }
 
@@ -183,7 +183,7 @@ function log_error(string $message, string $file = '') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = LOG_DRIVER == 'container' ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_ERROR, $file, $trace);
 }
 
@@ -202,7 +202,7 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
     /**@var \Psr\Log\LoggerInterface[][] $loggers */
     static $loggers = [];
     $_wula_last_msg = $message;
-    if (!$trace_info) {
+    if (!$trace_info && LOG_DRIVER != 'container') {
         $trace_info = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     }
     if (!defined('DEBUG')) {
@@ -217,7 +217,8 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
         } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
             $dumps .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
         }
-        @file_put_contents(LOGS_PATH . 'core_dump.log', $dumps, FILE_APPEND);
+        @file_put_contents(LOGS_PATH . 'bootstrap.log', $dumps, FILE_APPEND);
+        @error_log('[bootstrap] ' . $message, 4); #将日志发送到SAPI处理器
 
         return;
     }

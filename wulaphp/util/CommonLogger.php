@@ -19,7 +19,7 @@ class CommonLogger implements LoggerInterface {
         DEBUG_DEBUG => 'DEBUG',
         DEBUG_ERROR => 'ERROR'
     ];
-    protected $channel     = '';
+    protected        $channel  = '';
 
     public function __construct(string $file = 'wula') {
         $this->channel = $file;
@@ -59,8 +59,12 @@ class CommonLogger implements LoggerInterface {
 
     public function log($level, $message, array $trace_info = []) {
         $file = $this->channel;
+        $ln   = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
+        if (LOG_DRIVER == 'container') {
+            @error_log("[$ln] [$file] $message", 4);
 
-        $ln = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
+            return;
+        }
         if (defined('ARTISAN_TASK_PID')) {
             $pid = ARTISAN_TASK_PID;
         } else {
@@ -69,7 +73,7 @@ class CommonLogger implements LoggerInterface {
         $msg = date("Y-m-d H:i:s") . " [$pid] [$ln] {$message}\n";
         $msg .= self::getLine($trace_info[0], 0);
         if ($level > DEBUG_WARN) {//只有error的才记录trace info.
-            for ($i = 1; $i < 5; $i++) {
+            for ($i = 1; $i < 5; $i ++) {
                 if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
                     $msg .= self::getLine($trace_info[ $i ], $i);
                 }
