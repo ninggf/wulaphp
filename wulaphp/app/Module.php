@@ -85,7 +85,7 @@ abstract class Module {
      * @return string
      */
     public final function getRelativePath(?string $file = null): string {
-        return $file ? MODULE_DIR . DS . $this->dirname . DS . ($file ? $file : '') : $this->path . DS;
+        return $file ? MODULE_DIR . DS . $this->dirname . DS . $file : $this->path . DS;
     }
 
     /**
