@@ -28,7 +28,7 @@ class LocaleUploader implements IUploader {
      * @param string|null $path     存储路径,不指定时存储到WWWROOT目录
      * @param string|null $filename 存储为固定文件
      */
-    public function __construct($path = null, $filename = null) {
+    public function __construct(?string $path = null, ?string $filename = null) {
         if (empty ($path)) {
             $this->upload_root_path = WEB_ROOT;
         } else {
@@ -37,20 +37,20 @@ class LocaleUploader implements IUploader {
         $this->filename = $filename;
     }
 
-    public function getName() {
+    public function getName(): string {
         return '本地文件上传器';
     }
 
     /**
      * 默认文件上传器.
      *
-     * @param string $filepath 文件路径
-     * @param string $path     目的目录
+     * @param string      $filepath 文件路径
+     * @param string|null $path     目的目录
      *
      * @return array|bool  成功返回关键数组:
      * url,name,path
      */
-    public function save($filepath, $path = null) {
+    public function save(string $filepath, ?string $path = null) {
         $path = trailingslashit($this->getDestDir($path));
 
         $destdir  = trailingslashit($this->upload_root_path) . $path;
@@ -111,11 +111,11 @@ class LocaleUploader implements IUploader {
     }
 
     /**
-     * @param string $path 如果以@开头则不添加upload_dir@media配置.
+     * @param string|null $path 如果以@开头则不添加upload_dir@media配置.
      *
      * @return string
      */
-    public function getDestDir($path = null) {
+    public function getDestDir(?string $path = null) {
         if (!$path) {
             $dir = App::icfg('dir@media', App::icfg('upload.dir', 1));
             switch ($dir) {

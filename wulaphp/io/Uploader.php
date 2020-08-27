@@ -43,7 +43,7 @@ abstract class Uploader implements IUploader {
      *
      * @return \wulaphp\io\IUploader|null
      */
-    public static function getUploader($id = null) {
+    public static function getUploader(?string $id = null): ?IUploader {
         if (!$id) {
             $id = App::cfg('default_uploader@media', App::cfg('upload.uploader', 'file'));
         }

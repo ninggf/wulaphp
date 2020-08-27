@@ -18,13 +18,13 @@ interface IUploader {
     /**
      * @return string
      */
-    public function getName();
+    public function getName(): string;
 
     /**
      * 上传文件.
      *
-     * @param string $filepath 要上传的文件路径.
-     * @param string $path     存储路径,如果是null则自系统自动生成.
+     * @param string      $filepath 要上传的文件路径.
+     * @param string|null $path     存储路径,如果是null则自系统自动生成.
      *
      * @return array array(url,name,path,width,height,size)
      *         <code>
@@ -35,7 +35,7 @@ interface IUploader {
      *         </ul>
      *         </code>
      */
-    public function save($filepath, $path = null);
+    public function save(string $filepath, ?string $path = null);
 
     /**
      * 返回错误信息.
