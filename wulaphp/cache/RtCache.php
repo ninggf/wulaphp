@@ -246,9 +246,9 @@ namespace {
         if ($senvs === null) {
             $senvs = getenv();
         }
-        if (isset($senvs[ $key ])) {
-            $default = $senvs[ $key ];
-        }
+
+        $default = $senvs[ strtoupper(str_replace(['.', '-'], '_', $key)) ] ?? $default;
+
         if ($envs === null) {
             $evnf = CONFIG_PATH . '.env';
             $ckey = 'rt@.env';
