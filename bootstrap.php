@@ -139,13 +139,7 @@ include WULA_ROOT . 'wulaphp/cache/RtCache.php';
 include WULA_ROOT . 'wulaphp/util/ObjectCaller.php';
 //运行环境检测
 if (!defined('APP_MODE')) {
-    if (isset($_SERVER['APPMODE']) && $_SERVER['APPMODE']) {
-        define('APP_MODE', $_SERVER['APPMODE']);
-    } else if (isset($_ENV['APPMODE']) && $_ENV['APPMODE']) {
-        define('APP_MODE', $_ENV['APPMODE']);
-    } else {
-        define('APP_MODE', env('app_mode', 'dev'));
-    }
+    define('APP_MODE', env('app_mode', 'dev'));
 }
 //启动运行时缓存
 RtCache::init();

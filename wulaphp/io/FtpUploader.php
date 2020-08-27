@@ -59,11 +59,11 @@ class FtpUploader extends LocaleUploader {
         $this->passive = boolval(aryget('passive', $params));
     }
 
-    public function getName() {
+    public function getName():string {
         return 'FTP文件上传器';
     }
 
-    public function save($filepath, $path = null) {
+    public function save(string $filepath,?string $path = null) {
         if (!$this->ftp) {
             $this->initFtpConnection();
         }
@@ -144,7 +144,7 @@ class FtpUploader extends LocaleUploader {
         return true;
     }
 
-    public function getDestDir($path = null) {
+    public function getDestDir(?string $path = null) {
         if (!$path) {
             $dir = App::icfg('dir@media', 1);
             switch ($dir) {
