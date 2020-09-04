@@ -1,18 +1,18 @@
 <?php
+/*
+ * This file is part of wulacms.
+ *
+ * (c) Leo Ning <windywany@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace wulaphp\util;
 
 use Psr\Log\LoggerInterface;
 
-/**
- * Class CommonLogger
- *
- * @package wulaphp\util
- * @since   1.1.0
- * @author  Leo Ning <windywany@gmail.com>
- * @internal
- */
-class CommonLogger implements LoggerInterface {
+class RedisLogger implements LoggerInterface {
     protected static $log_name = [
         DEBUG_INFO  => 'INFO',
         DEBUG_WARN  => 'WARN',
@@ -20,9 +20,18 @@ class CommonLogger implements LoggerInterface {
         DEBUG_ERROR => 'ERROR'
     ];
     protected        $channel  = '';
+    private          $redis    = null;
+    private          $app;
 
     public function __construct(string $file = 'wula') {
-        $this->channel = $file;
+        $this->channel = 'logredis-logs';
+        $this->app     = $file;
+        try {
+            $this->redis = RedisClient::getRedis(env('redis.loggerdb', 0));
+        } catch (\Exception $e) {
+            $msg = date('[d/M/Y:H:i:s O]') . ' ERROR RedisLogger ' . $e->getMessage();
+            @error_log($msg, 3, LOGS_PATH . 'wula.log');
+        }
     }
 
     public function emergency($message, array $context = []) {
@@ -58,30 +67,41 @@ class CommonLogger implements LoggerInterface {
     }
 
     public function log($level, $message, array $trace_info = []) {
-        $file = $this->channel;
-        $ln   = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
-        if (LOG_DRIVER == 'container') {
-            @error_log(date("[d/M/Y:H:i:s O]") . " $ln {$message}", 4);
-
+        if (!$this->redis) {
             return;
         }
-        $msg = date("[d/M/Y:H:i:s O]") . " $ln {$message}\n";
+
+        $ln = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
+
+        $msg['@timestamp'] = date("c");
+        $msg['level']      = $ln;
+        $msg['message']    = $message;
+        $msg['host']       = $_SERVER['SERVER_ADDR'] ?: '-';
+        $msg['app']        = $this->app;
+
+        if (isset ($_SERVER ['REQUEST_URI'])) {
+            $msg['uri'] = $_SERVER ['REQUEST_URI'];
+        } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
+            $msg['script'] = implode(' ', $_SERVER ['argv']);
+        }
+
+        $stacks = [];
         if ($level > DEBUG_WARN) {//只有error的才记录trace info.
-            $msg .= self::getLine($trace_info[0], 0);
+            $stacks[] = self::getLine($trace_info[0], 0);
             for ($i = 1; $i < 5; $i ++) {
                 if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
-                    $msg .= self::getLine($trace_info[ $i ], $i);
+                    $stacks[] = self::getLine($trace_info[ $i ], $i);
                 }
-            }
-            if (isset ($_SERVER ['REQUEST_URI'])) {
-                $msg .= " uri: " . $_SERVER ['REQUEST_URI'] . "\n";
-            } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
-                $msg .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
             }
         }
 
-        $dest_file = $file ? $file . '.log' : 'wula.log';
-        @error_log($msg, 3, LOGS_PATH . $dest_file);
+        $msg['stacks'] = implode("\n", $stacks);
+        try {
+            $this->redis->rPush($this->channel, json_encode($msg));
+        } catch (\Exception $e) {
+            $msg = date('[d/M/Y:H:i:s O]') . ' ERROR RedisLogger ' . $e->getMessage();
+            @error_log($msg, 3, LOGS_PATH . 'wula.log');
+        }
     }
 
     /**

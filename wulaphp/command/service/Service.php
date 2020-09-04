@@ -33,7 +33,7 @@ abstract class Service {
      * @param string $name
      * @param array  $config 配置
      */
-    public function __construct($name, array $config) {
+    public function __construct(string $name, array $config) {
         $this->pid     = '[' . @posix_getpid() . ']';
         $this->name    = $name;
         $this->config  = $config;
@@ -66,7 +66,7 @@ abstract class Service {
      *
      * @return string
      */
-    protected function getOption($name, $default = '') {
+    protected function getOption(string $name, string $default = '') {
         if ($this->config && array_key_exists($name, $this->config)) {
             return $this->config[ $name ];
         }
@@ -80,36 +80,36 @@ abstract class Service {
      * @param string $message
      * @param bool   $rtn
      */
-    protected final function output($message, $rtn = true) {
+    protected final function output(string $message, $rtn = true) {
         echo $message, $rtn ? "\n" : '';
 
         flush();
     }
 
-    protected final function logd($message = '') {
+    protected final function logd(string $message = '') {
         if ($this->verbose > 3) {
-            $msg = '[' . date('Y-m-d H:i:s') . '] ' . $this->pid . ' [DEBUG] ' . $message;
+            $msg = date('[d/M/Y:H:i:s O] ') . ' DEBUG ' . $message;
             @file_put_contents($this->logFile, $msg . "\n", FILE_APPEND);
         }
     }
 
-    protected final function logw($message = '') {
+    protected final function logw(string $message = '') {
         if ($this->verbose > 2) {
-            $msg = '[' . date('Y-m-d H:i:s') . '] ' . $this->pid . ' [WARN] ' . $message;
+            $msg = date('[d/M/Y:H:i:s O] ') . ' WARN ' . $message;
             @file_put_contents($this->logFile, $msg . "\n", FILE_APPEND);
         }
     }
 
-    protected final function loge($message = '') {
+    protected final function loge(string $message = '') {
         if ($this->verbose > 1) {
-            $msg = '[' . date('Y-m-d H:i:s') . '] ' . $this->pid . ' [ERROR] ' . $message;
+            $msg = date('[d/M/Y:H:i:s O] ') . ' ERROR ' . $message;
             @file_put_contents($this->logFile, $msg . "\n", FILE_APPEND);
         }
     }
 
-    protected final function logi($message = '') {
+    protected final function logi(string $message = '') {
         if ($this->verbose > 0) {
-            $msg = '[' . date('Y-m-d H:i:s') . '] ' . $this->pid . ' [INFO] ' . $message;
+            $msg = date('[d/M/Y:H:i:s O] ') . ' INFO ' . $message;
             @file_put_contents($this->logFile, $msg . "\n", FILE_APPEND);
         }
     }
