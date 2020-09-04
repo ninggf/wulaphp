@@ -35,14 +35,14 @@ class RESTFulServer {
     /**
      * RESTFulServer constructor.
      *
-     * @param \wulaphp\restful\ISecretCheck $secretChecker  密钥校验器
-     * @param \wulaphp\restful\ISignCheck   $signChecker    签名校验器,默认为DefaultSignChecker
-     * @param string                        $format         默认响应格式，支持json和xml
-     * @param int                           $session_expire session过期时间(单位秒)
+     * @param \wulaphp\restful\ISecretCheck    $secretChecker  密钥校验器
+     * @param \wulaphp\restful\ISignCheck|null $signChecker    签名校验器,默认为DefaultSignChecker
+     * @param string                           $format         默认响应格式，支持json和xml
+     * @param int                              $session_expire session过期时间(单位秒)
      */
     public function __construct(ISecretCheck $secretChecker, ISignCheck $signChecker = null, string $format = 'json', int $session_expire = 300) {
         $this->secretChecker = $secretChecker;
-        $this->signChecker   = $signChecker ? $signChecker : new DefaultSignChecker();
+        $this->signChecker   = $signChecker ?: new DefaultSignChecker();
         $this->format        = $format == 'xml' ? 'xml' : 'json';
         $this->expire        = intval($session_expire);
         if (!$this->expire) {
@@ -80,7 +80,7 @@ class RESTFulServer {
             $this->httpout(408, 'Request Timeout');//非法请求
         }
         //时间检测结束
-        $v = $signV   = irqst('v', 1);
+        $v   = $signV = irqst('v', 1);
         $api = rqst('api');//API
         if (empty($api)) {
             $this->httpout(400, 'Miss API');
@@ -136,7 +136,6 @@ class RESTFulServer {
             $params  = [];//请求参数用于签名
             $dparams = [];//调用参数
             $ps      = $m->getParameters();
-            /**@var \ReflectionParameter $p */
             foreach ($ps as $p) {
                 $name = $p->getName();
                 if (rqset($name)) {
