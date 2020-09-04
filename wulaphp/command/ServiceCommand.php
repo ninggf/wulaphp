@@ -23,6 +23,8 @@ pcntl_async_signals(true);
  * @internal
  */
 class ServiceCommand extends ArtisanCommand {
+    private $foreground = false;
+
     public function __construct() {
         parent::__construct();
         define('ARTISAN_TASK_PID', 1);
@@ -35,6 +37,10 @@ class ServiceCommand extends ArtisanCommand {
 
     public function desc() {
         return 'run services in background';
+    }
+
+    public function getOpts() {
+        return ['f' => 'run in foreground'];
     }
 
     public function argDesc() {
@@ -72,6 +78,7 @@ class ServiceCommand extends ArtisanCommand {
 
         switch ($cmd) {
             case 'start':
+                $this->foreground = isset($options['f']);
                 $this->start($service);
                 break;
             case 'stop':
@@ -99,7 +106,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function start($service) {
+    private function start(string $service) {
         if ($service) {
             $this->output('Starting ...', false);
             $rtn = $this->sendCommand('start', ['service' => $service]);
@@ -139,6 +146,11 @@ class ServiceCommand extends ArtisanCommand {
                 }
             }
             //启动service monitor process
+            if ($this->foreground) {
+                $this->nohup();
+
+                return;
+            }
             $pid = @pcntl_fork();
             if ($pid > 0) {//主程序退出
                 exit(0);
@@ -150,8 +162,9 @@ class ServiceCommand extends ArtisanCommand {
                         $this->error('[service] could not detach session id.');
                         exit(1);
                     }
-                    $conf    = self::getRuntimeCfg();
-                    $monitor = new MonitorService('monitor', $conf);
+                    $conf               = self::getRuntimeCfg();
+                    $conf['foreground'] = false;
+                    $monitor            = new MonitorService('monitor', $conf);
                     $monitor->run();
                 } catch (\Exception $e) {
                     exit(- 1);
@@ -163,13 +176,20 @@ class ServiceCommand extends ArtisanCommand {
         }
     }
 
+    private function nohup() {
+        $conf               = self::getRuntimeCfg();
+        $conf['foreground'] = true;
+        $monitor            = new MonitorService('monitor', $conf);
+        $monitor->run();
+    }
+
     /**
      * 停止
      *
      * @param string $service
      * @param bool   $restart
      */
-    private function stop($service, $restart = false) {
+    private function stop(string $service,bool$restart = false) {
         $this->output('Stopping ...', false);
         $rtn = $this->sendCommand('stop', ['service' => $service, 'restart' => $restart]);
         if ($rtn) {
@@ -182,7 +202,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function reload($service) {
+    private function reload(string $service) {
         $this->output('Reloading ...', false);
         self::getRuntimeCfg();
         $rtn = $this->sendCommand('reload', ['service' => $service]);
@@ -197,7 +217,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function ps($service) {
+    private function ps(string $service) {
         $rtn = $this->sendCommand('ps', ['service' => $service]);
         if ($rtn) {
             $this->output('monitor');
@@ -223,7 +243,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @param string $service
      */
-    private function status($service) {
+    private function status(string $service) {
         $rtn = $this->sendCommand('status', ['service' => $service]);
         if ($rtn) {
             $status = $this->getStatus($rtn['status']);
@@ -372,7 +392,7 @@ class ServiceCommand extends ArtisanCommand {
      *
      * @return mixed
      */
-    private function sendCommand($command, array $args = []) {
+    private function sendCommand(string $command, array $args = []) {
         $data['command'] = $command;
         $data['args']    = $args;
         $payload         = json_encode($data) . "\r\n\r\n";

@@ -152,7 +152,7 @@ class MonitorService extends Service {
      * @param string   $msg
      * @param resource $socket
      */
-    private function onMessage($msg, $socket) {
+    private function onMessage(string $msg, $socket) {
         try {
             $payload = @json_decode($msg, true);
             if (!$payload) {
@@ -274,7 +274,7 @@ class MonitorService extends Service {
                 case 'running':
                     //补齐进程
                     $service['worker'] = intval(isset($service['worker']) ? $service['worker'] : 1);
-                    $serOk             = $this->checkSer($service, $id,$msg);
+                    $serOk             = $this->checkSer($service, $id, $msg);
                     if ($serOk) {
                         $forkOk = true;
                         while (count($this->services[ $id ]['pids']) < $service['worker']) {
@@ -565,7 +565,7 @@ class MonitorService extends Service {
         }
     }
 
-    private function checkSer(array $config, $id,&$msg = null) {
+    private function checkSer(array $config, $id, &$msg = null) {
         $type = isset($config['type']) ? $config['type'] : 'parallel';
         if (!$type) {
             $type = 'parallel';
@@ -574,7 +574,7 @@ class MonitorService extends Service {
             $type = 'parallel';
         } else if ($type == 'gearman' && !extension_loaded('gearman')) {
             $msg = 'gearman extension not found';
-            $this->loge("[$id] ".$msg);
+            $this->loge("[$id] " . $msg);
 
             return false;
         }
@@ -582,7 +582,7 @@ class MonitorService extends Service {
         $typeCls = 'wulaphp\command\service\\' . ucfirst($type) . 'Service';
         if (!class_exists($typeCls)) {
             $msg = 'unkown service type: ' . $type;
-            $this->loge("[$id] ".$msg);
+            $this->loge("[$id] " . $msg);
 
             return false;
         }
@@ -615,10 +615,10 @@ class MonitorService extends Service {
     /**
      * 解包消息.
      *
-     * @param string $socketId
-     * @param        $socket
+     * @param string   $socketId
+     * @param resource $socket
      */
-    private function unpackMsg($socketId, $socket) {
+    private function unpackMsg(string $socketId, $socket) {
         $msgs = $this->msgs[ $socketId ];
         if ($msgs) {
             $msgs   = implode('', $msgs);
