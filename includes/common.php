@@ -137,7 +137,7 @@ function frqst(string $name, float $default = 0.0): float {
  * @param string $message
  * @param string $file
  */
-function log_debug(string $message, string $file = '') {
+function log_debug(string $message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
@@ -151,7 +151,7 @@ function log_debug(string $message, string $file = '') {
  * @param string $message
  * @param string $file
  */
-function log_info(string $message, string $file = '') {
+function log_info(string $message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
@@ -165,7 +165,7 @@ function log_info(string $message, string $file = '') {
  * @param string $message
  * @param string $file
  */
-function log_warn(string $message, string $file = '') {
+function log_warn(string $message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
@@ -179,7 +179,7 @@ function log_warn(string $message, string $file = '') {
  * @param string $message
  * @param string $file
  */
-function log_error(string $message, string $file = '') {
+function log_error(string $message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
@@ -229,7 +229,10 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
 
     if (!isset($loggers[ $level ][ $file ])) {
         //获取日志器.
-        $log = apply_filter('logger\getLogger', new \wulaphp\util\CommonLogger($file), $level, $file);
+        $dlogger = env('logger.driver') == 'redis' ? new \wulaphp\util\RedisLogger($file) : new \wulaphp\util\CommonLogger
+        ($file);
+        $log     = apply_filter('logger\getLogger', $dlogger, $level, $file);
+
         if ($log instanceof Psr\Log\LoggerInterface) {
             $logger = $log;
         } else {
@@ -267,12 +270,12 @@ function get_session_name(): string {
 /**
  * 生成SQL中不可变字符.
  *
- * @param string $val
- * @param string $alias
+ * @param string      $val
+ * @param string|null $alias
  *
  * @return \wulaphp\db\sql\ImmutableValue
  */
-function imv(string $val, string $alias = null): ImmutableValue {
+function imv(string $val, ?string $alias = null): ImmutableValue {
     return new \wulaphp\db\sql\ImmutableValue ($val, $alias);
 }
 
@@ -283,7 +286,7 @@ function imv(string $val, string $alias = null): ImmutableValue {
  *
  * @return \wulaphp\db\sql\Ref
  */
-function imf(string $field) {
+function imf(string $field): \wulaphp\db\sql\Ref {
     return new \wulaphp\db\sql\Ref($field);
 }
 
@@ -318,15 +321,14 @@ function whoami(string $type = 'default'): Passport {
 /**
  * 根据宽高生成缩略图文件名.
  *
- * @param string $filename
- *                    原始文件名.
+ * @param string $filename 原始文件名.
  * @param int    $w
  * @param int    $h
- * @param string $sep 分隔符.
+ * @param string $sep      分隔符.
  *
  * @return string
  */
-function get_thumbnail_filename($filename, $w, $h, $sep = '-') {
+function get_thumbnail_filename(string $filename, int $w, int $h, string $sep = '-') {
     $finfo = pathinfo($filename);
 
     $shortname = $finfo['dirname'] . '/' . $finfo['filename'];
@@ -475,7 +477,11 @@ set_exception_handler('show_exception_page');
 register_shutdown_function(function () {
     @session_write_close();# close session
     define('WULA_STOPTIME', microtime(true));
-    fire('wula\stop');
+    try {
+        fire('wula\stop');
+    } catch (\Exception $e) {
+        log_error($e->getMessage(), 'shutdown');
+    }
 });
 include WULA_ROOT . 'includes/plugin.php';
 include WULA_ROOT . 'includes/kernelimpl.php';
