@@ -88,29 +88,29 @@ abstract class Service {
 
     protected final function logd(string $message = '') {
         if ($this->verbose > 3) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' DEBUG ' . $message;
-            @file_put_contents($this->logFile, $msg . "\n", FILE_APPEND);
+            $msg = date('[d/M/Y:H:i:s O] ') . ' DEBUG ' . $this->name . $message;
+            $this->_log($msg);
         }
     }
 
     protected final function logw(string $message = '') {
         if ($this->verbose > 2) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' WARN ' . $message;
-            @file_put_contents($this->logFile, $msg . "\n", FILE_APPEND);
+            $msg = date('[d/M/Y:H:i:s O] ') . ' WARN ' . $this->name . $message;
+            $this->_log($msg);
         }
     }
 
     protected final function loge(string $message = '') {
         if ($this->verbose > 1) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' ERROR ' . $message;
-            @file_put_contents($this->logFile, $msg . "\n", FILE_APPEND);
+            $msg = date('[d/M/Y:H:i:s O] ') . ' ERROR ' . $this->name . $message;
+            $this->_log($msg);
         }
     }
 
     protected final function logi(string $message = '') {
         if ($this->verbose > 0) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' INFO ' . $message;
-            @file_put_contents($this->logFile, $msg . "\n", FILE_APPEND);
+            $msg = date('[d/M/Y:H:i:s O] ') . ' INFO ' . $this->name . $message;
+            $this->_log($msg);
         }
     }
 
@@ -119,6 +119,14 @@ abstract class Service {
             $this->verbose = $verbose;
         } else {
             $this->verbose = strlen($verbose) - strlen(str_replace('v', '', $verbose));
+        }
+    }
+
+    private function _log($msg) {
+        if (LOG_DRIVER == 'container') {
+            @error_log($msg, 4);
+        } else {
+            @error_log($msg . "\n", 3, $this->logFile);
         }
     }
 

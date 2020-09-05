@@ -3,6 +3,7 @@
 namespace wulaphp\util;
 
 use Psr\Log\LoggerInterface;
+use wulaphp\io\Request;
 
 /**
  * Class CommonLogger
@@ -22,7 +23,7 @@ class CommonLogger implements LoggerInterface {
     protected        $channel  = '';
 
     public function __construct(string $file = 'wula') {
-        $this->channel = $file;
+        $this->channel = $file ?: 'wula';
     }
 
     public function emergency($message, array $context = []) {
@@ -60,12 +61,13 @@ class CommonLogger implements LoggerInterface {
     public function log($level, $message, array $trace_info = []) {
         $file = $this->channel;
         $ln   = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
+        $ip   = Request::getIp() ?: '-';
         if (LOG_DRIVER == 'container') {
-            @error_log(date("[d/M/Y:H:i:s O]") . " $ln {$message}", 4);
+            @error_log($ip . date(" - [d/M/Y:H:i:s O]") . " [$ln] $file {$message}", 4);
 
             return;
         }
-        $msg = date("[d/M/Y:H:i:s O]") . " $ln {$message}\n";
+        $msg = $ip . date(" - [d/M/Y:H:i:s O]") . " $ln {$message}\n";
         if ($level > DEBUG_WARN) {//只有error的才记录trace info.
             $msg .= self::getLine($trace_info[0], 0);
             for ($i = 1; $i < 5; $i ++) {

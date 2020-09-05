@@ -27,7 +27,7 @@ if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib'
     @ini_set('zlib.output_compression_level', 7);
 }
 @ob_start();
-define('WULA_VERSION', '3.4.1');
+define('WULA_VERSION', '3.6.6');
 define('WULA_RELEASE', 'RC');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
@@ -139,7 +139,7 @@ include WULA_ROOT . 'wulaphp/cache/RtCache.php';
 include WULA_ROOT . 'wulaphp/util/ObjectCaller.php';
 //运行环境检测
 if (!defined('APP_MODE')) {
-    define('APP_MODE', env('app_mode', 'dev'));
+    define('APP_MODE', env('app.mode', 'dev'));
 }
 //启动运行时缓存
 RtCache::init();
@@ -188,7 +188,7 @@ spl_autoload_register(function ($clz) {
         include $clz_file;
     }
 });
-define('LOG_DRIVER', env('log.driver'));
+define('LOG_DRIVER', env('logger.driver'));
 include WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
     include LIBS_PATH . 'common.php';

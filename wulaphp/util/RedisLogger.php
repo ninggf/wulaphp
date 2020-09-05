@@ -11,6 +11,7 @@
 namespace wulaphp\util;
 
 use Psr\Log\LoggerInterface;
+use wulaphp\io\Request;
 
 class RedisLogger implements LoggerInterface {
     protected static $log_name = [
@@ -75,6 +76,7 @@ class RedisLogger implements LoggerInterface {
 
         $msg['@timestamp'] = date("c");
         $msg['level']      = $ln;
+        $msg['ip']         = Request::getIp();
         $msg['message']    = $message;
         $msg['host']       = $_SERVER['SERVER_ADDR'] ?: '-';
         $msg['app']        = $this->app;
