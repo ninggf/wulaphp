@@ -8,7 +8,7 @@
  */
 $config = new \wulaphp\conf\ClusterConfiguration();
 
-$config->enabled(false);
+$config->enabled(env('app.cluster'));
 $config->addRedisServer('the host of redis server');
 
 return $config;

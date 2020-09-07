@@ -132,6 +132,7 @@ include WULA_ROOT . 'wulaphp/conf/ClusterConfiguration.php';
 include WULA_ROOT . 'wulaphp/conf/RedisConfiguration.php';
 include WULA_ROOT . 'wulaphp/conf/BaseConfigurationLoader.php';
 include WULA_ROOT . 'wulaphp/conf/ConfigurationLoader.php';
+include WULA_ROOT . 'wulaphp/util/RedisClient.php';
 include WULA_ROOT . 'wulaphp/cache/Cache.php';
 include WULA_ROOT . 'wulaphp/cache/RedisCache.php';
 include WULA_ROOT . 'wulaphp/cache/MemcachedCache.php';

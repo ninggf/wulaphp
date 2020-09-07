@@ -29,6 +29,8 @@ namespace wulaphp\cache {
          * @var Cache
          */
         private static $LOCAL_CACHE;
+        private static $lempty = true;
+        private static $empty  = false;
         /**
          * 缓存前缀.
          * @var string
@@ -44,19 +46,25 @@ namespace wulaphp\cache {
          */
         public static function init(bool $force = false) {
             if (RtCache::$CACHE == null || $force) {
+                if (env('app.cluster')) {
+                    define('RUN_IN_CLUSTER', true);
+                }
                 if (!$force && APP_MODE != 'pro') {
                     RtCache::$CACHE = new Cache ();
+                    self::$empty    = true;
                 } else if (defined('RUN_IN_CLUSTER')) {//部署到集群中，使用REDIS
                     $cfg = ConfigurationLoader::loadFromFile('cluster');
                     try {
                         $cache = $cfg->getb('enabled', false) ? RedisCache::getInstance($cfg) : null;
                     } catch (\Exception $e) {
-                        $cache = new Cache();
+                        $cache       = new Cache();
+                        self::$empty = true;
                     }
                     if ($cache) {
                         RtCache::$CACHE = $cache;
                     } else {
                         RtCache::$CACHE = new Cache();
+                        self::$empty    = true;
                     }
                     unset($cfg);
                 } else if (extension_loaded('yac')) {
@@ -67,6 +75,7 @@ namespace wulaphp\cache {
                     RtCache::$CACHE = new XCacheCacher ();
                 } else {
                     RtCache::$CACHE = new Cache ();
+                    self::$empty    = true;
                 }
             }
 
@@ -75,13 +84,20 @@ namespace wulaphp\cache {
 
         public static function initLocal() {
             if (!self::$LOCAL_CACHE) {
-                RtCache::$PREFIX = defined('APPID') && APPID ? APPID : WWWROOT;
+                if (($appid = getenv('APP_ID', true)) != '') {
+                    RtCache::$PREFIX = $appid;
+                } else {
+                    RtCache::$PREFIX = WWWROOT;
+                }
                 if (extension_loaded('yac')) {
-                    $rtc = new YacCache();
+                    $rtc          = new YacCache();
+                    self::$lempty = false;
                 } else if (function_exists('apcu_store')) {
-                    $rtc = new ApcCacher();
+                    $rtc          = new ApcCacher();
+                    self::$lempty = false;
                 } else if (function_exists('xcache_get')) {
-                    $rtc = new XCacheCacher();
+                    $rtc          = new XCacheCacher();
+                    self::$lempty = false;
                 } else {
                     $rtc = new Cache();
                 }
@@ -97,7 +113,10 @@ namespace wulaphp\cache {
          *
          * @return bool
          */
-        public static function add($key, $data) {
+        public static function add(string $key, $data) {
+            if (self::$empty) {
+                return true;
+            }
             $key = md5(RtCache::$PREFIX . $key);
             RtCache::$CACHE->add($key, $data);
 
@@ -111,7 +130,10 @@ namespace wulaphp\cache {
          *
          * @return mixed
          */
-        public static function get($key) {
+        public static function get(string $key) {
+            if (self::$empty) {
+                return null;
+            }
             $key = md5(RtCache::$PREFIX . $key);
 
             return RtCache::$CACHE->get($key);
@@ -124,7 +146,10 @@ namespace wulaphp\cache {
          *
          * @return bool
          */
-        public static function delete($key) {
+        public static function delete(string $key) {
+            if (self::$empty) {
+                return true;
+            }
             $key = md5(RtCache::$PREFIX . $key);
 
             return RtCache::$CACHE->delete($key);
@@ -134,6 +159,9 @@ namespace wulaphp\cache {
          * 清空运行时缓存.
          */
         public static function clear() {
+            if (self::$empty) {
+                return;
+            }
             RtCache::$CACHE->clear();
         }
 
@@ -144,7 +172,10 @@ namespace wulaphp\cache {
          *
          * @return bool
          */
-        public static function exists($key) {
+        public static function exists(string $key) {
+            if (self::$empty) {
+                return false;
+            }
             $key = md5(RtCache::$PREFIX . $key);
 
             return RtCache::$CACHE->has_key($key);
@@ -172,7 +203,10 @@ namespace wulaphp\cache {
          *
          * @return bool
          */
-        public static function ladd($key, $data) {
+        public static function ladd(string $key, $data) {
+            if (self::$lempty) {
+                return true;
+            }
             $key = md5(RtCache::$PREFIX . $key);
             RtCache::$LOCAL_CACHE->add($key, $data);
 
@@ -186,7 +220,10 @@ namespace wulaphp\cache {
          *
          * @return mixed
          */
-        public static function lget($key) {
+        public static function lget(string $key) {
+            if (self::$lempty) {
+                return null;
+            }
             $key = md5(RtCache::$PREFIX . $key);
 
             return RtCache::$LOCAL_CACHE->get($key);
@@ -199,7 +236,11 @@ namespace wulaphp\cache {
          *
          * @return bool
          */
-        public static function ldelete($key) {
+        public static function ldelete(string $key) {
+            if (self::$lempty) {
+                return true;
+            }
+
             $key = md5(RtCache::$PREFIX . $key);
 
             return RtCache::$LOCAL_CACHE->delete($key);
@@ -209,6 +250,9 @@ namespace wulaphp\cache {
          * 清空运行时缓存.
          */
         public static function lclear() {
+            if (self::$lempty) {
+                return;
+            }
             RtCache::$LOCAL_CACHE->clear();
         }
 
@@ -219,7 +263,10 @@ namespace wulaphp\cache {
          *
          * @return bool
          */
-        public static function lexists($key) {
+        public static function lexists(string $key) {
+            if (self::$lempty) {
+                return false;
+            }
             $key = md5(RtCache::$PREFIX . $key);
 
             return RtCache::$LOCAL_CACHE->has_key($key);
@@ -241,7 +288,7 @@ namespace {
      *
      * @return mixed
      */
-    function env($key, $default = '') {
+    function env(string $key, $default = '') {
         static $envs = null, $senvs = null;
         if ($senvs === null) {
             $senvs = getenv();
