@@ -47,7 +47,7 @@ namespace wulaphp\cache {
         public static function init(bool $force = false) {
             if (RtCache::$CACHE == null || $force) {
                 if (env('app.cluster')) {
-                    define('RUN_IN_CLUSTER', true);
+                    defined('RUN_IN_CLUSTER') or define('RUN_IN_CLUSTER', true);
                 }
                 if (!$force && APP_MODE != 'pro') {
                     RtCache::$CACHE = new Cache ();

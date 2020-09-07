@@ -78,7 +78,6 @@ class RedisCache extends Cache {
     }
 
     public function has_key($key) {
-        return $this->redis->exists($key) > 0;
+        return !empty($this->redis->exists($key));
     }
-
 }
