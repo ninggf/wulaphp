@@ -9,6 +9,7 @@
  */
 
 namespace wulaphp\command\service;
+
 /**
  * Class ParallelService
  * @package wulaphp\command\service
@@ -54,9 +55,7 @@ class ParallelService extends Service {
                         $pid = @pcntl_wait($status, WNOHANG);
                         if ($pid == 0) {
                             if ($this->shutdown) {
-                                if (isset($env['loop'])) {
-                                    @fwrite($pipes[0], "@shutdown@");
-                                }
+                                @fwrite($pipes[0], "@shutdown@");
                                 @proc_terminate($process, SIGINT);
                             }
                             usleep(rand(300, 500));
@@ -76,11 +75,12 @@ class ParallelService extends Service {
                     @proc_close($process);
 
                     if ($rtn == 2) {
-                        $this->logi($script . ', pid: ' . $pid . ' exits with code: 2' . "[output] {$output}");
+                        $this->logi($script . ', pid: ' . $pid . ' exits with code: 2, sleep: 0' . "[output] {$output}");
                         $sleep = 0;
                     } else if ($rtn != 0) {
-                        $this->loge($cmd . ' ' . $arg . ' exit abnormally.' . "[output] {$output}, [error] {$error}");
-                        $sleep *= 2;
+                        $this->loge($cmd . ' ' . $arg . ' exit abnormally.' . " [output] {$output}, [error] {$error}");
+                    } else {
+                        $this->logd($script . ', pid: ' . $pid . ' exits with code: 0, sleep: ' . $sleep);
                     }
                     unset($process, $output, $error, $pipes);
                     // sleep
@@ -99,6 +99,8 @@ class ParallelService extends Service {
                 return false;
             }
         }//end while
+        $this->logi('shutdown');
+
         return true;
     }
 }

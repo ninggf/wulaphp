@@ -29,7 +29,7 @@ if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib'
 @ob_start();
 define('WULA_VERSION', '3.6.6');
 define('WULA_RELEASE', 'RC');
-defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
+defined('BUILD_NUMBER') or define('BUILD_NUMBER', '20200907001');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 if (version_compare('7.1', phpversion(), '>')) {
     !trigger_error(sprintf('Your php version is %s,but wulaphp required PHP 7.1 or higher', phpversion()), E_USER_ERROR) or exit(1);
@@ -188,12 +188,16 @@ spl_autoload_register(function ($clz) {
         include $clz_file;
     }
 });
-define('LOG_DRIVER', env('logger.driver'));
+define('LOG_DRIVER', env('app.logger.driver'));
 include WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
     include LIBS_PATH . 'common.php';
 }
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
-fire('wula\bootstrapped');
+try {
+    fire('wula\bootstrapped');
+} catch (\Exception $e) {
+    \wulaphp\io\Response::respond(503, $e->getMessage());
+}
 //end of bootstrap.php

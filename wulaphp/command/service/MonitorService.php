@@ -32,8 +32,9 @@ class MonitorService extends Service {
         parent::__construct($name, $config);
         $this->logFile = LOGS_PATH . 'service.log';
         $this->setVerbose($this->getOption('verbose', 'vvv'));
-        $this->output('Starting', false);
+        $this->output('Starting ', false);
         $this->cfgFile = TMP_PATH . '.service.json';
+        $this->output('.', false);
         //第一步修改当前进程uid
         $user = $this->getOption('user');
         if ($user) {
@@ -72,16 +73,17 @@ class MonitorService extends Service {
         $this->output('.', false);
         //第三步解析配置
         $this->reloadConfig($config);
+        $this->output('.', false);
         //第四步安装信号
         $this->initSignal();
-        $this->output('.', false);
-        $this->output($this->color->str('Done', 'green'));
+        $this->output($this->color->str('  Done', 'green'));
     }
 
     public function __destruct() {
         if ($this->sock) {
             @socket_close($this->sock);
         }
+
         if ($this->clients) {
             foreach ($this->clients as $c) {
                 @socket_close($c);
@@ -93,9 +95,12 @@ class MonitorService extends Service {
      * 运行
      */
     public function run() {
-        @fclose(STDIN);
-        @fclose(STDOUT);
-        @fclose(STDERR);
+        if (!$this->config['foreground']) {
+            @fclose(STDIN);
+            @fclose(STDOUT);
+            @fclose(STDERR);
+        }
+
         $this->logi('started');
         while (!$this->shutdown) {
             $this->checkServices();
@@ -131,11 +136,13 @@ class MonitorService extends Service {
         while (count($this->pids) > 0) {
             $pid = pcntl_wait($status, WNOHANG);
             if ($pid > 0) {//有进程退出啦
-                $sid = isset($this->pids[ $pid ]) ? $this->pids[ $pid ] : '';
                 unset($this->pids[ $pid ]);
-                $this->logd('service ' . $sid . ', pid ' . $pid . ' exit');
-                if ($sid && isset($this->services[ $sid ])) {
-                    unset($this->services[ $sid ]['pids'][ $pid ]);
+                $sid = isset($this->pids[ $pid ]) ? $this->pids[ $pid ] : '';
+                if ($sid) {
+                    $this->logd('service ' . $sid . ', pid ' . $pid . ' exit');
+                    if (isset($this->services[ $sid ])) {
+                        unset($this->services[ $sid ]['pids'][ $pid ]);
+                    }
                 }
             }
             usleep(100);
@@ -287,11 +294,14 @@ class MonitorService extends Service {
                                     $this->loge('[' . $id . '] ' . $e->getMessage());
                                     $rtn = false;
                                 }
+
                                 //服务进程肯定要退出
                                 if ($rtn === false) {
-                                    exit(1);
+                                    $this->logi($id . ' exited with error');
+                                    die(1);
                                 } else {
-                                    exit(0);
+                                    $this->logi($id . ' exited ');
+                                    die(0);
                                 }
                             } else if ($pid > 0) {
                                 //监控进程
@@ -300,6 +310,12 @@ class MonitorService extends Service {
                                 $this->logd('service ' . $id . ', pid ' . $pid . ' created');
                             } else {
                                 $forkOk = false;
+                                if (count($this->services[ $id ]['pids']) > 0) {
+                                    foreach ($this->services[ $id ]['pids'] as $key => $v) {
+                                        @posix_kill($key, SIGTERM);
+                                        @pcntl_signal_dispatch();
+                                    }
+                                }
                                 break;
                             }
                         }

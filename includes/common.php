@@ -480,7 +480,6 @@ register_shutdown_function(function () {
     try {
         fire('wula\stop');
     } catch (\Exception $e) {
-        log_error($e->getMessage(), 'shutdown');
     }
 });
 include WULA_ROOT . 'includes/plugin.php';

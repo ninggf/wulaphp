@@ -17,9 +17,9 @@ pcntl_async_signals(true);
  * @package wulaphp\command
  */
 abstract class LoopScript {
-    const DONE = 1;//会sleep一会然后退出,然后被重新拉起
-    const NEXT = 2;//会立即退出,然后被重新拉起
-    const GOON = 3;//继续运行run方法
+    const DONE = 1;// 退出，然后睡指定时间后再拉起执行
+    const NEXT = 2;// 退出,然后立即拉起执行
+    const GOON = 3;// 继续运行run方法
     protected $error   = '';
     private   $running = true;
     private   $command = '';
@@ -41,15 +41,18 @@ abstract class LoopScript {
             while ($this->running) {
                 try {
                     $rst = $this->run();
-                    if ($rst === self::DONE) {
-                        exit(0);// 会sleep一会然后退出,然后被重新拉起
+                    if ($rst === self::GOON) {
+                        usleep(100);// 还是要睡一会的,睡醒接着执行run方法，主要是为了优雅的关掉自己
                     } else if ($rst === self::NEXT) {
                         exit(2);// 会立即退出,然后被重新拉起
+                    } else {
+                        exit(0);// 监控进行会sleep interval,然后被重新执行这个脚本
                     }
                 } catch (\Exception $e) {
                     echo $e->getMessage();
                     exit(1); // 退出，不会被拉起
                 }
+
                 $line = @fgets(STDIN);
                 if ($line) {
                     $this->command .= trim($line);
@@ -58,6 +61,7 @@ abstract class LoopScript {
                     $this->running = false;
                 }
             }
+
             exit(0);
         } else {
             if ($this->error) {
@@ -86,7 +90,7 @@ abstract class LoopScript {
      *
      * @return mixed
      */
-    protected function env($name, $default = '') {
+    protected function env(string $name, $default = '') {
         return aryget($name, $_SERVER, $default);
     }
 
@@ -109,9 +113,9 @@ abstract class LoopScript {
 
     /**
      * 运行脚本任务。
-     * @return bool 成功返回true,反之返回false.
+     * @return int
      */
-    protected abstract function run();
+    protected abstract function run(): ?int;
 
     private function onSignal($sig) {
         $this->running = false;

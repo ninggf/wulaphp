@@ -9,6 +9,7 @@
  */
 
 namespace wulaphp\artisan;
+
 /**
  * Gearman Worker
  *
@@ -23,7 +24,7 @@ abstract class GmWorker {
      *
      * @var \GearmanJob
      */
-    protected $job     = null;
+    protected $job = null;
     /**
      * 工作（任务）名
      * @var string|null
@@ -33,7 +34,7 @@ abstract class GmWorker {
      * 工作（任务）ID
      * @var string|null
      */
-    protected $jobId   = null;
+    protected $jobId = null;
 
     public function __construct() {
         global $argv;

@@ -145,6 +145,7 @@ class ServiceCommand extends ArtisanCommand {
                     }
                 }
             }
+
             //启动service monitor process
             if ($this->foreground) {
                 $this->nohup();
@@ -189,7 +190,7 @@ class ServiceCommand extends ArtisanCommand {
      * @param string $service
      * @param bool   $restart
      */
-    private function stop(string $service,bool$restart = false) {
+    private function stop(string $service, bool $restart = false) {
         $this->output('Stopping ...', false);
         $rtn = $this->sendCommand('stop', ['service' => $service, 'restart' => $restart]);
         if ($rtn) {

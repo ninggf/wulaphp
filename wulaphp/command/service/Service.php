@@ -62,11 +62,11 @@ abstract class Service {
      * 读取配置.
      *
      * @param string $name
-     * @param string $default
+     * @param mixed  $default
      *
      * @return string
      */
-    protected function getOption(string $name, string $default = '') {
+    protected function getOption(string $name, $default = '') {
         if ($this->config && array_key_exists($name, $this->config)) {
             return $this->config[ $name ];
         }
@@ -88,28 +88,28 @@ abstract class Service {
 
     protected final function logd(string $message = '') {
         if ($this->verbose > 3) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' DEBUG ' . $this->name . $message;
+            $msg = date('[d/M/Y:H:i:s O] ') . ' DEBUG ' . $this->name . ' ' . $message;
             $this->_log($msg);
         }
     }
 
     protected final function logw(string $message = '') {
         if ($this->verbose > 2) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' WARN ' . $this->name . $message;
+            $msg = date('[d/M/Y:H:i:s O] ') . ' WARN ' . $this->name . ' ' . $message;
             $this->_log($msg);
         }
     }
 
     protected final function loge(string $message = '') {
         if ($this->verbose > 1) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' ERROR ' . $this->name . $message;
+            $msg = date('[d/M/Y:H:i:s O] ') . ' ERROR ' . $this->name . ' ' . $message;
             $this->_log($msg);
         }
     }
 
     protected final function logi(string $message = '') {
         if ($this->verbose > 0) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' INFO ' . $this->name . $message;
+            $msg = date('[d/M/Y:H:i:s O] ') . ' INFO ' . $this->name . ' ' . $message;
             $this->_log($msg);
         }
     }
@@ -124,7 +124,8 @@ abstract class Service {
 
     private function _log($msg) {
         if (LOG_DRIVER == 'container') {
-            @error_log($msg, 4);
+            echo $msg, "\n";
+            flush();
         } else {
             @error_log($msg . "\n", 3, $this->logFile);
         }

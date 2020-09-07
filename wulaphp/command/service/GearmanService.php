@@ -77,14 +77,14 @@ class GearmanService extends Service {
                 $status = $worker->returnCode();
                 switch ($status) {
                     case GEARMAN_SUCCESS:
-                        $count++;
+                        $count ++;
                         break;
                     case GEARMAN_NO_ACTIVE_FDS:
                     case GEARMAN_IO_WAIT:
                         $i = 10;
                         while ($i > 0 && !$this->shutdown) {
                             sleep(1);
-                            $i--;
+                            $i --;
                         }
                         break;
                     case GEARMAN_NO_JOBS:
@@ -112,12 +112,12 @@ class GearmanService extends Service {
     /**
      * 初始化GearmanWorker.
      *
-     * @param string   $func
-     * @param callable $cb
+     * @param string        $func
+     * @param callable|null $cb
      *
      * @return \GearmanWorker|null
      */
-    protected function initWorker($func, $cb = null): ?\GearmanWorker {
+    protected function initWorker(string $func, $cb = null): ?\GearmanWorker {
         try {
             $worker = new \GearmanWorker();
             $worker->setId($func . '@' . posix_getpid());
