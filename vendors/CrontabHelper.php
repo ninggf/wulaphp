@@ -93,15 +93,45 @@ class CrontabHelper {
      *
      * @return int
      */
-    public static function next_runtime($crontab) {
-        $time = time();
+    public static function next_runtime(string $crontab) {
+        $ctime = $time = time();
+        [
+            $now_second,
+            $now_minute,
+            $now_hour,
+            $now_day,
+            $now_month
+        ] = explode(' ', date('s i H d n', $time));
 
-        list($minute, $hour, $day, $month, $dow) = preg_split('/\s+/', $crontab);
+        [$second, $minute, $hour, $day, $month, $dow] = preg_split('/\s+/', $crontab);
+
+        if ($month != '*' && $day == '*' && $hour == '*' && $minute == '*' && $second == '*') {
+            $now_hour = $now_minute = 0;
+            $now_day  = 1;
+        }
+
+        if ($day != '*' && $hour == '*' && $minute == '*' && $second == '*') {
+            $now_hour = $now_minute = 0;
+        }
+
+        if ($hour != '*' && $minute == '*' && $second == '*') {
+            $now_minute = 0;
+        }
+
+        $time = mktime((int)$now_hour, (int)$now_minute, (int)$now_second, (int)$now_month, (int)$now_day, date("Y", $time));
 
         do {
-            list($now_minute, $now_hour, $now_day, $now_month, $now_dow) = explode(' ', date('i H d n N', $time));
+            [
+                $now_second,
+                $now_minute,
+                $now_hour,
+                $now_day,
+                $now_month,
+                $now_dow
+            ] = explode(' ', date('s i H d n N', $time));
+
             if ($month != '*') {
-                if (!self::fit($month, $now_month)) {
+                if (!self::fit($month, $now_month) || $time < $ctime) {
                     $now_month = (int)$now_month + 1;
                     $time      = mktime(0, 0, 0, $now_month, 1, date("Y", $time));
                     continue;
@@ -109,7 +139,7 @@ class CrontabHelper {
             }
 
             if ($day != '*') {
-                if (!self::fit($day, $now_day)) {
+                if (!self::fit($day, $now_day) || $time < $ctime) {
                     $now_day = (int)$now_day + 1;
                     $time    = mktime(0, 0, 0, $now_month, $now_day, date("Y", $time));
                     continue;
@@ -118,7 +148,7 @@ class CrontabHelper {
 
             if ($hour != '*') {
                 $now_hour = (int)$now_hour;
-                if (!self::fit($hour, $now_hour)) {
+                if (!self::fit($hour, $now_hour) || $time < $ctime) {
                     $now_hour = $now_hour + 1;
                     $time     = mktime($now_hour, 0, 0, $now_month, $now_day, date("Y", $time));
                     continue;
@@ -127,15 +157,22 @@ class CrontabHelper {
 
             if ($minute != '*') {
                 $now_minute = (int)$now_minute;
-                if (!self::fit($minute, $now_minute)) {
+                if (!self::fit($minute, $now_minute) || $time < $ctime) {
                     $now_minute = $now_minute + 1;
                     $time       = mktime($now_hour, $now_minute, 0, $now_month, $now_day, date("Y", $time));
                     continue;
                 }
             }
-
+            if ($second != '*') {
+                $now_second = (int)$now_second;
+                if (!self::fit($second, $now_second) || $time < $ctime) {
+                    $now_second = $now_second + 1;
+                    $time       = mktime($now_hour, $now_minute, $now_second, $now_month, $now_day, date("Y", $time));
+                    continue;
+                }
+            }
             if ($dow != '*') {
-                if (!self::fit($dow, $now_dow)) {
+                if (!self::fit($dow, $now_dow) || $time < $ctime) {
                     $now_day = (int)$now_day + 1;
                     $time    = mktime(0, 0, 0, $now_month, $now_day, date("Y", $time));
                     continue;
@@ -178,7 +215,7 @@ class CrontabHelper {
 
         //处理"-" -- 范围
         if (false !== strpos($part, '-')) {
-            list($min, $max) = explode('-', $part);
+            [$min, $max] = explode('-', $part);
             if ($min > $max) {
                 throw new Exception('使用"-"设置范围时，左不能大于右');
             }
@@ -202,18 +239,19 @@ class CrontabHelper {
         return $max - $min > $step ? range($min, $max, $step) : [(int)$min];
     }
 
-    protected static function fit($str, $num) {
+    public static function fit($str, $num) {
         if (strpos($str, ',')) {
             $arr = explode(',', $str);
             foreach ($arr as $element) {
-                if (self::fit($element, $num)) return true;
+                if (self::fit($element, $num))
+                    return true;
             }
 
             return false;
         }
 
         if (strpos($str, '-')) {
-            list($low, $h) = explode('-', $str);
+            [$low, $h] = explode('-', $str);
             if ($num >= (int)$low && $num <= (int)$h) {
                 return true;
             } else {
@@ -222,7 +260,7 @@ class CrontabHelper {
         }
 
         if (strpos($str, '/')) {
-            list($pre, $pos) = explode('/', $str);
+            [$pre, $pos] = explode('/', $str);
             if ($pre == '*') {
                 return $num % (int)$pos == 0;
             } else {
@@ -232,5 +270,4 @@ class CrontabHelper {
 
         return (int)$str == $num;
     }
-
 }

@@ -18,11 +18,13 @@ namespace wulaphp\command\service;
 class CronService extends Service {
     private $proc;
     private $descriptorspec;
+    private $nextRunTime = 0;
 
     public function run() {
         $script   = $this->getOption('script');
         $interval = $this->getOption('interval', $this->getOption('sleep', 10));
         $fixed    = $this->getOption('fixed');//以固定间隔运行
+        $crontab  = $this->getOption('crontab');
         $env      = (array)$this->getOption('env', []);
 
         if (!$script) {
@@ -44,22 +46,24 @@ class CronService extends Service {
             1 => ["pipe", "w"],  // 标准输出，子进程向此管道中写入数据
             2 => ["pipe", "w"] // 标准错误，子进程向此管道中写入数据
         ];
-
-        while (!$this->shutdown) {
-            $s = time();
-            $this->cron($script, $env);
-            $e = time();
-            if ($fixed) {
-                $intv = $interval - ($e - $s);
-                $s    = time();
-            } else {
-                $intv = $interval;
+        if ($crontab) {
+            $crontab1 = preg_split('/\s+/', $crontab);
+            while (!$this->shutdown) {
+                $ctime = time();
+                if ($ctime >= $this->nextRunTime && \CrontabHelper::check($ctime, $crontab)) {
+                    if ($crontab1[0] != '*') {
+                        $this->nextRunTime = \CrontabHelper::next_runtime($crontab) + 1;
+                    } else {
+                        $this->nextRunTime = \CrontabHelper::next_runtime($crontab) + 60;
+                    }
+                    $this->cron($script, $env);
+                } else {
+                    sleep(1);
+                }
             }
-            $i = $intv;
-            while ($i > 0 && !$this->shutdown) {
-                sleep(1);
-                $e = time();
-                $i = $intv - ($e - $s);
+        } else {
+            while (!$this->shutdown) {
+                $this->runInterval($script, $env, $fixed, $interval);
             }
         }
 
@@ -120,9 +124,32 @@ class CronService extends Service {
             }
         } catch (\Exception $e) {
             $this->loge($e->getMessage());
-
         }
 
         return 1;
+    }
+
+    /**
+     * @param string $script
+     * @param array  $env
+     * @param string $fixed
+     * @param string $interval
+     */
+    private function runInterval(string $script, array $env, string $fixed, string $interval): void {
+        $s = time();
+        $this->cron($script, $env);
+        $e = time();
+        if ($fixed) {
+            $intv = $interval - ($e - $s);
+            $s    = time();
+        } else {
+            $intv = $interval;
+        }
+        $i = $intv;
+        while ($i > 0 && !$this->shutdown) {
+            sleep(1);
+            $e = time();
+            $i = $intv - ($e - $s);
+        }
     }
 }
