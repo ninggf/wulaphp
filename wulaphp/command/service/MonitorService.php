@@ -27,6 +27,7 @@ class MonitorService extends Service {
     private $pids     = [];
     private $sockFile;
     private $cfgFile;
+    private $hostname;
 
     public function __construct($name, array $config) {
         parent::__construct($name, $config);
@@ -35,6 +36,7 @@ class MonitorService extends Service {
         $this->output('Starting ', false);
         $this->cfgFile = TMP_PATH . '.service.json';
         $this->output('.', false);
+        $this->hostname = getenv('HOSTNAME');
         //第一步修改当前进程uid
         $user = $this->getOption('user');
         if ($user) {
@@ -682,6 +684,16 @@ class MonitorService extends Service {
             if ($cfg) {
                 $config = array_merge($config, $cfg);
             }
+        }
+        if ($config['services']) {
+            $services = [];
+            foreach ($config['services'] as $id => $service) {
+                $hostset = isset($service['hosts']) && $service['hosts'];
+                if (!$hostset || ($hostset && in_array($this->hostname, (array)$services['hosts']))) {
+                    $services[ $id ] = $service;
+                }
+            }
+            $config['services'] = $services;
         }
 
         return $config;
