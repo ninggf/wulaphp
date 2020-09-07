@@ -30,7 +30,7 @@ namespace wulaphp\cache {
          */
         private static $LOCAL_CACHE;
         private static $lempty = true;
-        private static $empty  = false;
+        public static  $empty  = false;
         /**
          * 缓存前缀.
          * @var string
@@ -46,6 +46,7 @@ namespace wulaphp\cache {
          */
         public static function init(bool $force = false) {
             if (RtCache::$CACHE == null || $force) {
+                self::$empty = false;
                 if (env('app.cluster')) {
                     defined('RUN_IN_CLUSTER') or define('RUN_IN_CLUSTER', true);
                 }
