@@ -686,6 +686,7 @@ class MonitorService extends Service {
             }
         }
         if ($config['services']) {
+            // 只加载可以在本主机上运行的服务
             $services = [];
             foreach ($config['services'] as $id => $service) {
                 $hostset = isset($service['hosts']) && $service['hosts'];

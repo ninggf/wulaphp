@@ -75,10 +75,11 @@ class ParallelService extends Service {
                     @proc_close($process);
 
                     if ($rtn == 2) {
-                        $this->logi($script . ', pid: ' . $pid . ' exits with code: 2, sleep: 0' . "[output] {$output}");
+                        $this->logi($script . ', pid: ' . $pid . ' exits with code: 2, sleep: 0');
                         $sleep = 0;
                     } else if ($rtn != 0) {
                         $this->loge($cmd . ' ' . $arg . ' exit abnormally.' . " [output] {$output}, [error] {$error}");
+                        exit(1);//出错了
                     } else {
                         $this->logd($script . ', pid: ' . $pid . ' exits with code: 0, sleep: ' . $sleep);
                     }

@@ -15,7 +15,7 @@ class CrontabHelper {
      *
      * @return bool 出错返回string（错误信息）
      */
-    public static function check($time, $str_cron) {
+    public static function check(int $time,string $str_cron) {
         $format_time = self::format_timestamp($time);
         $format_cron = self::format_crontab($str_cron);
         if (!is_array($format_cron)) {
@@ -44,7 +44,7 @@ class CrontabHelper {
      *
      * @return array
      */
-    public static function format_timestamp($time) {
+    public static function format_timestamp(int $time):array {
         $chunk    = explode('-', date('s-i-G-j-n-w', $time));
         $chunk[0] = intval(ltrim($chunk[0], '0'));
 
@@ -58,7 +58,7 @@ class CrontabHelper {
      *
      * @return array|string 正确返回数组，出错返回字符串（错误信息）
      */
-    public static function format_crontab($str_cron) {
+    public static function format_crontab(string $str_cron) {
         //格式检查
         $str_cron = trim($str_cron);
         $reg      = '#^((\*(/\d+)?|((\d+(-\d+)?)(?3)?)(,(?4))*))( (?2)){5}$#';
@@ -93,7 +93,7 @@ class CrontabHelper {
      *
      * @return int
      */
-    public static function next_runtime(string $crontab) {
+    public static function next_runtime(string $crontab):int {
         $ctime = $time = time();
         [
             $now_second,
@@ -194,7 +194,7 @@ class CrontabHelper {
      * @return array 若为空数组则表示可任意取值
      * @throws Exception
      */
-    protected static function parse_cron_part($part, $f_min, $f_max) {
+    protected static function parse_cron_part(string $part,int $f_min,int $f_max):array {
         $list = [];
 
         //处理"," -- 列表
@@ -239,7 +239,7 @@ class CrontabHelper {
         return $max - $min > $step ? range($min, $max, $step) : [(int)$min];
     }
 
-    public static function fit($str, $num) {
+    public static function fit($str, $num):bool {
         if (strpos($str, ',')) {
             $arr = explode(',', $str);
             foreach ($arr as $element) {
