@@ -10,10 +10,11 @@
 
 namespace wulaphp\util;
 
+use Fluent\Logger\FluentLogger;
 use Psr\Log\LoggerInterface;
 use wulaphp\io\Request;
 
-class RedisLogger implements LoggerInterface {
+class FluentdLogger implements LoggerInterface {
     protected static $log_name = [
         DEBUG_INFO  => 'INFO',
         DEBUG_WARN  => 'WARN',
@@ -21,18 +22,21 @@ class RedisLogger implements LoggerInterface {
         DEBUG_ERROR => 'ERROR'
     ];
     protected        $channel  = '';
-    private          $redis    = null;
-    private          $app;
+    protected        $fluentd;
+    protected        $app;
 
     public function __construct(string $file = 'wula') {
-        $this->channel = 'logredis-logs';
-        $this->app     = $file;
-        try {
-            $this->redis = RedisClient::getRedis(env('redis.logger.db', 0));
-        } catch (\Exception $e) {
-            $msg = date('[d/M/Y:H:i:s O]') . ' ERROR RedisLogger ' . $e->getMessage();
+        $this->app                  = $file ?: 'wula';
+        $this->channel              = env('app.name', 'wulaphp');
+        $opts['max_write_retry']    = @intval(env('fluentd.retry', 3)) ?: 3;
+        $opts['socket_timeout']     = @intval(env('fluentd.timeout', 3)) ?: 3;
+        $opts['connection_timeout'] = @intval(env('fluentd.con.timeout', 3)) ?: 3;
+        $this->fluentd              = FluentLogger::open(env('fluentd.host', 'localhost'), env('fluentd.port', 24224), $opts);
+        $this->fluentd->registerErrorHandler(function ($logger, $entity, $error) {
+            $msg = date('[d/M/Y:H:i:s O]');
+            $msg .= sprintf(" ERROR FluentdLogger %s %s: %s", $error, $entity->getTag(), json_encode($entity->getData()));
             @error_log($msg, 3, LOGS_PATH . 'wula.log');
-        }
+        });
     }
 
     public function emergency($message, array $context = []) {
@@ -68,7 +72,7 @@ class RedisLogger implements LoggerInterface {
     }
 
     public function log($level, $message, array $trace_info = []) {
-        if (!$this->redis) {
+        if (!$this->fluentd) {
             return;
         }
 
@@ -98,10 +102,12 @@ class RedisLogger implements LoggerInterface {
         }
 
         $msg['stacks'] = implode("\n", $stacks);
+
         try {
-            $this->redis->rPush($this->channel, json_encode($msg));
+            $tag = $this->channel . '.' . strtolower($ln);
+            $this->fluentd->post($tag, $msg);
         } catch (\Exception $e) {
-            $msg = date('[d/M/Y:H:i:s O]') . ' ERROR RedisLogger ' . $e->getMessage();
+            $msg = date('[d/M/Y:H:i:s O]') . ' ERROR FluentdLogger ' . $e->getMessage();
             @error_log($msg, 3, LOGS_PATH . 'wula.log');
         }
     }

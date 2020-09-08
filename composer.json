@@ -14,7 +14,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^7.5",
-        "phpoffice/phpspreadsheet": "^1.4"
+        "phpoffice/phpspreadsheet": "^1.9",
+        "fluent/logger": "^1.0"
     },
     "suggest": {
         "ext-curl": "*",

@@ -226,23 +226,38 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
     if (DEBUG == DEBUG_OFF) {
         return;
     }
-
-    if (!isset($loggers[ $level ][ $file ])) {
+    if (LOG_DRIVER == 'redis' || LOG_DRIVER == 'fluentd') {
+        $logt = '_single_log__';
+        $logl = '_log_level_';
+    } else {
+        $logt = $file;
+        $logl = $level;
+    }
+    if (!isset($loggers[ $logl ][ $logt ])) {
         //获取日志器.
-        $dlogger = env('logger.driver') == 'redis' ? new \wulaphp\util\RedisLogger($file) : new \wulaphp\util\CommonLogger
-        ($file);
-        $log     = apply_filter('logger\getLogger', $dlogger, $level, $file);
+        switch (LOG_DRIVER) {
+            case 'redis':
+                $dlogger = new \wulaphp\util\RedisLogger($file);
+                break;
+            case 'fluentd':
+                $dlogger = new \wulaphp\util\FluentdLogger($file);
+                break;
+            default:
+                $dlogger = new \wulaphp\util\CommonLogger($file);
+        }
+
+        $log = apply_filter('logger\getLogger', $dlogger, $level, $file);
 
         if ($log instanceof Psr\Log\LoggerInterface) {
             $logger = $log;
         } else {
             $logger = false;
         }
-        $loggers[ $level ][ $file ] = $logger;
+        $loggers[ $logl ][ $logt ] = $logger;
     }
 
-    if ($level >= DEBUG && $loggers[ $level ][ $file ]) {
-        $loggers[ $level ][ $file ]->log($level, $message, $trace_info);
+    if ($level >= DEBUG && $loggers[ $logl ][ $logt ]) {
+        $loggers[ $logl ][ $logt ]->log($level, $message, $trace_info);
     }
 }
 
