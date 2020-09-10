@@ -134,56 +134,56 @@ function frqst(string $name, float $default = 0.0): float {
 /**
  * 记录debug信息.
  *
- * @param string $message
- * @param string $file
+ * @param string|array $message
+ * @param string       $file
  */
-function log_debug(string $message, string $file = 'wula') {
+function log_debug($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = LOG_DRIVER == 'container' ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = LOG_DRIVER ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_DEBUG, $file, $trace);
 }
 
 /**
  * 记录info信息.
  *
- * @param string $message
- * @param string $file
+ * @param string|array $message
+ * @param string       $file
  */
-function log_info(string $message, string $file = 'wula') {
+function log_info($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = LOG_DRIVER == 'container' ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = LOG_DRIVER ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_INFO, $file, $trace);
 }
 
 /**
  * 记录warn信息.
  *
- * @param string $message
- * @param string $file
+ * @param string|array $message
+ * @param string       $file
  */
-function log_warn(string $message, string $file = 'wula') {
+function log_warn($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = LOG_DRIVER == 'container' ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = LOG_DRIVER ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_WARN, $file, $trace);
 }
 
 /**
  * 记录error信息.
  *
- * @param string $message
- * @param string $file
+ * @param string|array $message
+ * @param string       $file
  */
-function log_error(string $message, string $file = 'wula') {
+function log_error($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = LOG_DRIVER == 'container' ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = LOG_DRIVER ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_ERROR, $file, $trace);
 }
 
@@ -202,11 +202,12 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
     /**@var \Psr\Log\LoggerInterface[][] $loggers */
     static $loggers = [];
     $_wula_last_msg = $message;
-    if (!$trace_info && LOG_DRIVER != 'container') {
-        $trace_info = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-    }
+
     if (!defined('DEBUG')) {
-        $dumps = '[' . gmdate('Y-m-d H:i:s') . ' GMT] ' . $message . "\n";
+        if (is_array($message)) {
+            $message = json_encode($message, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+        $dumps = '[' . date('c') . '] ' . $message . "\n";
         for ($i = 0; $i < 10; $i ++) {
             if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
                 $dumps .= \wulaphp\util\CommonLogger::getLine($trace_info[ $i ], $i);
@@ -217,8 +218,12 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
         } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
             $dumps .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
         }
-        @file_put_contents(LOGS_PATH . 'bootstrap.log', $dumps, FILE_APPEND);
-        @error_log('[bootstrap] ' . $message, 4); #将日志发送到SAPI处理器
+
+        @error_log($dumps, 3, LOGS_PATH . 'bootstrap.log');
+
+        if (PHP_SAPI != 'cli') {
+            @error_log($message, 4); #将日志发送到SAPI处理器
+        }
 
         return;
     }
@@ -251,7 +256,7 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
         if ($log instanceof Psr\Log\LoggerInterface) {
             $logger = $log;
         } else {
-            $logger = false;
+            $logger = null;
         }
         $loggers[ $logl ][ $logt ] = $logger;
     }
@@ -269,7 +274,7 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
 function log_last_msg(): string {
     global $_wula_last_msg;
 
-    return $_wula_last_msg ? $_wula_last_msg : '';
+    return $_wula_last_msg ? (is_array($_wula_last_msg) ? json_encode($_wula_last_msg, JSON_PRETTY_PRINT) : '') : '';
 }
 
 /**

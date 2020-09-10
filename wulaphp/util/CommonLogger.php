@@ -62,11 +62,17 @@ class CommonLogger implements LoggerInterface {
         $file = $this->channel;
         $ln   = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
         $ip   = Request::getIp() ?: '-';
+
+        if (is_array($message)) {
+            $message = json_encode($message, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+
         if (LOG_DRIVER == 'container') {
             @error_log($ip . date(" - [d/M/Y:H:i:s O]") . " [$ln] $file {$message}", 4);
 
             return;
         }
+
         $msg = $ip . date(" - [d/M/Y:H:i:s O]") . " $ln {$message}\n";
         if ($level > DEBUG_WARN) {//只有error的才记录trace info.
             $msg .= self::getLine($trace_info[0], 0);

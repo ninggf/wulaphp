@@ -81,10 +81,13 @@ class FluentdLogger implements LoggerInterface {
         $msg['@timestamp'] = date("c");
         $msg['level']      = $ln;
         $msg['ip']         = Request::getIp() ?: '-';
-        $msg['message']    = $message;
         $msg['host']       = $_SERVER['SERVER_ADDR'] ?: '-';
         $msg['app']        = $this->app;
-
+        if (is_array($message)) {
+            $msg = array_merge($message, $msg);
+        } else {
+            $msg['message'] = $message;
+        }
         if (isset ($_SERVER ['REQUEST_URI'])) {
             $msg['uri'] = $_SERVER ['REQUEST_URI'];
         } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
