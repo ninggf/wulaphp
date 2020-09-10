@@ -165,6 +165,9 @@ class DefaultDispatcher implements IURLDispatcher {
                                     return null;
                                 }
                             }
+
+                            $router->urlParams = (array)$pms;
+
                             $rtn = $clz->beforeRun($action, $method);
                             //beforeRun可以返回view了
                             if ($rtn instanceof View) {
@@ -192,8 +195,8 @@ class DefaultDispatcher implements IURLDispatcher {
                                     }
                                 }
                             }
-                            $router->urlParams = (array)$pms;
-                            $view              = $clz->{$action}(...$args);
+
+                            $view = $clz->{$action}(...$args);
                             if ($view !== null) {
                                 if (is_array($view)) {
                                     $view = new JsonView($view);

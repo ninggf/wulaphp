@@ -526,12 +526,11 @@ class App {
      * @return Module|null 未找到时返回Null
      */
     public static function getModule(string $module): ?Module {
-        $info = null;
         if (isset (self::$modules [ $module ])) {
             return self::$modules [ $module ];
         }
 
-        return $info;
+        return null;
     }
 
     /**
@@ -591,7 +590,7 @@ class App {
             return self::$maps ['dir2id'] [ $dir ];
         } else if (!$check) {
             return $dir;
-        } else if ($check && isset (self::$modules [ $dir ])) {
+        } else if (isset (self::$modules [ $dir ])) {
             return $dir;
         }
 
@@ -601,7 +600,7 @@ class App {
     /**
      * 根据模块ID（namespace）查找模块所在目录.当$id为null时，返回映射字典.
      *
-     * @param string $id 模块id
+     * @param string|null $id 模块id
      *
      * @return string|string[]
      */
@@ -989,14 +988,14 @@ class App {
     /**
      * 处理请求.
      *
-     * @param string       $url    请求URL.
-     * @param array|string $data   请求数据或请求方式
-     * @param string       $method 请求方法.
+     * @param string|null       $url    请求URL.
+     * @param array|string|null $data   请求数据或请求方式
+     * @param string            $method 请求方法.
      *
      * @return mixed
      * @throws
      */
-    public static function run($url = null, $data = null, $method = 'GET') {
+    public static function run(?string $url = null, $data = null, string $method = 'GET') {
         if ($url) {
             if (is_string($data)) {
                 $method = $data;
