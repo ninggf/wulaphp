@@ -25,7 +25,7 @@ trait JQueryValidatorController {
 	 * @return string
 	 */
 	public function validate($_arg0_form, $_arg1_filed) {
-		if (isset($this->reflectionObj) && $this->reflectionObj) {
+		if ($this->reflectionObj) {
 			$ann     = new Annotation($this->reflectionObj);
 			$accepts = $ann->getMultiValues('accept');
 			if (empty($accepts)) {
