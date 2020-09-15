@@ -68,11 +68,11 @@ namespace wulaphp\cache {
                         self::$empty    = true;
                     }
                     unset($cfg);
-                } else if (extension_loaded('yac')) {
+                } else if (extension_loaded('yac') && PHP_SAPI !== 'cli') {
                     RtCache::$CACHE = new YacCache();
-                } else if (function_exists('apcu_store')) {
+                } else if (function_exists('apcu_store') && PHP_SAPI !== 'cli') {
                     RtCache::$CACHE = new ApcCacher ();
-                } else if (function_exists('xcache_get')) {
+                } else if (function_exists('xcache_get') && PHP_SAPI !== 'cli') {
                     RtCache::$CACHE = new XCacheCacher ();
                 } else {
                     RtCache::$CACHE = new Cache ();
