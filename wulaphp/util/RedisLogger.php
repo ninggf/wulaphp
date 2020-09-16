@@ -13,6 +13,11 @@ namespace wulaphp\util;
 use Psr\Log\LoggerInterface;
 use wulaphp\io\Request;
 
+/**
+ * Class RedisLogger
+ * @package wulaphp\util
+ * @internal
+ */
 class RedisLogger implements LoggerInterface {
     protected static $log_name = [
         DEBUG_INFO  => 'INFO',

@@ -15,7 +15,7 @@ namespace wulaphp\cache;
  * @internal
  */
 class YacCache extends Cache {
-	private $yac = null;
+	private $yac;
 
 	public function getName() {
 		return 'Yac';
@@ -38,9 +38,7 @@ class YacCache extends Cache {
 	}
 
 	public function get($key) {
-		$v = $this->yac->get($key);
-
-		return $v;
+		return $this->yac->get($key);
 	}
 
 	public function clear($check = true) {

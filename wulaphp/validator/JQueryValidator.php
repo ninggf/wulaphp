@@ -25,9 +25,9 @@ trait JQueryValidator {
 	/**
 	 * 生成可供jquery.validator插件使用的验证规则.
 	 *
-	 * @param Controller                           $controller
+	 * @param ?Controller                           $controller
 	 * @param \wulaphp\validator\JQueryValidator[] $validators
-	 *
+	 * @deprecated
 	 * @return string|array
 	 */
 	public function encodeValidatorRule(Controller $controller = null, JQueryValidator ...$validators) {

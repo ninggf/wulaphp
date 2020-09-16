@@ -304,8 +304,8 @@ class DatabaseConnection {
      *                        function trans(DatabaseConnection $con,mixed $data);
      *                        1. $con 数据库链接
      *                        2. $data 锁返回的数据.
-     * @param string   $error 错误信息
-     * @param ILock    $lock  锁.
+     * @param ?string   $error 错误信息
+     * @param ?ILock    $lock  锁.
      *
      * @return mixed|null  事务过程函数的返回值或null
      */
@@ -367,7 +367,7 @@ class DatabaseConnection {
 
             return false;
         }
-        if ($sql{0} == '@') {
+        if ($sql[0] == '@') {
             $sql     = mb_substr($sql, 1);
             $parsing = false;
         } else {
@@ -400,7 +400,7 @@ class DatabaseConnection {
     /**
      * 最后插入的主键值.
      *
-     * @param string $name
+     * @param ?string $name
      *
      * @return null|string
      */
@@ -428,7 +428,7 @@ class DatabaseConnection {
 
             return null;
         }
-        if ($sql{0} == '@') {
+        if ($sql[0] == '@') {
             $sql     = mb_substr($sql, 1);
             $parsing = false;
         } else {
@@ -539,7 +539,7 @@ class DatabaseConnection {
 
             return null;
         }
-        if ($sql{0} == '@') {
+        if ($sql[0] == '@') {
             $sql     = mb_substr($sql, 1);
             $parsing = false;
         } else {
@@ -657,8 +657,8 @@ class DatabaseConnection {
     /**
      * 删除.
      *
-     * @param string $table 表名.
-     * @param string $alias 别名.
+     * @param ?string $table 表名.
+     * @param ?string $alias 别名.
      *
      * @return \wulaphp\db\sql\DeleteSQL
      */

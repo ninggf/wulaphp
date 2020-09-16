@@ -14,6 +14,11 @@ use Fluent\Logger\FluentLogger;
 use Psr\Log\LoggerInterface;
 use wulaphp\io\Request;
 
+/**
+ * Class FluentdLogger
+ * @package wulaphp\util
+ * @internal
+ */
 class FluentdLogger implements LoggerInterface {
     protected static $log_name = [
         DEBUG_INFO  => 'INFO',
