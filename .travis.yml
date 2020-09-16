@@ -7,7 +7,6 @@ cache:
     - $HOME/.composer/cache
 
 services:
-  - mysql
   - postgresql
   - memcached
   - redis
@@ -42,6 +41,7 @@ before_install:
   - mkdir tests/storage/logs
   - docker pull wendal/ssdb
   - docker run --rm -d -p 8888:8888 wendal/ssdb
+  - docker run --rm -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=888888 mysql:5.7.31
   - gearmand -d -l tests/storage/logs/gm.log
 
 install:
