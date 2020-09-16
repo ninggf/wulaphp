@@ -26,6 +26,22 @@ abstract class Source {
      * @var \wulaphp\util\data\Sinker[]
      */
     private $sinker = [];
+    /**
+     * @var \wulaphp\util\data\State
+     */
+    protected $state;
+
+    /**
+     * Source constructor.
+     *
+     * @param string                        $name  数据源名称
+     * @param \wulaphp\util\data\State|null $state 状态管理器
+     *
+     * @throws \InvalidArgumentException when name is empty
+     */
+    public function __construct(string $name, ?State $state = null) {
+        $this->state = $state ?? new FileState($name);
+    }
 
     /**
      * 添加数据处理器.
