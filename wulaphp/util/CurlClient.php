@@ -28,8 +28,8 @@ class CurlClient {
     private        $cookies    = null;
     private        $headers    = null;
     private        $useJson    = false;
-    private        $timeout    = 30;
-    private        $referer    = '';
+    private        $timeout;
+    private        $referer;
     private        $customData = [];
 
     public $error     = null;
@@ -198,7 +198,7 @@ class CurlClient {
      *
      * @param string               $url      URL
      * @param array                $data     数据
-     * @param CurlMultiExeCallback $callback 回调
+     * @param CurlMultiExeCallback|null $callback 回调
      *
      * @return CurlClient;
      */
@@ -285,11 +285,11 @@ class CurlClient {
      * 准备Client给execute方法使用.
      *
      * @param string               $url
-     * @param CurlMultiExeCallback $callback
+     * @param CurlMultiExeCallback|null $callback
      *
      * @return CurlClient
      */
-    public function prepareGet($url, ?CurlMultiExeCallback $callback = null) {
+    public function prepareGet(string $url, ?CurlMultiExeCallback $callback = null) {
         if (!$this->inUsed) {
             $this->inUsed = true;
             $options      = [
@@ -320,7 +320,7 @@ class CurlClient {
      *
      * @return bool|mixed|null|string|string[]
      */
-    public function get($url, $base = null, $reuse = false, $isImg = false) {
+    public function get(string $url, $base = null,bool $reuse = false,bool $isImg = false) {
         set_time_limit(0);
 
         $curl = $this->ch;
@@ -393,7 +393,7 @@ class CurlClient {
     /**
      * 设置请求cookie并获取响应中的cookie。
      *
-     * @param array $cookies
+     * @param array|null $cookies
      *
      * @return $this
      */
@@ -500,11 +500,11 @@ class CurlClient {
      * 下载图片.
      *
      * @param string $url
-     * @param null   $base
+     * @param mixed   $base
      *
      * @return bool|mixed|string|string[]|null
      */
-    public function getImage($url, $base = null) {
+    public function getImage(string $url, $base = null) {
         return $this->get($url, $base, false, true);
     }
 
@@ -642,7 +642,7 @@ class CurlClient {
      *
      * @return array results for each request. array(0=>success array,1=>failed array,2=>not start).
      */
-    public static function execute($clients) {
+    public static function execute(array $clients):array {
         $result = [0 => [], 1 => [], 2 => []];
         if ($clients) {
             $mh      = curl_multi_init();
@@ -706,7 +706,7 @@ class CurlClient {
      *
      * @return array
      */
-    public static function getUrlInfo($url): array {
+    public static function getUrlInfo(string $url): array {
         $here = explode('/', $url);
         array_pop($here);
         $here = implode('/', $here) . '/';
@@ -740,7 +740,7 @@ class CurlClient {
      *
      * @return string
      */
-    public static function getURL($url, $info): string {
+    public static function getURL(string $url, array $info): string {
         if (preg_match('#^(htt|ft)ps?://.+#i', $url)) {
             return $url;
         } else if ($url[0] === '/') {
