@@ -1,65 +1,22 @@
 version: "3"
 services:
-  web:
-    container_name: wula_web
-    depends_on:
-      - php
-    image: nginx:latest
-    ports:
-      - "8090:80"
-    volumes:
-      - "./:/var/www/html"
-      - "./conf/site.conf:/etc/nginx/conf.d/default.conf:ro"
-    links:
-      - "php"
   php:
-    container_name: wula_php
-    depends_on:
-      - "mysql"
-      - "redis"
-      - "memcached"
-      - "gearmand"
-    image: wulaphp/php:latest
+    container_name: wulapp
+    image: wulaphp/php:7.4.10-ng-alphine
+    ports:
+      - 8808:80/tcp
     volumes:
       - "./:/var/www/html/"
-    expose:
-      - "9000"
-    environment:
-      XDEBUG_REMOTE_PORT: 9000
-      XDEBUG_ENABLE: 0
-      APCU_ENABLE: 0
-    links:
-      - "mysql"
-      - "redis"
-      - "memcached"
-      - "gearmand"
+      - "./docker/etc/nginx/nginx.conf:/usr/local/etc/nginx/nginx.conf:ro"
   mysql:
-    container_name: wula_db
-    image: mysql:5.7.24
-    ports:
-      - "3306:3306"
-    expose:
-      - "3306"
+    container_name: wuladb
+    image: mysql:5.7.31
     volumes:
       - "./storage/mysql:/var/lib/mysql"
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
   redis:
-    container_name: wula_edis
+    container_name: wula_redis
     image: redis:4.0.11
-    expose:
-      - "6379"
     sysctls:
       net.core.somaxconn: 1024
-  memcached:
-    container_name: wula_memcached
-    image: memcached:1.5.10
-    expose:
-      - "11211"
-    sysctls:
-      net.core.somaxconn: 1024
-  gearmand:
-    container_name: wula_gearmand
-    image: artefactual/gearmand:latest
-    expose:
-      - "4730"

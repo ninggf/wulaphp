@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  php:
+    image: app:unittest
+    volumes:
+    - ./reports/:/var/www/html/storage/reports
+    depends_on:
+      - mysql
+      - redis
+    links:
+      - mysql
+      - redis
+  mysql:
+    image: mysql:5.7.31
+    environment:
+      MYSQL_ROOT_PASSWORD: 888888
+    expose:
+      - 3306
+  redis:
+    image: redis:6.0.7-buster
+    expose:
+      - 6379
+    sysctls:
+      net.core.somaxconn: 1024
