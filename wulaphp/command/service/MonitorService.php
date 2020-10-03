@@ -11,6 +11,7 @@
 namespace wulaphp\command\service;
 
 use wulaphp\conf\ConfigurationLoader;
+use wulaphp\util\RedisClient;
 
 /**
  * 监控服务.
@@ -31,7 +32,6 @@ class MonitorService extends Service {
 
     public function __construct($name, array $config) {
         parent::__construct($name, $config);
-        $this->logFile = LOGS_PATH . 'service.log';
         $this->setVerbose($this->getOption('verbose', 'vvv'));
         $this->output('Starting ', false);
         $this->cfgFile = TMP_PATH . '.service.json';
@@ -44,10 +44,12 @@ class MonitorService extends Service {
             if ($uinfo) {
                 if (!@posix_setuid($uinfo['uid'])) {
                     $this->output('cannot run service command by user ' . $user);
+                    $this->loge('cannot run service command by user ' . $user);
                     exit(- 1);
                 }
             } else {
                 $this->output('user ' . $user . ' is not found');
+                $this->loge('user ' . $user . ' is not found');
                 exit(- 1);
             }
             $group = $this->getOption('group');
@@ -57,6 +59,7 @@ class MonitorService extends Service {
                     $gid = $ginfo['gid'];
                 } else {
                     $this->output('group ' . $group . ' is not found');
+                    $this->loge('group ' . $group . ' is not found');
                     exit(- 1);
                 }
             } else {
@@ -65,6 +68,7 @@ class MonitorService extends Service {
             if ($gid) {
                 if (!@posix_setgid($gid)) {
                     $this->output('cannot run service command by group ' . $gid);
+                    $this->loge('cannot run service command by group ' . $gid);
                     exit(- 1);
                 }
             }
@@ -74,7 +78,7 @@ class MonitorService extends Service {
         $this->initSocket();
         $this->output('.', false);
         //第三步解析配置
-        $this->reloadConfig($config);
+        $this->reloadConfig();
         $this->output('.', false);
         //第四步安装信号
         $this->initSignal();
@@ -136,10 +140,10 @@ class MonitorService extends Service {
             }
         }
         while (count($this->pids) > 0) {
-            $pid = pcntl_wait($status, WNOHANG);
+            $pid = @pcntl_wait($status, WNOHANG);
             if ($pid > 0) {//有进程退出啦
                 unset($this->pids[ $pid ]);
-                $sid = isset($this->pids[ $pid ]) ? $this->pids[ $pid ] : '';
+                $sid = $this->pids[ $pid ] ?? '';
                 if ($sid) {
                     $this->logd('service ' . $sid . ', pid ' . $pid . ' exit');
                     if (isset($this->services[ $sid ])) {
@@ -166,6 +170,7 @@ class MonitorService extends Service {
             $payload = @json_decode($msg, true);
             if (!$payload) {
                 $this->response($socket, ['error' => 403, 'message' => 'error request']);
+                $this->logw('error request');
 
                 return;
             }
@@ -230,6 +235,7 @@ class MonitorService extends Service {
                     }
             }
         } catch (\Exception $e) {
+            log_error($e->getMessage(), $this->name);
             $this->response($socket, ['error' => 500, 'msg' => $e->getMessage()]);
         }
     }
@@ -238,6 +244,7 @@ class MonitorService extends Service {
      * 监测服务
      */
     private function checkServices() {
+        static $err_cnt = 0;
         do {
             $pid = @pcntl_wait($status, WNOHANG);
             if ($pid > 0) {//有进程退出啦
@@ -268,6 +275,7 @@ class MonitorService extends Service {
         } while ($pid > 0);
 
         $removed = [];
+
         foreach ($this->services as $id => $service) {
             $status = $service['status'];
             if (!isset($this->services[ $id ]['pids'])) {
@@ -364,9 +372,23 @@ class MonitorService extends Service {
                     }
             }
         }
+
         if ($removed) {
             foreach ($removed as $id) {
                 unset($this->services[ $id ]);
+            }
+        }
+
+        try {
+            $redis = RedisClient::getRedis();
+            $redis->setex('service_run@' . $this->hostname, 3, time());
+            $service = @json_encode($this->services);
+            $redis->setex('service_ins@' . $this->hostname, 5, $service);
+            $err_cnt = 0;
+        } catch (\Exception $e) {
+            if ($err_cnt < 3) {
+                $err_cnt ++;
+                log_error('监控进程无法连接Redis:' . $e->getMessage(), $this->name);
             }
         }
     }
@@ -381,12 +403,12 @@ class MonitorService extends Service {
      */
     private function reloadConfig($config = null, $service = '') {
         if (!$config) {
-            $config       = $this->loadRuntimeCfg();
-            $this->config = $config;
+            $config = $this->loadRuntimeCfg();
             $this->setVerbose($this->getOption('verbose'));
         }
         if ($config) {
-            $services = isset($config['services']) ? $config['services'] : [];
+            $this->config = $config;
+            $services     = isset($config['services']) ? $config['services'] : [];
             if ($service) {
                 if (isset($services[ $service ]) && isset($this->services[ $service ])) {
                     $c_status                             = $this->services[ $service ]['status'];
@@ -432,6 +454,8 @@ class MonitorService extends Service {
             }
 
             return true;
+        } else {
+            $this->config = [];
         }
 
         return false;
@@ -690,7 +714,7 @@ class MonitorService extends Service {
             $services = [];
             foreach ($config['services'] as $id => $service) {
                 $hostset = isset($service['hosts']) && $service['hosts'];
-                if (!$hostset || ($hostset && in_array($this->hostname, (array)$services['hosts']))) {
+                if (!$hostset || in_array($this->hostname, (array)$services['hosts'])) {
                     $services[ $id ] = $service;
                 }
             }

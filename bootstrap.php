@@ -64,8 +64,8 @@ defined('EXTENSION_LOADER_CLASS') or define('EXTENSION_LOADER_CLASS', 'wulaphp\a
 defined('CONFIG_LOADER_CLASS') or define('CONFIG_LOADER_CLASS', 'wulaphp\conf\ConfigurationLoader ');
 define('DEBUG_OFF', 1000);
 define('DEBUG_ERROR', 400);
-define('DEBUG_WARN', 300);
-define('DEBUG_INFO', 200);
+define('DEBUG_INFO', 300);
+define('DEBUG_WARN', 200);
 define('DEBUG_DEBUG', 100);
 define('EXIT_SUCCESS', 0);
 define('EXIT_ERROR', 1);
@@ -190,6 +190,7 @@ spl_autoload_register(function ($clz) {
     }
 });
 define('LOG_DRIVER', env('app.logger.driver'));
+define('LOG_ROTATE', env('app.logger.rotate'));
 include WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
     include LIBS_PATH . 'common.php';

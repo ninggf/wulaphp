@@ -359,8 +359,8 @@ class Router {
                 }
 
                 return false;
-            } else if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
-                throw new \Exception(__('no route for %s', $uri));
+            } else if (defined('DEBUG') && DEBUG == DEBUG_DEBUG) {
+                throw new \Exception(__('no route for %s', $uri), 404);
             } else {
                 Response::respond(404);
             }

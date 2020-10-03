@@ -31,6 +31,7 @@ abstract class QueryBuilder {
     protected      $exception   = null;
     protected      $performed   = false;
     protected      $whereData   = [];
+    protected      $whereSet    = false;
     /**
      * @var \PDOStatement
      */
@@ -147,6 +148,7 @@ abstract class QueryBuilder {
      * @return $this
      */
     public function where($con, $append = true) {
+        $this->whereSet = true;
         if (is_array($con) && !empty ($con)) {
             $con = new Condition ($con, $this->alias);
         }
@@ -255,7 +257,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function limit($start, $limit = null) {
+    public function limit(int $start, ?int $limit = null) {
         if ($limit === null) {
             $limit = intval($start);
             $start = 0;

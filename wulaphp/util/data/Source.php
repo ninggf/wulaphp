@@ -34,13 +34,12 @@ abstract class Source {
     /**
      * Source constructor.
      *
-     * @param string                        $name  数据源名称
      * @param \wulaphp\util\data\State|null $state 状态管理器
      *
      * @throws \InvalidArgumentException when name is empty
      */
-    public function __construct(string $name, ?State $state = null) {
-        $this->state = $state ?? new FileState($name);
+    public function __construct(?State $state = null) {
+        $this->state = $state ?? new State();
     }
 
     /**
@@ -51,6 +50,7 @@ abstract class Source {
      * @return \wulaphp\util\data\Source
      */
     public final function operate(Operator $operator): Source {
+        $operator->setState($this->state);
         $this->ops[] = $operator;
 
         return $this;
@@ -64,6 +64,7 @@ abstract class Source {
      * @return \wulaphp\util\data\Source
      */
     public final function sink(Sinker $sinker): Source {
+        $sinker->setState($this->state);
         $this->sinker[] = $sinker;
 
         return $this;

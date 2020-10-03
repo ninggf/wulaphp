@@ -46,6 +46,9 @@ class CronService extends Service {
             1 => ["pipe", "w"],  // 标准输出，子进程向此管道中写入数据
             2 => ["pipe", "w"] // 标准错误，子进程向此管道中写入数据
         ];
+
+        @cli_set_process_title('php -name ' . $this->name . ' -type cron ' . trim($arg, "'"));
+
         if ($crontab) {
             $crontab1 = preg_split('/\s+/', $crontab);
             while (!$this->shutdown) {
@@ -56,7 +59,9 @@ class CronService extends Service {
                     } else {
                         $this->nextRunTime = \CrontabHelper::next_runtime($crontab) + 60;
                     }
-                    $this->cron($script, $env);
+                    $this->logd($this->nameStr . '开始运行');
+                    $rtn = $this->cron($script, $env);
+                    $this->logd($this->nameStr . '运行结束,退出状态码: ' . $rtn);
                 } else {
                     sleep(1);
                 }
@@ -81,7 +86,7 @@ class CronService extends Service {
     private function cron(string $script, ?array $env = null) {
         try {
             $this->logd('start to run cron job: ' . $script);
-            $process = @proc_open($this->proc, $this->descriptorspec, $pipes, APPROOT, $env);
+            $process = @proc_open($this->proc, $this->descriptorspec, $pipes, APPROOT);
             $output  = '';
             $error   = '';
             if ($process && is_resource($process)) {

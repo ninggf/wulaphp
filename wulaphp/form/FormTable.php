@@ -13,6 +13,7 @@ use wulaphp\validator\Validator;
  */
 abstract class FormTable extends Table {
     use Validator;
+
     protected $_skips_    = [];
     protected $_maps_     = [];
     protected $_fields    = [];
@@ -309,7 +310,7 @@ abstract class FormTable extends Table {
      *
      * @return string 字段名,非本表字段时请返回null。
      */
-    public function addField($fname, $ann, $default = ''): ?string {
+    public function addField(string $fname, $ann, $default = ''): ?string {
         if (is_array($ann)) {
             $ann = new Annotation($ann);
         }
@@ -347,7 +348,7 @@ abstract class FormTable extends Table {
      * @param string $name    字段名
      * @param array  $options 字段属性.
      */
-    public function alterFieldOptions($name, &$options) {
+    public function alterFieldOptions(string $name, array &$options) {
     }
 
     /**

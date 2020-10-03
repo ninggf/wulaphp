@@ -23,7 +23,11 @@ class CommonLogger implements LoggerInterface {
     protected        $channel  = '';
 
     public function __construct(string $file = 'wula') {
-        $this->channel = $file ?: 'wula';
+        if ($file) {
+            $this->channel = rtrim($file, '.log');
+        } else {
+            $this->channel = 'wula';
+        }
     }
 
     public function emergency($message, array $context = []) {
@@ -60,21 +64,24 @@ class CommonLogger implements LoggerInterface {
 
     public function log($level, $message, array $trace_info = []) {
         $file = $this->channel;
-        $ln   = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
-        $ip   = Request::getIp() ?: '-';
+        $ln   = self::$log_name [ $level ] ?? 'WARN';
+        $ip   = Request::getIp() ?: '127.0.0.1';
 
         if (is_array($message)) {
             $message = json_encode($message, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
 
+        $mtm = substr(microtime(), 1, 4);
+        $tm  = str_replace('+', $mtm . '+', date('c'));
         if (LOG_DRIVER == 'container') {
-            @error_log($ip . date(" - [d/M/Y:H:i:s O]") . " [$ln] $file {$message}", 4);
+            @error_log($ip . " - [$tm] [$ln] $file {$message}", 4);
 
             return;
         }
 
-        $msg = $ip . date(" - [d/M/Y:H:i:s O]") . " $ln {$message}\n";
-        if ($level > DEBUG_WARN) {//只有error的才记录trace info.
+        $msg = $ip . " - [$tm] [$ln] $file {$message}\n";
+
+        if ($level > DEBUG_INFO && $trace_info) {//只有error的才记录trace info.
             $msg .= self::getLine($trace_info[0], 0);
             for ($i = 1; $i < 5; $i ++) {
                 if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
@@ -88,7 +95,12 @@ class CommonLogger implements LoggerInterface {
             }
         }
 
-        $dest_file = $file ? $file . '.log' : 'wula.log';
+        if (LOG_ROTATE) {
+            $dest_file = 'app-' . date('Y-m-d') . '.log';
+        } else {
+            $dest_file = 'app.log';
+        }
+
         @error_log($msg, 3, LOGS_PATH . $dest_file);
     }
 

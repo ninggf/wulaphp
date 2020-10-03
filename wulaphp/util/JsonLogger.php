@@ -13,12 +13,7 @@ namespace wulaphp\util;
 use Psr\Log\LoggerInterface;
 use wulaphp\io\Request;
 
-/**
- * Class RedisLogger
- * @package wulaphp\util
- * @internal
- */
-class RedisLogger implements LoggerInterface {
+class JsonLogger implements LoggerInterface {
     protected static $log_name = [
         DEBUG_INFO  => 'INFO',
         DEBUG_WARN  => 'WARN',
@@ -26,21 +21,14 @@ class RedisLogger implements LoggerInterface {
         DEBUG_ERROR => 'ERROR'
     ];
     protected        $channel  = '';
-    private          $redis    = null;
-    private          $app;
+    protected        $fluentd;
+    protected        $app;
 
     public function __construct(string $file = 'wula') {
-        $this->channel = 'logredis-logs';
         if ($file) {
-            $this->app = rtrim($file, '.log');
+            $this->channel = rtrim($file, '.log');
         } else {
-            $this->app = 'wula';
-        }
-        try {
-            $this->redis = RedisClient::getRedis(env('redis.logger.db', 0));
-        } catch (\Exception $e) {
-            $msg = date('[d/M/Y:H:i:s O]') . ' ERROR RedisLogger ' . $e->getMessage();
-            @error_log($msg, 3, LOGS_PATH . 'wula.log');
+            $this->channel = 'wula';
         }
     }
 
@@ -77,25 +65,20 @@ class RedisLogger implements LoggerInterface {
     }
 
     public function log($level, $message, array $trace_info = []) {
-        if (!$this->redis) {
-            return;
-        }
-
+        $file              = $this->channel;
         $ln                = self::$log_name [ $level ] ?? 'WARN';
         $mtm               = substr(microtime(), 1, 4);
         $msg['@timestamp'] = str_replace('+', $mtm . '+', date('c'));
         $msg['level']      = $ln;
         $msg['ip']         = Request::getIp() ?: '127.0.0.1';
+        $msg['app']        = $file;
         $msg['host']       = $_SERVER['SERVER_ADDR'] ?: '-';
         $msg['hostname']   = getenv('HOSTNAME', true) ?: '-';
-        $msg['app']        = $this->app;
-
         if (is_array($message)) {
             $msg = array_merge($message, $msg);
         } else {
             $msg['message'] = $message;
         }
-
         if (isset ($_SERVER ['REQUEST_URI'])) {
             $msg['uri'] = $_SERVER ['REQUEST_URI'];
         } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
@@ -103,7 +86,6 @@ class RedisLogger implements LoggerInterface {
         }
 
         $stacks = [];
-
         if ($level > DEBUG_INFO && $trace_info) {//只有error的才记录trace info.
             $stacks[] = CommonLogger::getLine($trace_info[0], 0);
             for ($i = 1; $i < 5; $i ++) {
@@ -114,11 +96,14 @@ class RedisLogger implements LoggerInterface {
         }
 
         $msg['stacks'] = implode("\n", $stacks);
-        try {
-            $this->redis->rPush($this->channel, json_encode($msg));
-        } catch (\Exception $e) {
-            $msg = date('[d/M/Y:H:i:s O]') . ' ERROR RedisLogger ' . $e->getMessage();
-            @error_log($msg, 3, LOGS_PATH . 'wula.log');
+
+        if (LOG_ROTATE) {
+            $dest_file = 'app-' . date('Y-m-d') . '.json';
+        } else {
+            $dest_file = 'app.json';
         }
+
+        $msg = json_encode($msg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        @error_log($msg . "\n", 3, LOGS_PATH . $dest_file);
     }
 }

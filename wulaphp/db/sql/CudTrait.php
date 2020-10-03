@@ -16,13 +16,14 @@ namespace wulaphp\db\sql;
  */
 trait CudTrait {
     protected $retriedCnt = 0;
+
     /**
      * 上次执行是否成功.
      *
      * @return bool
      */
     public function success(): bool {
-        return empty ($this->error) ? true : false;
+        return empty ($this->error);
     }
 
     /**
@@ -57,10 +58,10 @@ trait CudTrait {
      * 执行update,insert,delete语句.
      *
      * @param boolean|null $checkAffected 是否检测影响的条数 .
-     *                                1. false不检测影响的行数，SQL语句执行成功返回true，反之false；
-     *                                1.1 如果是insert语句执行成功则返回auto_increment ID.
-     *                                2. true影响的行数大于0时返回true,反之返回false；
-     *                                3. null直接返回影响的行数；
+     *                                    1. false不检测影响的行数，SQL语句执行成功返回true，反之false；
+     *                                    1.1 如果是insert语句执行成功则返回auto_increment ID.
+     *                                    2. true影响的行数大于0时返回true,反之返回false；
+     *                                    3. null直接返回影响的行数；
      *
      *
      * @return boolean|int|mixed
@@ -73,8 +74,7 @@ trait CudTrait {
             if ($this->exception instanceof \PDOException) {
                 $this->error = $this->exception->getMessage();
             }
-            $dn = $this->dialect->getDriverName();
-            log_error($this->error . '[' . $this->getSqlString() . ']', $dn . '.sql.err');
+            log_error($this->error . ' [' . $this->getSqlString() . ']', 'sql.err');
 
             return is_null($checkAffected) ? 0 : false;
         } else if ($this instanceof InsertSQL) {

@@ -14,7 +14,7 @@ namespace wulaphp\util\data;
  * @package wulaphp\util\data
  */
 class GroupData extends Source {
-    private $size = 10;
+    private $size;
     private $source;
 
     /**
@@ -23,7 +23,8 @@ class GroupData extends Source {
      * @param \wulaphp\util\data\Source $source 上游数据源
      * @param int                       $size   分组大小
      */
-    public function __construct(Source $source, int $size) {
+    public function __construct(Source $source, int $size=10) {
+        parent::__construct($source->state);
         $this->source = $source;
         $this->size   = $size <= 0 ? 1 : $size;
     }

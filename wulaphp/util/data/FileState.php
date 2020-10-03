@@ -26,11 +26,13 @@ class FileState extends State {
      * @throws \InvalidArgumentException when name is empty
      */
     public function __construct(string $name) {
-        parent::__construct($name);
+        if (empty($name)) {
+            throw new \InvalidArgumentException('name is empty');
+        }
         $this->fileName = TMP_PATH . '.dstate_' . sanitize_file_name($name) . '.json';
     }
 
-    public function get() {
+    public function get(): array {
         if (is_file($this->fileName)) {
             $state = @file_get_contents($this->fileName);
             if ($state) {
@@ -41,7 +43,7 @@ class FileState extends State {
         return [];
     }
 
-    public function save(array $state) {
+    public function save(array $state): bool {
         if (empty($state)) {
             @unlink($this->fileName);
 

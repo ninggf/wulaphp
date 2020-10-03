@@ -330,7 +330,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * 取一行或一行中的一个字段的值.
      *
      * @param integer|string|array $index 结果集中的行号或字段名或条件.
-     * @param string               $field 结果集中的字段名.
+     * @param string|null               $field 结果集中的字段名.
      *
      * @return Query|array|null|mixed
      *  $index是数据时返回Query实例;$index是字符时返回null或字符;$index是数字，$field为null时返回array，$field不为null时返回null或字符.

@@ -141,8 +141,7 @@ function log_debug($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = LOG_DRIVER ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-    log_message($message, DEBUG_DEBUG, $file, $trace);
+    log_message($message, DEBUG_DEBUG, $file, []);
 }
 
 /**
@@ -155,8 +154,7 @@ function log_info($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = LOG_DRIVER ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-    log_message($message, DEBUG_INFO, $file, $trace);
+    log_message($message, DEBUG_INFO, $file, []);
 }
 
 /**
@@ -169,8 +167,7 @@ function log_warn($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = LOG_DRIVER ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-    log_message($message, DEBUG_WARN, $file, $trace);
+    log_message($message, DEBUG_WARN, $file, []);
 }
 
 /**
@@ -183,7 +180,7 @@ function log_error($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = LOG_DRIVER ? [] : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
     log_message($message, DEBUG_ERROR, $file, $trace);
 }
 
@@ -233,12 +230,10 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
     }
     if (LOG_DRIVER == 'redis' || LOG_DRIVER == 'fluentd') {
         $logt = '_single_log__';
-        $logl = '_log_level_';
     } else {
         $logt = $file;
-        $logl = $level;
     }
-    if (!isset($loggers[ $logl ][ $logt ])) {
+    if (!isset($loggers[ $logt ])) {
         //获取日志器.
         switch (LOG_DRIVER) {
             case 'redis':
@@ -247,22 +242,25 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
             case 'fluentd':
                 $dlogger = new \wulaphp\util\FluentdLogger($file);
                 break;
+            case 'json':
+                $dlogger = new \wulaphp\util\JsonLogger($file);
+                break;
             default:
                 $dlogger = new \wulaphp\util\CommonLogger($file);
         }
 
-        $log = apply_filter('logger\getLogger', $dlogger, $level, $file);
+        $log = apply_filter('logger\getLogger', $dlogger, $file);
 
         if ($log instanceof Psr\Log\LoggerInterface) {
             $logger = $log;
         } else {
             $logger = null;
         }
-        $loggers[ $logl ][ $logt ] = $logger;
+        $loggers[ $logt ] = $logger;
     }
 
-    if ($level >= DEBUG && $loggers[ $logl ][ $logt ]) {
-        $loggers[ $logl ][ $logt ]->log($level, $message, $trace_info);
+    if ($level >= DEBUG && $loggers[ $logt ]) {
+        $loggers[ $logt ]->log($level, $message, $trace_info);
     }
 }
 
@@ -416,11 +414,17 @@ function http_send($sock, array $request, ?int &$size = 0) {
 /**
  * 显示异常页.
  *
- * @param \Exception $exception 异常
+ * @param \Throwable|null $exception 异常
  */
-function show_exception_page($exception) {
+function show_exception_page(?Throwable $exception) {
     global $argv;
-    if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
+    if (!$exception) {
+        return;
+    }
+    if (defined('DEBUG')) {
+        if ($exception->getCode() != 404) {
+            log_error($exception->getMessage(), 'error');
+        }
         if ($argv) {
             echo $exception->getMessage(), "\n";
             echo $exception->getTraceAsString(), "\n";
@@ -429,9 +433,8 @@ function show_exception_page($exception) {
             $stack  = [];
             $msg    = str_replace('file:' . APPROOT, '', $exception->getMessage());
             $tracks = $exception->getTrace();
-
-            $f = $exception->getFile();
-            $l = $exception->getLine();
+            $f      = $exception->getFile();
+            $l      = $exception->getLine();
             array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
             foreach ($tracks as $i => $t) {
                 $tss     = ['<tr>'];
@@ -465,28 +468,17 @@ function show_exception_page($exception) {
             echo $errorFile;
             exit(0);
         } else {
-            status_header(500);
-            $msg  = str_replace('file:' . APPROOT, '', $exception->getMessage());
-            $f    = str_replace(APPROOT, '', $exception->getFile());
-            $l    = $exception->getLine();
-            $html = <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head> <meta charset="utf-8">  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no"></head><body>
-<br/><b>Warning</b>: $msg in <b>$f</b> on line <b>$l</b><br/>
-</body></html>
-HTML;
-            echo $html;
-            exit(0);
+            \wulaphp\io\Response::respond(500, $exception->getMessage());
         }
     } else {
-        log_error($exception->getMessage() . "\n" . $exception->getTraceAsString(), 'exceptions');
         if ($argv) {
             echo $exception->getMessage(), "\n";
             echo $exception->getTraceAsString(), "\n";
             exit(1);
         } else {
+            @error_log($exception->getMessage(), 4);
             \wulaphp\io\Response::respond(500, $exception->getMessage());
+            exit(0);
         }
     }
 }

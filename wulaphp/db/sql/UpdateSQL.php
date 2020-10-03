@@ -76,7 +76,7 @@ class UpdateSQL extends QueryBuilder {
      *
      * @return $this
      */
-    public function set($data, $batch = false) {
+    public function set(array $data, $batch = false) {
         $this->data  = $data;
         $this->batch = $batch;
 
@@ -88,6 +88,9 @@ class UpdateSQL extends QueryBuilder {
      * @return bool|int
      */
     public function count() {
+        if ($this->whereSet && empty($this->where)) {
+            return false;
+        }
         $sql    = $this->getSQL();
         $values = $this->values;
         if ($sql) {

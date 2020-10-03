@@ -16,6 +16,11 @@ namespace wulaphp\util\data;
  */
 abstract class Sinker {
     /**
+     * @var \wulaphp\util\data\State
+     */
+    protected $state;
+
+    /**
      * 输出.
      *
      * @param mixed $data
@@ -42,5 +47,9 @@ abstract class Sinker {
      * 数据源中无数据时调用。
      */
     public function noData() {
+    }
+
+    public function setState(State $state) {
+        $this->state = $state;
     }
 }

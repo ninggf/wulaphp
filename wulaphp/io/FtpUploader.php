@@ -59,11 +59,11 @@ class FtpUploader extends LocaleUploader {
         $this->passive = boolval(aryget('passive', $params));
     }
 
-    public function getName():string {
+    public function getName(): string {
         return 'FTP文件上传器';
     }
 
-    public function save(string $filepath,?string $path = null) {
+    public function save(string $filepath, ?string $path = null) {
         if (!$this->ftp) {
             $this->initFtpConnection();
         }
@@ -188,7 +188,7 @@ class FtpUploader extends LocaleUploader {
                     $filename = $name1;
                     break;
                 }
-                $i++;
+                $i ++;
             }
         } else {
             $filename = $name;
@@ -257,19 +257,17 @@ class FtpUploader extends LocaleUploader {
         } else if (!$ftp) {
             return 'cannot connect to the ftp server - ' . $host . ':' . $port;
         }
-        if ($ftp) {
-            if (!@ftp_pasv($ftp, $passive)) {
-                @ftp_close($ftp);
-
-                return 'cannot change passive mode to ' . $passive;
-            }
-            if (!@ftp_chdir($ftp, '~')) {
-                @ftp_close($ftp);
-
-                return 'cannot change to home dir';
-            }
+        if (!@ftp_pasv($ftp, $passive)) {
             @ftp_close($ftp);
+
+            return 'cannot change passive mode to ' . $passive;
         }
+        if (!@ftp_chdir($ftp, '~')) {
+            @ftp_close($ftp);
+
+            return 'cannot change to home dir';
+        }
+        @ftp_close($ftp);
 
         return true;
     }

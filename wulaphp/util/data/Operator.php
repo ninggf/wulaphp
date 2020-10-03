@@ -16,6 +16,11 @@ namespace wulaphp\util\data;
  */
 abstract class Operator {
     /**
+     * @var \wulaphp\util\data\State
+     */
+    protected $state;
+
+    /**
      * 要处理的数据。
      *
      * @param mixed $data
@@ -23,4 +28,8 @@ abstract class Operator {
      * @return mixed
      */
     public abstract function operate($data);
+
+    public function setState(State $state) {
+        $this->state = $state;
+    }
 }

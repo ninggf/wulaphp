@@ -97,7 +97,7 @@ abstract class View {
      *
      * @return mixed
      */
-    public static function __callStatic($name, $arguments) {
+    public static function __callStatic(string $name, $arguments) {
         $clz = static::class;
         try {
             if (!isset(self::$tableClzs[ $clz ])) {
@@ -120,7 +120,7 @@ abstract class View {
      *
      * @return $this
      */
-    public final function alias($alias) {
+    public final function alias(string $alias) {
         $this->alias         = $alias;
         $this->qualifiedName = $this->table . ' AS ' . $this->alias;
 
@@ -162,7 +162,7 @@ abstract class View {
      *
      * @return array
      */
-    public final function json_decode($id, $field) {
+    public final function json_decode($id,string $field):array {
         $rtn = $this->findOne($id, $field)[ $field ];
         if ($rtn) {
             $rtn = @json_decode($rtn, true);

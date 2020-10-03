@@ -24,7 +24,7 @@ class CacheConfiguration extends Configuration {
      * @param integer $timeout
      * @param string  $auth
      */
-    public function addRedisServer($host, $port = 6379, $db = 0, $timeout = 5, $auth = '') {
+    public function addRedisServer(string $host, $port = 6379, $db = 0, $timeout = 5, $auth = '') {
         $this->settings['redis'] = [$host, $port, $db, $timeout, $auth];
     }
 
@@ -35,7 +35,7 @@ class CacheConfiguration extends Configuration {
      * @param integer $port
      * @param integer $weight
      */
-    public function addMemcachedServer($host, $port = 11211, $weight = 100) {
+    public function addMemcachedServer(string $host, $port = 11211, $weight = 100) {
         $this->settings['memcached'][] = [$host, $port, $weight];
     }
 
@@ -43,7 +43,7 @@ class CacheConfiguration extends Configuration {
      * @param bool $enabled
      */
     public function enabled($enabled = true) {
-        $this->settings['enabled'] = $enabled;
+        $this->settings['enabled'] = !empty($enabled);
     }
 
     /**
@@ -59,7 +59,7 @@ class CacheConfiguration extends Configuration {
      * @param string $type
      * @param mixed  $config
      */
-    public function addConfig($type, $config) {
+    public function addConfig(string $type, $config) {
         $this->settings[ $type ] = $config;
     }
 

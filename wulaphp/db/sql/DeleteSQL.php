@@ -30,6 +30,9 @@ class DeleteSQL extends QueryBuilder {
      * @return int|bool
      */
     public function count() {
+        if ($this->whereSet && empty($this->where)) {
+            return false;
+        }
         $sql    = $this->getSQL();
         $values = $this->values;
         if ($sql) {

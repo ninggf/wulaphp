@@ -70,7 +70,7 @@ class GearmanService extends Service {
             return false;
         }
         $count = 0;//运行成功多少次后重启
-
+        @cli_set_process_title('php -name ' . $this->name . ' -type gearman -func ' . $this->funcName);
         while (!$this->shutdown && $count < $this->count) {
             try {
                 $worker->work();

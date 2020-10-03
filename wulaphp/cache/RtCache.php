@@ -85,12 +85,17 @@ namespace wulaphp\cache {
 
         public static function initLocal() {
             if (!self::$LOCAL_CACHE) {
+                $rtc = new Cache();
                 if (($appid = getenv('APP_ID', true)) != '') {
                     RtCache::$PREFIX = $appid;
+                } else if (is_file(CONFIG_PATH . 'config.php')) {
+                    RtCache::$PREFIX = sha1_file(CONFIG_PATH . 'config.php');
                 } else {
                     RtCache::$PREFIX = WWWROOT;
                 }
-                if (extension_loaded('yac')) {
+                if (PHP_SAPI !== 'cli') {
+                    $rtc = new Cache();
+                } else if (extension_loaded('yac')) {
                     $rtc          = new YacCache();
                     self::$lempty = false;
                 } else if (function_exists('apcu_store')) {
@@ -99,8 +104,6 @@ namespace wulaphp\cache {
                 } else if (function_exists('xcache_get')) {
                     $rtc          = new XCacheCacher();
                     self::$lempty = false;
-                } else {
-                    $rtc = new Cache();
                 }
                 self::$LOCAL_CACHE = $rtc;
             }
@@ -309,14 +312,22 @@ namespace {
             } else {
                 $envs = null;
             }
+
             if (!$envs) {
                 $envs = [];
             }
-            if (isset($envs['debug'])) {
-                $envs['debug'] = intval($envs['debug']);
-            } else {
-                $envs['debug'] = 100;
+
+            $env_files = find_files('/run/secrets/', '/.*\.env$/');
+
+            if ($env_files) {
+                foreach ($env_files as $f) {
+                    $env = @parse_ini_file($f);
+                    if ($env) {
+                        $envs = array_merge($envs, $env);
+                    }
+                }
             }
+
             RtCache::ladd($ckey, $envs);
         }
 

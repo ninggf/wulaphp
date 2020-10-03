@@ -20,12 +20,12 @@ use wulaphp\artisan\Colors;
 abstract class Service {
     protected $pid;
     protected $name;
+    protected $nameStr;
     protected $config   = null;
     protected $shutdown = false;
     protected $color    = null;
     protected $rSignal;
     protected $verbose  = 3;//0:off;1:info;2:error;3:warn;4:debug
-    protected $logFile;
 
     /**
      * Service constructor.
@@ -36,9 +36,9 @@ abstract class Service {
     public function __construct(string $name, array $config) {
         $this->pid     = '[' . @posix_getpid() . ']';
         $this->name    = $name;
+        $this->nameStr = $config['name'] ?? $name;
         $this->config  = $config;
         $this->color   = new Colors();
-        $this->logFile = LOGS_PATH . 'service.' . $this->name . '.log';
     }
 
     // 监听信号
@@ -88,30 +88,20 @@ abstract class Service {
 
     protected final function logd(string $message = '') {
         if ($this->verbose > 3) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' DEBUG ' . $this->name . ' ' . $message;
-            $this->_log($msg);
+            log_debug($message, $this->name);
         }
     }
 
     protected final function logw(string $message = '') {
-        if ($this->verbose > 2) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' WARN ' . $this->name . ' ' . $message;
-            $this->_log($msg);
-        }
+        log_warn($message, $this->name);
     }
 
     protected final function loge(string $message = '') {
-        if ($this->verbose > 1) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' ERROR ' . $this->name . ' ' . $message;
-            $this->_log($msg);
-        }
+        log_error($message, $this->name);
     }
 
     protected final function logi(string $message = '') {
-        if ($this->verbose > 0) {
-            $msg = date('[d/M/Y:H:i:s O] ') . ' INFO ' . $this->name . ' ' . $message;
-            $this->_log($msg);
-        }
+        log_info($message, $this->name);
     }
 
     public function setVerbose($verbose) {
@@ -119,15 +109,6 @@ abstract class Service {
             $this->verbose = $verbose;
         } else {
             $this->verbose = strlen($verbose) - strlen(str_replace('v', '', $verbose));
-        }
-    }
-
-    private function _log($msg) {
-        if (LOG_DRIVER == 'container') {
-            echo $msg, "\n";
-            flush();
-        } else {
-            @error_log($msg . "\n", 3, $this->logFile);
         }
     }
 

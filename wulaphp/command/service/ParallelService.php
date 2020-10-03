@@ -21,7 +21,6 @@ class ParallelService extends Service {
     public function run() {
         $script = $this->getOption('script');
         $sleep1 = max(1, intval($this->getOption('sleep', 1)));
-        $env    = (array)$this->getOption('env', []);
         if (!$script) {
             $this->loge('no script specified');
 
@@ -41,10 +40,11 @@ class ParallelService extends Service {
             1 => ["pipe", "w"],  // 标准输出，子进程向此管道中写入数据
             2 => ["pipe", "w"] // 标准错误，子进程向此管道中写入数据
         ];
+        @cli_set_process_title('php -name ' . $this->name . ' -type parallel ' . trim($arg, "'"));
         while (!$this->shutdown) {
             try {
                 $sleep   = $sleep1;
-                $process = @proc_open($proc, $descriptorspec, $pipes, APPROOT, $env);
+                $process = @proc_open($proc, $descriptorspec, $pipes, APPROOT);
                 $output  = '';
                 $error   = '';
                 if ($process && is_resource($process)) {

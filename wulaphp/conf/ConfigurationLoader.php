@@ -12,6 +12,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
 
     /**
      * 加载配置.
+     *
      * @param string $name 配置名.
      *
      * @return \wulaphp\conf\Configuration
@@ -39,8 +40,10 @@ class ConfigurationLoader extends BaseConfigurationLoader {
         unset ($_wula_config_file, $wula_cfg_fiels);
 
         if ($name == 'default' && !defined('DEBUG')) {
-            $debug = intval($config->get('debug', DEBUG_ERROR));
-            if ($debug > 1000 || $debug < 0) {
+            $debug = @constant('DEBUG_' . strtoupper($config->get('debug', 'error')));
+            if (!$debug || $debug < 0) {
+                $debug = DEBUG_ERROR;
+            } else if ($debug > 1000) {
                 $debug = DEBUG_OFF;
             }
             define('DEBUG', $debug);

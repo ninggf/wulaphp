@@ -20,7 +20,7 @@ abstract class Table extends View {
     /**
      * Table constructor.
      *
-     * @param string|array|DatabaseConnection|View $db
+     * @param string|array|DatabaseConnection|View|null $db
      */
     public function __construct($db = null) {
         parent::__construct($db);
@@ -38,7 +38,7 @@ abstract class Table extends View {
      *
      * @return mixed|null
      */
-    public final function trans(\Closure $fun, ILock $lock = null) {
+    public final function trans(\Closure $fun, ?ILock $lock = null) {
         return $this->dbconnection->trans($fun, $this->errors, $lock);
     }
 
@@ -51,7 +51,7 @@ abstract class Table extends View {
      *
      * @return bool
      */
-    public final function save($data, $con = null, \Closure $cb = null): bool {
+    public final function save(array $data, $con = null, ?\Closure $cb = null): bool {
         if (!$con) {
             $rst = $this->insert($data, $cb);
         } else if ($this->exist($con)) {//存在即修改
@@ -70,13 +70,13 @@ abstract class Table extends View {
     /**
      * 创建记录.
      *
-     * @param array    $data 数据.
-     * @param \Closure $cb   数据处理函数.
+     * @param array         $data 数据.
+     * @param \Closure|null $cb   数据处理函数.
      *
      * @return bool|int 成功返回true或主键值,失败返回false.
      * @throws
      */
-    public final function insert(array $data, \Closure $cb = null) {
+    public final function insert(array $data, ?\Closure $cb = null) {
         if ($cb && $cb instanceof \Closure) {
             $data = $cb ($data, $this);
         }
@@ -113,13 +113,13 @@ abstract class Table extends View {
     /**
      * 新增数据，唯一键冲突时则修改相应的数据,如果使用校验器则使用新增数据校验器.
      *
-     * @param array  $data  数据.
-     * @param array  $data1 修改数据.
-     * @param string $key   冲突键，默认是主键
+     * @param array       $data  数据.
+     * @param array|null  $data1 修改数据.
+     * @param string|null $key   冲突键，默认是主键
      *
      * @return bool
      */
-    public final function upsert(array $data, ?array $data1 = null, string $key = null): bool {
+    public final function upsert(array $data, ?array $data1 = null, ?string $key = null): bool {
         if ($data) {
             $this->filterFields($data);
             if (method_exists($this, 'validateNewData')) {
@@ -213,13 +213,13 @@ abstract class Table extends View {
     /**
      * 批量插入数据.
      *
-     * @param array    $datas 要插入的数据数组.
-     * @param \Closure $cb
+     * @param array         $datas 要插入的数据数组.
+     * @param \Closure|null $cb
      *
      * @return bool|array 如果配置了自增键将返回自增键值的数组.
      * @throws
      */
-    public final function inserts($datas, \Closure $cb = null) {
+    public final function inserts(array $datas, ?\Closure $cb = null) {
         if ($cb && $cb instanceof \Closure) {
             $datas = $cb ($datas, $this);
         }
@@ -260,9 +260,9 @@ abstract class Table extends View {
     /**
      * 更新数据或获取UpdateSQL实例.
      *
-     * @param array|null $data 数据.
-     * @param array|null $con  更新条件.
-     * @param \Closure   $cb   数据处理器.
+     * @param array|null    $data 数据.
+     * @param array|null    $con  更新条件.
+     * @param \Closure|null $cb   数据处理器.
      *
      * @return bool|UpdateSQL 成功true，失败false；当$data=null时返回UpdateSQL实例.
      * @throws
@@ -316,7 +316,7 @@ abstract class Table extends View {
     /**
      * 删除记录或获取DeleteSQL实例.
      *
-     * @param array|int $con 条件或主键.
+     * @param array|int|null $con 条件或主键.
      *
      * @return boolean|DeleteSQL 成功true，失败false；当$con==null时返回DeleteSQL实例.
      * @throws
@@ -349,14 +349,14 @@ abstract class Table extends View {
      * 如果uid不为0,则表中还需要有update_time与update_uid字段,
      * 分别表示更新时间与更新用户.
      *
-     * @param array    $con 条件.
-     * @param int      $uid 如果大于0，则表中必须包括update_time(unix时间戳)和update_uid字段.
-     * @param \Closure $cb  回调.
+     * @param array         $con 条件.
+     * @param int           $uid 如果大于0，则表中必须包括update_time(unix时间戳)和update_uid字段.
+     * @param \Closure|null $cb  回调.
      *
      * @return boolean 成功true，失败false.
      * @throws
      */
-    public final function recycle($con, $uid = 0, $cb = null) {
+    public final function recycle(array $con, $uid = 0, $cb = null) {
         if (!$con) {
             return false;
         }

@@ -236,7 +236,7 @@ class Request implements \ArrayAccess {
             } else if (!empty ($_SERVER ['REMOTE_ADDR'])) {
                 $cip = $_SERVER ['REMOTE_ADDR'];
             } else {
-                $cip = '';
+                $cip = '127.0.0.1';
             }
         }
 

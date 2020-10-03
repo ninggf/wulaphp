@@ -31,7 +31,11 @@ class FluentdLogger implements LoggerInterface {
     protected        $app;
 
     public function __construct(string $file = 'wula') {
-        $this->app                  = $file ?: 'wula';
+        if ($file) {
+            $this->app = rtrim($file, '.log');
+        } else {
+            $this->app = 'wula';
+        }
         $this->channel              = env('app.name', 'wulaphp');
         $opts['max_write_retry']    = @intval(env('fluentd.retry', 3)) ?: 3;
         $opts['socket_timeout']     = @intval(env('fluentd.timeout', 3)) ?: 3;
@@ -81,12 +85,13 @@ class FluentdLogger implements LoggerInterface {
             return;
         }
 
-        $ln = isset(self::$log_name [ $level ]) ? self::$log_name [ $level ] : 'WARN';
-
-        $msg['@timestamp'] = date("c");
+        $ln                = self::$log_name [ $level ] ?? 'WARN';
+        $mtm               = substr(microtime(), 1, 4);
+        $msg['@timestamp'] = str_replace('+', $mtm . '+', date('c'));
         $msg['level']      = $ln;
-        $msg['ip']         = Request::getIp() ?: '-';
+        $msg['ip']         = Request::getIp() ?: '127.0.0.1';
         $msg['host']       = $_SERVER['SERVER_ADDR'] ?: '-';
+        $msg['hostname']   = getenv('HOSTNAME', true) ?: '-';
         $msg['app']        = $this->app;
         if (is_array($message)) {
             $msg = array_merge($message, $msg);
@@ -100,11 +105,11 @@ class FluentdLogger implements LoggerInterface {
         }
 
         $stacks = [];
-        if ($level > DEBUG_WARN) {//只有error的才记录trace info.
-            $stacks[] = self::getLine($trace_info[0], 0);
+        if ($level > DEBUG_INFO && $trace_info) {//只有error的才记录trace info.
+            $stacks[] = CommonLogger::getLine($trace_info[0], 0);
             for ($i = 1; $i < 5; $i ++) {
                 if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
-                    $stacks[] = self::getLine($trace_info[ $i ], $i);
+                    $stacks[] = CommonLogger::getLine($trace_info[ $i ], $i);
                 }
             }
         }
@@ -117,28 +122,6 @@ class FluentdLogger implements LoggerInterface {
         } catch (\Exception $e) {
             $msg = date('[d/M/Y:H:i:s O]') . ' ERROR FluentdLogger ' . $e->getMessage();
             @error_log($msg, 3, LOGS_PATH . 'wula.log');
-        }
-    }
-
-    /**
-     * 格式化堆栈信息。
-     *
-     * @param array $info
-     * @param int   $i
-     *
-     * @return string
-     */
-    public static function getLine(array $info, int $i): string {
-        if (isset($info['class'])) {
-            $cls = "{$info['class']}{$info['type']}";
-        } else {
-            $cls = '';
-        }
-        $file = str_replace(APPROOT, '', $info['file']);
-        if ($i) {
-            return " #{$i} {$file}({$info['line']}): {$cls}{$info['function']}()\n";
-        } else {
-            return " #{$i} {$file}({$info['line']})\n";
         }
     }
 }
