@@ -1,4 +1,4 @@
-DST_IMG_TAG = app
+DST_IMG_TAG = wula/app
 
 app_files = conf crontab modules extensions includes themes vendor wwwroot artisan bootstrap.php
 

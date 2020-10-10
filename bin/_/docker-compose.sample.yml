@@ -1,22 +1,19 @@
 version: "3"
 services:
   php:
-    container_name: wulapp
-    image: wulaphp/php:7.4.10-ng-alphine
+    image: wulaphp/php:7.4-dev
     ports:
       - 8808:80/tcp
     volumes:
       - "./:/var/www/html/"
       - "./docker/etc/nginx/nginx.conf:/usr/local/etc/nginx/nginx.conf:ro"
   mysql:
-    container_name: wuladb
     image: mysql:5.7.31
     volumes:
       - "./storage/mysql:/var/lib/mysql"
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
   redis:
-    container_name: wula_redis
-    image: redis:4.0.11
+    image: redis:6.0.7-buster
     sysctls:
       net.core.somaxconn: 1024
