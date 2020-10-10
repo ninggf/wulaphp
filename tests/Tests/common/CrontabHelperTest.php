@@ -27,20 +27,23 @@ class CrontabHelperTest extends TestCase {
 
         $time = \CrontabHelper::next_runtime($crontab);
         self::assertTrue($time >= time());
-        $date  = date('Ymd H:i', $time);
-        $date1 = date('Ymd H');
-        self::assertTrue(preg_match("/^$date1:[0-5][05]\$/", $date) ? true : false, $date);
+        $date = date('Ymd H:i', $time);
+        self::assertTrue(preg_match("/.+?:[0-5][05]\$/", $date) ? true : false, $date);
 
         $crontab = '* * ' . (int)date('H') . ' * * *';
         $time    = \CrontabHelper::next_runtime($crontab);
         self::assertTrue($time >= time());
         $date = date('Ymd H:i', $time);
-        self::assertEquals(date('Ymd H:00', strtotime('+1 day')), $date);
+        $d1   = date('Ymd H:i');
+        $d2   = date('Ymd H:00', strtotime('+1 day'));
+        self::assertTrue($d1 == $date || $d2 == $date, $date);
 
         $crontab = '* * * ' . (int)date('d') . ' * *';
         $time    = \CrontabHelper::next_runtime($crontab);
         self::assertTrue($time >= time());
         $date = date('Ymd H:i', $time);
-        self::assertEquals(date('Ymd' . ' 00:00', strtotime('+1 month')), $date);
+        $d1   = date('Ymd 00:00');
+        $d2   = date('Ymd' . ' 00:00', strtotime('+1 month'));
+        self::assertTrue($d1 == $date || $d2 == $date, $date);
     }
 }
