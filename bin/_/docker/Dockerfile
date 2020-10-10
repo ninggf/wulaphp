@@ -27,6 +27,8 @@ RUN cd /var/www/html && mkdir -p storage/logs && mkdir -p storage/tmp &&\
         mv $f "$f.html";\
     done
 
+EXPOSE 80
+
 VOLUME /var/www/html/storage/logs
 
 COPY etc/ /usr/local/etc/

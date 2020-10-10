@@ -790,7 +790,9 @@ class App {
             if ('index' != $ctr) {
                 array_push($clzs, $ctr);
             }
-
+            if ($clzs[0]) {
+                $clzs[0] = App::id2dir($clzs[0]);
+            }
             $prefix = '';
             if (!isset($host) && method_exists($clz, 'urlGroup')) {
                 $tprefix = ObjectCaller::callClzMethod($clz, 'urlGroup');
