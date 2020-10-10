@@ -49,7 +49,7 @@ clean:
 	@echo "delete all bz2 files..."
 	rm -f docker/*.tar.bz2
 	@echo "rm old images..."
-	for img in $$(docker images | grep $${DST_IMG_TAG} | awk 'BEGIN {OFS=":"} {print $$1,$$2}'); do docker rmi $$img;done
+	for img in $$(docker images | grep ${DST_IMG_TAG} | awk 'BEGIN {OFS=":"} {print $$1,$$2}'); do docker rmi $$img;done
 	@echo "clean done!"
 
 cleantest:
