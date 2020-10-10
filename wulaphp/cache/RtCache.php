@@ -306,7 +306,7 @@ namespace {
             $envs = RtCache::lget($ckey);
             if (is_file($evnf) && ($mtime = intval(@filemtime($evnf)))) {
                 if (!$envs || @$envs['dot_env_mtime'] < $mtime) {
-                    $envs                  = @parse_ini_file($evnf);
+                    $envs                  = parse_ini_file($evnf);
                     $envs['dot_env_mtime'] = $mtime;
                 }
             } else {
@@ -333,9 +333,6 @@ namespace {
 
         if (isset($envs[ $key ])) {
             $default = trim($envs[ $key ]);
-            if (preg_match('/^\$\{([^\}]+)\}$/', $default, $ms)) {
-                $default = getenv($ms[1], true);
-            }
         }
 
         return $default;
