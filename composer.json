@@ -20,7 +20,6 @@
     "suggest": {
         "ext-curl": "*",
         "ext-redis": "*",
-        "ext-memcached": "*",
         "ext-apcu": "*",
         "ext-sockets": "*",
         "ext-posix": "*",

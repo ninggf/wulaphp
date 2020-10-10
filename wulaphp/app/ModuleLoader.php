@@ -70,7 +70,7 @@ class ModuleLoader {
      *
      * @return string|null 类文件路径。
      */
-    public function loadClass($file) {
+    public function loadClass(string $file): ?string {
         $clf = MODULE_ROOT . $file;
         if (is_file($clf)) {
             return $clf;
@@ -86,7 +86,7 @@ class ModuleLoader {
      *
      * @return bool 启用返回true,反之返回false
      */
-    public function isEnabled(Module $module) {
+    public function isEnabled(Module $module): bool {
         if ($module) {
             $module->installed = true;
 

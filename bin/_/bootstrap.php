@@ -3,8 +3,6 @@
 define('GZIP_ENABLED', true);
 /* 运行模式 */
 # define('APP_MODE', 'pro');
-/* 如果需要开启URL别名请取消下一行注释，并配置modules/alias.php */
-# define('ALIAS_ENABLED', true);
 /* 如果你的网站以集群的方式提供服务时，请取消下一行的注释，并配置cluster_config.php */
 # define('RUN_IN_CLUSTER', true);
 /* 如果你的应用不是运行在网站的根目录,请取消下一行注释并修改其值,必须以/开始,以/结束。*/

@@ -10,8 +10,6 @@
 
 define('DEBUG', 100);
 
-define('ALIAS_ENABLED', true);
-
 define('PUBLIC_DIR', 'www');
 
 define('APPROOT', __DIR__ . DIRECTORY_SEPARATOR);
