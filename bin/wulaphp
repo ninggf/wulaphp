@@ -46,6 +46,7 @@ function init() {
     @chmod($dir . 'storage', 0777);
     @chmod($dir . 'storage/logs', 0777);
     @chmod($dir . 'storage/tmp', 0777);
+    @rename($dir . '_tests', $dir . 'tests');
     echo "done!\n";
 }
 
@@ -99,11 +100,11 @@ function conf() {
     $domains = [];
     if (isset($argv[2]) && $argv[2]) {
         if (!in_array($argv[2], ['httpd', 'apache', 'nginx'])) {
-            for ($i = 2; $i < $argc; $i++) {
+            for ($i = 2; $i < $argc; $i ++) {
                 $domains[] = $argv[ $i ];
             }
         } else {
-            for ($i = 3; $i < $argc; $i++) {
+            for ($i = 3; $i < $argc; $i ++) {
                 $domains[] = $argv[ $i ];
             }
         }
