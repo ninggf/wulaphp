@@ -394,8 +394,10 @@ class App {
             $values = $confObj->get($name, $default);
             if ($keys && is_array($values)) {
                 foreach ($keys as $ky) {
-                    if (isset($values[ $ky ])) {
+                    if (is_array($values) && isset($values[ $ky ])) {
                         $values = $values[ $ky ];
+                    } else {
+                        return $default;
                     }
                 }
             }

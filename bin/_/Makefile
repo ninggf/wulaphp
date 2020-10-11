@@ -1,15 +1,12 @@
-DST_IMG_TAG = wula/app
+DST_IMG_TAG   = wula/app
+TEST_SVC_NAME = test
+app_files     = conf crontab modules extensions includes themes vendor wwwroot artisan bootstrap.php
+DOC_RUN       = docker-compose -f tests/docker-compose.yml
 
-app_files = conf crontab modules extensions includes themes vendor wwwroot artisan bootstrap.php
+build:image
 
-DOC_RUN = docker-compose -f tests/docker-compose.yml
-
-build:app svc
-
-app:tar
+image:tar
 	docker build --build-arg APP_VER="${APP_VER}" -t "${DST_IMG_TAG}:${APP_VER}-app" -f docker/Dockerfile docker/
-
-svc:tar
 	docker build --build-arg APP_VER="${APP_VER}" -t "${DST_IMG_TAG}:${APP_VER}-svc" -f docker/service.Dockerfile docker/
 
 tag:build
@@ -26,24 +23,21 @@ tar:clean
   		echo 'error: APP_VER is not exported for app version!';\
   		echo 'please run "export APP_VER=xx.xx.xx" first!';\
 		exit 1;\
- 	fi
+	fi
 	tar -cjf "docker/app-${APP_VER}.tar.bz2" ${app_files}
 
-tartest:
-	tar -cjf "docker/app-unittest.tar.bz2" ${app_files} tests
+tartest:cleantest
+	tar -cjf "docker/unittest.tar.bz2" --exclude='tests/reports' --exclude='*.bz2' ${app_files} tests
 
 install:tag
 	docker push "${REG_HOST}/${DST_IMG_TAG}:${APP_VER}-app"
 	docker push "${REG_HOST}/${DST_IMG_TAG}:${APP_VER}-svc"
 
-testimg:cleantest tartest
-	docker build --build-arg APP_VER="unittest" -t "${DST_IMG_TAG}:unittest" -f docker/Dockerfile docker/
-
-test: testimg
-	$(DOC_RUN) up -d
-	$(DOC_RUN) exec php sh ./tests/run_docker_test.sh
+test: tartest
+	$(DOC_RUN) up -d --build
+	$(DOC_RUN) exec ${TEST_SVC_NAME} sh ./tests/run_docker_test.sh || echo 'Could not pass the unit test!'
 	$(DOC_RUN) down
-	docker images | grep unittest | awk 'BEGIN {OFS=":"} {print $$1,$$2}' | xargs docker rmi
+	for img in $$(docker images | grep tests_${TEST_SVC_NAME} | awk 'BEGIN {OFS=":"} {print $$1,$$2}'); do docker rmi $$img;done
 
 clean:
 	@echo "delete all bz2 files..."
@@ -54,5 +48,5 @@ clean:
 
 cleantest:
 	$(DOC_RUN) down
-	rm -f docker/*unittest.tar.bz2
-	for img in $$(docker images | grep unittest | awk 'BEGIN {OFS=":"} {print $$1,$$2}'); do docker rmi $$img;done
+	rm -f docker/unittest.tar.bz2
+	for img in $$(docker images | grep tests_${TEST_SVC_NAME} | awk 'BEGIN {OFS=":"} {print $$1,$$2}'); do docker rmi $$img;done

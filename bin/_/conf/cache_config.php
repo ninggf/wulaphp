@@ -4,7 +4,7 @@
  */
 $config = new \wulaphp\conf\CacheConfiguration();
 $config->enabled(env('cache.enabled', 0));
-$type = env('cache.type');
+$type = trim(env('cache.type'));
 if ($type == 'redis') {
     $host    = env('cache.redis.host', 'localhost');
     $port    = env('cache.redis.port', 6379);

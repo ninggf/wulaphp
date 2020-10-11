@@ -1,4 +1,4 @@
-FROM wulaphp/php:7.4.9-alphine
+FROM wulaphp/php:7.4-cli
 
 ARG APP_VER
 

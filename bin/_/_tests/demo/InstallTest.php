@@ -22,24 +22,24 @@ use wulaphp\app\ModuleLoader;
 class InstallTest extends TestCase {
 
     public function testConstant() {
-        self::assertEquals(realpath(__DIR__ . '/../../') . DS, APPROOT);
+        self::assertTrue(defined('APPROOT'));
+        self::assertEquals(APPROOT, realpath(__DIR__ . '/../../') . DS);
     }
 
     public function testModuleLoaded() {
         $loader = App::moduleLoader();
         self::assertTrue($loader instanceof ModuleLoader);
-        $module = App::getModule('home');
+        $module = App::getModule('app');
         self::assertNotNull($module);
     }
 
     /**
      * @depends testConstant
      * @depends testModuleLoaded
-     * @throws \Exception
      */
     public function testViewHomePage() {
-        $module = App::getModule('home');
-        self::assertNotNull($module, 'home module is not loaded');
+        $module = App::getModule('app');
+        self::assertNotNull($module, 'app module is not loaded');
         @ob_start();
         try {
             App::run('/');

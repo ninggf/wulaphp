@@ -30,9 +30,9 @@
     </filter>
 
     <logging>
-        <log type="junit" target="../storage/report/result.xml"/>
-        <log type="testdox-html" target="../storage/report/testdox.html"/>
-        <!--<log type="coverage-clover" target="../storage/report/coverage.xml"/>-->
+        <log type="junit" target="./reports/result.xml"/>
+        <log type="testdox-html" target="./reports/testdox.html"/>
+        <!--<log type="coverage-clover" target="../report/coverage.xml"/>-->
     </logging>
 
 </phpunit>

@@ -1,6 +1,6 @@
 version: "3"
 services:
-  php:
+  app:
     image: wulaphp/php:7.4-dev
     ports:
       - 8808:80/tcp
@@ -12,7 +12,7 @@ services:
     volumes:
       - "./storage/mysql:/var/lib/mysql"
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      MYSQL_ROOT_PASSWORD: 888888
   redis:
     image: redis:6.0.7-buster
     sysctls:
