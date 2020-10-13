@@ -85,7 +85,7 @@ class CronService extends Service {
      */
     private function cron(string $script, ?array $env = null) {
         try {
-            $this->logd('start to run cron job: ' . $script);
+            $this->logi('cron : ' . $script);
             $process = @proc_open($this->proc, $this->descriptorspec, $pipes, APPROOT);
             $output  = '';
             $error   = '';

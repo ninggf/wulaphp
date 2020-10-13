@@ -388,7 +388,7 @@ class MonitorService extends Service {
         } catch (\Exception $e) {
             if ($err_cnt < 3) {
                 $err_cnt ++;
-                log_error('监控进程无法连接Redis:' . $e->getMessage(), $this->name);
+                log_error('Could not connect to redis: ' . $e->getMessage(), $this->name);
             }
         }
     }
