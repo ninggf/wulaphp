@@ -15,7 +15,7 @@ class CrontabHelper {
      *
      * @return bool 出错返回string（错误信息）
      */
-    public static function check(int $time,string $str_cron) {
+    public static function check(int $time, string $str_cron) {
         $format_time = self::format_timestamp($time);
         $format_cron = self::format_crontab($str_cron);
         if (!is_array($format_cron)) {
@@ -44,7 +44,7 @@ class CrontabHelper {
      *
      * @return array
      */
-    public static function format_timestamp(int $time):array {
+    public static function format_timestamp(int $time): array {
         $chunk    = explode('-', date('s-i-G-j-n-w', $time));
         $chunk[0] = intval(ltrim($chunk[0], '0'));
 
@@ -89,12 +89,16 @@ class CrontabHelper {
     /**
      * 根据crontab返回下一次执行时间.
      *
-     * @param string $crontab
+     * @param string   $crontab
+     * @param int|null $ctime
      *
      * @return int
      */
-    public static function next_runtime(string $crontab):int {
-        $ctime = $time = time();
+    public static function next_runtime(string $crontab, ?int $ctime = null): int {
+        $ctime = $time = $ctime ?? time();
+
+        [$second, $minute, $hour, $day, $month, $dow] = preg_split('/\s+/', $crontab);
+
         [
             $now_second,
             $now_minute,
@@ -103,19 +107,22 @@ class CrontabHelper {
             $now_month
         ] = explode(' ', date('s i H d n', $time));
 
-        [$second, $minute, $hour, $day, $month, $dow] = preg_split('/\s+/', $crontab);
-
+        //以下对齐时间
         if ($month != '*' && $day == '*' && $hour == '*' && $minute == '*' && $second == '*') {
-            $now_hour = $now_minute = 0;
-            $now_day  = 1;
+            $now_hour = $now_minute = $now_second = 0;
+            $now_day  = 1;# 对齐到 '01 00:00:00'
         }
 
         if ($day != '*' && $hour == '*' && $minute == '*' && $second == '*') {
-            $now_hour = $now_minute = 0;
+            $now_hour = $now_minute = $now_second = 0;# 对齐到 '00:00:00'
         }
 
         if ($hour != '*' && $minute == '*' && $second == '*') {
-            $now_minute = 0;
+            $now_minute = $now_second = 0; # 对齐到 '00:00'
+        }
+
+        if ($minute != '*' && $second == '*') {
+            $now_second = 0; # 对齐到 '00'
         }
 
         $time = mktime((int)$now_hour, (int)$now_minute, (int)$now_second, (int)$now_month, (int)$now_day, date("Y", $time));
@@ -129,35 +136,31 @@ class CrontabHelper {
                 $now_month,
                 $now_dow
             ] = explode(' ', date('s i H d n N', $time));
-
             if ($month != '*') {
-                if (!self::fit($month, $now_month) || $time < $ctime) {
+                if (!self::fit($month, $now_month)) {
                     $now_month = (int)$now_month + 1;
                     $time      = mktime(0, 0, 0, $now_month, 1, date("Y", $time));
                     continue;
                 }
             }
-
             if ($day != '*') {
-                if (!self::fit($day, $now_day) || $time < $ctime) {
+                if (!self::fit($day, $now_day)) {
                     $now_day = (int)$now_day + 1;
                     $time    = mktime(0, 0, 0, $now_month, $now_day, date("Y", $time));
                     continue;
                 }
             }
-
             if ($hour != '*') {
                 $now_hour = (int)$now_hour;
-                if (!self::fit($hour, $now_hour) || $time < $ctime) {
+                if (!self::fit($hour, $now_hour)) {
                     $now_hour = $now_hour + 1;
                     $time     = mktime($now_hour, 0, 0, $now_month, $now_day, date("Y", $time));
                     continue;
                 }
             }
-
             if ($minute != '*') {
                 $now_minute = (int)$now_minute;
-                if (!self::fit($minute, $now_minute) || $time < $ctime) {
+                if (!self::fit($minute, $now_minute)) {
                     $now_minute = $now_minute + 1;
                     $time       = mktime($now_hour, $now_minute, 0, $now_month, $now_day, date("Y", $time));
                     continue;
@@ -165,18 +168,30 @@ class CrontabHelper {
             }
             if ($second != '*') {
                 $now_second = (int)$now_second;
-                if (!self::fit($second, $now_second) || $time < $ctime) {
+                if (!self::fit($second, $now_second)) {
                     $now_second = $now_second + 1;
                     $time       = mktime($now_hour, $now_minute, $now_second, $now_month, $now_day, date("Y", $time));
                     continue;
                 }
             }
             if ($dow != '*') {
-                if (!self::fit($dow, $now_dow) || $time < $ctime) {
+                if (!self::fit($dow, $now_dow)) {
                     $now_day = (int)$now_day + 1;
                     $time    = mktime(0, 0, 0, $now_month, $now_day, date("Y", $time));
                     continue;
                 }
+            }
+            if ($time < $ctime) {
+                if ($second != '*') {
+                    $time += 1;
+                } else if ($minute != '*') {
+                    $time += 60;
+                } else if ($hour != '*') {
+                    $time += 3600;
+                } else if ($day != '*' || $dow != '*') {
+                    $time += 86400;
+                }
+                continue;
             }
             break;
         } while (true);
@@ -194,7 +209,7 @@ class CrontabHelper {
      * @return array 若为空数组则表示可任意取值
      * @throws Exception
      */
-    protected static function parse_cron_part(string $part,int $f_min,int $f_max):array {
+    protected static function parse_cron_part(string $part, int $f_min, int $f_max): array {
         $list = [];
 
         //处理"," -- 列表
@@ -239,7 +254,7 @@ class CrontabHelper {
         return $max - $min > $step ? range($min, $max, $step) : [(int)$min];
     }
 
-    public static function fit($str, $num):bool {
+    public static function fit($str, $num): bool {
         if (strpos($str, ',')) {
             $arr = explode(',', $str);
             foreach ($arr as $element) {
