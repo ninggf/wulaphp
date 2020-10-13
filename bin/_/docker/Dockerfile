@@ -2,7 +2,7 @@ FROM wulaphp/php:7.4-fpm
 
 ARG APP_VER
 
-ENV APP_VER=$APP_VER APP_MODE=pro
+ENV APP_VER=$APP_VER APP_MODE=pro APP_LOGGER_DRIVER=container APP_LOGGER_LEVEL=info
 
 ADD app-$APP_VER.tar.bz2 /var/www/html/
 

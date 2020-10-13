@@ -15,11 +15,20 @@
         </testsuite>
     </testsuites>
 
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">../modules/app</directory>
+            <exclude>
+                <file>../modules/app/bootstrap.php</file>
+            </exclude>
+        </whitelist>
+    </filter>
+
     <logging>
         <log type="junit" target="./reports/result.xml"/>
         <log type="testdox-html" target="./reports/testdox.html"/>
         <log type="testdox-text" target="./reports/testdox.txt"/>
-        <log type="coverage-clover" target="./reports/coverage.xml"/>-->
+        <log type="coverage-clover" target="./reports/coverage.xml"/>
     </logging>
 
 </phpunit>

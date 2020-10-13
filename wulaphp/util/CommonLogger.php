@@ -66,15 +66,24 @@ class CommonLogger implements LoggerInterface {
         $file = $this->channel;
         $ln   = self::$log_name [ $level ] ?? 'WARN';
         $ip   = Request::getIp() ?: '127.0.0.1';
-
+        if (LOG_ROTATE) {
+            $dest_file = 'app-' . date('Y-m-d') . '.log';
+        } else {
+            $dest_file = 'app.log';
+        }
         if (is_array($message)) {
             $message = json_encode($message, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
 
         $mtm = substr(microtime(), 1, 4);
         $tm  = str_replace('+', $mtm . '+', date('c'));
+
         if (LOG_DRIVER == 'container') {
-            @error_log($ip . " - [$tm] [$ln] $file {$message}", 4);
+            if (PHP_SAPI == 'cli') {
+                @error_log("[$tm] [$ln] $file {$message}\n", 3, LOGS_PATH . $dest_file);
+            } else {
+                @error_log($ip . " - [$tm] [$ln] $file {$message}", 4);
+            }
 
             return;
         }
@@ -93,12 +102,6 @@ class CommonLogger implements LoggerInterface {
             } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
                 $msg .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
             }
-        }
-
-        if (LOG_ROTATE) {
-            $dest_file = 'app-' . date('Y-m-d') . '.log';
-        } else {
-            $dest_file = 'app.log';
         }
 
         @error_log($msg, 3, LOGS_PATH . $dest_file);

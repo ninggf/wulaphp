@@ -8,19 +8,19 @@
         "ext-mbstring": "*",
         "ext-Reflection": "*",
         "ext-SPL": "*",
-        "smarty/smarty": "^3.1",
         "psr/log": "^1.0",
+        "smarty/smarty": "^3.1",
         "wula/common": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.5",
-        "phpoffice/phpspreadsheet": "^1.9",
-        "fluent/logger": "^1.0"
+        "phpoffice/phpspreadsheet": "^1.12",
+        "fluent/logger": "^1.0",
+        "phpunit/php-invoker": "2.0.0"
     },
     "suggest": {
         "ext-curl": "*",
         "ext-redis": "*",
-        "ext-apcu": "*",
         "ext-sockets": "*",
         "ext-posix": "*",
         "ext-pcntl": "*"
@@ -51,7 +51,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "3.1-dev"
+            "dev-master": "3.7-dev"
         }
     },
     "support": {
