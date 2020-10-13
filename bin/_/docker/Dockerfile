@@ -2,7 +2,7 @@ FROM wulaphp/php:7.4-fpm
 
 ARG APP_VER
 
-ENV APP_VER=$APP_VER APP_MODE=pro APP_DEBUG=200
+ENV APP_VER=$APP_VER APP_MODE=pro
 
 ADD app-$APP_VER.tar.bz2 /var/www/html/
 
@@ -10,6 +10,7 @@ RUN cd /var/www/html && mkdir -p storage/logs && mkdir -p storage/tmp &&\
     chown -R www-data:www-data storage;\
     chown -R www-data:www-data /var/lib/nginx;\
     [ -e conf/.env ] && rm conf/.env || echo '.env not found';\
+    rm -f conf/*_dev.php conf/*_test.php;\
     find ./ -type f -name "*.js" | xargs gzip -7 -k;\
     find ./ -type f -name "*.css" | xargs gzip -7 -k;\
     find ./ -type f -name "*.svg" | xargs gzip -7 -k;\

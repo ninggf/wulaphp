@@ -26,18 +26,14 @@ tar:clean
 	fi
 	tar -cjf "docker/app-${APP_VER}.tar.bz2" ${app_files}
 
-tartest:cleantest
-	tar -cjf "docker/unittest.tar.bz2" --exclude='tests/reports' --exclude='*.bz2' ${app_files} tests
-
 install:tag
 	docker push "${REG_HOST}/${DST_IMG_TAG}:${APP_VER}-app"
 	docker push "${REG_HOST}/${DST_IMG_TAG}:${APP_VER}-svc"
 
-test: tartest
-	$(DOC_RUN) up -d --build
+test:
+	$(DOC_RUN) up -d
 	$(DOC_RUN) exec ${TEST_SVC_NAME} sh ./tests/run_docker_test.sh || echo 'Could not pass the unit test!'
 	$(DOC_RUN) down
-	for img in $$(docker images | grep tests_${TEST_SVC_NAME} | awk 'BEGIN {OFS=":"} {print $$1,$$2}'); do docker rmi $$img;done
 
 clean:
 	@echo "delete all bz2 files..."
@@ -48,5 +44,3 @@ clean:
 
 cleantest:
 	$(DOC_RUN) down
-	rm -f docker/unittest.tar.bz2
-	for img in $$(docker images | grep tests_${TEST_SVC_NAME} | awk 'BEGIN {OFS=":"} {print $$1,$$2}'); do docker rmi $$img;done

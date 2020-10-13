@@ -22,6 +22,7 @@ use wulaphp\app\ModuleLoader;
 class InstallTest extends TestCase {
 
     public function testConstant() {
+        self::assertEquals(APP_MODE,'test');
         self::assertTrue(defined('APPROOT'));
         self::assertEquals(APPROOT, realpath(__DIR__ . '/../../') . DS);
     }
@@ -44,10 +45,9 @@ class InstallTest extends TestCase {
         try {
             App::run('/');
         } catch (\Exception $e) {
-
         }
         $page = @ob_get_clean();
         self::assertNotEmpty($page);
-        self::assertContains('Hello wula !!', $page);
+        self::assertStringContainsString('Hello wula !!', $page);
     }
 }

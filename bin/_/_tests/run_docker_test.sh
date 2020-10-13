@@ -1,19 +1,20 @@
 #!/usr/bin/env sh
 
 cnt=0
+echo "waiting database ..."
 while [ $cnt -le 60 ] ; do
-    dbok=$(php -r "include 'bootstrap.php';try{\$db=\wulaphp\app\App::db();echo \$db?'ok':'no';}catch(Exception \$e){echo 'no';}")
+    dbok=$(php -r "try{new PDO('mysql:dbname=mysql;host=mysql','root','888888');echo 'ok';}catch(Exception \$e){echo \$e->getMessage();}")
     if [ "$dbok" = "ok" ]; then
         break
     fi
-    echo "database is not ready: $cnt"
     sleep 1
     cnt=$(( cnt+1 ))
 done
 
 if [ $cnt -le 60 ]; then
-    php ./vendor/bin/phpunit --prepend ./bootstrap.php -c tests/phpunit.xml.dist --colors=always --testdox \
-    --testdox-text ./reports/testdox.txt --testsuite all
+    echo "database is ready!"
+    echo ""
+    php ./vendor/bin/phpunit --prepend ./bootstrap.php -c tests/phpunit.xml.dist --colors=always --testdox
 else
     echo "Could not connect to the database server!"
     exit 1

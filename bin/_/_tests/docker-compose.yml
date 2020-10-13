@@ -2,11 +2,12 @@ version: "3"
 
 services:
   test:
-    build:
-      context: ../docker
-      dockerfile: test.Dockerfile
+    image: wulaphp/php:7.4-dev
     volumes:
-    - ./reports/:/var/www/html/tests/reports
+      - ../:/var/www/html
+    environment:
+      APP_MODE: test
+      APP_LOGGER_LEVEL: debug
     depends_on:
       - mysql
       - redis
