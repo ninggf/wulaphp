@@ -10,6 +10,7 @@
 
 namespace wulaphp\form\providor;
 
+use wulaphp\form\FormField;
 use wulaphp\form\FormTable;
 
 /**
@@ -42,11 +43,11 @@ class FieldDataProvidor {
     /**
      * FieldDataProvidor constructor.
      *
-     * @param \wulaphp\form\FormTable  $form
-     * @param  \wulaphp\form\FormField $field
-     * @param string                   $option 选项
+     * @param \wulaphp\form\FormTable|null $form
+     * @param \wulaphp\form\FormField|null $field
+     * @param string|null                  $option 选项
      */
-    public function __construct($form, $field, $option = '') {
+    public function __construct(?FormTable $form, ?FormField $field, ?string $option = '') {
         $this->option = $option;
         if (!is_array($option)) {
             $ops             = @json_decode($this->option, true);
@@ -110,7 +111,7 @@ class FieldDataProvidor {
      * @param string                  $clz
      * @param \wulaphp\form\FormTable $form
      */
-    public final static function registerConfigForm($clz, $form) {
+    public final static function registerConfigForm(string $clz, FormTable $form) {
         assert(!empty($clz) && class_exists($clz), 'FieldDataProvidor is invalid');
         assert($form instanceof FormTable, get_class($form) . ' is not an instance of FormTable');
         self::$forms[ $clz ] = $form;

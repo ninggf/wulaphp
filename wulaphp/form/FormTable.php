@@ -14,24 +14,28 @@ use wulaphp\validator\Validator;
 abstract class FormTable extends Table {
     use Validator;
 
-    protected $_skips_    = [];
-    protected $_maps_     = [];
-    protected $_fields    = [];
-    protected $_widgets   = null;
-    protected $_excludes  = [];//不绘制的字段
-    protected $_tableData = [];//数据库表数据
-    protected $_formData  = [];//表单数据
-    private   $_xssClean  = true;
+    protected $_f__skips     = [];
+    protected $_f__maps      = [];
+    protected $_v__fields    = [];
+    protected $_r__widgets   = null;
+    protected $_r__excludes  = [];//不绘制的字段
+    protected $_f__tableData = [];//数据库表数据
+    protected $_v__formData  = [];//表单数据
+    private   $_f__xssClean  = true;
 
     /**
      * FormTable constructor.
      *
-     * @param bool                                                         $parse 是否解析字段.
-     * @param string|array|\wulaphp\db\DatabaseConnection|\wulaphp\db\View $db
+     * @param bool                                                              $parse 是否解析字段.
+     * @param string|array|\wulaphp\db\DatabaseConnection|\wulaphp\db\View|null $db
      */
     public function __construct($parse = false, $db = null) {
         if ($parse) {
-            $this->parseFields();
+            try {
+                $this->parseFields();
+            } catch (\Exception $e) {
+                log_debug($e->getMessage());
+            }
         }
         parent::__construct($db);
     }
@@ -46,8 +50,8 @@ abstract class FormTable extends Table {
      * @return array 填充后的数组.
      */
     public final function inflate($excepts = '', $useDefault = false, $force = false) {
-        if ($this->_tableData && !$force) {
-            return $this->_tableData;
+        if ($this->_f__tableData && !$force) {
+            return $this->_f__tableData;
         }
         $data     = [];
         $formData = [];
@@ -56,7 +60,7 @@ abstract class FormTable extends Table {
         } else {
             $excepts = $excepts ? explode(',', $excepts) : [];
         }
-        foreach ($this->_fields as $key => $v) {
+        foreach ($this->_v__fields as $key => $v) {
             if (in_array($key, $excepts)) {
                 continue;
             }
@@ -78,8 +82,8 @@ abstract class FormTable extends Table {
         }
 
         $this->skipFields($data);
-        $this->_tableData = $data;
-        $this->_formData  = $formData;
+        $this->_f__tableData = $data;
+        $this->_v__formData  = $formData;
 
         return $data;
     }
@@ -97,7 +101,7 @@ abstract class FormTable extends Table {
     }
 
     public final function tableData() {
-        return $this->_tableData;
+        return $this->_f__tableData;
     }
 
     /**
@@ -107,19 +111,19 @@ abstract class FormTable extends Table {
      *
      * @return array
      */
-    public final function inflateByData($data) {
-        $rtn      = $this->_tableData;
-        $formData = $this->_formData;
+    public final function inflateByData(array $data): array {
+        $rtn      = $this->_f__tableData;
+        $formData = $this->_v__formData;
         if ($data) {
-            foreach ($this->_maps_ as $key => $v) {
+            foreach ($this->_f__maps as $key => $v) {
                 if (array_key_exists($key, $data)) {
-                    $formData[ $v ] = $rtn[ $key ] = $this->unpack($v, $data[ $key ], $this->_fields[ $v ]);
+                    $formData[ $v ] = $rtn[ $key ] = $this->unpack($v, $data[ $key ], $this->_v__fields[ $v ]);
                     $this->{$key}   = $rtn[ $key ];
                 }
             }
         }
-        $this->_tableData = $rtn;
-        $this->_formData  = $formData;
+        $this->_f__tableData = $rtn;
+        $this->_v__formData  = $formData;
 
         return $rtn;
     }
@@ -131,7 +135,7 @@ abstract class FormTable extends Table {
      *
      * @return array
      */
-    public final function inflateFromDB($where) {
+    public final function inflateFromDB(array $where): array {
         $data = $this->loadFromDb($where);
         if (!$data) {//加载失败时将条件做为数据填充
             $data = $where;
@@ -143,13 +147,13 @@ abstract class FormTable extends Table {
     /**
      * 从数据库加载数据.
      *
-     * @param array $where
+     * @param array|\wulaphp\db\sql\Condition $where
      *
      * @return array
      * @see  \wulaphp\form\FormTable::inflateFromDB()
      *
      */
-    protected function loadFromDb($where) {
+    protected function loadFromDb($where): array {
         return $this->select($this->defaultQueryFields)->where($where)->get(0);
     }
 
@@ -159,13 +163,13 @@ abstract class FormTable extends Table {
      * @param array $data    要过滤的数据.
      * @param bool  $formKey key是否是表单字段名.
      */
-    protected function skipFields(&$data, $formKey = false) {
+    protected function skipFields(array &$data, bool $formKey = false) {
         $keys = array_keys($data);
         foreach ($keys as $key) {
             if ($formKey) {
-                $key = $this->_fields[ $key ]['name'];
+                $key = $this->_v__fields[ $key ]['name'];
             }
-            if (isset($this->_skips_[ $key ]) && $this->_skips_[ $key ]) {
+            if (isset($this->_f__skips[ $key ]) && $this->_f__skips[ $key ]) {
                 unset($data[ $key ]);
             }
         }
@@ -180,7 +184,7 @@ abstract class FormTable extends Table {
      *
      * @return float|int|mixed
      */
-    protected function unpack($field, $value, $options) {
+    protected function unpack(string $field, string $value, array $options) {
         switch ($options['type']) {
             case 'int':
                 return intval($value);
@@ -217,7 +221,7 @@ abstract class FormTable extends Table {
      *
      * @return float|int|string
      */
-    protected function pack($field, $value, $options) {
+    protected function pack(string $field, $value, array $options) {
         switch ($options['type']) {
             case 'int':
                 return intval($value);
@@ -257,17 +261,18 @@ abstract class FormTable extends Table {
      * 5. 第三方插件支持的注解.
      * 6. var  为IFormField类型
      * 7. typef 当type值为number时用来定义number_format参数.
+     *
+     * @throws \Exception
      */
     private function parseFields() {
-        $this->_fields   = [];
-        $refobj          = new \ReflectionObject($this);
-        $dann            = new Annotation($refobj);
-        $this->_xssClean = $dann->getBool('xssclean', true);
+        $this->_v__fields   = [];
+        $refobj             = new \ReflectionObject($this);
+        $dann               = new Annotation($refobj);
+        $this->_f__xssClean = $dann->getBool('xssclean', true);
         unset($dann);
         $fields  = $refobj->getProperties(\ReflectionProperty::IS_PUBLIC);
         $sfields = [];
         if (!empty($fields)) {
-            /**@var  \ReflectionProperty $field */
             foreach ($fields as $field) {
                 $ann = new Annotation($field);
                 if ($ann->has('type')) {
@@ -293,11 +298,11 @@ abstract class FormTable extends Table {
     /**
      * 排除字段(不会绘制)
      *
-     * @param array ...$fields
+     * @param string ...$fields
      */
-    public function excludeFields(...$fields) {
+    public function excludeFields(string ...$fields) {
         foreach ($fields as $field) {
-            $this->_excludes[ $field ] = 1;
+            $this->_r__excludes[ $field ] = 1;
         }
     }
 
@@ -318,20 +323,20 @@ abstract class FormTable extends Table {
             //字段名
             $fieldName = $ann->getString('name', $fname);
             //忽略值
-            $this->_skips_[ $fname ] = $ann->has('skip');
+            $this->_f__skips[ $fname ] = $ann->has('skip');
             //字段配置
-            $this->_fields[ $fname ] = [
+            $this->_v__fields[ $fname ] = [
                 'annotation' => $ann,
                 'var'        => $ann->getString('var', ''),
                 'name'       => $fieldName,
                 'default'    => $default,
                 'type'       => $ann->getString('type', 'string'),
                 'typef'      => $ann->getString('typef'),
-                'xssClean'   => $ann->getBool('xssclean', $this->_xssClean)
+                'xssClean'   => $ann->getBool('xssclean', $this->_f__xssClean)
             ];
-            if (!$this->_skips_[ $fname ]) {
+            if (!$this->_f__skips[ $fname ]) {
                 //映射
-                $this->_maps_[ $fname ] = $fname;
+                $this->_f__maps[ $fname ] = $fname;
 
                 return "`{$fname}`";
             }
@@ -363,13 +368,13 @@ abstract class FormTable extends Table {
      * @return array|null 组件列表.
      */
     public final function createWidgets(): ?array {
-        if ($this->_widgets !== null) {
-            return $this->_widgets;
+        if ($this->_r__widgets !== null) {
+            return $this->_r__widgets;
         }
         $this->beforeCreateWidgets();
-        $this->_widgets = [];
-        foreach ($this->_fields as $key => $field) {
-            if (isset($this->_excludes[ $key ])) {
+        $this->_r__widgets = [];
+        foreach ($this->_v__fields as $key => $field) {
+            if (isset($this->_r__excludes[ $key ])) {
                 continue;
             }
             $cls = $field['var'];
@@ -377,15 +382,15 @@ abstract class FormTable extends Table {
                 /**@var \wulaphp\form\FormField $clz */
                 $clz       = new $cls($key, $this, $field);
                 $fieldName = $field['name'];
-                if (isset($this->_tableData[ $fieldName ])) {
-                    $clz->setValue($this->_tableData[ $fieldName ]);
+                if (isset($this->_f__tableData[ $fieldName ])) {
+                    $clz->setValue($this->_f__tableData[ $fieldName ]);
                 } else {
                     $clz->setValue($field['default']);
                 }
-                $this->_widgets[ $key ] = $clz;
+                $this->_r__widgets[ $key ] = $clz;
             }
         }
 
-        return $this->_widgets;
+        return $this->_r__widgets;
     }
 }

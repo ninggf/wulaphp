@@ -11,8 +11,8 @@ use wulaphp\db\sql\UpdateSQL;
  *
  * @package wulaphp\db
  * @author  Leo Ning <windywany@gmail.com>
- * @property $_formData
- * @property $_tableData
+ * @property $_v__formData
+ * @property $_f__tableData
  */
 abstract class Table extends View {
     protected $autoIncrement = true;
@@ -83,8 +83,8 @@ abstract class Table extends View {
         if ($data) {
             $this->filterFields($data);
             if (method_exists($this, 'validateNewData')) {
-                if (isset($this->_formData)) {
-                    $this->validateNewData($this->_formData);
+                if (isset($this->_v__formData)) {
+                    $this->validateNewData($this->_v__formData);
                 } else {
                     $this->validateNewData($data);
                 }
@@ -123,8 +123,8 @@ abstract class Table extends View {
         if ($data) {
             $this->filterFields($data);
             if (method_exists($this, 'validateNewData')) {
-                if (isset($this->_formData)) {
-                    $this->validateNewData($this->_formData);
+                if (isset($this->_v__formData)) {
+                    $this->validateNewData($this->_v__formData);
                 } else {
                     $this->validateNewData($data);
                 }
@@ -296,8 +296,8 @@ abstract class Table extends View {
         if ($data) {
             $this->filterFields($data);
             if (method_exists($this, 'validateUpdateData')) {
-                if (isset($this->_formData)) {
-                    $this->validateUpdateData($this->_formData);
+                if (isset($this->_v__formData)) {
+                    $this->validateUpdateData($this->_v__formData);
                 } else {
                     $this->validateUpdateData($data);
                 }

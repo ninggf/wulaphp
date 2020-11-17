@@ -39,7 +39,7 @@ abstract class FormField implements \ArrayAccess {
      * @param \wulaphp\form\FormTable $form
      * @param array                   $options
      */
-    public function __construct($name, $form, $options = []) {
+    public function __construct(string $name, FormTable $form, array $options = []) {
         $this->name    = $name;
         $this->form    = $form;
         $this->options = $options;
