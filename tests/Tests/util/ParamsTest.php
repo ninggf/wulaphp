@@ -32,7 +32,7 @@ class ParamsTest extends TestCase {
 
         Request::getInstance()->addUserData(['password1' => '123']);
         $params1 = new LoginParams(true);
-        $data    = $params1->getParams($errors1);
+        $data    = $params1->forn($errors1);
         self::assertNull($errors1);
         self::assertEquals('Leo Ning', $data['username']);
         self::assertEquals('123', $data['password']);

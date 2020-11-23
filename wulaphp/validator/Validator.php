@@ -63,6 +63,9 @@ trait Validator {
                 $obj  = new \ReflectionObject($this);
                 $vars = $obj->getProperties(\ReflectionProperty::IS_PUBLIC);
                 foreach ($vars as $var) {
+                    if ($var->isStatic()) {
+                        continue;
+                    }
                     $name            = $var->getName();
                     $fields[ $name ] = ['annotation' => new Annotation($var)];
                 }
@@ -75,8 +78,9 @@ trait Validator {
                 /**@var $ann \wulaphp\util\Annotation */
                 $ann  = $def['annotation'];
                 $anns = $ann->getAll();
-                if (!$anns)
+                if (!$anns) {
                     continue;
+                }
                 $multiple = $def['type'] == 'array' || $def['type'] == '[]';
                 foreach ($anns as $an => $va) {
                     if (isset($this->_v__preDefinedRule[ $an ]) && !is_array($va)) {
@@ -200,14 +204,14 @@ trait Validator {
             $data = $this->_v__formData;
         }
         if ($this->_v__rules) {
-            $newRules = [];
+            $validateRules = [];
             foreach ($data as $key => $v) {
                 if (isset($this->_v__rules[ $key ])) {
-                    $newRules[ $key ] = $this->_v__rules[ $key ];
+                    $validateRules[ $key ] = $this->_v__rules[ $key ];
                 }
             }
-            if ($newRules) {
-                return $this->validateData($newRules, $data);
+            if ($validateRules) {
+                return $this->validateData($validateRules, $data);
             }
         }
 

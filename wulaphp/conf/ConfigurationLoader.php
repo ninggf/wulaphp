@@ -39,7 +39,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
         }
         unset ($_wula_config_file, $wula_cfg_fiels);
 
-        if ($name == 'default' && !defined('DEBUG')) {
+        if (!defined('DEBUG') && $name == 'default') {
             $debug = @constant('DEBUG_' . strtoupper($config->get('debug', 'error')));
             if (!$debug || $debug < 0) {
                 $debug = DEBUG_ERROR;
