@@ -41,7 +41,8 @@ abstract class ArtisanCommand {
             $cmds = array_keys($this->subCmds);
             array_walk($cmds, function ($value) use (&$maxlength) {
                 $len = strlen($value);
-                if ($len > $maxlength) $maxlength = $len;
+                if ($len > $maxlength)
+                    $maxlength = $len;
             });
             $leftPad = str_pad('', $maxlength + 7, ' ', STR_PAD_LEFT);
             $sMax    = 77 - $maxlength;
@@ -60,7 +61,7 @@ abstract class ArtisanCommand {
                 $i = 1;
                 while (($line = substr($desc, $sMax * $i, $sMax))) {
                     echo "\n", $leftPad, $line;
-                    $i++;
+                    $i ++;
                 }
                 echo "\n";
             }
@@ -79,7 +80,8 @@ abstract class ArtisanCommand {
                 $op          = '-' . $opss[0] . ($arg && $l == 2 ? " <$arg>" : ($arg && $l == 3 ? " [$arg]" : ''));
                 $args[ $op ] = $msg;
                 $len         = strlen($op);
-                if ($len > $maxlength) $maxlength = $len;
+                if ($len > $maxlength)
+                    $maxlength = $len;
             }
 
             foreach ($lopts as $opt => $msg) {
@@ -89,7 +91,8 @@ abstract class ArtisanCommand {
                 $op          = '--' . $opss[0] . ($arg && $l == 2 ? " <$arg>" : ($arg && $l == 3 ? " [$arg]" : ''));
                 $args[ $op ] = $msg;
                 $len         = strlen($op);
-                if ($len > $maxlength) $maxlength = $len;
+                if ($len > $maxlength)
+                    $maxlength = $len;
             }
             $leftPad = str_pad('', $maxlength + 7, ' ', STR_PAD_LEFT);
             $sMax    = 77 - $maxlength;
@@ -103,7 +106,7 @@ abstract class ArtisanCommand {
                 $i = 1;
                 while (($line = substr($desc, $sMax * $i, $sMax))) {
                     echo "\n", $leftPad, $line;
-                    $i++;
+                    $i ++;
                 }
                 echo "\n";
             }
@@ -152,7 +155,7 @@ abstract class ArtisanCommand {
         foreach ($op as $o => $r) {
             // $r [1,11] => 标识参数; [2,12]=> 必填选项; [3,13] => 可选参数
             $key = trim($o, '-');
-            for ($i = 2; $i < $argc; $i++) {
+            for ($i = 2; $i < $argc; $i ++) {
                 if (strpos($argv[ $i ], $o) === 0) {//提供参数(选项)
                     $ov         = $argv[ $i ];
                     $argv[ $i ] = null;
@@ -171,7 +174,7 @@ abstract class ArtisanCommand {
                         }
                     }
                     //查找参数值
-                    for ($j = $i + 1; $j < $argc; $j++) {
+                    for ($j = $i + 1; $j < $argc; $j ++) {
                         $v = $argv[ $j ];
                         if ($v == '=') {
                             $argv[ $j ] = null;
@@ -201,8 +204,8 @@ abstract class ArtisanCommand {
             }
         }
         $this->argv[0] = $argv[0];
-        $this->argv[1] = $argv[1];
-        for ($i = 2; $i < $argc; $i++) {
+        $this->argv[1] = $argv[1] ?? '';
+        for ($i = 2; $i < $argc; $i ++) {
             if ($argv[ $i ] && preg_match('#^(-([a-z\d])|--([a-z\d\-_]+))$#i', $argv[ $i ], $ms)) {
                 $this->help('Invalid option "' . $ms[0] . '"');
             }
@@ -215,7 +218,7 @@ abstract class ArtisanCommand {
         return $options;
     }
 
-    protected final function opt($index = -1, $default = '') {
+    protected final function opt($index = - 1, $default = '') {
         $argvv = $this->argv;
         $argcc = $this->arvc;
         if ($index < 0) {
@@ -332,7 +335,7 @@ abstract class ArtisanCommand {
         }
         if ($this->subCmds) {
             $cmd = null;
-            for ($i = 2; $i < $argc; $i++) {
+            for ($i = 2; $i < $argc; $i ++) {
                 $_cmd = $argv[ $i ];
                 if ($_cmd[0] != '-') {
                     $cmd = $_cmd;
