@@ -35,9 +35,9 @@ class Cookie implements \ArrayAccess {
         $this->expire   = $exp ? time() + $exp : 0;
         $this->path     = $cks['path'];
         $this->domain   = $cks['domain'];
-        $this->security = $cks['security'];
-        $this->httponly = $cks['httponly'];
-        $this->samesite = $cks['samesite'];
+        $this->security = $cks['security'] ?? false;
+        $this->httponly = $cks['httponly'] ?? false;
+        $this->samesite = $cks['SameSite'] ?? 'None';
     }
 
     /**
