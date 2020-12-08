@@ -12,10 +12,13 @@ $cnt = 0;
 while (true) {
     try {
         new PDO('mysql:dbname=mysql;host=127.0.0.1', 'root', '');
+        echo "mysql server connected!\n";
     } catch (Exception $e) {
-        if (++ $cnt > 30) {
+        $cnt ++;
+        if ($cnt > 30) {
             exit(1);
         }
+        echo "try connect to mysql server: ", $cnt, "\n";
         sleep(1);
     }
 }
