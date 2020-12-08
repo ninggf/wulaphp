@@ -49,7 +49,7 @@ class RouteTableDispatcher implements IURLDispatcher {
                     $expire = intval(aryget('expire', $route), 0);
                     if ($expire > 0) {
                         Router::checkCache();#检测缓存
-                        define('CACHE_EXPIRE', $expire);
+                        defined('CACHE_EXPIRE') or define('CACHE_EXPIRE', $expire);
                     }
                     $func = aryget('func', $route);
                     $data = isset($route['data']) ? (array)$route['data'] : [];
@@ -84,7 +84,7 @@ class RouteTableDispatcher implements IURLDispatcher {
      *
      * @return string
      */
-    public static function parseURL(UrlParsedInfo $parsedInfo):string {
+    public static function parseURL(UrlParsedInfo $parsedInfo): string {
         $pageSet = false;
         if (preg_match('#.+?\.$#', $parsedInfo->url)) {
             return false;

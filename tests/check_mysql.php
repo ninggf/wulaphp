@@ -11,7 +11,7 @@
 $cnt = 0;
 while (true) {
     try {
-        new PDO('mysql:dbname=mysql;host=127.0.0.1;port=3307', 'root', '');
+        new PDO('mysql:dbname=mysql;host=127.0.0.1', 'root', '');
         echo "mysql server connected!\n";
         break;
     } catch (Exception $e) {

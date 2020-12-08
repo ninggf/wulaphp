@@ -81,7 +81,7 @@ trait Validator {
                 if (!$anns) {
                     continue;
                 }
-                $multiple = $def['type'] == 'array' || $def['type'] == '[]';
+                $multiple = isset($def['type']) && ($def['type'] == 'array' || $def['type'] == '[]');
                 foreach ($anns as $an => $va) {
                     if (isset($this->_v__preDefinedRule[ $an ]) && !is_array($va)) {
                         // 用=>分隔参数与提示消息.$r[0]参数,$r[1]为提示信息
@@ -239,6 +239,9 @@ trait Validator {
                 }
             }
             if ($r) {
+                if (!isset($this->_v__rulesIdx[ $field ])) {
+                    $this->_v__rulesIdx[ $field ] = 0;
+                }
                 $this->_v__rulesIdx[ $field ]       += 1;
                 $idx                                = $this->_v__rulesIdx[ $field ];
                 $this->_v__rules[ $field ][ $idx ]  = [$r, $ops, $m, $multiple];
