@@ -25,7 +25,7 @@ class ModuleLoader {
                     include $file;
                 }
             } catch (\Exception $e) {
-                log_warn($e->getMessage(), 'loader');
+                log_error($e->getMessage(), 'loader');
             }
         }
         unset($_wula_namespace_classpath['tmpmodules']);
@@ -39,8 +39,18 @@ class ModuleLoader {
     public function scanModules() {
         $modules = RtCache::get('loader@modules');
         if (!$modules) {
-            $modules = [];
-            if (is_dir(MODULE_ROOT)) {
+            $modules    = [];
+            $premodules = App::cfg('modules');
+            if ($premodules && is_array($premodules)) {
+                foreach ($premodules as $m) {
+                    $boot = MODULE_ROOT . $m . '/bootstrap.php';
+                    if (is_file($boot)) {
+                        $modules[ $m ] = $boot;
+                    } else if (is_dir(MODULE_ROOT . $m)) {
+                        $modules[ $m ] = true;
+                    }
+                }
+            } else if (is_dir(MODULE_ROOT)) {
                 $it = new \DirectoryIterator (MODULE_ROOT);
                 foreach ($it as $dir) {
                     if ($dir->isDot()) {

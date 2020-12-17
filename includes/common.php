@@ -412,11 +412,21 @@ function http_send($sock, array $request, ?int &$size = 0) {
 }
 
 /**
- * 显示异常页.
+ * 输出http响应输出。
  *
- * @param \Throwable|null $exception 异常
+ * @param string|int $status 状态
+ * @param string     $message
  */
-function show_exception_page(?Throwable $exception) {
+function http_out($status, $message = '') {
+    http_response_code($status);
+    if ($message) {
+        echo $message;
+    }
+    exit();
+}
+
+//异常处理
+set_exception_handler(function (?Throwable $exception) {
     global $argv;
     if (!$exception) {
         return;
@@ -481,15 +491,12 @@ function show_exception_page(?Throwable $exception) {
             exit(0);
         }
     }
-}
-
-//异常处理
-set_exception_handler('show_exception_page');
+});
 //脚本结束回调
 register_shutdown_function(function () {
     @session_write_close();# close session
-    define('WULA_STOPTIME', microtime(true));
     try {
+        define('WULA_STOPTIME', microtime(true));
         fire('wula\stop');
     } catch (\Exception $e) {
     }

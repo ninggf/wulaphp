@@ -2,6 +2,12 @@
 
 namespace wulaphp\conf;
 
+use wulaphp\app\App;
+use wulaphp\feature\CmsFeatureManager;
+use wulaphp\feature\LimitFeature;
+use wulaphp\io\Request;
+use wulaphp\router\Router;
+
 /**
  * 系统默认配置加载器.
  *
@@ -9,6 +15,54 @@ namespace wulaphp\conf;
  *
  */
 class ConfigurationLoader extends BaseConfigurationLoader {
+    /**
+     * 加载配置前运行CMS特性。
+     */
+    public function beforeLoad() {
+        if (PHP_SAPI != 'cli') {
+            if (defined('ANTI_CC') && ANTI_CC) {
+                $arg    = explode('/', ANTI_CC);
+                $arg[0] = intval($arg[0]);
+                if ($arg[0]) {//0就是关闭喽
+                    $arg[1] = intval($arg[1] ?? 60);
+                    CmsFeatureManager::register(new LimitFeature(abs(intval($arg[0])), abs($arg[1])));
+                }
+            }
+            $features = CmsFeatureManager::getFeatures();
+            if ($features) {
+                ksort($features);
+                $rst = [];
+                $url = Router::getFullURI();
+                foreach ($features as $fs) {
+                    foreach ($fs as $f) {
+                        $rst[] = $f->perform($url) === false ? 0 : 1;
+                        if (!array_product($rst)) {//有特性要求停止运行（返回了false）
+                            http_response_code(403);
+                            exit();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public function postLoad() {
+        if (App::bcfg('offline')) {
+            $ip = Request::getIp();
+            if (!$ip) {
+                return;
+            }
+            $ips = trim(App::cfg('allowedIps'));
+            $msg = App::cfg('offlineMsg', 'Service Unavailable');
+            if (empty($ips)) {
+                http_out(503, $msg);
+            }
+            $ips = explode("\n", $ips);
+            if (!in_array($ip, $ips)) {
+                http_out(503, $msg);
+            }
+        }
+    }
 
     /**
      * 加载配置.
@@ -18,7 +72,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      * @return \wulaphp\conf\Configuration
      * @see \wulaphp\conf\BaseConfigurationLoader::loadConfig()
      */
-    public function loadConfig($name = 'default') {
+    public function loadConfig(string $name = 'default'): Configuration {
         $config = new Configuration($name);
         if ($name == 'default') {
             $_wula_config_file = APPROOT . CONF_DIR . '/config';
@@ -62,7 +116,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      *
      * @return \wulaphp\conf\Configuration
      */
-    public static function loadFromFile($name) {
+    public static function loadFromFile(string $name): Configuration {
         static $loader = null;
         if ($loader === null) {
             $loader = new ConfigurationLoader();
@@ -81,7 +135,7 @@ class ConfigurationLoader extends BaseConfigurationLoader {
      *
      * @return DatabaseConfiguration
      */
-    public function loadDatabaseConfig($name = 'default') {
+    public function loadDatabaseConfig(string $name = 'default'): DatabaseConfiguration {
         $config = new DatabaseConfiguration ($name);
         if ($name == 'default') {
             $_wula_config_file = APPROOT . CONF_DIR . '/dbconfig';

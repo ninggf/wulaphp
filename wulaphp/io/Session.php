@@ -86,7 +86,7 @@ class Session {
         } catch (\Exception $e) {
             $msg = 'Cannot start session: ' . $e->getMessage();
             if (DEBUG < DEBUG_ERROR) {
-                show_exception_page($e);
+                throw $e;
             } else {
                 log_error($msg);
             }

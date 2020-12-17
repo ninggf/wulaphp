@@ -27,7 +27,7 @@ if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib'
     @ini_set('zlib.output_compression_level', 7);
 }
 @ob_start();
-define('WULA_VERSION', '3.8.1');
+define('WULA_VERSION', '3.8.2');
 define('WULA_RELEASE', 'RC');
 defined('BUILD_NUMBER') or define('BUILD_NUMBER', '20200907001');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
@@ -154,8 +154,20 @@ spl_autoload_register(function ($clz) {
 
         return;
     }
+
     if (strpos($clz, '\\') > 0) {
         $clzf = str_replace('\\', DS, $clz);
+        if (defined('WULAPHP_INITED')) {
+            //从模块加载
+            $clz_file = App::loadClass($clz);
+            if ($clz_file && is_file($clz_file)) {
+                RtCache::ladd($key, $clz_file);
+                include $clz_file;
+
+                return;
+            }
+        }
+
         foreach ($_wula_namespace_classpath as $cp) {
             $clz_file = $cp . $clzf . '.php';
             if (is_file($clz_file)) {
@@ -165,15 +177,8 @@ spl_autoload_register(function ($clz) {
                 return;
             }
         }
-        //从模块加载
-        $clz_file = App::loadClass($clz);
-        if ($clz_file && is_file($clz_file)) {
-            RtCache::ladd($key, $clz_file);
-            include $clz_file;
-
-            return;
-        }
     }
+
     foreach ($_wula_classpath as $path) {
         $clz_file = $path . DS . $clz . '.php';
         if (is_file($clz_file)) {
@@ -183,14 +188,17 @@ spl_autoload_register(function ($clz) {
             return;
         }
     }
+
     $clz_file = apply_filter('loader\loadClass', null, $clz);
     if ($clz_file && is_file($clz_file)) {
         RtCache::ladd($key, $clz_file);
         include $clz_file;
     }
 });
+
 define('LOG_DRIVER', env('app.logger.driver'));
 define('LOG_ROTATE', env('app.logger.rotate'));
+
 include WULA_ROOT . 'includes/common.php';
 if (is_file(LIBS_PATH . 'common.php')) {
     include LIBS_PATH . 'common.php';

@@ -155,18 +155,5 @@ return [
         'password'           => '密码必须由数字、字母组成',
         'password2'          => '密码必须由数字、字母和符号组成',
         'password3'          => '密码必须由数字、小写字母、大写字母和符号组成'
-    ],
-    '@restful'                                                                => [
-        'miss app_key'                   => '缺少app_key',
-        'Invalid API'                    => '无效API',
-        'module not found'               => '模块不存在',
-        'unsupport request methd'        => '不支持的请求方法',
-        'api not found'                  => 'API不存在',
-        'Miss param: %s'                 => '缺少参数:%s',
-        'unsupport sign methd'           => '不支持的签名方法',
-        'invalid app_key'                => '无效的app_key',
-        'invalid sign'                   => '签名错误',
-        'unknown params'                 => '未知参数',
-        'Not supported response format.' => '不支持的响应格式'
     ]
 ];

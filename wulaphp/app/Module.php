@@ -3,6 +3,7 @@
 namespace wulaphp\app;
 
 use wulaphp\db\DatabaseConnection;
+use wulaphp\db\dialect\DatabaseDialect;
 use wulaphp\util\Annotation;
 
 /**
@@ -17,7 +18,7 @@ abstract class Module {
     public $enabled          = false;
     public $installed        = false;
     public $upgradable       = false;
-    public $installedVersion = '0.0.0';
+    public $installedVersion = '0.0.1';
     public $group            = '';
     public $hasHooks         = false;
     public $hookPath         = null;
@@ -206,7 +207,7 @@ abstract class Module {
      *
      * @return array
      */
-    public function getVersionList() {
+    public function getVersionList(): array {
         $v ['1.0.0'] = '第一个版本';
 
         return $v;
@@ -248,17 +249,8 @@ abstract class Module {
      *
      * @return string
      */
-    public function getAuthor() {
+    public function getAuthor(): string {
         return 'wulacms team';
-    }
-
-    /**
-     * 依赖.
-     * @return array|null
-     * @deprecated 使用composer.json定义
-     */
-    public function getDependences() {
-        return null;
     }
 
     /**
@@ -269,7 +261,7 @@ abstract class Module {
      *
      * @return bool
      */
-    public function install(DatabaseConnection $con, int $kernel = 0) {
+    public function install(DatabaseConnection $con, int $kernel = 0): bool {
         return true;
     }
 
@@ -277,7 +269,7 @@ abstract class Module {
      * 卸载.
      * @return bool
      */
-    public function uninstall() {
+    public function uninstall(): bool {
         return true;
     }
 
@@ -285,7 +277,7 @@ abstract class Module {
      * 停用
      * @return bool
      */
-    public function stop() {
+    public function stop(): bool {
         return true;
     }
 
@@ -293,7 +285,7 @@ abstract class Module {
      * 启用
      * @return bool
      */
-    public function start() {
+    public function start(): bool {
         return true;
     }
 
@@ -306,7 +298,7 @@ abstract class Module {
      *
      * @return bool
      */
-    public function upgrade($db, $toVer, $fromVer = '0.0.0') {
+    public function upgrade(DatabaseConnection $db, string $toVer, string $fromVer = '0.0.0'): bool {
         return true;
     }
 
@@ -315,7 +307,7 @@ abstract class Module {
      *
      * @param array $envs
      */
-    public function envCheck(&$envs) {
+    public function envCheck(array &$envs) {
 
     }
 
@@ -326,7 +318,7 @@ abstract class Module {
      *
      * @return array 模块定义的表视图
      */
-    public function getDefinedTables($dialect) {
+    public function getDefinedTables(DatabaseDialect $dialect): array {
         return [];
     }
 
@@ -335,7 +327,7 @@ abstract class Module {
      *
      * @return bool
      */
-    public function hasSubModule() {
+    public function hasSubModule(): bool {
         return $this->subEnabled;
     }
 
@@ -348,7 +340,7 @@ abstract class Module {
      *
      * @return array ['required'=>'','checked'=>'','pass'=>'']
      */
-    public final static function checkFile($f, $r = true, $w = true) {
+    public final static function checkFile(string $f, bool $r = true, bool $w = true): array {
         $rst     = [];
         $checked = $required = '';
         if ($r) {
@@ -394,7 +386,7 @@ abstract class Module {
      *
      * @return array ['required'=>'','checked'=>'','pass'=>'']
      */
-    public final static function checkEnv($key, $r, $optional = false) {
+    public final static function checkEnv(string $key, int $r, bool $optional = false): array {
         $rst = [];
         $rel = strtolower(ini_get($key));
         $rel = ($rel == '0' || $rel == 'off' || $rel == '') ? 0 : 1;
@@ -414,13 +406,13 @@ abstract class Module {
      * 模块名
      * @return string
      */
-    public abstract function getName();
+    public abstract function getName(): string;
 
     /**
      * 模块描述.
      * @return string
      */
-    public function getDescription() {
+    public function getDescription(): string {
         return '';
     }
 
@@ -428,7 +420,7 @@ abstract class Module {
      * 模块主页
      * @return string
      */
-    public function getHomePageURL() {
+    public function getHomePageURL(): string {
         return '';
     }
 }

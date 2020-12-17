@@ -159,6 +159,7 @@ class App {
         } else {
             throw new \Exception('No ModuleLoader found!');
         }
+        define('WULAPHP_INITED', 1);
         fire('wula\moduleLoaded');//模块加载完成
     }
 
@@ -975,11 +976,7 @@ class App {
         if (count($pkg) > 1) {
             $module = $pkg [0];
             if (!isset(self::$modules[ $module ])) {
-                $module .= '\\' . $pkg[1];
-                array_shift($pkg);
-                if (!isset(self::$modules[ $module ])) {
-                    return null;
-                }
+                return null;
             }
             $file = implode(DS, $pkg) . '.php';
 
@@ -1040,7 +1037,7 @@ class App {
             return self::$app->router->route();
         } catch (\Exception $e) {
             if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
-                show_exception_page($e);
+                throw $e;
             } else {
                 Response::respond(500, $e->getMessage());
             }

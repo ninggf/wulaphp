@@ -27,14 +27,11 @@ class DefaultModule extends Module {
         $this->mName     = ucwords($ns, '_');
     }
 
-    public function getName() {
+    public function getName(): string {
         return $this->mName;
     }
 
-    public function getDescription() {
+    public function getDescription(): string {
         return 'simple module without bootstrap.php file';
-    }
-
-    public function autoBind() {
     }
 }
