@@ -15,15 +15,15 @@ use wulaphp\app\App;
 use wulaphp\app\Module;
 
 class TestM extends Module {
-    public function getName() {
+    public function getName():string {
         return '模块一';
     }
 
-    public function getDescription() {
+    public function getDescription():string {
         return 'testm';
     }
 
-    public function getHomePageURL() {
+    public function getHomePageURL():string {
         return 'http://www.wulaphp.com/';
     }
 }

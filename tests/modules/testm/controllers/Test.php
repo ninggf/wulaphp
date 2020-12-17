@@ -15,7 +15,7 @@ use wulaphp\cache\RtCache;
 use wulaphp\io\Response;
 use wulaphp\mvc\controller\Controller;
 
-class TestController extends Controller {
+class Test extends Controller {
     public function add($i, $j = 1) {
         return pview(['i' => $i, 'j' => $j]);
     }

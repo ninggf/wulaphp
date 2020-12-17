@@ -8,12 +8,19 @@
  * file that was distributed with this source code.
  */
 
-namespace subm\user\controllers;
+namespace testm\controllers;
 
 use wulaphp\mvc\controller\Controller;
 
-class IndexController extends Controller {
+class Json extends Controller {
+    /**
+     * @jsonBody
+     * @return array
+     */
     public function index() {
-        return view(['username' => 'wulaphp']);
+        $name = rqst('name');
+        $age  = rqst('age');
+
+        return ['name' => $name, 'age' => $age];
     }
 }

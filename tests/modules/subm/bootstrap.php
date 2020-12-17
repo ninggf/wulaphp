@@ -16,19 +16,19 @@ use wulaphp\app\Module;
 use wulaphp\router\Router;
 
 class SubM extends Module {
-    public function getName() {
+    public function getName():string {
         return '模块2';
     }
 
-    public function getDescription() {
+    public function getDescription():string {
         return '子模块测试';
     }
 
-    public function getHomePageURL() {
+    public function getHomePageURL():string {
         return 'http://www.wulaphp.com/';
     }
 
-    public function hasSubModule() {
+    public function hasSubModule():bool {
         return true;
     }
 }

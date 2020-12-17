@@ -48,7 +48,7 @@ class AliasTest extends TestCase {
     public function testAliasUrl2() {
         $url = App::action(\login\controllers\Index::class . '::index');
         self::assertEquals('http://login.wulaphp.com:9090/', $url);
-        $url = App::action(\login\controllers\TestController::class . '::add');
+        $url = App::action(\login\controllers\Test::class . '::add');
         self::assertEquals('http://login.wulaphp.com:9090/test/add', $url);
 
         $url = App::url('login');

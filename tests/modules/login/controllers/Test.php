@@ -8,19 +8,16 @@
  * file that was distributed with this source code.
  */
 
-namespace testm\controllers;
+namespace login\controllers;
 
 use wulaphp\mvc\controller\Controller;
 
-class JsonController extends Controller {
-    /**
-     * @jsonBody
-     * @return array
-     */
-    public function index() {
-        $name = rqst('name');
-        $age  = rqst('age');
+class Test extends Controller {
+    public function add($i, $j = 1) {
+        return ['i' => $i, 'j' => $j];
+    }
 
-        return ['name' => $name, 'age' => $age];
+    public function sub($x = 0, $y = 0) {
+        return ['result' => $x - $y];
     }
 }

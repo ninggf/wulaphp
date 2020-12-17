@@ -14,7 +14,7 @@ use wulaphp\io\LocaleUploader;
 use wulaphp\mvc\controller\Controller;
 use wulaphp\mvc\controller\UploadSupport;
 
-class UploadController extends Controller {
+class Upload extends Controller {
     use UploadSupport;
 
     public function index() {

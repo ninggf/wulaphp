@@ -14,7 +14,7 @@ use wulaphp\app\App;
 use wulaphp\app\Module;
 
 class AppModule extends Module {
-    public function getName() {
+    public function getName():string {
         return 'App Test Module';
     }
 }

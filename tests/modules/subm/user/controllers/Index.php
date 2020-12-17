@@ -8,16 +8,12 @@
  * file that was distributed with this source code.
  */
 
-namespace login\controllers;
+namespace subm\user\controllers;
 
 use wulaphp\mvc\controller\Controller;
 
-class TestController extends Controller {
-    public function add($i, $j = 1) {
-        return ['i' => $i, 'j' => $j];
-    }
-
-    public function sub($x = 0, $y = 0) {
-        return ['result' => $x - $y];
+class Index extends Controller {
+    public function index() {
+        return view(['username' => 'wulaphp']);
     }
 }

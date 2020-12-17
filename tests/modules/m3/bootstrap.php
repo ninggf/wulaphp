@@ -14,15 +14,15 @@ use wulaphp\app\Module;
  */
 class M3Module extends Module {
 
-    public function getName() {
+    public function getName():string {
         return 'm3';
     }
 
-    public function getDescription() {
+    public function getDescription():string {
         return '描述';
     }
 
-    public function getHomePageURL() {
+    public function getHomePageURL():string {
         return '';
     }
 }

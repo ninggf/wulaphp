@@ -14,15 +14,15 @@ use wulaphp\app\Module;
 class M1Module extends Module {
     use M1Prefix;
 
-    public function getName() {
+    public function getName():string {
         return 'm1';
     }
 
-    public function getDescription() {
+    public function getDescription():string {
         return '描述';
     }
 
-    public function getHomePageURL() {
+    public function getHomePageURL():string {
         return '';
     }
 }

@@ -12,7 +12,7 @@ namespace subm\user\controllers;
 
 use wulaphp\mvc\controller\Controller;
 
-class AddController extends Controller {
+class Add extends Controller {
     public function addOp() {
         return pview('~testm/views/test/add', ['i' => 2, 'j' => 8]);
     }

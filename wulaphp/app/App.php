@@ -787,8 +787,8 @@ class App {
             $ctrClz = array_pop($clzs);
             array_pop($clzs);
 
-            $ctr = preg_replace('#Controller$#', '', $ctrClz);
-            $ctr = Router::addSlash($ctr);
+            #$ctr = preg_replace('#Controller$#', '', $ctrClz);
+            $ctr = Router::addSlash($ctrClz);
 
             if ('index' != $ctr) {
                 array_push($clzs, $ctr);

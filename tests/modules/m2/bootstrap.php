@@ -5,6 +5,7 @@ namespace m2;
 use m2\classes\M2Prefix;
 use wulaphp\app\App;
 use wulaphp\app\Module;
+use ZipStream\Stream;
 
 /**
  * m2
@@ -16,15 +17,15 @@ use wulaphp\app\Module;
 class M2Module extends Module {
     use M2Prefix;
 
-    public function getName() {
+    public function getName():string {
         return 'm2';
     }
 
-    public function getDescription() {
+    public function getDescription():string {
         return '描述';
     }
 
-    public function getHomePageURL() {
+    public function getHomePageURL():string {
         return '';
     }
 }
