@@ -68,8 +68,8 @@ class SubModuleRouter extends Controller {
             $nc  = true;
         }
         if ($app) {
-            list ($controllerClz, $action, $pms, , $controllerSlag, $actionSlag) = $app;
-            if (in_array($action, ['beforerun', 'afterrun'])) {
+            [$controllerClz, $action, $pms, , $controllerSlag, $actionSlag] = $app;
+            if (in_array($action, ['beforerun', 'afterrun', '__get', '__set'])) {
                 return null;
             }
             if ($nc) {
@@ -100,21 +100,17 @@ class SubModuleRouter extends Controller {
                         $action      = $md;
                         $actionSlag  = $actionSlag . '-' . $rqMethod;
                         $actionFound = true;
-                    } else if (!method_exists($clz, $action)) {
-                        array_unshift($pms, $actionSlag);
+                    } else if (method_exists($clz, $action)) {
+                        $actionFound = true;
+                        define('NEED_CHECK_REQ_M', $rqMethod);
+                    } else { #后退查找index方法
                         $action     = 'index';
                         $actionSlag = 'index';
-                    }
-                    if (!$actionFound) {
-                        $md = $action . $rm;
-                        if (method_exists($clz, $md)) {
-                            $action      = $md;
-                            $actionSlag  = $actionSlag . '-' . $rqMethod;
-                            $actionFound = true;
-                        } else if (method_exists($clz, $action)) {
+                        if (method_exists($clz, $action)) {
                             $actionFound = true;
                         }
                     }
+
                     if ($actionFound) {
                         $ref        = $clz->reflectionObj;
                         $method     = $ref->getMethod($action);
@@ -140,7 +136,7 @@ class SubModuleRouter extends Controller {
                                     $args [] = is_array($value) ? array_map(function ($v) {
                                         return is_array($v) ? $v : urldecode($v);
                                     }, $value) : urldecode($value);
-                                    $idx++;
+                                    $idx ++;
                                 }
                             }
                             if ($paramsCount != $idx) {

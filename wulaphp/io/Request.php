@@ -35,6 +35,7 @@ class Request implements \ArrayAccess {
             self::$santitized = true;
             $this->sanitizeGlobals();
         }
+        $this->addJsonPostBody();
     }
 
     /**
@@ -189,26 +190,25 @@ class Request implements \ArrayAccess {
     /**
      * 从php://input读取json格式的数据并添加到请求中.
      */
-    public function addJsonPostBody() {
-        $rqMethod = strtolower(isset($_SERVER ['REQUEST_METHOD']) ? $_SERVER ['REQUEST_METHOD'] : 'get');
-        if ($rqMethod == 'post' || $rqMethod == 'put') {
-            //检测请求头
-            $contentType = '';
-            // Look for the content type header
-            if (isset ($_SERVER ["HTTP_CONTENT_TYPE"])) {
-                $contentType = $_SERVER ["HTTP_CONTENT_TYPE"];
-            } else if (isset ($_SERVER ["CONTENT_TYPE"])) {
-                $contentType = $_SERVER ["CONTENT_TYPE"];
-            }
-            if (strpos($contentType, '/json') > 0) {
-                $postData = @file_get_contents('php://input');
+    private function addJsonPostBody() {
+        // Look for the content type header
+        if (isset ($_SERVER ["HTTP_CONTENT_TYPE"])) {
+            $contentType = $_SERVER ["HTTP_CONTENT_TYPE"];
+        } else if (isset ($_SERVER ["CONTENT_TYPE"])) {
+            $contentType = $_SERVER ["CONTENT_TYPE"];
+        } else {
+            $contentType = null;
+        }
+        if ($contentType == 'application/json') {
+            $postData = @file_get_contents('php://input');
+            if ($postData) {
+                $postData = @json_decode($postData, true);
                 if ($postData) {
-                    $postData = @json_decode($postData, true);
-                    if ($postData) {
-                        $this->addUserData($postData);
-                    }
+                    $this->addUserData($postData);
                 }
             }
+        } else if ($contentType == 'text/plain') {
+            $this->addUserData(['rawData' => @file_get_contents('php://input')]);
         }
     }
 

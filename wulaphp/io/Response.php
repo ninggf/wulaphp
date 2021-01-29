@@ -212,14 +212,14 @@ class Response {
     /**
      * 响应对应的状态码.
      *
-     * @param int          $status respond status code.
-     * @param string|array $message
+     * @param int               $status respond status code.
+     * @param string|array|null $message
      */
-    public static function respond(int $status = 404, $message = '') {
+    public static function respond(int $status = 404, $message = null) {
         http_response_code($status);
         if (Request::isAjaxRequest()) {
             @header('ajax: 1');
-            Response::getInstance()->output(['message' => $message ? $message : __('error occurred')]);
+            Response::getInstance()->output(['message' => $message ? $message : get_status_header_desc($status)]);
             Response::getInstance()->close();
         } else {
             if ($status == 404) {
@@ -234,6 +234,11 @@ class Response {
             } else if ($status == 503) {
                 $data ['message'] = $message;
                 $view             = template('503.tpl', $data);
+            } else if ($status == 405) {
+                if (!$message) {
+                    $message = get_status_header_desc(405);
+                }
+                $view = new SimpleView($message);
             } else if ($message) {
                 if (is_array($message)) {
                     $view = new JsonView($message);

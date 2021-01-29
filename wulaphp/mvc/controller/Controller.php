@@ -3,7 +3,7 @@
 namespace wulaphp\mvc\controller;
 
 use wulaphp\app\Module;
-use wulaphp\io\Request;
+use wulaphp\io\Response;
 use wulaphp\mvc\view\View;
 use wulaphp\util\Annotation;
 
@@ -21,16 +21,17 @@ use wulaphp\util\Annotation;
  * @property-read string                   $action              动作
  */
 abstract class Controller {
-    private   $_module;  // 所属模块
-    private   $_clzName; // 类名
-    private   $_ctrName; // 小写类名
-    private   $_slag;    // 类名格式化后的URL
-    private   $_action;  // 动作
-    private   $_reflectionObj;
-    private   $_ann;
-    private   $_methodAnn;
-    private   $beforeFeatures = [];
-    private   $afterFeatures  = [];
+    protected $_module;  // 所属模块
+    protected $_clzName; // 类名
+    protected $_ctrName; // 小写类名
+    protected $_slag;    // 类名格式化后的URL
+    protected $_action;  // 动作(方案)
+    protected $_reflectionObj;
+    protected $_ann;
+    protected $_methodAnn;
+    protected $_beforeFeatures = [];
+    protected $_afterFeatures  = [];
+    protected $_reqMethod;
     protected $_session;
 
     public function __construct(Module $module) {
@@ -59,8 +60,30 @@ abstract class Controller {
         $this->_action    = $action;
         $this->_methodAnn = new Annotation($refMethod);
 
-        if ($this->_methodAnn->has('jsonBody')) {
-            Request::getInstance()->addJsonPostBody();
+        if (defined('NEED_CHECK_REQ_M')) {
+            $ms['post']   = $this->_methodAnn->has('post');
+            $ms['put']    = $this->_methodAnn->has('put');
+            $ms['patch']  = $this->_methodAnn->has('patch');
+            $ms['delete'] = $this->_methodAnn->has('delete');
+            $ms['get']    = $this->_methodAnn->has('get');
+            $ms['*']      = !$ms['get'] && !$ms['post'] && !$ms['put'] && !$ms['patch'] && !$ms['delete'];
+            if (!$ms['*']) {//指定了请求方法
+                switch (NEED_CHECK_REQ_M) {
+                    case 'post':
+                    case 'put':
+                    case 'delete':
+                    case 'patch':
+                        $blocked = !$ms[ NEED_CHECK_REQ_M ];
+                        break;
+                    case 'get':
+                    default:
+                        $blocked = $this->_methodAnn->has('post', 'put', 'delete', 'patch');
+                }
+
+                if ($blocked) {
+                    Response::respond(405);
+                }
+            }
         }
 
         if ($this->_methodAnn->has('nobuffer')) {
@@ -70,8 +93,8 @@ abstract class Controller {
             header('Content-Type: text/octet-stream');
         }
 
-        if ($this->beforeFeatures) {
-            foreach ($this->beforeFeatures as $feature) {
+        if ($this->_beforeFeatures) {
+            foreach ($this->_beforeFeatures as $feature) {
                 $view = $this->$feature($refMethod, $view);
             }
         }
@@ -80,6 +103,8 @@ abstract class Controller {
     }
 
     /**
+     * 在业务方法执行完后调用.
+     *
      * @param string            $action
      * @param View|mixed        $view
      * @param \ReflectionMethod $method
@@ -87,8 +112,8 @@ abstract class Controller {
      * @return View
      */
     public function afterRun($action, $view, $method) {
-        if ($this->afterFeatures) {
-            foreach ($this->afterFeatures as $feature) {
+        if ($this->_afterFeatures) {
+            foreach ($this->_afterFeatures as $feature) {
                 $view = $this->$feature($action, $view, $method);
             }
         }
@@ -119,11 +144,11 @@ abstract class Controller {
                 }
                 $bfname = 'beforeRunIn' . $fname;
                 if (method_exists($this, $bfname)) {
-                    $this->beforeFeatures[] = $bfname;
+                    $this->_beforeFeatures[] = $bfname;
                 }
                 $afname = 'afterRunIn' . $fname;
                 if (method_exists($this, $afname)) {
-                    $this->afterFeatures[] = $afname;
+                    $this->_afterFeatures[] = $afname;
                 }
             }
         }

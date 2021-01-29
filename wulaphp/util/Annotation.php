@@ -83,8 +83,14 @@ class Annotation {
      *
      * @return bool
      */
-    public function has(string $annotation): bool {
-        return isset($this->annotations[ $annotation ]);
+    public function has(string ...$annotation): bool {
+        foreach ($annotation as $ann) {
+            if (isset($this->annotations[ $ann ])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -99,7 +105,7 @@ class Annotation {
     /**
      * 获取字符串型注解.
      *
-     * @param string $annotation
+     * @param string      $annotation
      * @param string|null $default
      *
      * @return string|null

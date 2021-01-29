@@ -98,7 +98,7 @@ class DefaultDispatcher implements IURLDispatcher {
             }
             if ($app) {
                 [$controllerClz, $action, $pms, , $controllerSlag, $actionSlag] = $app;
-                if (in_array($action, ['beforerun', 'afterrun'])) {
+                if (in_array($action, ['beforerun', 'afterrun', '__set', '__get'])) {
                     return null;
                 }
                 if ($nc) {
@@ -135,21 +135,19 @@ class DefaultDispatcher implements IURLDispatcher {
                             $action      = $md;
                             $actionSlag  = $actionSlag . '-' . $rqMethod;
                             $actionFound = true;
-                        } else if (!method_exists($clz, $action)) {
-                            array_unshift($pms, $actionSlag);
+                        } else if (method_exists($clz, $action)) {
+                            $actionFound = true;
+                            if (!$clz instanceof SubModuleRouter) {
+                                define('NEED_CHECK_REQ_M', $rqMethod);
+                            }
+                        } else { #后退查找index方法
                             $action     = 'index';
                             $actionSlag = 'index';
-                        }
-                        if (!$actionFound) {
-                            $md = $action . $rm;
-                            if (method_exists($clz, $md)) {
-                                $action      = $md;
-                                $actionSlag  = $actionSlag . '-' . $rqMethod;
-                                $actionFound = true;
-                            } else if (method_exists($clz, $action)) {
+                            if (method_exists($clz, $action)) {
                                 $actionFound = true;
                             }
                         }
+
                         if ($actionFound) {
                             $ref        = $clz->reflectionObj;
                             $method     = $ref->getMethod($action);
@@ -169,6 +167,7 @@ class DefaultDispatcher implements IURLDispatcher {
                             $router->urlParams = (array)$pms;
 
                             $rtn = $clz->beforeRun($action, $method);
+
                             //beforeRun可以返回view了
                             if ($rtn instanceof View) {
                                 self::prepareView($rtn, $namespace, $clz, $action);

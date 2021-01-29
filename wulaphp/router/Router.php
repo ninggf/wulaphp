@@ -54,6 +54,8 @@ class Router {
         if (PHP_SAPI == 'cli-server') {
             $this->register(new ModuleResDispatcher(), 1000);
         }
+        // 处理 CORS
+        $this->registerPreDispatcher(new CorsPreDispatcher(), 0);
     }
 
     /**
@@ -305,6 +307,9 @@ class Router {
         //解析url
         $this->urlParams  = [];
         $this->requestURI = parse_url($uri, PHP_URL_PATH);
+        if (preg_match('#-(get|post|put|patch|delete)$#', $this->requestURI)) {
+            Response::respond(404);
+        }
         //从原生的URL中解析出参数
         $query = @parse_url($uri, PHP_URL_QUERY);
         $args  = [];
