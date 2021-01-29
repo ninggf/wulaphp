@@ -69,7 +69,7 @@ class CreCtrlCommand extends ArtisanCommand {
             $path      = $m->getPath('controllers');
             $namespace = $m->getNamespace();
         }
-        $file = $path . DS . $clz . 'Controller.php';
+        $file = $path . DS . $clz . '.php';
 
         if (is_file($file)) {
             $this->error('controller: "' . $clz . '" exists');

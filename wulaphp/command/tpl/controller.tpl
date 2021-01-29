@@ -4,7 +4,7 @@ namespace {$namespace}\controllers;
 
 use wulaphp\mvc\controller\Controller;
 
-class {$module}Controller extends Controller {
+class {$module} extends Controller {
     /**
      * 默认方法.
      */

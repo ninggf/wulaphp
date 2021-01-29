@@ -28,8 +28,8 @@ class CreateModuleCommand extends ArtisanCommand {
             return 1;
         }
         $namespace = $dir;
-        $name      = aryget('n', $options, $dir);
-        $name      = aryget('name', $options, $name);
+        $name      = $namespace;
+        $name      = aryget('n', $options, $name);
         if (!preg_match('#^[a-z][a-z_\-\d]*$#', $dir)) {
             $this->error('illegal module name: ' . $this->color->str($dir, 'white', 'red'));
 
@@ -85,7 +85,7 @@ class CreateModuleCommand extends ArtisanCommand {
                 'Index',
                 'return view($data)'
             ], $bootstrap);
-            file_put_contents($modulePath . 'controllers/IndexController.php', $bootstrap);
+            file_put_contents($modulePath . 'controllers/Index.php', $bootstrap);
 
             //视图
             $bootstrap = file_get_contents(__DIR__ . '/tpl/index.tpl');
@@ -114,10 +114,6 @@ class CreateModuleCommand extends ArtisanCommand {
 
     protected function getOpts() {
         return ['c' => 'create composer.json for module', 'n::' => 'the name of module'];
-    }
-
-    protected function getLongOpts() {
-        return ['name::' => 'the name of module'];
     }
 
     protected function argDesc() {

@@ -10,7 +10,7 @@ use wulaphp\app\Module;
  * @package {$namespace}
  */
 class {$module}Module extends Module {
-    public function getName() {
+    public function getName(): string {
         return '{$name}';
     }
 }

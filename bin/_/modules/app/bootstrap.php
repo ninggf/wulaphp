@@ -7,7 +7,7 @@ use wulaphp\app\Module;
 use wulaphp\io\Response;
 
 class AppModule extends Module {
-    public function getName() {
+    public function getName(): string {
         return '默认模块';
     }
 
