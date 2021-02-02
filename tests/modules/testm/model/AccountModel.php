@@ -13,7 +13,7 @@ namespace tests\modules\testm\model;
 use wulaphp\db\Table;
 
 class AccountModel extends Table {
-    public function user() {
+    protected function user() {
         return $this->belongsTo('user', 'user_id');
     }
 }

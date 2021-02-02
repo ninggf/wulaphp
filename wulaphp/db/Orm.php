@@ -63,23 +63,25 @@ class Orm {
         $con                               = null;
         if (isset($this->queries[ $field ])) {
             $con = $this->queries[ $field ];
-        } else if (method_exists($this->view, $field)) {
-            //构建查询
-            $con = $this->view->{$field}();
-            /**@var Query $query */
-            [$query, $fk, $lk, , $type] = $con;
-            // 预加载数据，只有belongsTo类型的关系才能预加载.
-            if ($eager && $type == 'belongsTo' && !isset($this->ids[ $field ])) {
-                $this->prepareIds($result, $lk, $field);
-                $datas                      = $query->where([$fk . ' IN' => $this->ids[ $field ]])->toArray(null, $fk);
-                $this->eagerDatas[ $field ] = $datas;
-                $query->close();
-            } else {
-                $query->where([$fk => $result[ $index ][ $lk ]]);
-            }
-            $this->queries[ $field ] = $con;
         } else {
-            return [];
+            try {
+                //构建查询
+                $con = $this->view->{$field}();
+                /**@var Query $query */
+                [$query, $fk, $lk, , $type] = $con;
+                // 预加载数据，只有belongsTo类型的关系才能预加载.
+                if ($eager && $type == 'belongsTo' && !isset($this->ids[ $field ])) {
+                    $this->prepareIds($result, $lk, $field);
+                    $datas                      = $query->where([$fk . ' IN' => $this->ids[ $field ]])->toArray(null, $fk);
+                    $this->eagerDatas[ $field ] = $datas;
+                    $query->close();
+                } else {
+                    $query->where([$fk => $result[ $index ][ $lk ]]);
+                }
+                $this->queries[ $field ] = $con;
+            } catch (\Exception $e) {
+                return [];
+            }
         }
 
         if ($con) {

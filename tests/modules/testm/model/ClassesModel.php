@@ -13,7 +13,8 @@ namespace tests\modules\testm\model;
 use wulaphp\db\Table;
 
 class ClassesModel extends Table {
-    public function students() {
+
+    protected function students() {
         return $this->hasMany('user', 'cid', 'id');
     }
 }

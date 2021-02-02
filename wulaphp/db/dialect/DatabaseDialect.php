@@ -224,7 +224,7 @@ abstract class DatabaseDialect extends \PDO {
      *
      * @return string
      */
-    public function getOnDuplicateSet(string $key): string {
+    public function getOnDuplicateSet(string $key): ?string {
         return null;
     }
 

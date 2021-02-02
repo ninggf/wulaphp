@@ -330,7 +330,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * 取一行或一行中的一个字段的值.
      *
      * @param integer|string|array $index 结果集中的行号或字段名或条件.
-     * @param string|null               $field 结果集中的字段名.
+     * @param string|null          $field 结果集中的字段名.
      *
      * @return Query|array|null|mixed
      *  $index是数据时返回Query实例;$index是字符时返回null或字符;$index是数字，$field为null时返回array，$field不为null时返回null或字符.
@@ -382,7 +382,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return array
      */
-    public function first(array $default = []) {
+    public function first(array $default = []): array {
         if (!$this->performed) {
             $this->select();
         }
@@ -614,6 +614,16 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     }
 
     /**
+     * set魔术方法.
+     *
+     * @param string $field
+     * @param mixed  $value
+     */
+    public function __set(string $field, $value) {
+        $this->{$field} = $value;
+    }
+
+    /**
      * ORM work here for hasMany and belongsToMany.
      *
      * @param string $name
@@ -621,7 +631,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return mixed
      */
-    public function __call($name, $args) {
+    public function __call(string $name, array $args): Query {
         if (!$this->performed) {
             $this->select();
         }
@@ -638,10 +648,6 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
         }
 
         return $this->emptyQuery();
-    }
-
-    public function __set($field, $value) {
-        $this->{$field} = $value;
     }
 
     /**

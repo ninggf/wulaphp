@@ -38,7 +38,7 @@ class DatabaseConnection {
      */
     private function __construct(DatabaseDialect $dialect, $config) {
         if (!$dialect instanceof DatabaseDialect) {
-            throw new \Exception('the dialect is not instance of DatabaseDialect');
+            throw new DialectException('the dialect is not instance of DatabaseDialect');
         }
         $this->config  = $config;
         $this->dialect = $dialect;
@@ -304,8 +304,8 @@ class DatabaseConnection {
      *                        function trans(DatabaseConnection $con,mixed $data);
      *                        1. $con 数据库链接
      *                        2. $data 锁返回的数据.
-     * @param ?string   $error 错误信息
-     * @param ?ILock    $lock  锁.
+     * @param ?string  $error 错误信息
+     * @param ?ILock   $lock  锁.
      *
      * @return mixed|null  事务过程函数的返回值或null
      */

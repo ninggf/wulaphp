@@ -55,9 +55,22 @@ abstract class View {
      * 创建模型实例.
      *
      * @param string|array|DatabaseConnection|View|null $db 数据库实例.
+     *
+     * @throws \wulaphp\db\DialectException
      */
     public function __construct($db = null) {
         if ($this->table !== null) {
+            if ($db instanceof View) {
+                $this->dbconnection = $db->dbconnection;
+            } else if (!$db instanceof DatabaseConnection) {
+                try {
+                    $this->dbconnection = App::db($db === null ? 'default' : $db);
+                } catch (\Exception $e) {
+                    throw $e;
+                }
+            } else {
+                $this->dbconnection = $db;
+            }
             $tb          = explode("\\", get_class($this));
             $this->alias = preg_replace('#(View|Table|Model|Form)$#', '', array_pop($tb));
             if (!$this->table) {
@@ -69,22 +82,10 @@ abstract class View {
                     return '_' . strtolower($r [0]);
                 }, $table);
             }
-            $this->foreignKey  = $this->table . '_id';//被其它表引用时的字段名
-            $this->primaryKey  = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];//本表主键字段
-            $this->originTable = $this->table;
-            $this->table       = '{' . $this->table . '}';
-
-            if ($db instanceof View) {
-                $this->dbconnection = $db->dbconnection;
-            } else if (!$db instanceof DatabaseConnection) {
-                try {
-                    $this->dbconnection = App::db($db === null ? 'default' : $db);
-                } catch (\Exception $e) {
-                    return;
-                }
-            } else {
-                $this->dbconnection = $db;
-            }
+            $this->foreignKey    = $this->table . '_id';//被其它表引用时的字段名
+            $this->primaryKey    = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];//本表主键字段
+            $this->originTable   = $this->table;
+            $this->table         = '{' . $this->table . '}';
             $this->dialect       = $this->dbconnection->getDialect();
             $this->tableName     = $this->dialect->getTableName($this->table);
             $this->qualifiedName = $this->table . ' AS ' . $this->alias;
@@ -92,6 +93,8 @@ abstract class View {
     }
 
     /**
+     * 静态魔术方法.
+     *
      * @param string $name function with s
      * @param        $arguments
      *
@@ -111,6 +114,23 @@ abstract class View {
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * 魔术方法，用于实现关联映射.
+     *
+     * @param string $name
+     * @param        $args
+     *
+     * @return mixed
+     * @throws \BadMethodCallException
+     */
+    public function __call(string $name, array $args) {
+        if (method_exists($this, $name)) {
+            return $this->{$name}(...$args);
+        }
+
+        throw new \BadMethodCallException($name . ' does not exist');
     }
 
     /**
@@ -162,7 +182,7 @@ abstract class View {
      *
      * @return array
      */
-    public final function json_decode($id,string $field):array {
+    public final function json_decode($id, string $field): array {
         $rtn = $this->findOne($id, $field)[ $field ];
         if ($rtn) {
             $rtn = @json_decode($rtn, true);
@@ -454,7 +474,7 @@ abstract class View {
      *
      * @return string
      */
-    public function lastSQL() {
+    public function lastSQL(): string {
         return $this->lastSQL;
     }
 
@@ -470,7 +490,7 @@ abstract class View {
     /**
      * @return string 表名
      */
-    protected function myTableName() {
+    protected function myTableName(): ?string {
         return null;
     }
 
@@ -478,12 +498,12 @@ abstract class View {
      * one-to-one.
      *
      * @param View|string $tableCls
-     * @param string      $foreign_key 值字段在$tableCls中的引用.
+     * @param string      $foreign_key $tableCls中的引用字段.
      * @param string      $value_key   值字段，默认为本表主键.
      *
      * @return array
      */
-    protected final function hasOne($tableCls, $foreign_key = '', $value_key = '') {
+    protected final function hasOne($tableCls, string $foreign_key = '', string $value_key = ''): array {
         if (!$tableCls instanceof View) {
             $tableCls = new SimpleTable($tableCls, $this->dbconnection);
         }
@@ -505,12 +525,12 @@ abstract class View {
      * one-to-many.
      *
      * @param View|string $tableCls
-     * @param string      $foreign_key 值字段在$tableCls中的引用.
+     * @param string      $foreign_key 值字段在$tableCls中的引用字段.
      * @param string      $value_key   值字段，默认为本表主键.
      *
      * @return array
      */
-    protected final function hasMany($tableCls, $foreign_key = '', $value_key = '') {
+    protected final function hasMany($tableCls, string $foreign_key = '', string $value_key = ''): array {
         if (!$tableCls instanceof View) {
             $tableCls = new SimpleTable($tableCls, $this->dbconnection);
         }
@@ -535,9 +555,9 @@ abstract class View {
      * @param string|array $value_keys 当前表在$mtable中的外键（本表主键）.
      * @param string|array $table_keys $tableCls在$mtable中的外键($table的主键).
      *
-     * @return array|null
+     * @return array
      */
-    protected final function belongsToMany($tableCls, $mtable = '', $value_keys = '', $table_keys = '') {
+    protected final function belongsToMany($tableCls, string $mtable = '', $value_keys = '', $table_keys = ''): array {
         if (!$tableCls instanceof View) {
             $tableCls = new SimpleTable($tableCls, $this->dbconnection);
         }
@@ -589,11 +609,11 @@ abstract class View {
      *
      * @param View|string $tableCls
      * @param string      $value_key   值字段(本表通过此字段属于$tableCls),默认为$tableCls_id.
-     * @param string      $foreign_key $tableCls的主键或唯一键.
+     * @param string      $foreign_key $tableCls表中的关联字段.
      *
      * @return array
      */
-    protected final function belongsTo($tableCls, $value_key = '', $foreign_key = '') {
+    protected final function belongsTo($tableCls, string $value_key = '', string $foreign_key = ''): array {
         if (!$tableCls instanceof View) {
             $tableCls = new SimpleTable($tableCls, $this->dbconnection);
         }
