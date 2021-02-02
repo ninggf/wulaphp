@@ -375,18 +375,18 @@ abstract class QueryBuilder {
 
     /**
      * 最后错误信息
-     * @return string
+     * @return string|boolean
      */
-    public function lastError(): string {
+    public function lastError() {
         return $this->error;
     }
 
     /**
      * 最后错误信息
-     * @return string
+     * @return string|boolean
      * @see \wulaphp\db\sql\QueryBuilder::lastError()
      */
-    public function error(): string {
+    public function error() {
         return $this->error;
     }
 
@@ -411,7 +411,7 @@ abstract class QueryBuilder {
      *
      * @return array
      */
-    public function lastValues(): array {
+    public function lastValues(): ?array {
         return $this->errorValues;
     }
 
