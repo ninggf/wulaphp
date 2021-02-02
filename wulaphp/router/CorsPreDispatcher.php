@@ -15,8 +15,13 @@ use wulaphp\io\Response;
 
 class CorsPreDispatcher implements IURLPreDispatcher {
     public function preDispatch($url, $router, $view) {
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+        $host   = $_SERVER['HTTP_HOST'] ?? false;
+        if (!$host || preg_replace('#^https?://#', '', $origin) == $host) {
+            return null;
+        }
         //开启CORS且请求头中有ORIGIN
-        if (($cors = App::acfg('cors')) && ($origin = $_SERVER['HTTP_ORIGIN'] ?? null)) {
+        if ($origin && ($cors = App::acfg('cors'))) {
             $defaultCorsHeaders = [
                 'Access-Control-Allow-Origin'  => '*',
                 'Access-Control-Allow-Methods' => 'GET,HEAD,POST',
