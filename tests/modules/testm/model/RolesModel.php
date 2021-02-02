@@ -13,7 +13,8 @@ namespace tests\modules\testm\model;
 use wulaphp\db\View;
 
 class RolesModel extends View {
-    protected function users() {
+
+    protected function users(): array {
         return $this->belongsToMany('user', 'user_roles', 'role_id', 'user_id');
     }
 }

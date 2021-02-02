@@ -13,15 +13,15 @@ namespace tests\modules\testm\model;
 use wulaphp\db\Table;
 
 class UserModel extends Table {
-    protected function account() {
+    protected function account(): array {
         return $this->hasOne('account', 'user_id', 'id');
     }
 
-    protected function classes() {
+    protected function classes(): array {
         return $this->belongsTo('classes', 'cid');
     }
 
-    protected function roles() {
+    protected function roles(): array {
         return $this->belongsToMany('roles', 'user_roles', 'user_id', 'role_id');
     }
 }

@@ -14,7 +14,7 @@ use wulaphp\db\Table;
 
 class ClassesModel extends Table {
 
-    protected function students() {
+    protected function students():array {
         return $this->hasMany('user', 'cid', 'id');
     }
 }

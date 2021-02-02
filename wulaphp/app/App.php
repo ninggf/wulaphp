@@ -285,7 +285,7 @@ class App {
      * @param string|array|\wulaphp\conf\DatabaseConfiguration|null $name 数据库配置名/配置数组/配置实例.
      *
      * @return DatabaseConnection
-     * @throws \Exception
+     * @throws \wulaphp\db\DialectException
      */
     public static function db($name = 'default'): ?DatabaseConnection {
         return DatabaseConnection::connect($name);

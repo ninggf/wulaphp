@@ -34,7 +34,7 @@ class DatabaseConnection {
      * @param DatabaseDialect $dialect
      * @param mixed           $config 配置
      *
-     * @throws
+     * @throws \wulaphp\db\DialectException
      */
     private function __construct(DatabaseDialect $dialect, $config) {
         if (!$dialect instanceof DatabaseDialect) {
@@ -50,7 +50,7 @@ class DatabaseConnection {
      * @param string|array|DatabaseConfiguration|null $name 数据库配置名/配置数组/配置实例.
      *
      * @return DatabaseConnection
-     * @throws \Exception
+     * @throws \wulaphp\db\DialectException
      */
     public static function connect($name = 'default'): DatabaseConnection {
         if ($name instanceof DatabaseConnection) {
@@ -152,7 +152,7 @@ class DatabaseConnection {
     /**
      * 获取数据库连接配置.
      *
-     * @return mixed|string
+     * @return mixed
      */
     public function getConfig() {
         return $this->config;

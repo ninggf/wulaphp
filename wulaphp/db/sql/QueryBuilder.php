@@ -76,7 +76,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function setDialect(?DatabaseDialect $dialect) {
+    public function setDialect(?DatabaseDialect $dialect): QueryBuilder {
         $this->dialect = $dialect;
 
         return $this;
@@ -89,7 +89,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function join(string $table, string $on, string $type = QueryBuilder::LEFT) {
+    public function join(string $table, string $on, string $type = QueryBuilder::LEFT): QueryBuilder {
         $table          = self::parseAs($table);
         $join           = [$table [0], $on, $type . ' JOIN ', $table [1]];
         $this->joins [] = $join;
@@ -105,7 +105,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function left(string $table, string ...$on) {
+    public function left(string $table, string ...$on): QueryBuilder {
         $this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::LEFT);
 
         return $this;
@@ -119,7 +119,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function right(string $table, string ...$on) {
+    public function right(string $table, string ...$on): QueryBuilder {
         $this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::RIGHT);
 
         return $this;
@@ -133,7 +133,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function inner(string $table, string ...$on) {
+    public function inner(string $table, string ...$on): QueryBuilder {
         $this->join($table, Condition::cleanField($on[0]) . '=' . Condition::cleanField($on[1]), self::INNER);
 
         return $this;
@@ -147,7 +147,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function where($con, $append = true) {
+    public function where($con, $append = true): QueryBuilder {
         $this->whereSet = true;
         if (is_array($con) && !empty ($con)) {
             $con = new Condition ($con, $this->alias);
@@ -172,7 +172,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function updateWhereData($data) {
+    public function updateWhereData($data): QueryBuilder {
         $this->performed = false;
         $this->whereData = array_merge($this->whereData, $data);
 
@@ -184,7 +184,7 @@ abstract class QueryBuilder {
      *
      * @return \wulaphp\db\sql\Condition
      */
-    public function getCondition() {
+    public function getCondition(): ?Condition {
         return $this->where;
     }
 
@@ -193,7 +193,7 @@ abstract class QueryBuilder {
      *
      * @return \wulaphp\db\sql\Condition
      */
-    public function getWhere() {
+    public function getWhere(): ?Condition {
         return $this->where;
     }
 
@@ -202,7 +202,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function asc($field) {
+    public function asc($field): QueryBuilder {
         $this->order [] = [$field, 'a'];
 
         return $this;
@@ -213,7 +213,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function desc($field) {
+    public function desc($field): QueryBuilder {
         $this->order [] = [$field, 'd'];
 
         return $this;
@@ -229,7 +229,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function sort($field = null, string $order = 'a') {
+    public function sort($field = null, string $order = 'a'): QueryBuilder {
         if ($field === null) {
             $field = rqst('sort.name');
             $order = rqst('sort.dir', 'a');
@@ -257,7 +257,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function limit(int $start, ?int $limit = null) {
+    public function limit(int $start, ?int $limit = null): QueryBuilder {
         if ($limit === null) {
             $limit = intval($start);
             $start = 0;
@@ -290,7 +290,7 @@ abstract class QueryBuilder {
      * @see QueryBuilder::limit()
      *
      */
-    public function page($pageNo = null, $size = 20) {
+    public function page($pageNo = null, $size = 20): QueryBuilder {
         if ($pageNo === null) {
             $pageNo = irqst('pager.page', 1);
             $size   = irqst('pager.size', 20);
@@ -308,7 +308,7 @@ abstract class QueryBuilder {
      *
      * @return $this
      */
-    public function alias($alias) {
+    public function alias($alias): QueryBuilder {
         $this->alias = $alias;
 
         return $this;
@@ -319,7 +319,7 @@ abstract class QueryBuilder {
      *
      * @return string the alias of the table this query used.
      */
-    public function getAlias() {
+    public function getAlias(): string {
         return $this->alias;
     }
 
@@ -328,7 +328,7 @@ abstract class QueryBuilder {
      *
      * @return \wulaphp\db\dialect\DatabaseDialect
      */
-    public function getDialect() {
+    public function getDialect(): ?DatabaseDialect {
         try {
             $this->checkDialect();
 
@@ -352,14 +352,14 @@ abstract class QueryBuilder {
     /**
      * @return \wulaphp\db\sql\BindValues
      */
-    public function getBindValues() {
+    public function getBindValues(): ?BindValues {
         return $this->values;
     }
 
     /**
      * @param BindValues $values
      */
-    public function setBindValues($values) {
+    public function setBindValues(BindValues $values) {
         $this->values     = $values;
         $this->valueFixed = true;
     }
@@ -369,7 +369,7 @@ abstract class QueryBuilder {
      *
      * @param array $options
      */
-    public function setPDOOptions($options) {
+    public function setPDOOptions(array $options) {
         $this->options = $options;
     }
 
@@ -377,7 +377,7 @@ abstract class QueryBuilder {
      * 最后错误信息
      * @return string
      */
-    public function lastError() {
+    public function lastError(): string {
         return $this->error;
     }
 
@@ -386,14 +386,14 @@ abstract class QueryBuilder {
      * @return string
      * @see \wulaphp\db\sql\QueryBuilder::lastError()
      */
-    public function error() {
+    public function error(): string {
         return $this->error;
     }
 
     /**
-     * @throws \PDOException
+     * @return \Exception
      */
-    public function lastExp() {
+    public function lastExp(): ?\Exception {
         return $this->exception;
     }
 
@@ -402,7 +402,7 @@ abstract class QueryBuilder {
      *
      * @return string
      */
-    public function lastSQL() {
+    public function lastSQL(): string {
         return $this->errorSQL;
     }
 
@@ -411,7 +411,7 @@ abstract class QueryBuilder {
      *
      * @return array
      */
-    public function lastValues() {
+    public function lastValues(): array {
         return $this->errorValues;
     }
 
@@ -449,7 +449,7 @@ abstract class QueryBuilder {
      * @return int
      * @deprecated
      */
-    public static function getSqlCount() {
+    public static function getSqlCount(): int {
         return self::$sqlCount;
     }
 
@@ -490,7 +490,7 @@ abstract class QueryBuilder {
      *
      * @return array
      */
-    protected static function parseAs($str, $alias1 = null) {
+    protected static function parseAs(string $str, ?string $alias1 = null): array {
         $table = preg_split('#\b(as|\s+)\b#i', trim($str));
         if (count($table) == 1) {
             $name  = $table [0];
@@ -513,7 +513,7 @@ abstract class QueryBuilder {
      *
      * @return array
      */
-    protected function prepareFrom($froms) {
+    protected function prepareFrom(array $froms): array {
         $_froms = [];
         if ($froms) {
             foreach ($froms as $from) {
@@ -533,7 +533,7 @@ abstract class QueryBuilder {
      *
      * @return array
      */
-    protected function prepareJoins($joins) {
+    protected function prepareJoins(array $joins): array {
         $_joins = [];
         if ($joins) {
             foreach ($joins as $join) {
@@ -554,7 +554,7 @@ abstract class QueryBuilder {
      *
      * @return string
      */
-    protected function prepareFields($fields, $values) {
+    protected function prepareFields(array $fields, BindValues $values): ?string {
         $_fields = [];
         foreach ($fields as $field) {
             if ($field instanceof Query) { // sub-select SQL as field
@@ -573,7 +573,7 @@ abstract class QueryBuilder {
         if ($_fields) {
             return implode(',', $_fields);
         } else {
-            return false;
+            return null;
         }
     }
 

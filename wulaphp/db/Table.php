@@ -21,6 +21,8 @@ abstract class Table extends View {
      * Table constructor.
      *
      * @param string|array|DatabaseConnection|View|null $db
+     *
+     * @throws \wulaphp\db\DialectException
      */
     public function __construct($db = null) {
         parent::__construct($db);
@@ -378,7 +380,7 @@ abstract class Table extends View {
      *
      * @param array $data 要过滤的数据.
      */
-    protected function filterFields(&$data) {
+    protected function filterFields(array &$data) {
     }
 
     /**
@@ -389,7 +391,7 @@ abstract class Table extends View {
      *
      * @return mixed
      */
-    protected final function popValue(&$data, $field) {
+    protected final function popValue(array &$data, string $field) {
         $rtn = null;
         if (isset($data[ $field ])) {
             $rtn = $data[ $field ];

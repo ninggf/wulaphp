@@ -63,11 +63,7 @@ abstract class View {
             if ($db instanceof View) {
                 $this->dbconnection = $db->dbconnection;
             } else if (!$db instanceof DatabaseConnection) {
-                try {
-                    $this->dbconnection = App::db($db === null ? 'default' : $db);
-                } catch (\Exception $e) {
-                    throw $e;
-                }
+                $this->dbconnection = App::db($db === null ? 'default' : $db);
             } else {
                 $this->dbconnection = $db;
             }
@@ -140,7 +136,7 @@ abstract class View {
      *
      * @return $this
      */
-    public final function alias(string $alias) {
+    public final function alias(string $alias): View {
         $this->alias         = $alias;
         $this->qualifiedName = $this->table . ' AS ' . $this->alias;
 
@@ -157,7 +153,7 @@ abstract class View {
      * @since      1.0.0
      * @deprecated 使用findOne, 将在4.0版本中移除。
      */
-    public final function get($id, $fields = '*') {
+    public final function get($id, $fields = '*'): Query {
         if (is_array($id)) {
             $where = $id;
         } else {
@@ -203,7 +199,7 @@ abstract class View {
      * @return string
      * @since v3.5.9
      */
-    public final function fetch($id, string $field) {
+    public final function fetch($id, string $field): ?string {
         return $this->findOne($id, $field)[ $field ];
     }
 
@@ -217,7 +213,7 @@ abstract class View {
      *
      * @return Query 列表查询.
      */
-    public final function find($where = null, $fields = null, $limit = 10, $start = 0) {
+    public final function find($where = null, $fields = null, $limit = 10, $start = 0): Query {
         if (is_array($fields)) {
             $sql = $this->select(...$fields);
         } else {
@@ -242,7 +238,7 @@ abstract class View {
      * @return Query 记录.
      * @since v3.5.9
      */
-    public final function findOne($id, $fields = '*') {
+    public final function findOne($id, string $fields = '*'): Query {
         if (is_array($id)) {
             $where = $id;
         } else {
@@ -262,26 +258,26 @@ abstract class View {
     /**
      * 获取全部数据列表.
      *
-     * @param array|null                                  $where  条件.
+     * @param array|Condition|null                        $where  条件.
      * @param array|string|\wulaphp\db\sql\ImmutableValue $fields 字段或字段数组.
      *
      * @return Query
      */
-    public final function findAll($where = null, $fields = '*') {
+    public final function findAll($where = null, string $fields = '*'): Query {
         return $this->find($where, $fields, 0);
     }
 
     /**
      * 获取key/value数组.
      *
-     * @param array       $where      条件.
-     * @param string      $valueField value字段.
-     * @param string|null $keyField   key字段.
-     * @param array       $rows       初始数组.
+     * @param array|Condition $where      条件.
+     * @param string          $valueField value字段.
+     * @param string|null     $keyField   key字段.
+     * @param array           $rows       初始数组.
      *
      * @return array 读取后的数组.
      */
-    public final function map($where, $valueField, $keyField = null, $rows = []) {
+    public final function map($where, string $valueField, ?string $keyField = null, array $rows = []): array {
         $sql = $this->select($valueField, $keyField);
         $sql->where($where);
         $rst = $sql->toArray($valueField, $keyField, $rows);
@@ -298,7 +294,7 @@ abstract class View {
      *
      * @return int 记数.
      */
-    public final function count($con, string $id = '*') {
+    public final function count($con, string $id = '*'): int {
         if ($con && !is_array($con)) {
             $con = [$this->primaryKeys[0] => $con];
         }
@@ -316,7 +312,7 @@ abstract class View {
      *
      * @return boolean 有记数返回true,反之返回false.
      */
-    public final function exist($con, string $id = '*') {
+    public final function exist($con, string $id = '*'): bool {
         return $this->count($con, $id) > 0;
     }
 
@@ -336,7 +332,7 @@ abstract class View {
      *
      * @return \Generator
      */
-    public final function traverse($con = [], $num = 100, $fields = '*', $id = 'id') {
+    public final function traverse(array $con = [], int $num = 100, string $fields = '*', string $id = 'id'): \Generator {
         if (isset($con[ $id ][0])) {
             $rst[0]['minId'] = $con[ $id ][0];
             if (isset($con[ $id ][1])) {
@@ -407,7 +403,7 @@ abstract class View {
      *
      * @return Query
      */
-    public final function select(...$fileds) {
+    public final function select(?string ...$fileds): Query {
         if (empty($fileds) || !isset($fileds[0])) {
             if (isset($this->fields) && $this->fields) {
                 $fileds = $this->defaultQueryFields;
@@ -429,7 +425,7 @@ abstract class View {
      *
      * @return \wulaphp\db\DatabaseConnection
      */
-    public final function db($con = null) {
+    public final function db(?DatabaseConnection $con = null): ?DatabaseConnection {
         if ($con) {
             $this->dbconnection = $con;
             $this->dialect      = $this->dbconnection->getDialect();
@@ -446,7 +442,7 @@ abstract class View {
      * @return ILock
      * @throws \Exception
      */
-    public final function lock($con) {
+    public final function lock($con): ILock {
         if (!$con) {
             throw_exception(__('no lock condition'));
         }
@@ -644,7 +640,7 @@ abstract class View {
             $this->lastSQL = $sql->getSqlString();
         }
         $this->lastValues = $sql->lastValues();
-        $this->dumpSQL    = $sql->dumpSQL();
+        $this->dumpSQL    = $sql->getSqlString();
     }
 
     /**
@@ -654,7 +650,7 @@ abstract class View {
      *
      * @return array 条件.
      */
-    protected final function getWhere($data) {
+    protected final function getWhere(array $data): array {
         $con = [];
         foreach ($this->primaryKeys as $f) {
             if (array_key_exists($f, $data)) {
