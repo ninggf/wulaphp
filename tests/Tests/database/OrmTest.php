@@ -34,7 +34,7 @@ class OrmTest extends TestCase {
         ];
         $dialect = DatabaseDialect::getDialect($dbcfg);
         self::assertNotNull($dialect);
-        self::$dbname = rand_str(5, 'a-z') . '_db';
+        self::$dbname = rand_str(6, 'a-z') . '_db';
         self::assertNotEmpty($dialect->createDatabase(self::$dbname, 'UTF8MB4'), DatabaseDialect::$lastErrorMassge);
         $dialect->close();
 

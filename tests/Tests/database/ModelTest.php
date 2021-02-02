@@ -32,7 +32,7 @@ class ModelTest extends TestCase {
         ];
         $dialect = DatabaseDialect::getDialect($dbcfg);
         self::assertNotNull($dialect);
-        self::$dbname = rand_str(5, 'a-z') . '_db';
+        self::$dbname = rand_str(7, 'a-z') . '_db';
         self::assertNotEmpty($dialect->createDatabase(self::$dbname, 'UTF8MB4'), DatabaseDialect::$lastErrorMassge);
         $dialect->close();
 

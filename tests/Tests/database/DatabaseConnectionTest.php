@@ -36,7 +36,7 @@ class DatabaseConnectionTest extends TestCase {
         ];
         $dialect = DatabaseDialect::getDialect($dbcfg);
         self::assertNotNull($dialect);
-        self::$dbname = rand_str(5, 'a-z') . '_db';
+        self::$dbname = rand_str(8, 'a-z') . '_db';
         self::assertTrue($dialect->createDatabase(self::$dbname, 'UTF8MB4'), DatabaseDialect::$lastErrorMassge);
         $dialect->close();
 

@@ -37,7 +37,7 @@ class PostgresDialectTest extends TestCase {
         ];
         self::$dialect = $dialect = DatabaseDialect::getDialect($dbcfg);
         self::assertNotNull($dialect);
-        self::$dbname = rand_str(5, 'a-z') . '_db';
+        self::$dbname = rand_str(7, 'a-z') . '_db';
         self::assertTrue($dialect->createDatabase(self::$dbname, 'UTF8'), DatabaseDialect::$lastErrorMassge);
 
         $dbcfg['dbname'] = self::$dbname;
