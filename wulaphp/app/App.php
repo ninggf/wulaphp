@@ -993,8 +993,7 @@ class App {
      * @param array|string|null $data   请求数据或请求方式
      * @param string            $method 请求方法.
      *
-     * @return mixed
-     * @throws
+     * @return bool
      */
     public static function run(?string $url = null, $data = null, string $method = 'GET') {
         if ($url) {

@@ -494,12 +494,12 @@ set_exception_handler(function (?Throwable $exception) {
 });
 //脚本结束回调
 register_shutdown_function(function () {
-    @session_write_close();# close session
+    define('WULA_STOPTIME', microtime(true));
     try {
-        define('WULA_STOPTIME', microtime(true));
         fire('wula\stop');
     } catch (\Exception $e) {
     }
+    @session_write_close();# close session
 });
 include WULA_ROOT . 'includes/plugin.php';
 include WULA_ROOT . 'includes/kernelimpl.php';

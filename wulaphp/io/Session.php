@@ -55,14 +55,13 @@ class Session {
                     $session_id = $_REQUEST [ $session_name ];
                 }
             }
-            if ($save_handler == 'redis') {
-                ini_set('redis.session.locking_enabled', 1);//启用锁
-                ini_set('redis.session.lock_expire', 120);//锁超时2分钟
-                ini_set('redis.session.lock_retries', - 1);//无限次重试
-                ini_set('redis.session.lock_wait_time', 2);// 每隔多久重试一次
-                if (!$session_expire) {
-                    ini_set('session.gc_maxlifetime', 43200);//12个小时
-                }
+            if ($save_handler == 'redis' && !$session_expire) {
+                # ini_set('redis.session.locking_enabled', 1);//启用锁
+                # ini_set('redis.session.lock_expire', 120);//锁超时2分钟
+                # ini_set('redis.session.lock_retries', - 1);//无限次重试
+                # ini_set('redis.session.lock_wait_time', 2);// 每隔多久重试一次
+                # 根据实际情况在php.ini或php-fpm的pool配置文件中配置
+                ini_set('session.gc_maxlifetime', 43200);//12个小时
             }
             @session_name($session_name);
             ob_start();
