@@ -66,7 +66,7 @@ abstract class Params {
      *
      * @return array|null 参数数组
      */
-    public function getParams(&$errors = null): ?array {
+    public function getParams(?array &$errors = null): ?array {
         $ary    = [];
         $fields = $this->_v__data;
         foreach ($fields as $field => $v) {
@@ -90,6 +90,10 @@ abstract class Params {
         return $ary;
     }
 
+    public function toArray(?array &$errors = null): ?array {
+        return $this->getParams($errors);
+    }
+
     /**
      * 获取参数列表用于新增数据.
      * 所有未明确指定值或指定值为null的参数将不会出现的结果数组里。
@@ -99,7 +103,7 @@ abstract class Params {
      *
      * @return array|null 参数数组
      */
-    public function forn(&$errors = null): ?array {
+    public function forn(?array &$errors = null): ?array {
         return $this->getParams($errors);
     }
 
@@ -112,7 +116,7 @@ abstract class Params {
      *
      * @return array|null 参数数组
      */
-    public function foru(&$errors = null): ?array {
+    public function foru(?array &$errors = null): ?array {
         $ary    = [];
         $fields = $this->_v__data;
         foreach ($fields as $field => $v) {

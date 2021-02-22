@@ -25,10 +25,11 @@ class ParamsTest extends TestCase {
 
     public function testGetParams() {
         $params = new LoginParams(true);
-        $params->getParams($errors);
+        $params->toArray($errors);
 
         self::assertNotEmpty($errors);
         self::assertTrue(isset($errors['password1']));
+        self::assertEquals('password1 does not equal to password', $errors['password1']);
 
         Request::getInstance()->addUserData(['password1' => '123']);
         $params1 = new LoginParams(true);

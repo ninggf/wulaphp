@@ -228,7 +228,7 @@ trait Validator {
     public final function addRule(string $field, array $rules, $multiple = false) {
         foreach ($rules as $rule => $m) {
             if (is_array($m)) {
-                @list($r, $ops, $m, $multiple) = $m;
+                [$r, $ops, $m, $multiple] = $m;
             } else {
                 if (is_int($rule)) {
                     $rule = $m;
@@ -292,7 +292,7 @@ trait Validator {
      * @param array  $data
      * @param array  $rules
      *
-     * @return bool|mixed
+     * @return mixed
      */
     private function validateField(string $field, array $data, array $rules) {
         foreach ($rules as $rule) {

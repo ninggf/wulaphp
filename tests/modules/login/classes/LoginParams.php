@@ -22,7 +22,7 @@ class LoginParams extends Params {
      */
     public $password;
     /**
-     * @equalTo (password)
+     * @equalTo (password) => {password1.not.equal}
      */
     public $password1;
 }
