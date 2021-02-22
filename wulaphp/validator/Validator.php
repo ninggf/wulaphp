@@ -300,6 +300,9 @@ trait Validator {
             $valid_m = 'v_' . $m;
             if (method_exists($this, $valid_m)) {
                 if ($msg) {
+                    if (preg_match('#^\{.+\}$#', $msg)) {
+                        $msg = _tt(substr($msg, 1, - 1));
+                    }
                     $msg = preg_replace('#\{\d+?\}#', '%s', $msg);
                 }
                 $valid = $this->$valid_m ($field, $ops, $data, $msg);
