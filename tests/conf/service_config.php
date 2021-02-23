@@ -11,7 +11,7 @@
 return [
     'verbose'  => 'vvvv',
     'services' => [
-        'strrev'  => [
+        /*'strrev'  => [
             'type'        => 'gearman',
             'job'         => 'strrev',
             'json'        => false,
@@ -22,6 +22,6 @@ return [
             'job'    => 'strrev2',
             'json'   => false,
             'script' => 'modules/app/script/strrev.php'
-        ]
+        ]*/
     ]
 ];

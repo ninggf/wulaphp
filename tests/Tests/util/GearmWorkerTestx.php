@@ -10,10 +10,10 @@
 
 namespace tests\Tests\util;
 
-use PHPUnit\Framework\TestCase;
 use wulaphp\artisan\GmTask;
 
-class GearmWorkerTest extends TestCase {
+class GearmWorkerTestx /*extends TestCase*/
+{
     public function testGmWorker() {
         self::assertTrue(extension_loaded('gearman'));
         if (version_compare('7.4', phpversion(), '>')) {
