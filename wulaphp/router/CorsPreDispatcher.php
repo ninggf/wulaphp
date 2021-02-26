@@ -66,15 +66,18 @@ class CorsPreDispatcher implements IURLPreDispatcher {
                         if ($header == 'Access-Control-Allow-Origin') {
                             @header($header . ': ' . $origin);
                         } else if ($header == 'Access-Control-Allow-Credentials') {
-                            @header($header . ': true');
+                            if ($value) {
+                                @header($header . ': true');
+                            }
                         } else {
                             @header($header . ': ' . $value);
                         }
                     }
+                    @header('Vary: origin');
                     http_response_code(204);
                     exit();//可以直接返回204
                 } else {
-                    if (isset($corsHeaders['Access-Control-Allow-Credentials'])) {
+                    if (isset($corsHeaders['Access-Control-Allow-Credentials']) && $corsHeaders['Access-Control-Allow-Credentials']) {
                         @header('Access-Control-Allow-Credentials: true');
                     }
                     @header('Access-Control-Allow-Origin: ' . $origin);

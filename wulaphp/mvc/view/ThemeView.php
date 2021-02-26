@@ -61,7 +61,7 @@ class ThemeView extends View {
             }
         }
         $tpl    = THEME_PATH . $this->tpl;
-        $devMod = APP_MODE != 'pro';
+        $devMod = !App::bcfg('smarty.cache',false);
         if (is_file($tpl)) {
             $this->__smarty = new \Smarty ();
             $tpl            = str_replace(DS, '/', $this->tpl);
@@ -105,7 +105,7 @@ class ThemeView extends View {
         $content = @ob_get_clean();
 
         if ($devMod && $content) {
-            $debugArg = App::cfg('debugArg', '');
+            $debugArg = App::cfg('smarty.debugArg', '');
             if ($debugArg) {
                 $debugArg    = json_encode($this->data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                 $debugString = '<script>console.log([\'pageData\',' . $debugArg . '])</script>';

@@ -50,7 +50,7 @@ class LocaleUploader implements IUploader {
      * @return array|bool  成功返回关键数组:
      * url,name,path
      */
-    public function save(string $filepath, ?string $path = null) {
+    public function save(string $filepath, ?string $path = null):?array {
         $path = trailingslashit($this->getDestDir($path));
 
         $destdir  = trailingslashit($this->upload_root_path) . $path;
@@ -59,7 +59,7 @@ class LocaleUploader implements IUploader {
         if (!is_dir($destdir) && !@mkdir($destdir, 0777, true)) { // 目的目录不存在，且创建也失败
             $this->last_error = '无法创建目录[' . $destdir . ']';
 
-            return false;
+            return null;
         }
         $pathinfo = pathinfo($tmp_file);
         $fext     = '.' . strtolower($pathinfo ['extension']);
@@ -75,7 +75,7 @@ class LocaleUploader implements IUploader {
         if ($result == false) {
             $this->last_error = '无法将文件[' . $tmp_file . ']重命名为[' . $destfile . ']';
 
-            return false;
+            return null;
         }
         $fileName = str_replace(DS, '/', $fileName);
 
@@ -86,7 +86,7 @@ class LocaleUploader implements IUploader {
         return $this->last_error;
     }
 
-    public function delete($file) {
+    public function delete(string $file) :bool{
         $file = $this->upload_root_path . $file;
         if (file_exists($file)) {
             @unlink($file);
@@ -102,7 +102,7 @@ class LocaleUploader implements IUploader {
     public function thumbnail($file, $w, $h) {
     }
 
-    public function configHint() {
+    public function configHint():string {
         return '';
     }
 
@@ -115,9 +115,9 @@ class LocaleUploader implements IUploader {
      *
      * @return string
      */
-    public function getDestDir(?string $path = null) {
+    public function getDestDir(?string $path = null):string {
         if (!$path) {
-            $dir = App::icfg('dir@media', App::icfg('upload.dir', 1));
+            $dir =  App::icfg('upload.dir', 1);
             switch ($dir) {
                 case 0:
                     $path = date('/Y/');
@@ -128,7 +128,7 @@ class LocaleUploader implements IUploader {
                 default:
                     $path = date('/Y/n/d/');
             }
-            $rand_cnt = App::icfg('group_num@media', App::icfg('upload.group', 0));
+            $rand_cnt =  App::icfg('upload.group', 0);
             if ($rand_cnt > 1) {
                 $cnt  = rand(0, $rand_cnt - 1);
                 $path .= $cnt . '/';
@@ -138,19 +138,9 @@ class LocaleUploader implements IUploader {
         if ($path[0] == '@') {
             return substr($path, 1);
         } else if ($path[0] == '~') {
-            $save_path = App::cfg('save_path@media', $uploadPath);
-            if (!$save_path) {
-                $save_path = 'files';
-            }
-
-            return trailingslashit($save_path) . substr($path, 1);
+            return trailingslashit($uploadPath) . substr($path, 1);
         } else {
-            $save_path = App::cfg('save_path@media', $uploadPath);
-            if (!$save_path) {
-                $save_path = 'files';
-            }
-
-            return $save_path . $path;
+            return trailingslashit($uploadPath) . $path;
         }
     }
 }

@@ -188,7 +188,7 @@ class ImageTool {
      */
     public function optimize($quality = 70, $file = null) {
         if ($this->ext == 'png') {
-            $pngquant = App::cfg('pngquant@media');
+            $pngquant = App::cfg('upload.pngquant');
             if ($pngquant && is_executable($pngquant)) {
                 $fileTmp        = $this->file . '.tmp';
                 $mq             = 90;
@@ -282,7 +282,7 @@ class ImageTool {
                         $pos = 'br';
                     }
                 }
-                $trans = App::cfg('transxy@media');
+                $trans = App::cfg('transxy');
                 if (!preg_match('/^[1-9]\d*x[1-9]\d*$/', $trans)) {
                     $trans = '0x0';
                 }

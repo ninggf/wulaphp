@@ -35,7 +35,7 @@ interface IUploader {
      *         </ul>
      *         </code>
      */
-    public function save(string $filepath, ?string $path = null);
+    public function save(string $filepath, ?string $path = null): ?array;
 
     /**
      * 返回错误信息.
@@ -50,7 +50,7 @@ interface IUploader {
      *
      * @return boolean 成功返回true,反之返回false.
      */
-    public function delete($file);
+    public function delete(string $file): bool;
 
     /**
      * 生成缩略图.
@@ -72,7 +72,7 @@ interface IUploader {
      * 配置提示
      * @return string
      */
-    public function configHint();
+    public function configHint(): string;
 
     public function configValidate($config);
 }

@@ -44,7 +44,7 @@ class FtpUploader extends LocaleUploader {
                 $opts = str_replace(["\n", "\r"], ['&', ''], trim($config));
             }
         } else {
-            $opts = str_replace(["\n", "\r"], ['&', ''], trim(App::cfg('params@media')));
+            $opts = str_replace(["\n", "\r"], ['&', ''], trim(App::cfg('upload.params')));
         }
         @parse_str($opts, $params);
         $path = aryget('path', $params, $path);
@@ -63,12 +63,12 @@ class FtpUploader extends LocaleUploader {
         return 'FTP文件上传器';
     }
 
-    public function save(string $filepath, ?string $path = null) {
+    public function save(string $filepath, ?string $path = null): ?array {
         if (!$this->ftp) {
             $this->initFtpConnection();
         }
         if (!$this->ftp) {
-            return false;
+            return null;
         }
         $path = $this->getDestDir($path);
 
@@ -76,7 +76,7 @@ class FtpUploader extends LocaleUploader {
         if (!$this->checkDir($destdir)) {
             $this->last_error = '无法创建目录' . $destdir;
 
-            return false;
+            return null;
         }
         $tmp_file = $filepath;
 
@@ -95,14 +95,14 @@ class FtpUploader extends LocaleUploader {
         if ($result == false) {
             $this->last_error = '无法将文件[' . $tmp_file . ']上传到FTP服务器[' . $destfile . ']';
 
-            return false;
+            return null;
         }
         $fileName = str_replace(DS, '/', $destfile);
 
         return ['url' => $fileName, 'name' => $pathinfo ['basename'], 'path' => $fileName];
     }
 
-    public function delete($file) {
+    public function delete(string $file): bool {
         if (!$this->ftp) {
             $this->initFtpConnection();
         }
@@ -121,7 +121,7 @@ class FtpUploader extends LocaleUploader {
         $this->ftp = null;
     }
 
-    private function checkDir($path) {
+    private function checkDir(string $path): bool {
         $paths = explode('/', trim($path, '/'));
         foreach ($paths as $path) {
             if (!@ftp_chdir($this->ftp, $path)) {
@@ -144,9 +144,9 @@ class FtpUploader extends LocaleUploader {
         return true;
     }
 
-    public function getDestDir(?string $path = null) {
+    public function getDestDir(?string $path = null): string {
         if (!$path) {
-            $dir = App::icfg('dir@media', 1);
+            $dir = App::icfg('upload.dir', 1);
             switch ($dir) {
                 case 0:
                     $path = date('/Y/');
@@ -157,7 +157,7 @@ class FtpUploader extends LocaleUploader {
                 default:
                     $path = date('/Y/n/d/');
             }
-            $rand_cnt = App::icfg('group_num@media', 0);
+            $rand_cnt = App::icfg('upload.group', 0);
             if ($rand_cnt > 1) {
                 $cnt  = rand(0, $rand_cnt - 1);
                 $path .= $cnt . '/';
@@ -233,7 +233,7 @@ class FtpUploader extends LocaleUploader {
         return $this->ftp;
     }
 
-    public function configHint() {
+    public function configHint(): string {
         return 'host=主机地址&port=端口&user=用户名&password=密码&timeout=超时时间单位秒&passive=是否是被动模式(1|0)&path=路径';
     }
 

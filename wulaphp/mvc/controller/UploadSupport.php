@@ -238,7 +238,7 @@ trait UploadSupport {
                     //添加水印
                     if ($hasWater && ($water || ($water = $this->watermark()))) {
                         $img = new ImageTool($filePath);
-                        $img->watermark($water, App::cfg('watermark_pos@media', 'br'), App::cfg('watermark_min_size@media'));
+                        $img->watermark($water, App::cfg('upload.watermark_pos', 'br'), App::cfg('upload.watermark_min_size'));
                         unset($img);
                     }
                 }

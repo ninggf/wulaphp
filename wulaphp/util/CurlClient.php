@@ -196,8 +196,8 @@ class CurlClient {
     /**
      * 准备Client给execute方法调用.
      *
-     * @param string               $url      URL
-     * @param array                $data     数据
+     * @param string                    $url      URL
+     * @param array                     $data     数据
      * @param CurlMultiExeCallback|null $callback 回调
      *
      * @return CurlClient;
@@ -284,7 +284,7 @@ class CurlClient {
     /**
      * 准备Client给execute方法使用.
      *
-     * @param string               $url
+     * @param string                    $url
      * @param CurlMultiExeCallback|null $callback
      *
      * @return CurlClient
@@ -320,7 +320,7 @@ class CurlClient {
      *
      * @return bool|mixed|null|string|string[]
      */
-    public function get(string $url, $base = null,bool $reuse = false,bool $isImg = false) {
+    public function get(string $url, $base = null, bool $reuse = false, bool $isImg = false) {
         set_time_limit(0);
 
         $curl = $this->ch;
@@ -500,7 +500,7 @@ class CurlClient {
      * 下载图片.
      *
      * @param string $url
-     * @param mixed   $base
+     * @param mixed  $base
      *
      * @return bool|mixed|string|string[]|null
      */
@@ -642,7 +642,7 @@ class CurlClient {
      *
      * @return array results for each request. array(0=>success array,1=>failed array,2=>not start).
      */
-    public static function execute(array $clients):array {
+    public static function execute(array $clients): array {
         $result = [0 => [], 1 => [], 2 => []];
         if ($clients) {
             $mh      = curl_multi_init();

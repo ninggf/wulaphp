@@ -32,7 +32,7 @@ abstract class Uploader implements IUploader {
         return true;
     }
 
-    public function configHint() {
+    public function configHint():string {
         return '';
     }
 
@@ -45,7 +45,7 @@ abstract class Uploader implements IUploader {
      */
     public static function getUploader(?string $id = null): ?IUploader {
         if (!$id) {
-            $id = App::cfg('default_uploader@media', App::cfg('upload.uploader', 'file'));
+            $id =  App::cfg('upload.uploader', 'file');
         }
         $uploaders = self::uploaders();
         if (isset($uploaders[ $id ])) {

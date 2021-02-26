@@ -219,7 +219,12 @@ ETC;
  * @internal
  */
 function getDestDir() {
-    $dir = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR;
+    global $argv;
+    if (isset($argv[1])) {
+        $dir = untrailingslashit($argv[1]) . DIRECTORY_SEPARATOR;
+    } else {
+        $dir = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR;
+    }
 
     return $dir;
 }

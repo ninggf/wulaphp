@@ -21,7 +21,6 @@ class JsonLogger implements LoggerInterface {
         DEBUG_ERROR => 'ERROR'
     ];
     protected        $channel  = '';
-    protected        $fluentd;
     protected        $app;
 
     public function __construct(string $file = 'wula') {

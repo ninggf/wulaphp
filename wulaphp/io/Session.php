@@ -27,13 +27,15 @@ class Session {
     }
 
     /**
-     * start the session
      *
-     * @param string $session_id
+     * start the session.
+     *
+     * @param string|null $session_id
      *
      * @return string session_id
+     * @throws
      */
-    public function start(?string $session_id = null) {
+    public function start(?string $session_id = null):string {
         if ($this->session_id) {
             return $this->session_id;
         }
@@ -100,7 +102,7 @@ class Session {
      * 换session，可以实现登录前一个session，登录后一个session。
      * @return string
      */
-    public function changeId() {
+    public function changeId():string {
         if ($this->session_id) {
             session_unset();
             session_regenerate_id(true);
