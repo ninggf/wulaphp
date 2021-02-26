@@ -220,8 +220,8 @@ ETC;
  */
 function getDestDir() {
     global $argv;
-    if (isset($argv[1])) {
-        $dir = untrailingslashit($argv[1]) . DIRECTORY_SEPARATOR;
+    if (isset($argv[2])) {
+        $dir = rtrim($argv[2], '/\\') . DIRECTORY_SEPARATOR;
     } else {
         $dir = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR;
     }
