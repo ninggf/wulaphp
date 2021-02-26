@@ -8,19 +8,15 @@
  * file that was distributed with this source code.
  */
 
-namespace testm\controllers;
+namespace m3\controllers;
 
+use m2\classes\M2Prefix;
 use wulaphp\mvc\controller\Controller;
 
-class Json extends Controller {
-    /**
-     * @jsonBody
-     * @return array
-     */
-    public function index() {
-        $name = rqst('name');
-        $age  = rqst('age');
+class IndexController extends Controller {
+    use M2Prefix;
 
-        return ['name' => $name, 'age' => $age];
+    public function index() {
+        return 'ok';
     }
 }

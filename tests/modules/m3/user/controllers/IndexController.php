@@ -12,7 +12,7 @@ namespace m3\user\controllers;
 
 use wulaphp\mvc\controller\Controller;
 
-class Index extends Controller {
+class IndexController extends Controller {
     public function index() {
         return 'admin/m3/user is ok';
     }

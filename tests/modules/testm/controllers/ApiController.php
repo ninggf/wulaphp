@@ -15,7 +15,7 @@ use wulaphp\restful\DefaultSignChecker;
 use wulaphp\restful\ISecretCheck;
 use wulaphp\restful\RESTFulServer;
 
-class Api extends Controller {
+class ApiController extends Controller {
     public function index() {
         $sign   = new DefaultSignChecker();
         $server = new RESTFulServer(new class implements ISecretCheck{

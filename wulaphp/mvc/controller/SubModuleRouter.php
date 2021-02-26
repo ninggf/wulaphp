@@ -46,13 +46,14 @@ class SubModuleRouter extends Controller {
             case 0:
                 return null;
             case 1:
-                $subname = array_shift($args);
                 $action  = 'index';
                 break;
             default:
-                $subname = array_shift($args);
                 $action  = array_shift($args);
         }
+
+        $subname = (string)array_shift($args);
+
         if (empty($subname) || empty($action)) {
             return null;
         }
@@ -118,7 +119,7 @@ class SubModuleRouter extends Controller {
                         if (!$method->isPublic() || $methodSlag != $actionSlag) {
                             return null;
                         }
-                        /* @var \ReflectionParameter[] $params */
+
                         $params      = $method->getParameters();
                         $paramsCount = count($params);
                         if ($paramsCount < count($pms)) {

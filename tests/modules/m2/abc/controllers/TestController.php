@@ -8,15 +8,15 @@
  * file that was distributed with this source code.
  */
 
-namespace m2\user\controllers;
+namespace m2\abc\controllers;
 
-use m1\classes\M1Prefix;
+use m2\classes\M2Prefix;
 use wulaphp\mvc\controller\Controller;
 
-class Index extends Controller {
-    use M1Prefix;
+class TestController extends Controller {
+    use M2Prefix;
 
-    public function index() {
-        return 'admin/m2/user is ok';
+    public function add($i, $j) {
+        return ['result' => $i + $j];
     }
 }

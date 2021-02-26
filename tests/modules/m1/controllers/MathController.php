@@ -13,7 +13,7 @@ namespace m1\controllers;
 use m2\classes\M2Prefix;
 use wulaphp\mvc\controller\Controller;
 
-class Math extends Controller {
+class MathController extends Controller {
     use M2Prefix;
 
     public function add($i = 0, $j = 0) {

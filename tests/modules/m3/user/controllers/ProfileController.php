@@ -13,7 +13,7 @@ namespace m3\user\controllers;
 use m2\classes\M2Prefix;
 use wulaphp\mvc\controller\Controller;
 
-class Profile extends Controller {
+class ProfileController extends Controller {
     use M2Prefix;
 
     public function read() {

@@ -8,12 +8,15 @@
  * file that was distributed with this source code.
  */
 
-namespace subm\user\controllers;
+namespace m2\controllers;
 
+use m2\classes\M2Prefix;
 use wulaphp\mvc\controller\Controller;
 
-class Add extends Controller {
-    public function addOp() {
-        return pview('~testm/views/test/add', ['i' => 2, 'j' => 8]);
+class IndexController extends Controller {
+    use M2Prefix;
+
+    public function index() {
+        return 'ok';
     }
 }

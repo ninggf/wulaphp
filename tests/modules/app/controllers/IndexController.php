@@ -8,15 +8,16 @@
  * file that was distributed with this source code.
  */
 
-namespace m2\abc\controllers;
+namespace app\controllers;
 
-use m2\classes\M2Prefix;
 use wulaphp\mvc\controller\Controller;
 
-class Test extends Controller {
-    use M2Prefix;
+class IndexController extends Controller {
+    public function index() {
+        return template('index.tpl', ['name' => 'Woola']);
+    }
 
-    public function add($i, $j) {
-        return ['result' => $i + $j];
+    public function wula() {
+        return pview(['name' => 'this ia wula']);
     }
 }

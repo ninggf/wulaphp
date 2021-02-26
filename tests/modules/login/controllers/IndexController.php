@@ -20,7 +20,7 @@ use wulaphp\mvc\view\SimpleView;
  * @package  tests\modules\login\controllers
  * @passport viptest
  */
-class Index extends Controller {
+class IndexController extends Controller {
     use SessionSupport, PassportSupport;
     protected $sessionID = 'aaaaabbbbccccdddd';
 

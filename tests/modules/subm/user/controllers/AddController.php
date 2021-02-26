@@ -8,16 +8,12 @@
  * file that was distributed with this source code.
  */
 
-namespace app\controllers;
+namespace subm\user\controllers;
 
 use wulaphp\mvc\controller\Controller;
 
-class Index extends Controller {
-    public function index() {
-        return template('index.tpl', ['name' => 'Woola']);
-    }
-
-    public function wula() {
-        return pview(['name' => 'this ia wula']);
+class AddController extends Controller {
+    public function addOp() {
+        return pview('~testm/views/test/add', ['i' => 2, 'j' => 8]);
     }
 }

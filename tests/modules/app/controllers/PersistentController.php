@@ -17,7 +17,7 @@ use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\mvc\controller\Controller;
 use wulaphp\util\RedisClient;
 
-class Persistent extends Controller {
+class PersistentController extends Controller {
     public function redis() {
         $redis = RedisClient::getRedis(['localhost', 6379, 5, '', 8, true]);
 

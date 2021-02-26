@@ -250,18 +250,22 @@ class DefaultDispatcher implements IURLDispatcher {
         if ($action != 'index') {
             $modulePath = MODULES_PATH . $module . DS;
             // Action Controller 的 index方法
-            $controllerClz   = str_replace('-', '', ucwords($action, '-'));
-            $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
-            $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index', $action];
+            $controllerClz   = str_replace('-', '', ucwords($action, '-')).'Controller';
 
-            if (!$isParent || $subnamespace || ($isParent && !is_dir($modulePath . $action . DS . 'controllers'))) {
-                $controllerClz   = 'Index';
+            $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
+            $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index',
+                                $action];
+
+            if (!$isParent || $subnamespace || !is_dir($modulePath . $action . DS . 'controllers')) {
+                $controllerClz   = 'IndexController';
+
                 $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
-                $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, $action, 'index'];
+                $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz,
+                                    $action, 'index'];
             }
 
             foreach ($files as $file) {
-                [$controller_file, $controllerClz, $act, $controller] = $file;
+                [$controller_file, $controllerClz, $act, $controllerSlag] = $file;
                 if (is_file($controller_file)) {
                     include_once $controller_file;
                     if (is_subclass_of($controllerClz, 'wulaphp\mvc\controller\Controller')) {
@@ -274,7 +278,7 @@ class DefaultDispatcher implements IURLDispatcher {
                             Router::removeSlash($act),
                             $params,
                             $controller_file,
-                            $controller,
+                            $controllerSlag,
                             $act
                         ];
                     }
@@ -282,7 +286,7 @@ class DefaultDispatcher implements IURLDispatcher {
             }
         } else {
             // 默认Controller的index方法
-            $controllerClz   = 'Index';
+            $controllerClz   = 'IndexController';
             $controller_file = MODULES_PATH . $module . DS . 'controllers' . DS . $controllerClz . '.php';
             $controllerClz   = $namespace . '\controllers\\' . $controllerClz;
             if (is_file($controller_file)) {

@@ -12,6 +12,7 @@ class AppModule extends Module {
     }
 
     protected function bind(): ?array {
+        //主页转发
         return [
             'router\parse_url' => function ($url) {
                 if ($url == 'app') {

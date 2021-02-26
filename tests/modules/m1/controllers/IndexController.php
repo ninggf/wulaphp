@@ -8,7 +8,7 @@ use wulaphp\mvc\controller\Controller;
 /**
  * 默认控制器.
  */
-class Index extends Controller {
+class IndexController extends Controller {
     use M1Prefix;
 
     /**

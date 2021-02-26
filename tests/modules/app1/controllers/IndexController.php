@@ -8,15 +8,12 @@
  * file that was distributed with this source code.
  */
 
-namespace m3\controllers;
+namespace app1\controllers;
 
-use m2\classes\M2Prefix;
 use wulaphp\mvc\controller\Controller;
 
-class Index extends Controller {
-    use M2Prefix;
-
+class IndexController extends Controller {
     public function index() {
-        return 'ok';
+        return 'app1';
     }
 }
