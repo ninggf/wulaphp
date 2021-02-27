@@ -168,7 +168,7 @@ class Router {
             }
             @header_remove('X-Powered-By');
             $page = apply_filter('alter_page_cache', $page);
-            @list($content, $headers, $time, $expire) = $page;
+            [$content, $headers, $time, $expire] = $page;
             if (isset ($_SERVER ['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER ['HTTP_IF_MODIFIED_SINCE']) === $time) {
                 http_response_code(304);
                 if (php_sapi_name() == 'cgi-fcgi') {
@@ -182,7 +182,7 @@ class Router {
                 }
                 if ($time !== 0) {
                     Response::cache($expire, $time);
-                } else if ($time == 0) {
+                } else if ($time==0) {
                     Response::nocache();
                 }
                 echo $content;

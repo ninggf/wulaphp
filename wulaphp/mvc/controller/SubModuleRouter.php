@@ -46,13 +46,13 @@ class SubModuleRouter extends Controller {
             case 0:
                 return null;
             case 1:
+                $subname = (string)array_shift($args);
                 $action  = 'index';
                 break;
             default:
+                $subname = (string)array_shift($args);
                 $action  = array_shift($args);
         }
-
-        $subname = (string)array_shift($args);
 
         if (empty($subname) || empty($action)) {
             return null;
@@ -103,7 +103,7 @@ class SubModuleRouter extends Controller {
                         $actionFound = true;
                     } else if (method_exists($clz, $action)) {
                         $actionFound = true;
-                        define('NEED_CHECK_REQ_M', $rqMethod);
+                        defined('NEED_CHECK_REQ_M') or define('NEED_CHECK_REQ_M', $rqMethod);
                     } else { #后退查找index方法
                         $action     = 'index';
                         $actionSlag = 'index';

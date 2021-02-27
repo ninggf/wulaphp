@@ -47,7 +47,7 @@ class LocaleUploader implements IUploader {
      * @param string      $filepath 文件路径
      * @param string|null $path     目的目录
      *
-     * @return array|bool  成功返回关键数组:
+     * @return array|null  成功返回关键数组:
      * url,name,path
      */
     public function save(string $filepath, ?string $path = null):?array {
@@ -138,9 +138,9 @@ class LocaleUploader implements IUploader {
         if ($path[0] == '@') {
             return substr($path, 1);
         } else if ($path[0] == '~') {
-            return trailingslashit($uploadPath) . substr($path, 1);
+            return trailingslashit($uploadPath) . ltrim(substr($path, 1),'/\\');
         } else {
-            return trailingslashit($uploadPath) . $path;
+            return trailingslashit($uploadPath) . ltrim($path,'/\\');
         }
     }
 }
