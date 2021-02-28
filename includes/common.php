@@ -2,6 +2,14 @@
 
 use wulaphp\auth\Passport;
 use wulaphp\db\sql\ImmutableValue;
+use wulaphp\db\sql\Ref;
+use wulaphp\io\Request;
+use wulaphp\io\Response;
+use wulaphp\router\Router;
+use wulaphp\util\CommonLogger;
+use wulaphp\util\FluentdLogger;
+use wulaphp\util\JsonLogger;
+use wulaphp\util\RedisLogger;
 
 define('CLRF', "\r\n");
 define('CLRF1', "\r\n\r\n");
@@ -17,7 +25,7 @@ define('CLRF1', "\r\n\r\n");
 function rqst(string $name, $default = '', bool $xss_clean = true) {
     global $__rqst;
     if (defined('ARTISAN_TASK_PID')) {
-        $__rqst = \wulaphp\io\Request::getInstance();
+        $__rqst = Request::getInstance();
     } else if (!$__rqst) {
         $__rqst = wulaphp\io\Request::getInstance();
     }
@@ -37,9 +45,9 @@ function rqst(string $name, $default = '', bool $xss_clean = true) {
 function rqsts(array $names, bool $xss_clean = true, array $map = []): array {
     global $__rqst;
     if (defined('ARTISAN_TASK_PID')) {
-        $__rqst = \wulaphp\io\Request::getInstance();
+        $__rqst = Request::getInstance();
     } else if (!$__rqst) {
-        $__rqst = wulaphp\io\Request::getInstance();
+        $__rqst = Request::getInstance();
     }
     $rqts = [];
     foreach ($names as $key => $default) {
@@ -65,7 +73,7 @@ function rqsts(array $names, bool $xss_clean = true, array $map = []): array {
  * @return mixed
  */
 function param(int $pos = 0, string $default = '') {
-    return \wulaphp\router\Router::getRouter()->getParam($pos, $default);
+    return Router::getRouter()->getParam($pos, $default);
 }
 
 /**
@@ -81,7 +89,7 @@ function param(int $pos = 0, string $default = '') {
 function arg(string $name, $default = '') {
     global $__rqst;
     if (defined('ARTISAN_TASK_PID')) {
-        $__rqst = \wulaphp\io\Request::getInstance();
+        $__rqst = Request::getInstance();
     } else if (!$__rqst) {
         $__rqst = wulaphp\io\Request::getInstance();
     }
@@ -99,7 +107,7 @@ function arg(string $name, $default = '') {
 function rqset(string $name): bool {
     global $__rqst;
     if (defined('ARTISAN_TASK_PID')) {
-        $__rqst = \wulaphp\io\Request::getInstance();
+        $__rqst = Request::getInstance();
     } else if (!$__rqst) {
         $__rqst = wulaphp\io\Request::getInstance();
     }
@@ -116,7 +124,7 @@ function rqset(string $name): bool {
  * @return int
  */
 function irqst(string $name, int $default = 0): int {
-    return intval(rqst($name, $default, true));
+    return intval(rqst($name, $default));
 }
 
 /**
@@ -128,7 +136,7 @@ function irqst(string $name, int $default = 0): int {
  * @return float
  */
 function frqst(string $name, float $default = 0.0): float {
-    return floatval(rqst($name, $default, true));
+    return floatval(rqst($name, $default));
 }
 
 /**
@@ -207,7 +215,7 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
         $dumps = '[' . date('c') . '] ' . $message . "\n";
         for ($i = 0; $i < 10; $i ++) {
             if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
-                $dumps .= \wulaphp\util\CommonLogger::getLine($trace_info[ $i ], $i);
+                $dumps .= CommonLogger::getLine($trace_info[ $i ], $i);
             }
         }
         if (isset ($_SERVER ['REQUEST_URI'])) {
@@ -237,16 +245,16 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
         //获取日志器.
         switch (LOG_DRIVER) {
             case 'redis':
-                $dlogger = new \wulaphp\util\RedisLogger($file);
+                $dlogger = new RedisLogger($file);
                 break;
             case 'fluentd':
-                $dlogger = new \wulaphp\util\FluentdLogger($file);
+                $dlogger = new FluentdLogger($file);
                 break;
             case 'json':
-                $dlogger = new \wulaphp\util\JsonLogger($file);
+                $dlogger = new JsonLogger($file);
                 break;
             default:
-                $dlogger = new \wulaphp\util\CommonLogger($file);
+                $dlogger = new CommonLogger($file);
         }
 
         $log = apply_filter('logger\getLogger', $dlogger, $file);
@@ -294,7 +302,7 @@ function get_session_name(): string {
  * @return \wulaphp\db\sql\ImmutableValue
  */
 function imv(string $val, ?string $alias = null): ImmutableValue {
-    return new \wulaphp\db\sql\ImmutableValue ($val, $alias);
+    return new ImmutableValue ($val, $alias);
 }
 
 /**
@@ -304,8 +312,8 @@ function imv(string $val, ?string $alias = null): ImmutableValue {
  *
  * @return \wulaphp\db\sql\Ref
  */
-function imf(string $field): \wulaphp\db\sql\Ref {
-    return new \wulaphp\db\sql\Ref($field);
+function imf(string $field): Ref {
+    return new Ref($field);
 }
 
 /**
@@ -333,7 +341,7 @@ function get_unique_id($obj): ?string {
  * @return \wulaphp\auth\Passport
  */
 function whoami(string $type = 'default'): Passport {
-    return \wulaphp\auth\Passport::get($type);
+    return Passport::get($type);
 }
 
 /**
@@ -346,7 +354,7 @@ function whoami(string $type = 'default'): Passport {
  *
  * @return string
  */
-function get_thumbnail_filename(string $filename, int $w, int $h, string $sep = '-') {
+function get_thumbnail_filename(string $filename, int $w, int $h, string $sep = '-'): string {
     $finfo = pathinfo($filename);
 
     $shortname = $finfo['dirname'] . '/' . $finfo['filename'];
@@ -425,73 +433,76 @@ function http_out($status, $message = '') {
     exit();
 }
 
-//异常处理
-set_exception_handler(function (?Throwable $exception) {
-    global $argv;
-    if (!$exception) {
-        return;
-    }
-    if (defined('DEBUG')) {
-        if ($exception->getCode() != 404) {
-            log_error($exception->getMessage(), 'error');
+// 用户可以选择自己处理异常
+if (null === set_exception_handler(null)) {
+    //异常处理
+    set_exception_handler(function (?Throwable $exception) {
+        global $argv;
+        if (!$exception) {
+            return;
         }
-        if ($argv) {
-            echo $exception->getMessage(), "\n";
-            echo $exception->getTraceAsString(), "\n";
-        } else if (DEBUG == DEBUG_DEBUG) {
-            status_header(500);
-            $stack  = [];
-            $msg    = str_replace('file:' . APPROOT, '', $exception->getMessage());
-            $tracks = $exception->getTrace();
-            $f      = $exception->getFile();
-            $l      = $exception->getLine();
-            array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
-            foreach ($tracks as $i => $t) {
-                $tss     = ['<tr>'];
-                $tss[]   = "<td class=\"cell-n\">$i</i>";
-                $tss[]   = "<td class=\"cell-f\">{$t['function']}( )</td>";
-                $f       = str_replace(APPROOT, '', $t['file']);
-                $tss[]   = "<td>{$f}<b>:</b>{$t['line']}</td>";
-                $tss []  = '</tr>';
-                $stack[] = implode('', $tss);
+        if (defined('DEBUG')) {
+            if ($exception->getCode() != 404) {
+                log_error($exception->getMessage(), 'error');
             }
-            $errorFile = file_get_contents(__DIR__ . '/debug.tpl');
-            $errorFile = str_replace([
-                '{$message}',
-                '{$stackInfo}',
-                '{$title}',
-                '{$tip}',
-                '{$cs}',
-                '{$f}',
-                '{$l}',
-                '{$uri}'
-            ], [
-                $msg,
-                implode('', $stack),
-                __('Oops'),
-                __('Fatal error'),
-                __('Call Stack'),
-                __('Function'),
-                __('Location'),
-                \wulaphp\router\Router::getURI()
-            ], $errorFile);
-            echo $errorFile;
-            exit(0);
+            if ($argv) {
+                echo $exception->getMessage(), "\n";
+                echo $exception->getTraceAsString(), "\n";
+            } else if (DEBUG == DEBUG_DEBUG) {
+                status_header(500);
+                $stack  = [];
+                $msg    = str_replace('file:' . APPROOT, '', $exception->getMessage());
+                $tracks = $exception->getTrace();
+                $f      = $exception->getFile();
+                $l      = $exception->getLine();
+                array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
+                foreach ($tracks as $i => $t) {
+                    $tss     = ['<tr>'];
+                    $tss[]   = "<td class=\"cell-n\">$i</i>";
+                    $tss[]   = "<td class=\"cell-f\">{$t['function']}( )</td>";
+                    $f       = str_replace(APPROOT, '', $t['file']);
+                    $tss[]   = "<td>{$f}<b>:</b>{$t['line']}</td>";
+                    $tss []  = '</tr>';
+                    $stack[] = implode('', $tss);
+                }
+                $errorFile = file_get_contents(__DIR__ . '/debug.tpl');
+                $errorFile = str_replace([
+                    '{$message}',
+                    '{$stackInfo}',
+                    '{$title}',
+                    '{$tip}',
+                    '{$cs}',
+                    '{$f}',
+                    '{$l}',
+                    '{$uri}'
+                ], [
+                    $msg,
+                    implode('', $stack),
+                    __('Oops'),
+                    __('Fatal error'),
+                    __('Call Stack'),
+                    __('Function'),
+                    __('Location'),
+                    Router::getURI()
+                ], $errorFile);
+                echo $errorFile;
+                exit(0);
+            } else {
+                Response::respond(500, $exception->getMessage());
+            }
         } else {
-            \wulaphp\io\Response::respond(500, $exception->getMessage());
+            if ($argv) {
+                echo $exception->getMessage(), "\n";
+                echo $exception->getTraceAsString(), "\n";
+                exit(1);
+            } else {
+                @error_log($exception->getMessage(), 4);
+                Response::respond(500, $exception->getMessage());
+                exit(0);
+            }
         }
-    } else {
-        if ($argv) {
-            echo $exception->getMessage(), "\n";
-            echo $exception->getTraceAsString(), "\n";
-            exit(1);
-        } else {
-            @error_log($exception->getMessage(), 4);
-            \wulaphp\io\Response::respond(500, $exception->getMessage());
-            exit(0);
-        }
-    }
-});
+    });
+}
 //脚本结束回调
 register_shutdown_function(function () {
     define('WULA_STOPTIME', microtime(true));

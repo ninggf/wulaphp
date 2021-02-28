@@ -267,7 +267,7 @@ class Response {
      *
      * @return \wulaphp\io\Cookie
      */
-    public static function cookie(string $name, $value = null, ?int $expire = null, ?string $path = null, ?string $domain = null) {
+    public static function cookie(string $name, $value = null, ?int $expire = null, ?string $path = null, ?string $domain = null): Cookie {
         $ck = new Cookie($name, $value);
 
         if ($expire !== null) {
@@ -296,7 +296,7 @@ class Response {
      * @filter before_output_content $content
      * @return string|null
      */
-    public function output($view = null, $return = false) {
+    public function output($view = null, $return = false): ?string {
         if ($view instanceof View) {
             $this->view = $view;
         } else if (is_string($view) || is_bool($view) || is_numeric($view)) {
@@ -309,9 +309,7 @@ class Response {
 
         if ($this->view instanceof View) {
             if ($return) {
-                $content = $this->view->render();
-
-                return $content;
+                return $this->view->render();
             } else {
                 $this->view->echoHeader();
                 $content = $this->view->render();
@@ -321,7 +319,7 @@ class Response {
                 }
             }
         } else if (!$return) {
-            Response::respond(404);
+            Response::respond();
         }
 
         return null;
