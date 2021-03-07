@@ -16,6 +16,7 @@ namespace wulaphp\db;
  * @property-read string $metaIdField
  * @property-read string $metaNameField
  * @property-read string $originTable
+ * @method \wulaphp\db\sql\Query get($id, $fields = '*')
  */
 trait MetaTable {
     protected final function onInitMetaTable() {
@@ -23,21 +24,21 @@ trait MetaTable {
             $this->metaIdField = strtolower(preg_replace('/_meta$/', '', $this->originTable)) . '_id';
         }
         if (!isset($this->metaNameField) || !$this->metaNameField) {
-            $this->metaIdField = 'name';
+            $this->metaNameField = 'name';
         }
     }
 
     /**
      * 设置用户字符型元数据.
      *
-     * @param string|int   $id
+     * @param int          $id
      * @param string       $name
      * @param string|array $value
      * @param string       $field
      *
      * @return bool
      */
-    public function setMeta($id, $name, $value, $field = 'value') {
+    public function setMeta(int $id, string $name, $value, string $field = 'value'): bool {
         if (is_array($value)) {
             $value = json_encode($value, JSON_UNESCAPED_UNICODE);
         }
@@ -48,14 +49,14 @@ trait MetaTable {
     /**
      * 获取JSON
      *
-     * @param string|int $id
-     * @param string     $name
-     * @param string     $field
+     * @param int    $id
+     * @param string $name
+     * @param string $field
      *
      * @return array
      */
-    public function getJsonMeta($id, $name, $field = 'value') {
-        $values = $this->get([$this->metaIdField => intval($id), $this->metaNameField => $name])->get($field);
+    public function getJsonMeta(int $id, string $name, string $field = 'value'): array {
+        $values = $this->get([$this->metaIdField => $id, $this->metaNameField => $name])->get($field);
         if ($values) {
             $values = @json_decode($values, true);
         }
@@ -66,13 +67,13 @@ trait MetaTable {
     /**
      * 取字符.
      *
-     * @param string|int  $id
+     * @param int         $id
      * @param string|null $name
      * @param string      $field
      *
      * @return array|string
      */
-    public function getMeta($id, $name = null, $field = 'value') {
+    public function getMeta(int $id, ?string $name = null, string $field = 'value') {
         if ($name) {
             $values = $this->get([$this->metaIdField => intval($id), $this->metaNameField => $name])->get($field);
         } else {
@@ -88,25 +89,19 @@ trait MetaTable {
     /**
      * 设置元数据.
      *
-     * @param string|int $uid
+     * @param int        $id
      * @param string     $name
      * @param string     $field
      * @param string|int $value
      *
      * @return bool
      */
-    private function updateMeta($uid, $name, $field, $value) {
-        $w[ $this->metaNameField ] = $name;
-        $w[ $this->metaIdField ]   = $uid;
-        $data[ $field ]            = $value;
+    private function updateMeta(int $id, string $name, string $field, $value): bool {
+        $data[ $this->metaIdField ]   = $id;
+        $data[ $this->metaNameField ] = $name;
+        $data[ $field ]               = $value;
         try {
-            if ($this->exist($w)) {
-                return $this->update($data, $w);
-            } else {
-                $w[ $field ] = $data[ $field ];
-
-                return $this->insert($w);
-            }
+            return $this->upsert($data, [$field => $value], 'UDX_ID_NAME') !== false;
         } catch (\Exception $e) {
             $this->errors = $e->getMessage();
         }

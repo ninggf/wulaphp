@@ -27,7 +27,7 @@ abstract class View {
     /**@var \wulaphp\db\View[] */
     private static $tableClzs   = [];
     public         $table       = '';//表名
-    private        $originTable;
+    protected      $originTable;
     protected      $tableName;//带前缀表名
     protected      $qualifiedName;//带AS的表名
     protected      $primaryKeys = ['id'];
@@ -263,7 +263,7 @@ abstract class View {
      *
      * @return Query
      */
-    public final function findAll($where = null, string $fields = '*'): Query {
+    public final function findAll($where = null, $fields = '*'): Query {
         return $this->find($where, $fields, 0);
     }
 

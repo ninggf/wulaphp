@@ -28,7 +28,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
      *
      * @return \wulaphp\db\sql\InsertSQL
      */
-    public function autoKey($key) {
+    public function autoKey(string $key): InsertSQL {
         $this->keyField = $key;
 
         return $this;
@@ -41,7 +41,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
      *
      * @return $this
      */
-    public function autoField($field) {
+    public function autoField(string $field): InsertSQL {
         $this->keyField = $field;
 
         return $this;
@@ -54,7 +54,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
      *
      * @return  \wulaphp\db\sql\InsertSQL
      */
-    public function into($table) {
+    public function into(string $table): InsertSQL {
         $this->intoTable = $table;
 
         return $this;
@@ -188,11 +188,11 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     /**
      * 获取 insert 语句生成的自增型ID.
      *
-     * @param string $field 字段名.
+     * @param string|null $field 字段名.
      *
      * @return int
      */
-    public function newId(string $field = null) {
+    public function newId(?string $field = null): int {
         $ids            = [];
         $this->keyField = $field;
         $cnt            = $this->count();
@@ -223,7 +223,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
      *
      * @return array
      */
-    protected function lastInsertIds() {
+    protected function lastInsertIds(): array {
         if (!$this->idsGot) {
             $this->idsGot = true;
             if ($this->keySet) {
@@ -248,11 +248,11 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     /**
      * 获取最后生成的自增字段.
      *
-     * @param string $field
+     * @param string|null $field
      *
      * @return int
      */
-    public function lastId($field = null) {
+    public function lastId(?string $field = null): int {
         try {
             $this->checkDialect();
         } catch (\Exception $e) {
@@ -267,12 +267,12 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     /**
      * 唯一键冲突时更新数据.
      *
-     * @param string $key 冲突键.
-     * @param array  $data
+     * @param string     $key 冲突键.
+     * @param array|null $data
      *
      * @return $this
      */
-    public function onDuplicate(string $key, array $data = null) {
+    public function onDuplicate(string $key, ?array $data = null): InsertSQL {
         $this->dupKey  = $key;
         $this->dupData = $data;
 
@@ -282,7 +282,7 @@ class InsertSQL extends QueryBuilder implements \ArrayAccess, \IteratorAggregate
     /**
      * @return \ArrayIterator
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return new \ArrayIterator ($this->ids);
     }
 

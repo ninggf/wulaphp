@@ -452,7 +452,7 @@ class DatabaseConnection {
                         } else if (is_null($args[ $params ])) {
                             $v = null;
                         } else {
-                            $v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
+                            $v = $dialect->quote($args[ $params ]);
                         }
                         $params ++;
 
@@ -562,7 +562,7 @@ class DatabaseConnection {
                         } else if (is_null($args[ $params ])) {
                             $v = null;
                         } else {
-                            $v = $dialect->quote($args[ $params ], \PDO::PARAM_STR);
+                            $v = $dialect->quote($args[ $params ]);
                         }
                         $params ++;
 
