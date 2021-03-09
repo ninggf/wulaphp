@@ -167,7 +167,7 @@ abstract class CmfModule extends Module {
      * @return array
      */
     public function getDefinedTables(DatabaseDialect $dialect): array {
-        $sqlFile = MODULES_PATH . $this->dirname . DS . 'schema.sql.php';
+        $sqlFile = MODULES_PATH . $dialect->getDriverName() . '.sql.php';
         if (is_file($sqlFile)) {
             $file = file_get_contents($sqlFile);
 
