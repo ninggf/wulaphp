@@ -216,9 +216,7 @@ class MySQLDialect extends DatabaseDialect {
             'port'     => 3306,
             'user'     => 'root',
             'password' => 'root',
-            'options'  => [
-                \PDO::MYSQL_ATTR_COMPRESS => true
-            ]
+            'options'  => []
         ], $options);
         $charset = isset ($opts ['encoding']) && !empty ($opts ['encoding']) ? $opts ['encoding'] : 'UTF8';
         if ($charset == null) {
