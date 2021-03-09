@@ -56,18 +56,7 @@ abstract class CmfModule extends Module {
         }
         $rst = $this->onUninstall();
         if ($rst) {
-            $db     = App::db();
-            $tables = $this->getDefinedTables($db->getDialect());
-            if ($tables ['tables']) {
-                foreach ($tables ['tables'] as $table) {
-                    $db->exec('DROP TABLE IF EXISTS ' . $table);
-                }
-            }
-            if ($tables ['views']) {
-                foreach ($tables ['views'] as $table) {
-                    $db->exec('DROP VIEW IF EXISTS ' . $table);
-                }
-            }
+            $db = App::db();
             $db->delete()->from('{module}')->where(['name' => $this->namespace])->exec();
             App::cfg();
         }
@@ -124,7 +113,7 @@ abstract class CmfModule extends Module {
         foreach ($this->getVersionList() as $ver => $chang) {
             $func = 'upgradeTo' . str_replace('.', '_', $ver);
             if (version_compare($ver, $toVer, '<=') && version_compare($ver, $fromVer, '>')) {
-                $sqls = $this->getSchemaSQLs($ver, $prev);
+                $sqls = $this->getSchemaSQLs($db->getDialect(), $ver, $prev);
                 $prev = $ver;
                 if ($sqls) {
                     $sr = ['{prefix}', '{encoding}'];
@@ -167,7 +156,7 @@ abstract class CmfModule extends Module {
      * @return array
      */
     public function getDefinedTables(DatabaseDialect $dialect): array {
-        $sqlFile = MODULES_PATH . $dialect->getDriverName() . '.sql.php';
+        $sqlFile = MODULES_PATH . $this->dirname . DS . $dialect->getDriverName() . '.sql.php';
         if (is_file($sqlFile)) {
             $file = file_get_contents($sqlFile);
 
@@ -184,14 +173,15 @@ abstract class CmfModule extends Module {
     /**
      * 加载SQL语句
      *
-     * @param string $toVer
-     * @param string $fromVer
+     * @param DatabaseDialect $dialect
+     * @param string          $toVer
+     * @param string          $fromVer
      *
      * @return array
      */
-    protected final function getSchemaSQLs(string $toVer, string $fromVer = '0.0.0'): array {
+    protected final function getSchemaSQLs(DatabaseDialect $dialect, string $toVer, string $fromVer = '0.0.0'): array {
         $sqls    = [];
-        $sqlFile = MODULES_PATH . $this->dirname . DS . 'schema.sql.php';
+        $sqlFile = MODULES_PATH . $this->dirname . DS . $dialect->getDriverName() . '.sql.php';
         if (is_file($sqlFile)) {
             $tables = [];
             @include $sqlFile;
