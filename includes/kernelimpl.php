@@ -30,6 +30,9 @@ bind('artisan\getCommands', function ($cmds) {
             $cmds['service'] = new \wulaphp\command\ServiceCommand();
         }
     }
+    if (defined('WULACMF_INSTALLED') && !WULACMF_INSTALLED) {
+        $cmds['install'] = new \wulaphp\command\InstallCommand();
+    }
 
     return $cmds;
 });

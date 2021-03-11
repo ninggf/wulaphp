@@ -208,6 +208,6 @@ define('WULA_BOOTSTRAPPED', microtime(true));
 try {
     fire('wula\bootstrapped');
 } catch (\Exception $e) {
-    \wulaphp\io\Response::respond(503, $e->getMessage());
+    \wulaphp\io\Response::respond(500, $e->getMessage());
 }
 //end of bootstrap.php
