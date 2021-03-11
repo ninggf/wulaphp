@@ -151,7 +151,7 @@ function fire(string $hook, $arg = '') {
     } else {
         $args [] = $arg;
     }
-    for ($a = 2; $a < func_num_args(); $a++) {
+    for ($a = 2; $a < func_num_args(); $a ++) {
         $args [] = func_get_arg($a);
     }
 

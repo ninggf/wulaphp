@@ -129,5 +129,7 @@ class CommonLogger implements LoggerInterface {
                 return " #{$i} {$file}({$info['line']})\n";
             }
         }
+
+        return '';
     }
 }
