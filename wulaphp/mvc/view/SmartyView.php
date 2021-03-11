@@ -58,12 +58,12 @@ class SmartyView extends View implements IModuleView {
             }
         }
         $tpl    = MODULES_PATH . $this->tpl . '.tpl';
-        $devMod = !App::bcfg('smarty.cache',false);
+        $devMod = App::bcfg('smarty.dev', false);
         if (is_file($tpl)) {
             $this->__smarty = new \Smarty ();
             $tpl            = str_replace(DS, '/', $this->tpl);
             $tpl            = explode('/', $tpl);
-            $sub            = implode(DS, array_slice($tpl, 0, -1));
+            $sub            = implode(DS, array_slice($tpl, 0, - 1));
 
             $this->__smarty->setTemplateDir(MODULES_PATH);
             $this->__smarty->setCompileDir(TMP_PATH . 'tpls_c' . DS . $sub);
@@ -72,10 +72,8 @@ class SmartyView extends View implements IModuleView {
 
             fire('init_smarty_engine', $this->__smarty);
             fire('init_view_smarty_engine', $this->__smarty);
-            $this->__smarty->compile_check = 1;
-            if ($devMod) {
-                $this->__smarty->caching = false;
-            }
+            $this->__smarty->compile_check   = $devMod;
+            $this->__smarty->caching         = App::bcfg('smarty.cache', false);
             $this->__smarty->error_reporting = defined('KS_ERROR_REPORT_LEVEL') ? KS_ERROR_REPORT_LEVEL : 0;
         } else {
             throw new \Exception(__('The template %s is not found', MODULE_DIR . '/' . $this->tpl . '.tpl'));
@@ -107,9 +105,9 @@ class SmartyView extends View implements IModuleView {
 
         if ($devMod && $content) {
             $debugArg = App::cfg('smarty.debugArg', '');
-            if ($debugArg) {
+            if ($debugArg && rqset($debugArg)) {
                 $debugArg    = json_encode($this->data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                $debugString = '<script>console.log([\'pageData\',' . $debugArg . '])</script>';
+                $debugString = '<script>console.log(' . $debugArg . ')</script>';
                 $content     = str_replace('<!--pageEnd-->', $debugString, $content);
             }
         }

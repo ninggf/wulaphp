@@ -61,12 +61,12 @@ class ThemeView extends View {
             }
         }
         $tpl    = THEME_PATH . $this->tpl;
-        $devMod = !App::bcfg('smarty.cache',false);
+        $devMod = App::bcfg('smarty.dev', false);
         if (is_file($tpl)) {
             $this->__smarty = new \Smarty ();
             $tpl            = str_replace(DS, '/', $this->tpl);
             $tpl            = explode('/', $tpl);
-            $sub            = implode(DS, array_slice($tpl, 0, -1));
+            $sub            = implode(DS, array_slice($tpl, 0, - 1));
 
             $this->__smarty->setTemplateDir(THEME_PATH);
             $this->__smarty->setCompileDir(TMP_PATH . 'themes_c' . DS . $sub);
@@ -74,10 +74,8 @@ class ThemeView extends View {
             $this->__smarty->setDebugTemplate(SMARTY_DIR . 'debug.tpl');
             fire('init_smarty_engine', $this->__smarty);
             fire('init_template_smarty_engine', $this->__smarty);
-            $this->__smarty->compile_check = 1;
-            if ($devMod) {
-                $this->__smarty->caching = false;
-            }
+            $this->__smarty->compile_check   = $devMod;
+            $this->__smarty->caching         = App::bcfg('smarty.cache', false);
             $this->__smarty->error_reporting = defined('KS_ERROR_REPORT_LEVEL') ? KS_ERROR_REPORT_LEVEL : 0;
         } else {
             throw new \Exception(__('The template %s is not found', THEME_DIR . '/' . $this->tpl));
@@ -106,9 +104,9 @@ class ThemeView extends View {
 
         if ($devMod && $content) {
             $debugArg = App::cfg('smarty.debugArg', '');
-            if ($debugArg) {
+            if ($debugArg && rqset($debugArg)) {
                 $debugArg    = json_encode($this->data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                $debugString = '<script>console.log([\'pageData\',' . $debugArg . '])</script>';
+                $debugString = '<script>console.log(' . $debugArg . ')</script>';
                 $content     = str_replace('<!--pageEnd-->', $debugString, $content);
             }
         }

@@ -20,7 +20,7 @@ trait LayoutSupport {
      *
      * @return \wulaphp\mvc\view\View
      */
-    protected final function render($tpl = null, array $data = []) {
+    protected final function render(?string $tpl = null, array $data = []) {
         if ($this instanceof Controller) {
             if (is_array($tpl)) {
                 $data = $tpl;
@@ -86,13 +86,11 @@ trait LayoutSupport {
             if ($title) {
                 $data  = $view->getData();
                 $title = preg_replace_callback('#\$\{([^\}]+)\}#', function ($ms) use ($data) {
-
                     return $data[ $ms[1] ] ?? '';
-
                 }, $title);
                 if ($title) {
                     header('PageTitle: ' . html_escape($title), true);
-                    $view->assign('page_title', $title);
+                    $view->assign('pageTitle', $title);
                 }
             }
         }
@@ -107,7 +105,7 @@ trait LayoutSupport {
      *
      * @return array
      */
-    protected function onInitLayoutData(array $data) {
+    protected function onInitLayoutData(array $data): array {
         return $data;
     }
 }
