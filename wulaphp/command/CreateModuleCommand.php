@@ -82,10 +82,10 @@ class CreateModuleCommand extends ArtisanCommand {
             $bootstrap = file_get_contents(__DIR__ . '/tpl/controller.tpl');
             $bootstrap = str_replace(['{$namespace}', '{$module}', '{$vfunc}'], [
                 $namespace,
-                'Index',
+                'IndexController',
                 'return view($data)'
             ], $bootstrap);
-            file_put_contents($modulePath . 'controllers/Index.php', $bootstrap);
+            file_put_contents($modulePath . 'controllers/IndexController.php', $bootstrap);
 
             //视图
             $bootstrap = file_get_contents(__DIR__ . '/tpl/index.tpl');

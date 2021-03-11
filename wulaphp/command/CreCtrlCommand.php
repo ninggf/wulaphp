@@ -59,7 +59,7 @@ class CreCtrlCommand extends ArtisanCommand {
 
             return 1;
         }
-        $clz = ucfirst($ctr);
+        $clz = ucfirst($ctr) . 'Controller';
         if ($subModule) {
             $viewp     = $m->getPath($subModule . DS . 'views' . DS . strtolower($ctr)) . DS;
             $path      = $m->getPath($subModule . DS . 'controllers');
