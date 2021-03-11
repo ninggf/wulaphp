@@ -404,6 +404,20 @@ abstract class ArtisanCommand {
 
     }
 
+    protected function get($promot = '', $default = '') {
+        if ($promot) {
+            echo $promot, ' : ';
+            flush();
+        }
+
+        $line = trim(fgets(STDIN));
+        if (!$line) {
+            return $default;
+        }
+
+        return $line;
+    }
+
     public abstract function cmd();
 
     public abstract function desc();

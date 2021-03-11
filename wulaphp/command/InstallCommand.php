@@ -14,7 +14,11 @@ class InstallCommand extends ArtisanCommand {
     }
 
     public function desc() {
-        return 'install wulacms';
+        return 'install wulacms step by step';
+    }
+
+    protected function argDesc() {
+        return '["mysql://user:pass@localhost:3306/dbname?encoding=UTF8MB4&env=dev"]';
     }
 
     protected function execute($options) {
@@ -29,34 +33,46 @@ class InstallCommand extends ArtisanCommand {
         $dashboard = 'backend';
         $domain    = '';
         if ($params) {
-            $opts = @parse_query($params);
+            $opts = parse_url($params);
+            #mysql://user:pass@localhost:3306/dbname?encoding=UTF8MB4&env=dev
             if ($opts) {
-                $env       = aryget('env', $opts, 'dev');
-                $dbhost    = aryget('dbhost', $opts, 'localhost');
-                $dbport    = aryget('dbport', $opts, '3306');
-                $dbname    = aryget('dbname', $opts, 'wulacms');
-                $dbuser    = aryget('dbuser', $opts, 'root');
-                $dbpwd     = aryget('dbpwd', $opts, '');
-                $dbcharset = aryget('charset', $opts, 'UTF8');
-                $username  = aryget('username', $opts, 'admin');
-                $password  = rand_str(12);
-
+                $dbcharset = 'UTF8';
+                $env       = 'dev';
+                if (isset($opts['query']) && $opts['query']) {
+                    @parse_str($opts['query'], $args);
+                    if ($args) {
+                        $env       = aryget('env', $args, 'dev');
+                        $dbcharset = aryget('encoding', $opts, 'UTF8');
+                    }
+                }
+                $dbdriver = aryget('scheme', $opts, 'mysql');
+                $dbhost   = aryget('host', $opts, 'localhost');
+                $dbport   = aryget('port', $opts, '3306');
+                $dbname   = trim(aryget('path', $opts, 'wulacms'), '/');
+                $dbuser   = aryget('user', $opts, 'root');
+                $dbpwd    = aryget('pass', $opts, '');
+                switch ($dbdriver) {
+                    case 'sqlite':
+                        $dbdriver = 'SQLite';
+                        break;
+                    case 'postgres':
+                        $dbdriver = 'Postgres';
+                        break;
+                    case 'mysql':
+                    default:
+                        $dbdriver = 'MySQL';
+                }
                 $this->log();
                 $this->log('install configuration:');
 
                 $this->log('environment: ' . $env);
                 $this->log('database info:');
+                $this->log("\tdriver  : " . $dbdriver);
                 $this->log("\tserver  : " . $this->color->str($dbhost . ':' . $dbport, 'blue'));
                 $this->log("\tdatabase: " . $this->color->str(str_pad($dbname, 20, ' ', STR_PAD_RIGHT), 'blue') . ' charset : ' . $this->color->str($dbcharset, 'blue'));
                 $this->log("\tusername: " . $this->color->str(str_pad($dbuser, 20, ' ', STR_PAD_RIGHT), 'blue') . ' password: ' . $this->color->str($dbpwd, 'blue'));
 
-                $this->log();
-                $this->log('admin and dashboard:');
-                $this->log("\tadmin    : " . $this->color->str($username, 'blue'));
-                $this->log("\tdomain:" . $this->color->str($domain, 'blue'));
-                $this->log();
                 $this->log('is that correct? [Y/n] Y');
-
             } else {
                 echo 'cannot parse parameters';
 
@@ -72,8 +88,25 @@ class InstallCommand extends ArtisanCommand {
             $this->log();
             $this->log('setp 2: database');
             $this->log('-----------------------------------------------');
-            $dbhost = $this->get('host [localhost]', 'localhost');
+            do {
+                $dbdriver = $this->get('driver [1:mysql; 2:postgres; 3:sqlite]', '1');
+                if (in_array($dbdriver, ['1', '2', '3'])) {
+                    switch ($dbdriver) {
+                        case '1':
+                            $dbdriver = 'MySQL';
+                            break;
+                        case '2':
+                            $dbdriver = 'Postgres';
+                            break;
+                        case '3':
+                            $dbdriver = 'SQLite';
+                            break;
+                    }
+                    break;
+                }
+            } while (true);
 
+            $dbhost = $this->get('host [localhost]', 'localhost');
             do {
                 $dbport = $this->get('port [3306]', '3306');
                 if (!preg_match('#^[1-9]\d{1,3}$#', $dbport)) {
@@ -83,7 +116,7 @@ class InstallCommand extends ArtisanCommand {
                 }
             } while (true);
 
-            $dbname    = $this->get('dbname [wula]', 'wula');
+            $dbname    = $this->get('name [wula]', 'wula');
             $dbcharset = strtoupper($this->get('charset [utf8mb4]', 'utf8mb4'));
             $dbuser    = $this->get('username [root]', 'root');
             $dbpwd     = $this->get('password');
@@ -93,6 +126,7 @@ class InstallCommand extends ArtisanCommand {
             $this->log('-----------------------------------------------');
             $this->log('environment: ' . $env);
             $this->log('database info:');
+            $this->log("\tdriver  : " . $this->color->str($dbdriver, 'blue'));
             $this->log("\tserver  : " . $this->color->str($dbhost . ':' . $dbport, 'blue'));
             $this->log("\tdatabase: " . $this->color->str(str_pad($dbname, 20, ' ', STR_PAD_RIGHT), 'blue') . ' charset : ' . $this->color->str($dbcharset, 'blue'));
             $this->log("\tusername: " . $this->color->str(str_pad($dbuser, 20, ' ', STR_PAD_RIGHT), 'blue') . ' password: ' . $this->color->str($dbpwd, 'blue'));
@@ -108,26 +142,23 @@ class InstallCommand extends ArtisanCommand {
         $this->log('step 4: create configuration files');
         $cfg = CONFIG_PATH . 'install_config.php';
         if (is_file($cfg)) {
-            $dbconfig         = file_get_contents($cfg);
-            $r['{dashboard}'] = $dashboard;
-            $r['{domain}']    = $domain;
-            $r["'{name}'"]    = 'null';
+            $config = file_get_contents($cfg);
             $this->log('  create config.php ...', false);
-            $dbconfig = str_replace(array_keys($r), array_values($r), $dbconfig);
-            if (!@file_put_contents(CONFIG_PATH . 'config.php', $dbconfig)) {
+            if (!@file_put_contents(CONFIG_PATH . 'config.php', $config)) {
                 $this->error('cannot save configuration file ' . CONFIG_PATH . 'config.php');
 
                 return 1;
             }
             $this->log('  [' . $this->color->str('done', 'green') . ']');
         }
+
         $dbconfig           = <<<'CFG'
 <?php
 /*
  * database configuration generated by installer. 
  */
 $config = new \wulaphp\conf\DatabaseConfiguration('default');
-$config->driver(env('db.driver', 'MySQL'));
+$config->driver(env('db.driver', '{db.driver}'));
 $config->host(env('db.host', '{db.host}'));
 $config->port(env('db.port', '{db.port}'));
 $config->dbname(env('db.name', '{db.name}'));
@@ -155,6 +186,7 @@ if ($options) {
 
 return $config;
 CFG;
+        $r['{db.driver}']   = $dbdriver;
         $r['{db.host}']     = $dbhost;
         $r['{db.port}']     = $dbport;
         $r['{db.name}']     = $dbname;
@@ -202,15 +234,39 @@ CFG;
             $rst = in_array($dbname, $dbs);
             if (!$rst) {
                 $rst = $dialect->createDatabase($dbname, $dbcharset);
-            }
-            if (!$rst) {
-                throw_exception('Cannot create the database ' . $dbname);
+                if (!$rst) {
+                    throw_exception('Cannot create the database ' . $dbname);
+                }
             }
             $db = App::db($dbconfig);
             if ($db == null) {
                 throw_exception('Cannot connect to the database');
             }
+            //创建模块表
+            $moduleSql = <<<'SQL'
+CREATE TABLE IF NOT EXISTS `{prefix}module` (
+    `id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(16) NOT NULL COMMENT '模块ID',
+    `version` VARCHAR(16) NOT NULL COMMENT '版本',
+    `status` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '0禁用1启用',
+    `create_time` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '安装时间',
+    `update_time` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '最后一次升级时间',
+    `checkupdate` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '是否检测升级信息',
+    `kernel` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否是内核内置模块',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `UDX_NAME` (`name` ASC)
+)  ENGINE=INNODB DEFAULT CHARACTER SET={encoding} COMMENT='模块表'
+SQL;
+            $sr        = ['{prefix}', '{encoding}'];
+            $rp        = [$db->getDialect()->getTablePrefix(), $db->getDialect()->getCharset()];
+            $sql       = str_replace($sr, $rp, $moduleSql);
 
+            $rst = $db->exec($sql);
+            if (!$rst) {
+                throw_exception($db->error);
+            }
+
+            //安装默认的模块
             $modules = [];
             if (isset($siteConfig['modules'])) {
                 $modules = array_merge($modules, (array)$siteConfig['modules']);
@@ -244,17 +300,4 @@ CFG;
         return 0;
     }
 
-    private function get($promot = '', $default = '') {
-        if ($promot) {
-            echo $promot, ' : ';
-            flush();
-        }
-
-        $line = trim(fgets(STDIN));
-        if (!$line) {
-            return $default;
-        }
-
-        return $line;
-    }
 }

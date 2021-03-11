@@ -121,11 +121,13 @@ class CommonLogger implements LoggerInterface {
         } else {
             $cls = '';
         }
-        $file = str_replace(APPROOT, '', $info['file']);
-        if ($i) {
-            return " #{$i} {$file}({$info['line']}): {$cls}{$info['function']}()\n";
-        } else {
-            return " #{$i} {$file}({$info['line']})\n";
+        if (isset($info['line'])) {
+            $file = str_replace(APPROOT, '', $info['file'] ?? '');
+            if ($i) {
+                return " #{$i} {$file}({$info['line']}): {$cls}{$info['function']}()\n";
+            } else {
+                return " #{$i} {$file}({$info['line']})\n";
+            }
         }
     }
 }
