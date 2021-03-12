@@ -13,7 +13,7 @@ namespace login\classes;
 use wulaphp\auth\Passport;
 
 class VipTestPassport extends Passport {
-    protected function doAuth($data = null) {
+    protected function doAuth($data = null): bool {
         $this->uid      = 1;
         $this->username = 'test admin';
         $this->nickname = 'test';
@@ -23,7 +23,7 @@ class VipTestPassport extends Passport {
         return true;
     }
 
-    protected function verifyPasswd($password) {
+    protected function verifyPasswd(string $password): bool {
         return $password == '123';
     }
 }

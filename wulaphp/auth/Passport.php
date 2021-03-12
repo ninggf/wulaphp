@@ -123,7 +123,7 @@ class Passport implements \ArrayAccess {
      * 将当前Passport存入SESSION。
      * @return bool
      */
-    public function store() {
+    public function store(): bool {
         if (extension_loaded('igbinary') && ini_get('session.save_handler') == 'redis') {
             $s = @igbinary_serialize($this);
         } else {
@@ -245,7 +245,7 @@ class Passport implements \ArrayAccess {
      *
      * @return bool
      */
-    public final function unlockScreen($password): bool {
+    public final function unlockScreen(string $password): bool {
         if ($this->verifyPasswd($password)) {
             $this->data['screenLocked'] = 0;
             $this->store();
@@ -263,7 +263,7 @@ class Passport implements \ArrayAccess {
      *
      * @return bool
      */
-    protected function verifyPasswd($password): bool {
+    protected function verifyPasswd(string $password): bool {
         return false;
     }
 

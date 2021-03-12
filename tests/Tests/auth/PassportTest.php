@@ -15,7 +15,15 @@ use wulaphp\auth\AclExtraChecker;
 use wulaphp\auth\Passport;
 
 class TestPassport extends Passport {
-    protected function doAuth($data = null) {
+    public function isSuper(): bool {
+        if ($this->uid == 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function doAuth($data = null): bool {
         if (is_int($data) && $data == 1) {
             $this->uid         = 1;
             $this->nickname    = 'user 1';
@@ -31,7 +39,7 @@ class TestPassport extends Passport {
 
             return true;
         } else if (is_array($data) && $data) {
-            list($name, $pass) = $data;
+            [$name, $pass] = $data;
             if ($name == 'aa' && $pass == 'bb') {
                 $this->uid         = 3;
                 $this->nickname    = 'user 3';
@@ -45,14 +53,14 @@ class TestPassport extends Passport {
         return false;
     }
 
-    protected function checkAcl($op, $res, $extra) {
+    protected function checkAcl(string $op, string $res, ?array $extra = null): bool {
         if ($this->uid == 1) {
             return true;
         }
-        if ($op = 'create' && $res == 'user') {
+        if ($op == 'create' && $res == 'user') {
             return $this->uid == 2;
         }
-        if ($op = 'create' && $res == 'site') {
+        if ($op == 'create' && $res == 'site') {
             return $this->uid == 3;
         }
 
@@ -61,7 +69,7 @@ class TestPassport extends Passport {
 }
 
 class SiteChecker extends AclExtraChecker {
-    protected function doCheck(Passport $passport, $op, $extra) {
+    protected function doCheck(Passport $passport, string $op, ?array $extra = null): bool {
         switch ($op) {
             case 'create':
                 return $extra && $extra['name'] == 'new site';
