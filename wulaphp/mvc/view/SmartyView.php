@@ -58,7 +58,7 @@ class SmartyView extends View implements IModuleView {
             }
         }
         $tpl    = MODULES_PATH . $this->tpl . '.tpl';
-        $devMod = App::bcfg('smarty.dev', false);
+        $devMod = App::bcfg('smarty.dev', true);
         if (is_file($tpl)) {
             $this->__smarty = new \Smarty ();
             $tpl            = str_replace(DS, '/', $this->tpl);
