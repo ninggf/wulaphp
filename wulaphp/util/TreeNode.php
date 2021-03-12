@@ -158,15 +158,17 @@ class TreeNode {
     }
 
     /**
-     * @param       $id
-     * @param array $node
+     * @param            $id
+     * @param array|null $node
      *
      * @return \wulaphp\util\TreeNode
      */
-    private function add($id, array $node = []): TreeNode {
+    private function add($id, ?array $node = null): TreeNode {
         if (isset(self::$nodes[ $id ])) {
-            $tnode       = self::$nodes[ $id ];
-            $tnode->data = $node;
+            $tnode = self::$nodes[ $id ];
+            if ($node) {
+                $tnode->data = $node;
+            }
         } else {
             $tnode              = new TreeNode($id, $node);
             self::$nodes[ $id ] = &$tnode;
