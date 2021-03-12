@@ -170,7 +170,7 @@ class TreeNode {
                 $tnode->data = $node;
             }
         } else {
-            $tnode              = new TreeNode($id, $node);
+            $tnode              = new TreeNode($id, $node ?? []);
             self::$nodes[ $id ] = &$tnode;
         }
 
