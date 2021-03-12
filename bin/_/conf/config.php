@@ -19,11 +19,13 @@ return [
     #'domains'=>[],
     # CORS配置
     #'cors'  => [
-    #    'Access-Control-Allow-Origin'  => '*',
-    #    'Access-Control-Allow-Methods' => 'GET,HEAD,POST',
-    #    'Access-Control-Allow-Headers' => '*',
-    #    'Access-Control-Max-Age'       => '1800',
-    #    'Access-Control-Allow-Credentials'=>false
+    #    '*' => [
+    #        'Access-Control-Allow-Origin'      => '*',
+    #        'Access-Control-Allow-Methods'     => 'GET,HEAD,POST',
+    #        'Access-Control-Allow-Headers'     => '*',
+    #        'Access-Control-Max-Age'           => '1800',
+    #        'Access-Control-Allow-Credentials' => false
+    #    ]
     #],
     # 离线模式
     #'offline'     => false,
@@ -58,6 +60,7 @@ return [
     #'ssn'         => 'file:path=storage',
     # 模板缓存与调试
     #'smarty'      => [
+    #    'dev'      => true,//开发模式
     #    'cache'    => false, //是否开启缓存
     #    'debugArg' => ''  //调试
     #],
