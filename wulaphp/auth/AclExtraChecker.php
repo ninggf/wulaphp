@@ -32,13 +32,13 @@ abstract class AclExtraChecker {
     /**
      * 权限检验.
      *
-     * @param Passport $passport
-     * @param string   $op
-     * @param array    $extra
+     * @param Passport   $passport
+     * @param string     $op
+     * @param array|null $extra
      *
      * @return bool
      */
-    public final function check(Passport $passport, $op, $extra) {
+    public final function check(Passport $passport, string $op, ?array $extra = null): bool {
         $rst = $this->doCheck($passport, $op, $extra);
         if ($rst && $this->next) {
             $rst = $this->next->check($passport, $op, $extra);
@@ -50,11 +50,11 @@ abstract class AclExtraChecker {
     /**
      * 自定义校验。
      *
-     * @param Passport $passport 通行证
-     * @param string   $op       操作
-     * @param array    $extra    额外数据
+     * @param Passport   $passport 通行证
+     * @param string     $op       操作
+     * @param array|null $extra    额外数据
      *
-     * @return mixed
+     * @return bool
      */
-    protected abstract function doCheck(Passport $passport, $op, $extra);
+    protected abstract function doCheck(Passport $passport, string $op, ?array $extra = null): bool;
 }

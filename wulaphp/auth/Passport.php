@@ -13,17 +13,18 @@ namespace wulaphp\auth;
 class Passport implements \ArrayAccess {
     const SESSION_NAME = 'wula_passport';
     /**@var int $uid */
-    public         $uid       = 0;
-    public         $type      = 'default';
-    public         $username  = '';
-    public         $nickname  = '';
-    public         $phone     = '';
-    public         $email     = '';
-    public         $avatar    = '';
-    public         $isLogin   = false;
-    public         $data      = [];
-    public         $error     = null;//错误信息.
-    private static $INSTANCES = [];
+    public         $uid         = 0;
+    public         $type        = 'default';
+    public         $username    = '';
+    public         $nickname    = '';
+    public         $phone       = '';
+    public         $email       = '';
+    public         $avatar      = '';
+    public         $isLogin     = false;
+    public         $data        = [];
+    public         $error       = null;//错误信息.
+    public         $isSuperUser = false;
+    private static $INSTANCES   = [];
 
     /**
      * Passport constructor.
@@ -199,13 +200,13 @@ class Passport implements \ArrayAccess {
     /**
      * 权限校验.
      *
-     * @param string $op
-     * @param string $res
-     * @param array  $extra
+     * @param string     $op
+     * @param string     $res
+     * @param array|null $extra
      *
      * @return bool
      */
-    protected function checkAcl($op, $res, $extra) {
+    protected function checkAcl(string $op, string $res, ?array $extra = null): bool {
         return true;
     }
 
@@ -216,7 +217,7 @@ class Passport implements \ArrayAccess {
      *
      * @return bool
      */
-    public function is($roles) {
+    public function is($roles): bool {
         return true;
     }
 
@@ -225,12 +226,8 @@ class Passport implements \ArrayAccess {
      *
      * @return bool 超级用户返回true,反之返回false。
      */
-    public function isSuper() {
-        if (isset($this->data['pid'])) {
-            return $this->data['pid'] == $this->uid;
-        }
-
-        return true;
+    public function isSuper(): bool {
+        return $this->isSuperUser;
     }
 
     /**
@@ -248,7 +245,7 @@ class Passport implements \ArrayAccess {
      *
      * @return bool
      */
-    public final function unlockScreen($password) {
+    public final function unlockScreen($password): bool {
         if ($this->verifyPasswd($password)) {
             $this->data['screenLocked'] = 0;
             $this->store();
@@ -266,7 +263,7 @@ class Passport implements \ArrayAccess {
      *
      * @return bool
      */
-    protected function verifyPasswd($password) {
+    protected function verifyPasswd($password): bool {
         return false;
     }
 
@@ -277,7 +274,7 @@ class Passport implements \ArrayAccess {
      *
      * @return bool 认证成功返回true,反之返回false.
      */
-    protected function doAuth($data = null) {
+    protected function doAuth($data = null): bool {
         return false;
     }
 
