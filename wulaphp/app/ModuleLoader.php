@@ -20,7 +20,13 @@ class ModuleLoader {
         foreach ($modules as $m => $file) {
             try {
                 if ($file === true) {
-                    App::register(new DefaultModule($m));
+                    $mcls = $m . '\\' . strtoupper($m) . 'Module';
+                    if (is_subclass_of($mcls, Module::class)) {
+                        $mclz = new $mcls();
+                        App::register($mclz);
+                    } else {
+                        App::register(new DefaultModule($m));
+                    }
                 } else {
                     include $file;
                 }
