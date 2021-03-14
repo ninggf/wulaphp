@@ -525,7 +525,7 @@ function minify_resources($content, $type) {
  *
  * @return \wulaphp\mvc\model\CtsData
  */
-function get_cts_from_datasource($name, $args = [], $dialect = null, $tplvars = []) {
+function get_cts_from_datasource(string $name, array $args = [], ?string $dialect = null, array $tplvars = []): \wulaphp\mvc\model\CtsData {
     static $urlInfo = null, $providers = null;
     //获取当前解析后的URL信息
     if ($urlInfo === null) {
@@ -542,9 +542,7 @@ function get_cts_from_datasource($name, $args = [], $dialect = null, $tplvars = 
             $data = $provider->getList($args, $dialect, $urlInfo, $tplvars);
         }
     }
-    if (is_array($data)) {
-        return new \wulaphp\mvc\model\CtsData ($data, count($data));
-    } else if ($data instanceof \wulaphp\mvc\model\CtsData) {
+    if ($data instanceof \wulaphp\mvc\model\CtsData) {
         return $data;
     } else {
         return new \wulaphp\mvc\model\CtsData ([], 0);
@@ -559,8 +557,10 @@ function get_cts_from_datasource($name, $args = [], $dialect = null, $tplvars = 
 function get_cts_datasource() {
     static $providers = null;
     if ($providers === null) {
-        $providers = apply_filter('tpl\regCtsDatasource', [
-            'split' => new \wulaphp\mvc\model\SplitDataSource()
+        $ds        = new \wulaphp\mvc\model\SplitDataSource();
+        $providers = apply_filter('regCtsDatasource', [
+            'split'   => $ds,
+            'implode' => $ds
         ]);
     }
 

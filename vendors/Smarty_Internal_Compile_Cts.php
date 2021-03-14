@@ -71,7 +71,7 @@ class Smarty_Internal_Compile_Cts extends Smarty_Internal_CompileBase {
 		$output .= " \$_smarty_tpl->tpl_vars[$item] = new Smarty_Variable();\$_smarty_tpl->tpl_vars[$item]->_loop = false;\n";
 		unset ($_attr ['var'], $_attr ['from'], $_attr ['loop']);
 		$pargs  = smarty_argstr($_attr);
-		$output .= " \$_cts_{$pname}_data = get_cts_from_datasource('$sink', $pargs,null,\$_smarty_tpl->tpl_vars);\n";
+		$output .= " \$_cts_{$pname}_data = get_cts_from_datasource('$sink', $pargs,'null',\$_smarty_tpl->tpl_vars);\n";
 		$output .= " \$_smarty_tpl->tpl_vars['{$pname}_total'] = new Smarty_Variable;\n";
 		$output .= " \$_smarty_tpl->tpl_vars['{$pname}_total']->value = \$_cts_{$pname}_data['size'];\n";
 		if ($loop) {

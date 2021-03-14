@@ -216,7 +216,7 @@ class CtsData implements \IteratorAggregate, \Countable, \ArrayAccess {
                 $end = $tp;
             }
         }
-        for ($i = $start; $i <= $end; $i++) {
+        for ($i = $start; $i <= $end; $i ++) {
             if ($i == $cur) {
                 $pages[ $i ] = $pager [ $i ] = '#';
             } else {

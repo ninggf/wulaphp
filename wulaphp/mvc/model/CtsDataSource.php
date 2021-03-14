@@ -11,7 +11,9 @@
 namespace wulaphp\mvc\model;
 
 use wulaphp\app\App;
+use wulaphp\db\DatabaseConnection;
 use wulaphp\form\FormTable;
+use wulaphp\router\UrlParsedInfo;
 
 /**
  * cts数据源.
@@ -19,24 +21,26 @@ use wulaphp\form\FormTable;
  * @package wulaphp\mvc\model
  */
 abstract class CtsDataSource {
-    protected      $cols  = ['id' => 'ID', 'title' => '标题'];
     private static $forms = [];
 
     /**
      * 获取数据.
      *
      * @param array                         $con      条件.
-     * @param string                        $db       数据库
+     * @param string|null                   $db       数据库
      * @param \wulaphp\router\UrlParsedInfo $pageInfo 分页信息
      * @param array                         $tplvars  模板变量.
      *
      * @return CtsData 数据.
      */
-    public final function getList($con, $db, $pageInfo, $tplvars) {
+    public final function getList(array $con, ?string $db, UrlParsedInfo $pageInfo, array $tplvars): CtsData {
         try {
-            $dbx = App::db($db);
-
+            $dbx = null;
+            if ($db != 'null') {
+                $dbx = App::db($db);
+            }
             $data = $this->getData($con, $dbx, $pageInfo, $tplvars);
+
             if ($data instanceof CtsData) {
                 return $data;
             }
@@ -52,19 +56,19 @@ abstract class CtsDataSource {
      *
      * @return string
      */
-    public abstract function getName();
+    public abstract function getName(): string;
 
     /**
      * 取数据
      *
-     * @param array                          $con
-     * @param \wulaphp\db\DatabaseConnection $db
-     * @param \wulaphp\router\UrlParsedInfo  $pageInfo
-     * @param array                          $tplvar
+     * @param array                               $con
+     * @param \wulaphp\db\DatabaseConnection|null $db
+     * @param \wulaphp\router\UrlParsedInfo       $pageInfo
+     * @param array                               $tplvar
      *
      * @return CtsData
      */
-    protected abstract function getData($con, $db, $pageInfo, $tplvar);
+    protected abstract function getData(array $con, ?DatabaseConnection $db, UrlParsedInfo $pageInfo, array $tplvar): CtsData;
 
     /**
      * 条件表单.
@@ -84,9 +88,10 @@ abstract class CtsDataSource {
 
     /**
      * 定义变量名.
+     *
      * @return string 变量名.
      */
-    public function getVarName() {
+    public function getVarName(): string {
         return 'item';
     }
 
@@ -94,8 +99,8 @@ abstract class CtsDataSource {
      * 预览列表定义.
      * @return array
      */
-    public function getCols() {
-        return $this->cols;
+    public function getCols(): array {
+        return ['value' => __('Value')];
     }
 
     /**
@@ -104,7 +109,7 @@ abstract class CtsDataSource {
      * @param string    $clz
      * @param FormTable $form
      */
-    public static function registerCondForm($clz, $form) {
+    public static function registerCondForm(string $clz, $form) {
         assert(!empty($clz) && class_exists($clz), 'CtsDataSource is invalid');
         assert($form instanceof FormTable, get_class($form) . ' is not an instance of FormTable');
         self::$forms[ $clz ] = $form;

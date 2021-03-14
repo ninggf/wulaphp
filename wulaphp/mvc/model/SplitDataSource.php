@@ -10,44 +10,43 @@
 
 namespace wulaphp\mvc\model;
 
+use wulaphp\db\DatabaseConnection;
+use wulaphp\router\UrlParsedInfo;
+
 /**
  * 分隔content参数指定的内容.
  *
  * @package wulaphp\mvc\model
  */
 class SplitDataSource extends CtsDataSource {
-    public function getName() {
-        return '分隔数据';
+    public function getName(): string {
+        return 'implode';
     }
 
     /**
-     * @param array                          $con
-     * @param \wulaphp\db\DatabaseConnection $db
-     * @param \wulaphp\router\UrlParsedInfo  $pageInfo
-     * @param array                          $tplvar
+     * @param array                               $con
+     * @param \wulaphp\db\DatabaseConnection|null $db
+     * @param \wulaphp\router\UrlParsedInfo       $pageInfo
+     * @param array                               $tplvar
      *
      * @return \wulaphp\mvc\model\CtsData
      */
-    protected function getData($con, $db, $pageInfo, $tplvar) {
+    protected function getData(array $con, ?DatabaseConnection $db, UrlParsedInfo $pageInfo, array $tplvar): CtsData {
         $content = aryget('content', $con);
         if (!$content) {
             return new CtsData([], 0);
         }
-        $sp = aryget('sp', $con, ',');
-        if (isset($con['r']) && $con['r']) {
-            $content = @preg_split('#' . $con['r'] . '#', $content);
+        if (isset($con['reg']) && $con['reg']) {
+            $content = @preg_split('#' . str_replace('#', '\\#', $con['r']) . '#', $content);
         } else {
+            $sp      = aryget('sp', $con, ',');
             $content = @explode($sp, $content);
         }
-        $contents = [];
-        foreach ($content as $c) {
-            $contents[] = ['val' => $c];
-        }
 
-        return new CtsData($contents, count($contents));
+        return new CtsData($content, count($content));
     }
 
-    public function getCols() {
-        return ['val' => '值'];
+    public function getCols(): array {
+        return [0 => 'Value'];
     }
 }
