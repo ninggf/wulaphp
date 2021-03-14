@@ -23,9 +23,11 @@ use wulaphp\mvc\view\SimpleView;
  * 管理器控制器.
  *
  * @package wulaphp\mvc\controller
+ * @property-read \wulaphp\auth\Passport $passport
  */
 class AdminController extends Controller {
     use SessionSupport, PassportSupport, RbacSupport;
+
     protected $passportType = 'admin';
     protected $loginBack    = false;
 
@@ -83,6 +85,15 @@ class AdminController extends Controller {
         $view = apply_filter('mvc\admin\onDenied', $view, $message);
         if ($view === null) {
             $view = new SimpleView('you are denied');
+        }
+
+        return $view;
+    }
+
+    protected function onScreenLocked($view) {
+        $view = apply_filter('mvc\admin\onScreenLocked', $view, $message);
+        if ($view === null) {
+            $view = new SimpleView('screen is locked');
         }
 
         return $view;

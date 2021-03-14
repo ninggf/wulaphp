@@ -47,6 +47,28 @@ trait MetaTable {
     }
 
     /**
+     * 批量设置元数据.
+     *
+     * @param int    $id
+     * @param array  $metas [name=>value]
+     * @param string $field
+     *
+     * @return bool
+     */
+    public function setMetas(int $id, array $metas, string $field = 'value'): bool {
+        $update = [$field => imv("VALUES(`$field`)")];
+        $datas  = [];
+        foreach ($metas as $name => $value) {
+            $data[ $this->metaIdField ]   = $id;
+            $data[ $this->metaNameField ] = $name;
+            $data[ $field ]               = $value;
+            $datas[]                      = $data;
+        }
+
+        return $this->upserts($datas, $update, 'UDX_ID_NAME');
+    }
+
+    /**
      * 获取JSON
      *
      * @param int    $id

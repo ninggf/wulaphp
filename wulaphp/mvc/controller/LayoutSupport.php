@@ -57,7 +57,7 @@ trait LayoutSupport {
 
     protected final function onInitLayoutSupport() {
         if ($this instanceof Controller) {
-            if (!isset($this->layout)) {
+            if (!property_exists($this, 'layout')) {
                 if ($this->reflectionObj instanceof \ReflectionClass) {
                     $ann          = $this->methodAnn;
                     $this->layout = $ann->getString('layout');

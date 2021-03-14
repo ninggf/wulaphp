@@ -26,11 +26,11 @@ abstract class FormTable extends Table {
     /**
      * FormTable constructor.
      *
-     * @param bool                                                              $parse 是否解析字段.
+     * @param bool                                                              $validte 是否解析字段.
      * @param string|array|\wulaphp\db\DatabaseConnection|\wulaphp\db\View|null $db
      */
-    public function __construct($parse = false, $db = null) {
-        if ($parse) {
+    public function __construct($validte = false, $db = null) {
+        if ($validte) {
             try {
                 $this->parseFields();
             } catch (\Exception $e) {

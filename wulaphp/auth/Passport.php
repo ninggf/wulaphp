@@ -263,7 +263,7 @@ class Passport implements \ArrayAccess {
      *
      * @return bool
      */
-    protected function verifyPasswd(string $password): bool {
+    public function verifyPasswd(string $password): bool {
         return false;
     }
 

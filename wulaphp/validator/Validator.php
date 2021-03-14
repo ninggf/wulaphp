@@ -16,11 +16,11 @@ use wulaphp\util\Annotation;
  * @method array inflate()
  */
 trait Validator {
-    private $_v__rules    = [];
-    private $_v__rulesIdx = [];
-    private $_v__ruleKeys = [];
+    protected $_v__rules    = [];
+    protected $_v__rulesIdx = [];
+    protected $_v__ruleKeys = [];
     //预定义的验证规则
-    private $_v__preDefinedRule = [
+    protected $_v__preDefinedRule = [
         'required'           => true,
         'equalTo'            => true,
         'notEqualTo'         => true,
@@ -57,9 +57,9 @@ trait Validator {
      */
     protected final function onInitValidator($fields = []) {
         if (empty($fields)) {
-            if (isset($this->_v__fields) && $this->_v__fields) {
+            if (property_exists($this, '_v__fields') && $this->_v__fields) {
                 $fields = $this->_v__fields;
-            } else if (!isset($this->_v__fields)) {
+            } else if (!property_exists($this, '_v__fields')) {
                 $obj  = new \ReflectionObject($this);
                 $vars = $obj->getProperties(\ReflectionProperty::IS_PUBLIC);
                 foreach ($vars as $var) {
@@ -154,7 +154,7 @@ trait Validator {
      * @throws ValidateException
      */
     public final function validate(?array $data = null, ?array $rules = null): bool {
-        if ($data === null && isset($this->_v__formData)) {
+        if ($data === null) {
             $data = $this->_v__formData;
         }
         if (empty($data)) {
@@ -181,7 +181,7 @@ trait Validator {
      * @throws ValidateException
      */
     protected final function validateNewData(?array $data = null): bool {
-        if ($data === null && isset($this->_v__formData)) {
+        if ($data === null) {
             $data = $this->_v__formData;
         }
         if ($this->_v__rules) {
@@ -200,7 +200,7 @@ trait Validator {
      * @throws ValidateException
      */
     protected final function validateUpdateData(?array $data = null): bool {
-        if ($data === null && isset($this->_v__formData)) {
+        if ($data === null) {
             $data = $this->_v__formData;
         }
         if ($this->_v__rules) {

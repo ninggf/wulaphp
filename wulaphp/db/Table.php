@@ -21,8 +21,6 @@ abstract class Table extends View {
      * Table constructor.
      *
      * @param string|array|DatabaseConnection|View|null $db
-     *
-     * @throws \wulaphp\db\DialectException
      */
     public function __construct($db = null) {
         parent::__construct($db);
@@ -298,7 +296,7 @@ abstract class Table extends View {
         if ($data) {
             $this->filterFields($data);
             if (method_exists($this, 'validateUpdateData')) {
-                if (isset($this->_v__formData)) {
+                if (property_exists($this, '_v__formData') && $this->_v__formData) {
                     $this->validateUpdateData($this->_v__formData);
                 } else {
                     $this->validateUpdateData($data);

@@ -409,9 +409,9 @@ abstract class QueryBuilder {
     /**
      * 最后出错时的数据.
      *
-     * @return array
+     * @return string
      */
-    public function lastValues(): ?array {
+    public function lastValues(): ?string {
         return $this->errorValues;
     }
 

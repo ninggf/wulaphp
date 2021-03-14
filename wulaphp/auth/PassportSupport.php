@@ -2,6 +2,8 @@
 
 namespace wulaphp\auth;
 
+use wulaphp\mvc\view\JsonView;
+use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\SmartyView;
 use wulaphp\mvc\view\ThemeView;
 use wulaphp\mvc\view\View;
@@ -54,7 +56,14 @@ trait PassportSupport {
             }
             $unlock = $this->methodAnn->has('unlock');
             if (!$unlock && $this->passport->screenLocked) { //不是解锁方法且用户已经锁屏。
-                return $this->onScreenLocked($view);
+                $rtn = $this->onScreenLocked($view);
+                if ($rtn instanceof iew) {
+                    return $rtn;
+                } else if (is_array($rtn)) {
+                    return new JsonView($rtn);
+                } else if (is_string($rtn)) {
+                    return new SimpleView($rtn);
+                }
             }
         }
 
