@@ -23,7 +23,7 @@ class VipTestPassport extends Passport {
         return true;
     }
 
-    protected function verifyPasswd(string $password): bool {
+    public function verifyPasswd(string $password): bool {
         return $password == '123';
     }
 }
