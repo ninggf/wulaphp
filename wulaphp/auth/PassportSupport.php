@@ -39,7 +39,7 @@ trait PassportSupport {
 
     /**
      * @param \Reflector $method
-     * @param View       $view
+     * @param mixed      $view
      *
      * @return mixed
      */
@@ -57,7 +57,7 @@ trait PassportSupport {
             $unlock = $this->methodAnn->has('unlock');
             if (!$unlock && $this->passport->screenLocked) { //不是解锁方法且用户已经锁屏。
                 $rtn = $this->onScreenLocked($view);
-                if ($rtn instanceof iew) {
+                if ($rtn instanceof View) {
                     return $rtn;
                 } else if (is_array($rtn)) {
                     return new JsonView($rtn);
