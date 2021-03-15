@@ -20,7 +20,7 @@ trait LayoutSupport {
      *
      * @return \wulaphp\mvc\view\View
      */
-    protected final function render(?string $tpl = null, array $data = []) {
+    protected final function render($tpl = null, array $data = []) {
         if ($this instanceof Controller) {
             if (is_array($tpl)) {
                 $data = $tpl;
@@ -76,7 +76,7 @@ trait LayoutSupport {
 
     protected final function afterRunInLayoutSupport($action, $view, $method) {
         if ($view === null) {
-            $view = $this->render($action);
+            $view = $this->render();
             $ns   = implode('/', array_slice(explode('\\', $this->clzName), 0, - 2));
             DefaultDispatcher::prepareView($view, $ns, $this, $action);
         }
