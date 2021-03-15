@@ -20,7 +20,7 @@ class ModuleLoader {
         foreach ($modules as $m => $file) {
             try {
                 if ($file === true) {
-                    $mcls = $m . '\\' . strtoupper($m) . 'Module';
+                    $mcls = $m . '\\' . ucfirst($m) . 'Module';
                     if (is_subclass_of($mcls, Module::class)) {
                         $mclz = new $mcls();
                         App::register($mclz);
@@ -47,16 +47,8 @@ class ModuleLoader {
         if (!$modules) {
             $modules    = [];
             $premodules = App::cfg('modules');
-            if ($premodules && is_array($premodules)) {
-                foreach ($premodules as $m) {
-                    $boot = MODULE_ROOT . $m . '/bootstrap.php';
-                    if (is_file($boot)) {
-                        $modules[ $m ] = $boot;
-                    } else if (is_dir(MODULE_ROOT . $m)) {
-                        $modules[ $m ] = true;
-                    }
-                }
-            } else if (is_dir(MODULE_ROOT)) {
+
+            if (is_dir(MODULE_ROOT)) {
                 $it = new \DirectoryIterator (MODULE_ROOT);
                 foreach ($it as $dir) {
                     if ($dir->isDot()) {
@@ -73,6 +65,7 @@ class ModuleLoader {
                     }
                 }
             }
+
             RtCache::add('loader@modules', $modules);
         }
 
