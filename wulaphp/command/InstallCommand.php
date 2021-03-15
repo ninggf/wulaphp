@@ -4,6 +4,7 @@ namespace wulaphp\command;
 
 use wulaphp\app\App;
 use wulaphp\artisan\ArtisanCommand;
+use wulaphp\cmf\CmfModule;
 use wulaphp\db\dialect\DatabaseDialect;
 
 class InstallCommand extends ArtisanCommand {
@@ -299,5 +300,4 @@ SQL;
 
         return 0;
     }
-
 }

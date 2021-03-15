@@ -13,6 +13,7 @@ namespace wulaphp\command;
 use wulaphp\app\App;
 use wulaphp\app\Module;
 use wulaphp\artisan\ArtisanCommand;
+use wulaphp\cmf\CmfModule;
 
 /**
  * Class ModuleCommand
@@ -95,11 +96,13 @@ class ModuleCommand extends ArtisanCommand {
     }
 
     protected function install(Module $module, $db) {
-        $rst = $module->install($db);
-        if (!$rst) {
-            $this->error('Cannot install "' . $module->getNamespace() . '"');
+        if ($module instanceof CmfModule) {
+            $rst = $module->install($db);
+            if (!$rst) {
+                $this->error('Cannot install "' . $module->getNamespace() . '"');
 
-            return 1;
+                return 1;
+            }
         }
         echo 'install ' . $this->color->str('successfully', 'green'), "\n";
 
@@ -107,11 +110,13 @@ class ModuleCommand extends ArtisanCommand {
     }
 
     protected function uninstall(Module $module) {
-        $rst = $module->uninstall();
-        if (!$rst) {
-            $this->error('Cannot uninstall "' . $module->getNamespace() . '"');
+        if ($module instanceof CmfModule) {
+            $rst = $module->uninstall();
+            if (!$rst) {
+                $this->error('Cannot uninstall "' . $module->getNamespace() . '"');
 
-            return 1;
+                return 1;
+            }
         }
         echo 'uninstall ' . $this->color->str('successfully', 'green'), "\n";
 
@@ -119,11 +124,13 @@ class ModuleCommand extends ArtisanCommand {
     }
 
     protected function upgrade(Module $module, $db) {
-        $rst = $module->upgrade($db, $module->getCurrentVersion(), $module->installedVersion);
-        if (!$rst) {
-            $this->error('Cannot upgrade "' . $module->getNamespace() . '"');
+        if ($module instanceof CmfModule) {
+            $rst = $module->upgrade($db, $module->getCurrentVersion(), $module->installedVersion);
+            if (!$rst) {
+                $this->error('Cannot upgrade "' . $module->getNamespace() . '"');
 
-            return 1;
+                return 1;
+            }
         }
         echo 'upgrade ' . $this->color->str('successfully', 'green'), "\n";
 
@@ -131,11 +138,13 @@ class ModuleCommand extends ArtisanCommand {
     }
 
     protected function stop(Module $module) {
-        $rst = $module->stop();
-        if (!$rst) {
-            $this->error('Cannot stop "' . $module->getNamespace() . '"');
+        if ($module instanceof CmfModule) {
+            $rst = $module->stop();
+            if (!$rst) {
+                $this->error('Cannot stop "' . $module->getNamespace() . '"');
 
-            return 1;
+                return 1;
+            }
         }
         echo 'stop ' . $this->color->str('successfully', 'green'), "\n";
 
@@ -143,11 +152,13 @@ class ModuleCommand extends ArtisanCommand {
     }
 
     protected function start(Module $module) {
-        $rst = $module->stop();
-        if (!$rst) {
-            $this->error('Cannot start "' . $module->getNamespace() . '"');
+        if ($module instanceof CmfModule) {
+            $rst = $module->stop();
+            if (!$rst) {
+                $this->error('Cannot start "' . $module->getNamespace() . '"');
 
-            return 1;
+                return 1;
+            }
         }
         echo 'start ' . $this->color->str('successfully', 'green'), "\n";
 

@@ -33,6 +33,7 @@ abstract class CmfModule extends Module {
         if ($con->select('id')->from('{module}')->where(['name' => $this->namespace])->exist('id')) {
             return true;
         }
+        $con->start();
         $rst = $this->upgrade($con, $this->currentVersion);
         if ($rst) {
             $data['name']        = $this->namespace;
@@ -40,6 +41,11 @@ abstract class CmfModule extends Module {
             $data['create_time'] = $data['update_time'] = time();
             $data['kernel']      = $kernel;
             $rst                 = $con->insert($data)->into('{module}')->exec(true);
+        }
+        if ($rst) {
+            $con->commit();
+        } else {
+            $con->rollback();
         }
 
         return $rst;
@@ -109,40 +115,47 @@ abstract class CmfModule extends Module {
         if ($fromVer !== '0.0.0' && !$db->select('id')->from('{module}')->where(['name' => $this->namespace])->exist('id')) {
             return false;
         }
-        $prev = $fromVer;
-        foreach ($this->getVersionList() as $ver => $chang) {
-            $func = 'upgradeTo' . str_replace('.', '_', $ver);
-            if (version_compare($ver, $toVer, '<=') && version_compare($ver, $fromVer, '>')) {
-                $sqls = $this->getSchemaSQLs($db->getDialect(), $ver, $prev);
-                $prev = $ver;
-                if ($sqls) {
-                    $sr = ['{prefix}', '{encoding}'];
-                    $rp = [$db->getDialect()->getTablePrefix(), $db->getDialect()->getCharset()];
-                    foreach ($sqls as $_sql) {
-                        if (!$_sql) {
-                            continue;
-                        }
-                        $_sql = (array)$_sql;
-                        foreach ($_sql as $sql) {
-                            $sql = str_replace($sr, $rp, $sql);
-                            $rst = $db->exec($sql);
-                            if (!$rst) {
-                                throw_exception($db->error);
+        $db->start();
+        try {
+            $prev = $fromVer;
+            foreach ($this->getVersionList() as $ver => $chang) {
+                $func = 'upgradeTo' . str_replace('.', '_', $ver);
+                if (version_compare($ver, $toVer, '<=') && version_compare($ver, $fromVer, '>')) {
+                    $sqls = $this->getSchemaSQLs($db->getDialect(), $ver, $prev);
+                    $prev = $ver;
+                    if ($sqls) {
+                        $sr = ['{prefix}', '{encoding}'];
+                        $rp = [$db->getDialect()->getTablePrefix(), $db->getDialect()->getCharset()];
+                        foreach ($sqls as $_sql) {
+                            if (!$_sql) {
+                                continue;
+                            }
+                            $_sql = (array)$_sql;
+                            foreach ($_sql as $sql) {
+                                $sql = str_replace($sr, $rp, $sql);
+                                $rst = $db->exec($sql);
+                                if (!$rst) {
+                                    throw_exception($db->error);
+                                }
                             }
                         }
                     }
-                }
-                if ($func && method_exists($this, $func)) {
-                    $rst = $this->{$func}($db);
-                    if (!$rst) {
-                        return false;
+                    if ($func && method_exists($this, $func)) {
+                        $rst = $this->{$func}($db);
+                        if (!$rst) {
+                            throw_exception('upgradeTo func error');
+                        }
                     }
                 }
             }
-        }
 
-        if ($fromVer != '0.0.0') {
-            $db->update('{module}')->set(['version' => $toVer])->where(['name' => $this->namespace])->exec();
+            if ($fromVer != '0.0.0') {
+                $db->update('{module}')->set(['version' => $toVer])->where(['name' => $this->namespace])->exec();
+            }
+            $db->commit();
+        } catch (\Exception $e) {
+            $db->rollback();
+            throw_exception($e);
         }
 
         return true;

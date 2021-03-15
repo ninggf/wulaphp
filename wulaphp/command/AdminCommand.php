@@ -31,9 +31,11 @@ class AdminCommand extends ArtisanCommand {
     }
 
     protected function subCommands() {
-        $this->subCmds['module']        = new ModuleCommand('admin');
-        $this->subCmds['router']        = new RouterCommand('admin');
-        $this->subCmds['hook']          = new HookCommand('admin');
+        if (defined('WULACMF_INSTALLED') && WULACMF_INSTALLED) {
+            $this->subCmds['module'] = new ModuleCommand('admin');
+        }
+        $this->subCmds['router'] = new RouterCommand('admin');
+        $this->subCmds['hook']   = new HookCommand('admin');
 
         foreach (apply_filter('artisan\init_admin_commands', []) as $cmd) {
             if ($cmd instanceof ArtisanCommand) {
