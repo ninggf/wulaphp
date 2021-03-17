@@ -80,8 +80,12 @@ trait RbacSupport {
 
             if (!$rst) {
                 $msg = $annotation->getString('aclmsg');
+                $msg = $msg ? $msg : $this->globalRbacSetting['aclmsg'];
+                if (preg_match('#^\{.+\}$#', $msg)) {
+                    $msg = _tt(substr($msg, 1, - 1));
+                }
 
-                return $this->onDenied($msg ? $msg : $this->globalRbacSetting['aclmsg'], $view);
+                return $this->onDenied($msg, $view);
             }
 
             return $view;
