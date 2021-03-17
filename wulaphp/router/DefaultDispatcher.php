@@ -250,18 +250,26 @@ class DefaultDispatcher implements IURLDispatcher {
         if ($action != 'index') {
             $modulePath = MODULES_PATH . $module . DS;
             // Action Controller 的 index方法
-            $controllerClz   = str_replace('-', '', ucwords($action, '-')).'Controller';
+            $controllerClz = str_replace('-', '', ucwords($action, '-')) . 'Controller';
 
             $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
-            $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz, 'index',
-                                $action];
+            $files []        = [
+                $controller_file,
+                $namespace . '\controllers\\' . $controllerClz,
+                'index',
+                $action
+            ];
 
             if (!$isParent || $subnamespace || !is_dir($modulePath . $action . DS . 'controllers')) {
-                $controllerClz   = 'IndexController';
+                $controllerClz = 'IndexController';
 
                 $controller_file = $modulePath . 'controllers' . DS . $controllerClz . '.php';
-                $files []        = [$controller_file, $namespace . '\controllers\\' . $controllerClz,
-                                    $action, 'index'];
+                $files []        = [
+                    $controller_file,
+                    $namespace . '\controllers\\' . $controllerClz,
+                    $action,
+                    'index'
+                ];
             }
 
             foreach ($files as $file) {

@@ -56,10 +56,11 @@ abstract class Controller {
      * @return View
      */
     public function beforeRun($action, $refMethod) {
-        $view             = null;
-        $this->_action    = $action;
-        $this->_methodAnn = new Annotation($refMethod);
-
+        $view          = null;
+        $this->_action = $action;
+        if (!$this->_methodAnn instanceof Annotation) {
+            $this->_methodAnn = new Annotation($refMethod);
+        }
         if (defined('NEED_CHECK_REQ_M')) {
             $ms['post']   = $this->_methodAnn->has('post');
             $ms['put']    = $this->_methodAnn->has('put');
