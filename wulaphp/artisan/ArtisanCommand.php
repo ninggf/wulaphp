@@ -22,8 +22,16 @@ abstract class ArtisanCommand {
         @chdir(APPROOT);
     }
 
-    public function setParent($parent) {
+    /**
+     * set this command's parent
+     * @param string $parent
+     *
+     * @return $this
+     */
+    public function setParent(string $parent): ArtisanCommand {
         $this->pcmd = $parent;
+
+        return $this;
     }
 
     public function help($message = '') {
