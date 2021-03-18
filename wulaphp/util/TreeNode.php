@@ -73,13 +73,31 @@ class TreeNode {
                 if (in_array($id, $excludes)) {
                     continue;
                 }
-                $items[ $id ] = $items;
+                $items[ $id ] = $item;
             }
         } else {
             $items = $this->items;
         }
 
         return $items;
+    }
+
+    /**
+     * 获取全部子孙节点.
+     *
+     * @param array $children 子孙节点数据.
+     * @param array $excludes 要排队的子孙节点ID
+     */
+    public function allChildren(array &$children = [], array $excludes = []) {
+        foreach ($this->items as $id => $item) {
+            if (in_array($id, $excludes)) {
+                continue;
+            }
+            $children[ $id ] = $item->data;
+            if ($item->items) {
+                $item->allChildren($children, $excludes);
+            }
+        }
     }
 
     /**
