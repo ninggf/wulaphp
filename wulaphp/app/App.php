@@ -1032,16 +1032,7 @@ class App {
         if (!self::$app->router) {
             self::$app->router = Router::getRouter();
         }
-        try {
-            return self::$app->router->route();
-        } catch (\Exception $e) {
-            if (defined('DEBUG') && DEBUG < DEBUG_ERROR) {
-                throw $e;
-            } else {
-                Response::respond(500, $e->getMessage());
-            }
-        }
 
-        return false;
+        return self::$app->router->route();
     }
 }

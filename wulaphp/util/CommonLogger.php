@@ -98,9 +98,9 @@ class CommonLogger implements LoggerInterface {
                 }
             }
             if (isset ($_SERVER ['REQUEST_URI'])) {
-                $msg .= " uri: " . $_SERVER ['REQUEST_URI'] . "\n";
+                $msg .= " #@ uri: " . $_SERVER ['REQUEST_URI'] . "\n";
             } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
-                $msg .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
+                $msg .= " #@ script: " . implode(' ', $_SERVER ['argv']) . "\n";
             }
         }
 
@@ -121,15 +121,35 @@ class CommonLogger implements LoggerInterface {
         } else {
             $cls = '';
         }
-        if (isset($info['line'])) {
-            $file = str_replace(APPROOT, '', $info['file'] ?? '');
-            if ($i) {
-                return " #{$i} {$file}({$info['line']}): {$cls}{$info['function']}()\n";
-            } else {
-                return " #{$i} {$file}({$info['line']})\n";
+        $sn       = $i >= 0 ? " #{$i}" : '';
+        $function = $info['function'] ?? false;
+        if ($function) {
+            $function .= '(';
+            if (isset($info['args']) && $info['args']) {
+                $as = [];
+                foreach ($info['args'] as $arg) {
+                    if (is_array($arg)) {
+                        $as[] = '[...]';
+                    } else if (is_object($arg)) {
+                        $as[] = 'Object(' . get_class($arg) . ')';
+                    } else if (is_resource($arg)) {
+                        $as[] = 'resource(' . get_resource_type($arg) . ')';
+                    } else if (is_null($arg)) {
+                        $as[] = 'null';
+                    } else {
+                        $as[] = strval($arg);
+                    }
+                }
+                $function .= implode(', ', $as);
             }
+            $function .= ')';
         }
-
-        return '';
+        $line = $info['line'] ?? 0;
+        $file = str_replace(APPROOT, '', $info['file'] ?? '');
+        if ($cls) {
+            return "{$sn} {$file}({$line}): {$cls}{$function}\n";
+        } else {
+            return "{$sn} {$file}({$line})\n";
+        }
     }
 }

@@ -193,12 +193,13 @@ class Request implements \ArrayAccess {
     private function addJsonPostBody() {
         // Look for the content type header
         if (isset ($_SERVER ["HTTP_CONTENT_TYPE"])) {
-            $contentType = $_SERVER ["HTTP_CONTENT_TYPE"];
+            $contentType = explode(';', $_SERVER ["HTTP_CONTENT_TYPE"])[0];
         } else if (isset ($_SERVER ["CONTENT_TYPE"])) {
-            $contentType = $_SERVER ["CONTENT_TYPE"];
+            $contentType = explode(';', $_SERVER ["CONTENT_TYPE"])[0];
         } else {
             $contentType = null;
         }
+
         if ($contentType == 'application/json') {
             $postData = @file_get_contents('php://input');
             if ($postData) {

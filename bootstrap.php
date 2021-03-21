@@ -27,9 +27,9 @@ if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib'
     @ini_set('zlib.output_compression_level', 7);
 }
 @ob_start();
-define('WULA_VERSION', '3.8.2');
+define('WULA_VERSION', '3.8.6');
 define('WULA_RELEASE', 'RC');
-defined('BUILD_NUMBER') or define('BUILD_NUMBER', '20200907001');
+defined('BUILD_NUMBER') or define('BUILD_NUMBER', '0');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 if (version_compare('7.1', phpversion(), '>')) {
     !trigger_error(sprintf('Your php version is %s,but wulaphp required PHP 7.1 or higher', phpversion()), E_USER_ERROR) or exit(1);
@@ -89,6 +89,8 @@ if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']) {
     define('VISITING_DOMAIN', '');
     define('VISITING_PORT', '');
 }
+
+define('RESPONSE_ACCEPT', explode(',', $_SERVER['HTTP_ACCEPT'] ?? 'text/plain')[0]);
 if (@ini_get('register_globals')) {
     !trigger_error('please close "register_globals" in php.ini file.') or exit(1);
 }
@@ -205,9 +207,5 @@ if (is_file(LIBS_PATH . 'common.php')) {
 }
 App::start();
 define('WULA_BOOTSTRAPPED', microtime(true));
-try {
-    fire('wula\bootstrapped');
-} catch (\Exception $e) {
-    \wulaphp\io\Response::respond(500, $e->getMessage());
-}
+fire('wula\bootstrapped');
 //end of bootstrap.php

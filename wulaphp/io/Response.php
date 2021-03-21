@@ -206,7 +206,7 @@ class Response {
      * @param string $message
      */
     public static function error(string $message) {
-        self::respond(400, $message);
+        self::respond(500, $message);
     }
 
     /**
@@ -217,43 +217,42 @@ class Response {
      */
     public static function respond(int $status = 404, $message = null) {
         http_response_code($status);
-        if (Request::isAjaxRequest()) {
-            @header('ajax: 1');
-            Response::getInstance()->output(['message' => $message ? $message : get_status_header_desc($status)]);
-            Response::getInstance()->close();
-        } else {
-            if ($status == 404) {
-                $data ['message'] = $message;
-                $view             = template('404.tpl', $data);
-            } else if ($status == 403) {
-                $data ['message'] = $message;
-                $view             = template('403.tpl', $data);
-            } else if ($status == 500) {
-                $data ['message'] = $message;
-                $view             = template('500.tpl', $data);
-            } else if ($status == 503) {
-                $data ['message'] = $message;
-                $view             = template('503.tpl', $data);
-            } else if ($status == 405) {
-                if (!$message) {
-                    $message = get_status_header_desc(405);
-                }
-                $view = new SimpleView($message);
-            } else if ($message) {
-                if (is_array($message)) {
-                    $view = new JsonView($message);
-                } else {
-                    $view = new SimpleView($message);
-                }
+        $resp    = Response::getInstance();
+        $message = $message ?? get_status_header_desc($status);
+        try {
+            if (strtolower(RESPONSE_ACCEPT) == 'application/json') {
+                $resp->output(new JsonView(['message' => $message]));
             } else {
-                $view = null;
+                if ($status == 404) {
+                    $data ['message'] = $message;
+                    $view             = template('404.tpl', $data);
+                } else if ($status == 403) {
+                    $data ['message'] = $message;
+                    $view             = template('403.tpl', $data);
+                } else if ($status == 500) {
+                    $data ['message'] = $message;
+                    $view             = template('500.tpl', $data);
+                } else if ($status == 503) {
+                    $data ['message'] = $message;
+                    $view             = template('503.tpl', $data);
+                } else if ($status == 405) {
+                    $view = new SimpleView($message);
+                } else if ($message) {
+                    if (is_array($message)) {
+                        $view = new JsonView($message);
+                    } else {
+                        $view = new SimpleView($message);
+                    }
+                } else {
+                    $data ['message'] = get_status_header_desc(500);;
+                    $view = template('500.tpl', $data);
+                }
+                $resp->output($view);
             }
-            if ($view) {
-                Response::getInstance()->output($view);
-                Response::getInstance()->close();
-            }
+        } catch (\Throwable $e) {
+            print_exception($e);
         }
-        exit (1);
+        $resp->close(true, 1);
     }
 
     /**
@@ -319,7 +318,7 @@ class Response {
                 }
             }
         } else if (!$return) {
-            Response::respond();
+            Response::respond(500);
         }
 
         return null;
@@ -332,14 +331,11 @@ class Response {
      *
      * @fire after_content_output $content
      */
-    public function close($exit = true) {
+    public function close($exit = true, $code = 0) {
         if ($exit) {
-            exit ();
+            exit ($code);
         } else {
-            try {
-                fire('after_content_output', $this->content);
-            } catch (\Exception $e) {
-            }
+            fire('after_content_output', $this->content);
         }
     }
 }

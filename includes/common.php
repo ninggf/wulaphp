@@ -13,6 +13,21 @@ use wulaphp\util\RedisLogger;
 
 define('CLRF', "\r\n");
 define('CLRF1', "\r\n\r\n");
+//errpr page template
+defined('WULA_ERROR_PAGE_TPL') or define('WULA_ERROR_PAGE_TPL', <<<'ERP'
+<!DOCTYPE html">
+<html"><head> <meta content="text/html; charset=utf-8" http-equiv="Content-Type"> <title>{{title}}</title><style type="text/css">
+*{ padding: 0; margin: 0; } html{ overflow-y: scroll; } body{ background: #fff; font-family: Helvetica Neue,Helvetica,PingFang SC,Tahoma,Arial,sans-serif; color: #333; font-size: 16px; } .error{ padding: 24px 48px; } h1{ font-size: 28px; line-height: 38px; } .error .content{ padding-top: 10px} .error .info{ margin-bottom: 12px; } .error .info .title{ margin-bottom: 3px; } .error .info .title h3{ color: #000; font-weight: 700; font-size: 16px; } .error .info .text{ line-height: 24px; } .copyright{ padding:12px 48px; color: #999; } .copyright a{ color: #000; text-decoration: none; } </style>
+</head><body><div class="error"><h1>{{message}}</h1>
+<div class="content">
+	<div class="info"><div class="title"><h3>{{Position}}</h3></div><div class="text"><p>{{ocurPos}}</p></div></div>
+	<div class="info"><div class="title"><h3>{{TRACE}}</h3></div><div class="text"><p>{{traceStr}}</p></div></div>
+</div></div><div class="copyright">
+<p><a href="https://www.wulaphp.com/">WULAPHP</a><sup>{{ver}}</sup>&nbsp;&nbsp;[ Make you a happy phper ]</p>
+</div></body></html>
+ERP
+);
+
 /**
  * 取数据.
  *
@@ -149,7 +164,8 @@ function log_debug($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    log_message($message, DEBUG_DEBUG, $file, []);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    log_message($message, DEBUG_DEBUG, $file, $trace);
 }
 
 /**
@@ -162,7 +178,8 @@ function log_info($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    log_message($message, DEBUG_INFO, $file, []);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    log_message($message, DEBUG_INFO, $file, $trace);
 }
 
 /**
@@ -175,7 +192,8 @@ function log_warn($message, string $file = 'wula') {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    log_message($message, DEBUG_WARN, $file, []);
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    log_message($message, DEBUG_WARN, $file, $trace);
 }
 
 /**
@@ -183,12 +201,15 @@ function log_warn($message, string $file = 'wula') {
  *
  * @param string|array $message
  * @param string       $file
+ * @param array|null   $trace
  */
-function log_error($message, string $file = 'wula') {
+function log_error($message, string $file = 'wula', ?array $trace = null) {
     if (defined('DEBUG') && DEBUG == DEBUG_OFF) {
         return;
     }
-    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+    if (!$trace) {
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    }
     log_message($message, DEBUG_ERROR, $file, $trace);
 }
 
@@ -213,15 +234,17 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
             $message = json_encode($message, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
         $dumps = '[' . date('c') . '] ' . $message . "\n";
-        for ($i = 0; $i < 10; $i ++) {
-            if (isset ($trace_info [ $i ]) && $trace_info [ $i ]) {
-                $dumps .= CommonLogger::getLine($trace_info[ $i ], $i);
+        for ($i = 0; $i < 5; $i ++) {
+            if (!isset ($trace_info [ $i ])) {
+                break;
             }
+
+            $dumps .= CommonLogger::getLine($trace_info[ $i ], $i);
         }
         if (isset ($_SERVER ['REQUEST_URI'])) {
-            $dumps .= " uri: " . $_SERVER ['REQUEST_URI'] . "\n";
+            $dumps .= " #@ uri: " . $_SERVER ['REQUEST_URI'] . "\n";
         } else if (isset($_SERVER['argc']) && $_SERVER['argc']) {
-            $dumps .= " script: " . implode(' ', $_SERVER ['argv']) . "\n";
+            $dumps .= " #@ script: " . implode(' ', $_SERVER ['argv']) . "\n";
         }
 
         @error_log($dumps, 3, LOGS_PATH . 'bootstrap.log');
@@ -256,9 +279,11 @@ function log_message($message, int $level, string $file = 'wula', array $trace_i
             default:
                 $dlogger = new CommonLogger($file);
         }
-
-        $log = apply_filter('logger\getLogger', $dlogger, $file);
-
+        if (function_exists('apply_filter')) {
+            $log = apply_filter('logger\getLogger', $dlogger, $file);
+        } else {
+            $log = $dlogger;
+        }
         if ($log instanceof Psr\Log\LoggerInterface) {
             $logger = $log;
         } else {
@@ -433,76 +458,79 @@ function http_out($status, $message = '') {
     exit();
 }
 
+/**
+ * 打印异常信息.
+ *
+ * @param \Throwable $exception
+ */
+function print_exception(?Throwable $exception) {
+    if (!$exception) {
+        return;
+    }
+    @ob_start();
+
+    @header('Content-type: ' . RESPONSE_ACCEPT);
+    $ocurPos = trim(CommonLogger::getLine([
+        'file' => str_replace(APPROOT, '', $exception->getFile()) . ' ',
+        'line' => $exception->getLine()
+    ], - 1));
+    $traces  = $exception->getTrace();
+    $i       = 0;
+    $traces  = html_escape(str_replace(APPROOT, '', $exception->getTraceAsString()));
+    $traces  = explode("\n", $traces);
+    if (strtolower(RESPONSE_ACCEPT) == 'application/json') {
+        $msg['message'] = $exception->getMessage();
+        array_unshift($traces, $ocurPos);
+        $msg['trace'] = $traces;
+        echo json_encode($msg);
+    } else {
+        $ss['{{title}}']    = __('Error Page');
+        $ss['{{Position}}'] = __('Position');
+        $ss['{{message}}']  = html_escape(str_replace(APPROOT, '', $exception->getMessage()));
+        $ss['{{ocurPos}}']  = $ocurPos;
+        $ss['{{TRACE}}']    = __('TRACE');
+        $ss['{{traceStr}}'] = implode('<br/>', $traces);
+        $ss['{{ver}}']      = WULA_VERSION . (WULA_RELEASE != '' ? '-' . WULA_RELEASE : '');
+        echo str_replace(array_keys($ss), array_values($ss), WULA_ERROR_PAGE_TPL);
+    }
+    @ob_end_flush();
+}
+
 // 用户可以选择自己处理异常
-if (null === set_exception_handler(null)) {
-    //异常处理
-    set_exception_handler(function (?Throwable $exception) {
-        global $argv;
-        if (!$exception) {
+$_oldExceptionHandler = set_exception_handler(null);
+//异常处理
+set_exception_handler(function (?Throwable $exception) use ($_oldExceptionHandler) {
+    global $argv;
+    try {
+        defined('DEBUG') or define('DEBUG', DEBUG_DEBUG);
+        if ($_oldExceptionHandler && ($handled = $_oldExceptionHandler($exception))) {
             return;
         }
-        if (defined('DEBUG')) {
-            if ($exception->getCode() != 404) {
-                log_error($exception->getMessage(), 'error');
+        try {
+            if ($exception->getCode() != 404 && DEBUG > DEBUG_WARN) {
+                $trace = $exception->getTrace();
+                array_unshift($trace, [
+                    'file' => $exception->getFile(),
+                    'line' => $exception->getLine()
+                ]);
+                log_error($exception->getMessage(), 'error', $trace);
             }
-            if ($argv) {
-                echo $exception->getMessage(), "\n";
-                echo $exception->getTraceAsString(), "\n";
-            } else if (DEBUG == DEBUG_DEBUG) {
-                status_header(500);
-                $stack  = [];
-                $msg    = str_replace('file:' . APPROOT, '', $exception->getMessage());
-                $tracks = $exception->getTrace();
-                $f      = $exception->getFile();
-                $l      = $exception->getLine();
-                array_unshift($tracks, ['line' => $l, 'file' => $f, 'function' => '']);
-                foreach ($tracks as $i => $t) {
-                    $tss     = ['<tr>'];
-                    $tss[]   = "<td class=\"cell-n\">$i</i>";
-                    $tss[]   = "<td class=\"cell-f\">{$t['function']}( )</td>";
-                    $f       = str_replace(APPROOT, '', $t['file']);
-                    $tss[]   = "<td>{$f}<b>:</b>{$t['line']}</td>";
-                    $tss []  = '</tr>';
-                    $stack[] = implode('', $tss);
-                }
-                $errorFile = file_get_contents(__DIR__ . '/debug.tpl');
-                $errorFile = str_replace([
-                    '{$message}',
-                    '{$stackInfo}',
-                    '{$title}',
-                    '{$tip}',
-                    '{$cs}',
-                    '{$f}',
-                    '{$l}',
-                    '{$uri}'
-                ], [
-                    $msg,
-                    implode('', $stack),
-                    __('Oops'),
-                    __('Fatal error'),
-                    __('Call Stack'),
-                    __('Function'),
-                    __('Location'),
-                    Router::getURI()
-                ], $errorFile);
-                echo $errorFile;
-                exit(0);
-            } else {
-                Response::respond(500, $exception->getMessage());
-            }
-        } else {
-            if ($argv) {
-                echo $exception->getMessage(), "\n";
-                echo $exception->getTraceAsString(), "\n";
-                exit(1);
-            } else {
-                @error_log($exception->getMessage(), 4);
-                Response::respond(500, $exception->getMessage());
-                exit(0);
-            }
+        } catch (Throwable $le) {
         }
-    });
-}
+        if ($argv) { # 命令行
+            echo $exception->getMessage(), "\n";
+            echo $exception->getTraceAsString(), "\n";
+        } else if (DEBUG < DEBUG_INFO || !class_exists('wulaphp\io\Response')) {
+            status_header(503);
+            print_exception($exception);
+        } else {
+            Response::respond(503, $exception->getMessage());
+        }
+    } catch (Throwable $te) {
+        print_exception($te);
+    }
+});
+
 //脚本结束回调
 register_shutdown_function(function () {
     define('WULA_STOPTIME', microtime(true));

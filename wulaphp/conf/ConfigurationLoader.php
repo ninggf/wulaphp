@@ -104,9 +104,13 @@ class ConfigurationLoader extends BaseConfigurationLoader {
         }
 
         // 再给用户一次机会
-        $cfg = function_exists('apply_filter') ? apply_filter('on_load_' . $name . '_config', $config) : $config;
+        if ($name != 'default') {
+            $cfg = function_exists('apply_filter') ? apply_filter('on_load_config', $config) : $config;
 
-        return $cfg instanceof Configuration ? $cfg : $config;
+            return $cfg instanceof Configuration ? $cfg : $config;
+        } else {
+            return $config;
+        }
     }
 
     /**
