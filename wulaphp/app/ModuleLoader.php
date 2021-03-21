@@ -42,12 +42,10 @@ class ModuleLoader {
      *
      * @return array
      */
-    public function scanModules() {
+    public function scanModules(): array {
         $modules = RtCache::get('loader@modules');
         if (!$modules) {
-            $modules    = [];
-            $premodules = App::cfg('modules');
-
+            $modules = [];
             if (is_dir(MODULE_ROOT)) {
                 $it = new \DirectoryIterator (MODULE_ROOT);
                 foreach ($it as $dir) {
