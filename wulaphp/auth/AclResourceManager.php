@@ -18,11 +18,10 @@ class AclResourceManager {
      *
      * @param string      $id
      * @param string      $name
-     * @param string|null $defaultOp
      *
      * @return AclResource
      */
-    public function getResource(string $id = '', string $name = '', ?string $defaultOp = null): AclResource {
+    public function getResource(string $id = '', string $name = ''): AclResource {
         if (empty ($id) || $id == '/') {
             return $this->root;
         } else {
@@ -35,9 +34,6 @@ class AclResourceManager {
             }
             if (!empty ($name)) {
                 $node->setName($name);
-            }
-            if ($defaultOp) {
-                $node->addOperate($defaultOp, '', '', true);
             }
 
             return $node;

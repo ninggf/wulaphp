@@ -13,7 +13,6 @@ namespace wulaphp\auth;
  * @property-read string $defaultOp
  * @property-read array  $operations
  * @property-read array  $items
- * @internal
  */
 class AclResource implements \ArrayAccess {
     private $uri;
@@ -22,8 +21,6 @@ class AclResource implements \ArrayAccess {
     private $note;
     private $name;
     private $items      = [];
-    private $defaultOp  = 'm';
-    private $resId      = '';
 
     public function __construct($id, $uri = '', $name = '') {
         $this->id  = $id;
@@ -66,7 +63,12 @@ class AclResource implements \ArrayAccess {
     }
 
     public function getOperations() {
-        return $this->operations;
+        $ops = [];
+        foreach ($this->operations as $op) {
+            $ops[ $op['op'] ] = $op;
+        }
+
+        return $ops;
     }
 
     public function setName($name) {
@@ -77,18 +79,18 @@ class AclResource implements \ArrayAccess {
         $this->note = $note;
     }
 
-    public function addOperate($op, $name, $extra_url = '', $default = false) {
-        if ($default) {
-            $this->defaultOp = '*';
-            $this->resId     = '*:' . $this->uri;
-        } else {
-            $this->operations [ $op ] = [
-                'uri'   => $this->uri,
-                'name'  => $name,
-                'extra' => $extra_url,
-                'resId' => $op . ':' . $this->uri
-            ];
-        }
+    public function addOperate($op, $name, $extra_url = '') {
+        static $idx = 0, $ops = [];
+        if (isset($ops[ $op ]))
+            return;
+        $ops [ $op ]                  = true;
+        $this->operations [ $idx ++ ] = [
+            'op'    => $op,
+            'uri'   => $this->uri,
+            'name'  => $name,
+            'extra' => $extra_url,
+            'resId' => $op . ':' . $this->uri
+        ];
     }
 
     public function offsetExists($offset) {

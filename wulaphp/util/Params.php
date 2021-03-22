@@ -62,11 +62,12 @@ abstract class Params {
      * 所有未明确指定值或指定值为null的参数将不会出现的结果数组里。
      * 如果想输出null,请使用imv('null')对参数进行赋值。
      *
-     * @param array|null $errors 错误信息，如果启用了验证功能且验证出错时的错误信息.
+     * @param array|null  $errors 错误信息，如果启用了验证功能且验证出错时的错误信息.
+     * @param string|null $group  用指定组校验数据.
      *
      * @return array|null 参数数组
      */
-    public function getParams(?array &$errors = null): ?array {
+    public function getParams(?array &$errors = null, ?string $group = null): ?array {
         $ary    = [];
         $fields = $this->_v__data;
         foreach ($fields as $field => $v) {
@@ -90,8 +91,16 @@ abstract class Params {
         return $ary;
     }
 
-    public function toArray(?array &$errors = null): ?array {
-        return $this->getParams($errors);
+    /**
+     *
+     * @param array|null  $errors
+     * @param string|null $group 用指定组校验数据.
+     *
+     * @return array|null
+     * @see \wulaphp\util\Params::getParams()
+     */
+    public function toArray(?array &$errors = null, ?string $group = null): ?array {
+        return $this->getParams($errors, $group);
     }
 
     /**
@@ -104,7 +113,35 @@ abstract class Params {
      * @return array|null 参数数组
      */
     public function forn(?array &$errors = null): ?array {
-        return $this->getParams($errors);
+        return $this->getParams($errors, 'new');
+    }
+
+    /**
+     * 获取数据
+     *
+     * @param string|null $group
+     *
+     * @return array|null
+     * @throws \wulaphp\validator\ValidateException
+     */
+    public function getData(?string $group = null): array {
+        $ary    = [];
+        $fields = $this->_v__data;
+        foreach ($fields as $field => $v) {
+            $value = $this->{$field};
+            if (is_null($value)) {
+                continue;
+            }
+            $ary[ $field ] = $value;
+        }
+        unset($obj, $vars, $var);
+        if ($fields) {
+            $this->validateData($this->_v__rules, $ary, $group);
+        } else {
+            throw new ValidateException(['@error' => __('data is empty')]);
+        }
+
+        return $ary;
     }
 
     /**
@@ -117,26 +154,6 @@ abstract class Params {
      * @return array|null 参数数组
      */
     public function foru(?array &$errors = null): ?array {
-        $ary    = [];
-        $fields = $this->_v__data;
-        foreach ($fields as $field => $v) {
-            $value = $this->{$field};
-            if (is_null($value)) {
-                continue;
-            }
-            $ary[ $field ] = $value;
-        }
-        unset($obj, $vars, $var);
-        if ($fields) {
-            try {
-                $this->validateUpdateData($ary);
-            } catch (ValidateException $e) {
-                $errors = $e->getErrors();
-
-                return null;
-            }
-        }
-
-        return $ary;
+        return $this->getParams($errors, 'update');
     }
 }

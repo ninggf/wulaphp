@@ -23,6 +23,7 @@ class Annotation {
     protected $docComment  = '';
     protected $annotations = [];
     protected $remove      = true;
+    protected $annExtras   = [];
 
     /**
      * Annotation constructor.
@@ -48,14 +49,18 @@ class Annotation {
                 while ($i < $len) {
                     $doc = $this->docComment[ $i ];
                     $doc = substr(trim($doc), 1);
-                    if ($doc && preg_match('#^@([a-z][a-z\d_]*)(\s+(.*))?#i', trim($doc), $ms)) {
-                        $ann = $ms[1];
+                    if ($doc && preg_match('#^@(([a-z][a-z\d_]*)(<([^>]+)>)?)(\s+(.*))?#i', trim($doc), $ms)) {
+                        $ann = $ms[2];
                         if (isset($ignore[ $ann ])) {
                             $i ++;
                             continue;
                         }
-
-                        $value = isset($ms[3]) ? $ms[3] : '';
+                        if (isset($ms[4]) && $ms[4]) {
+                            foreach (preg_split('#\s*,\s*#', trim($ms[4])) as $ex) {
+                                $this->annExtras[ $ann ][] = $ex;
+                            }
+                        }
+                        $value = isset($ms[6]) ? $ms[6] : '';
                         $value = $this->text($i, $value, $len, $this->remove ? '' : "\n");
                         if (isset($this->annotations[ $ann ])) {
                             if (is_array($this->annotations[ $ann ])) {
@@ -100,6 +105,17 @@ class Annotation {
      */
     public function getDoc(): ?string {
         return $this->docComment;
+    }
+
+    /**
+     * 获取额外数据.
+     *
+     * @param string $ann
+     *
+     * @return array
+     */
+    public function getExtra(string $ann): array {
+        return $this->annExtras[ $ann ] ?? [];
     }
 
     /**

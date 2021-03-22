@@ -14,11 +14,14 @@ use PHPUnit\Framework\TestCase;
 use wulaphp\cache\Cache;
 use wulaphp\cache\MemcachedCache;
 use wulaphp\conf\CacheConfiguration;
+use wulaphp\conf\Configuration;
 use wulaphp\conf\ConfigurationLoader;
 
 class MemcachedCacheTest extends TestCase {
     public static function setUpBeforeClass() {
-        bind('on_load_cache_config', function ($conf) {
+        bind('on_load_config', function (Configuration $conf) {
+            if ($conf->name() != 'cache')
+                return $conf;
             $conf = new CacheConfiguration();
             $conf->enabled();
             $conf->addRedisServer('127.0.0.1', 6379, 1);
@@ -33,7 +36,7 @@ class MemcachedCacheTest extends TestCase {
      * @return \wulaphp\cache\Cache
      */
     public function testGetCacheIns() {
-        self::assertTrue(has_hook('on_load_cache_config'));
+        self::assertTrue(has_hook('on_load_config'));
         self::assertTrue(has_hook('get_memcached_cache'));
 
         $cfg = ConfigurationLoader::loadFromFile('cache');

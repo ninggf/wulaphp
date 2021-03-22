@@ -17,6 +17,7 @@ use wulaphp\util\Annotation;
  */
 trait Validator {
     protected $_v__rules    = [];
+    protected $_v__rulesEx  = [];
     protected $_v__rulesIdx = [];
     protected $_v__ruleKeys = [];
     //预定义的验证规则
@@ -33,6 +34,9 @@ trait Validator {
         'range'              => true,
         'minlength'          => true,
         'maxlength'          => true,
+        'minlen'             => true,
+        'maxlen'             => true,
+        'length'             => true,
         'rangelength'        => true,
         'callback'           => true,
         'pattern'            => true,
@@ -47,7 +51,11 @@ trait Validator {
         'minWords'           => true,
         'maxWords'           => true,
         'require_from_group' => true,
-        'passwd'             => true
+        'passwd'             => true,
+        'null'               => true,
+        'notNull'            => true,
+        'blank'              => true,
+        'empty'              => true
     ];
 
     /**
@@ -55,7 +63,7 @@ trait Validator {
      *
      * @param array $fields 要验证的字段.
      */
-    protected final function onInitValidator($fields = []) {
+    protected final function onInitValidator(array $fields = []) {
         if (empty($fields)) {
             if (property_exists($this, '_v__fields') && $this->_v__fields) {
                 $fields = $this->_v__fields;
@@ -74,7 +82,7 @@ trait Validator {
         }
         if ($fields) {
             foreach ($fields as $field => $def) {
-                $rule = [];
+                $gpRules = [];
                 /**@var $ann \wulaphp\util\Annotation */
                 $ann  = $def['annotation'];
                 $anns = $ann->getAll();
@@ -88,22 +96,34 @@ trait Validator {
                         $r   = $va ? preg_split('/\s*=>\s*/u', $va) : [];
                         $len = count($r);
                         if ($len == 0) {
-                            $rule[ $an ] = null;
+                            $rule = [$an, null];
                         } else {
                             if (preg_match('/^\(.+\)$/', trim($r[0]))) {
                                 if (isset($r[1])) {
-                                    $rule[ $an . $r[0] ] = $r[1];
+                                    $rule = [$an . $r[0], $r[1]];
                                 } else {
-                                    $rule[ $an . $r[0] ] = null;
+                                    $rule = [$an . $r[0], null];
                                 }
                             } else {
-                                $rule[ $an ] = $r[0];
+                                $rule = [$an, $r[0]];
                             }
+                        }
+                        $groups = $ann->getExtra($an);
+                        if ($groups) {
+                            foreach ($groups as $gp) {
+                                if ($gp) {
+                                    $gpRules[ $rule[0] . '@' . $gp ] = $rule[1];
+                                } else {
+                                    $gpRules[ $rule[0] ] = $rule[1];
+                                }
+                            }
+                        } else {
+                            $gpRules[ $rule[0] ] = $rule[1];
                         }
                     }
                 }
-                if ($rule) {
-                    $this->addRule($field, $rule, $multiple);
+                if ($gpRules) {
+                    $this->addRule($field, $gpRules, $multiple);
                 }
             }
         }
@@ -158,7 +178,7 @@ trait Validator {
             $data = $this->_v__formData;
         }
         if (empty($data)) {
-            throw new ValidateException(['error' => 'data is empty']);
+            throw new ValidateException(['@error' => __('data is empty')]);
         }
         if ($rules) {
             $this->_v__rules    = [];
@@ -266,16 +286,19 @@ trait Validator {
     }
 
     /**
-     * @param array $rules
-     * @param array $data
+     * 校验数据.
+     *
+     * @param array  $rules
+     * @param array  $data
+     * @param string $group
      *
      * @return bool
      * @throws ValidateException
      */
-    private function validateData(array $rules, array $data): bool {
+    protected function validateData(array $rules, array $data, ?string $group = null): bool {
         $errors = [];
         foreach ($rules as $field => $rule) {
-            $valid = $this->validateField($field, $data, $rule);
+            $valid = $this->validateField($field, $data, $rule, $group);
             if ($valid !== true) {
                 $errors[ $field ] = $valid;
             }
@@ -288,15 +311,26 @@ trait Validator {
     }
 
     /**
-     * @param string $field
-     * @param array  $data
-     * @param array  $rules
+     * @param string      $field
+     * @param array       $data
+     * @param array       $rules
+     * @param string|null $group
      *
      * @return mixed
      */
-    private function validateField(string $field, array $data, array $rules) {
+    private function validateField(string $field, array $data, array $rules, ?string $group = null) {
         foreach ($rules as $rule) {
             [$m, $ops, $msg] = $rule;
+            if ($group) {
+                $ms = explode('@', $m);
+                if (isset($ms[1])) {
+                    if ($ms[1] == $group) {
+                        $m = $ms[0];
+                    } else {
+                        continue;
+                    }
+                }
+            }
             $valid_m = 'v_' . $m;
             if (method_exists($this, $valid_m)) {
                 if ($msg) {
@@ -499,8 +533,12 @@ trait Validator {
         return true;
     }
 
-    // minlength
     protected function v_minlength($field, $exp, $data, $message) {
+        return $this->v_minlen($field, $exp, $data, $message);
+    }
+
+    // minlength
+    protected function v_minlen($field, $exp, $data, $message) {
         if ($this->isEmpty($field, $data)) {
             return true;
         }
@@ -518,7 +556,7 @@ trait Validator {
     }
 
     // maxlength
-    protected function v_maxlength($field, $exp, $data, $message) {
+    protected function v_maxlen($field, $exp, $data, $message) {
         if ($this->isEmpty($field, $data)) {
             return true;
         }
@@ -532,6 +570,27 @@ trait Validator {
             return true;
         } else {
             return empty ($message) ? _t('maxlength@validator', $exp) : sprintf($message, $exp);
+        }
+    }
+
+    protected function v_maxlength($field, $exp, $data, $message) {
+        return $this->v_maxlen($field, $exp, $data, $message);
+    }
+
+    protected function v_length($field, $exp, $data, $message) {
+        if ($this->isEmpty($field, $data)) {
+            return true;
+        }
+        $value = $data[ $field ];
+        if (is_array($value)) {
+            $value = count($value);
+        } else {
+            $value = function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
+        }
+        if ($value == intval($exp)) {
+            return true;
+        } else {
+            return empty ($message) ? _t('the length of %s is not %s@validator', $field, $exp) : sprintf($message, $field, $exp);
         }
     }
 
@@ -749,6 +808,33 @@ trait Validator {
         }
 
         return (empty ($message) ? _t('maxWords@validator', $exp) : sprintf($message, $e1, $e2));
+    }
+
+    protected function v_null($field, $exp, $data, $message) {
+        $rst = isset($data[ $field ]);
+        if ($rst) {
+            return $message ? sprintf($message, $field) : _t('%s must be null@validator', $field);
+        }
+
+        return true;
+    }
+
+    protected function notNull($field, $exp, $data, $message) {
+        $rst = isset($data[ $field ]);
+        if ($rst) {
+            return true;
+        }
+
+        return $message ? sprintf($message, $field) : _t('%s must be not null@validator', $field);
+    }
+
+    protected function v_blank($field, $exp, $data, $message) {
+        $rst = isset($data[ $field ]) && '' === $data[ $field ];
+        if ($rst) {
+            return true;
+        }
+
+        return $message ? sprintf($message, $field) : _t('%s must be blank@validator', $field);
     }
 
     protected function v_require_from_group($field, $exp, $data, $message) {

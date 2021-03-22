@@ -14,14 +14,19 @@ use PHPUnit\Framework\TestCase;
 use wulaphp\cache\RedisCache;
 use wulaphp\cache\RtCache;
 use wulaphp\conf\ClusterConfiguration;
+use wulaphp\conf\Configuration;
 
 class ClusterCacheTest extends TestCase {
     public static function setUpBeforeClass() {
         define('RUN_IN_CLUSTER', 1);
-        bind('on_load_cluster_config', function ($c) {
-            $c = new ClusterConfiguration();
-            $c->enabled();
-            $c->addRedisServer('127.0.0.1', 6379, 2, 1);
+        bind('on_load_config', function (Configuration $c) {
+            if ($c->name() == 'cluster') {
+                $c = new ClusterConfiguration();
+                $c->enabled();
+                $c->addRedisServer('127.0.0.1', 6379, 2, 1);
+
+                return $c;
+            }
 
             return $c;
         });
