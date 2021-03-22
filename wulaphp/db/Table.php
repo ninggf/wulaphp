@@ -11,8 +11,6 @@ use wulaphp\db\sql\UpdateSQL;
  *
  * @package wulaphp\db
  * @author  Leo Ning <windywany@gmail.com>
- * @property $_v__formData
- * @property $_f__tableData
  */
 abstract class Table extends View {
     protected $autoIncrement = true;
@@ -21,6 +19,8 @@ abstract class Table extends View {
      * Table constructor.
      *
      * @param string|array|DatabaseConnection|View|null $db
+     *
+     * @throws \wulaphp\db\DialectException
      */
     public function __construct($db = null) {
         parent::__construct($db);
@@ -82,13 +82,6 @@ abstract class Table extends View {
         }
         if ($data) {
             $this->filterFields($data);
-            if (method_exists($this, 'validateNewData')) {
-                if (isset($this->_v__formData)) {
-                    $this->validateNewData($this->_v__formData);
-                } else {
-                    $this->validateNewData($data);
-                }
-            }
             $sql = new InsertSQL($data);
             $sql->into($this->table)->setDialect($this->dialect);
             if ($this->autoIncrement) {
@@ -122,13 +115,6 @@ abstract class Table extends View {
     public final function upsert(array $data, ?array $data1 = null, ?string $key = null): bool {
         if ($data) {
             $this->filterFields($data);
-            if (method_exists($this, 'validateNewData')) {
-                if (isset($this->_v__formData)) {
-                    $this->validateNewData($this->_v__formData);
-                } else {
-                    $this->validateNewData($data);
-                }
-            }
             if (!$key) {
                 $key = $this->primaryKey;
             }
@@ -167,18 +153,9 @@ abstract class Table extends View {
             }
             assert($key != '', '未定义冲突键名');
             assert(!empty($data1), '$data1为空');
-            //数据校验
-            if (method_exists($this, 'validateNewData')) {
-                foreach ($datas as &$data) {
-                    $this->filterFields($data);
-                    $this->validateNewData($data);
-                }
-            } else {
-                foreach ($datas as &$data) {
-                    $this->filterFields($data);
-                }
+            foreach ($datas as &$data) {
+                $this->filterFields($data);
             }
-
             $sql = new InsertSQL($datas, true);
             $sql->into($this->table)->setDialect($this->dialect);
             $sql->onDuplicate($key, $data1);
@@ -224,17 +201,9 @@ abstract class Table extends View {
             $datas = $cb ($datas, $this);
         }
         if ($datas) {
-            if (method_exists($this, 'validateNewData')) {
-                foreach ($datas as &$data) {
-                    $this->filterFields($data);
-                    $this->validateNewData($data);
-                }
-            } else {
-                foreach ($datas as &$data) {
-                    $this->filterFields($data);
-                }
+            foreach ($datas as &$data) {
+                $this->filterFields($data);
             }
-
             $sql = new InsertSQL($datas, true);
             $sql->into($this->table)->setDialect($this->dialect);
             if ($this->autoIncrement) {
@@ -295,13 +264,6 @@ abstract class Table extends View {
         }
         if ($data) {
             $this->filterFields($data);
-            if (method_exists($this, 'validateUpdateData')) {
-                if (property_exists($this, '_v__formData') && $this->_v__formData) {
-                    $this->validateUpdateData($this->_v__formData);
-                } else {
-                    $this->validateUpdateData($data);
-                }
-            }
             $sql = new UpdateSQL($this->table);
             $sql->set($data)->setDialect($this->dialect)->where($con);
             $rst = $sql->exec();
