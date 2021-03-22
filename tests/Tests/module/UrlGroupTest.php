@@ -52,13 +52,13 @@ class UrlGroupTest extends TestCase {
 
         $content = $curlient->get('http://127.0.0.1:9090/m2/user');
         $this->assertTrue(empty($content));
-        $this->assertEquals(500, $curlient->errorCode);
+        $this->assertEquals(503, $curlient->errorCode);
 
         $content = $curlient->get('http://127.0.0.1:9090/vip/m2/abc/test/add/1/2');
         $this->assertEquals('{"result":3}', $content);
 
         $content = $curlient->get('http://127.0.0.1:9090/vip/m2/abc/test/add/1');
         $this->assertTrue(empty($content));
-        $this->assertEquals(500, $curlient->errorCode);
+        $this->assertEquals(503, $curlient->errorCode);
     }
 }
