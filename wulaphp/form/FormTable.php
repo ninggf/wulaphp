@@ -10,6 +10,7 @@ use wulaphp\validator\Validator;
  * 声明了字段的数据表(支持数据验证).
  *
  * @package wulaphp\form
+ * @deprecated
  */
 abstract class FormTable extends Table {
     use Validator;
@@ -28,15 +29,10 @@ abstract class FormTable extends Table {
      *
      * @param bool                                                              $validte 是否解析字段.
      * @param string|array|\wulaphp\db\DatabaseConnection|\wulaphp\db\View|null $db
+     *
+     * @throws \wulaphp\db\DialectException
      */
-    public function __construct($validte = false, $db = null) {
-        if ($validte) {
-            try {
-                $this->parseFields();
-            } catch (\Exception $e) {
-                log_debug($e->getMessage());
-            }
-        }
+    public function __construct($validte = true, $db = null) {
         parent::__construct($db);
     }
 
@@ -49,7 +45,7 @@ abstract class FormTable extends Table {
      *
      * @return array 填充后的数组.
      */
-    public final function inflate($excepts = '', $useDefault = false, $force = false) {
+    public final function inflate($excepts = '', $useDefault = false, $force = false): array {
         if ($this->_f__tableData && !$force) {
             return $this->_f__tableData;
         }
