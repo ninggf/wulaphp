@@ -13,7 +13,6 @@ use wulaphp\util\Annotation;
  * @since   1.0.0
  * @property array $_v__fields
  * @property array $_v__formData
- * @method array inflate()
  */
 trait Validator {
     protected $_v__rules    = [];
@@ -136,7 +135,7 @@ trait Validator {
      *
      * @return $this
      */
-    public final function applyRules(Validator $form) {
+    public final function applyRules(Validator $form): Validator {
         $this->_v__rules = array_merge($this->_v__rules, $form->getValidateRules());
 
         return $this;
@@ -149,7 +148,7 @@ trait Validator {
      *
      * @return array
      */
-    public final function getValidateRules(string ...$fileds) {
+    public final function getValidateRules(string ...$fileds): array {
         if ($fileds) {
             $rules = [];
             foreach ($fileds as $f) {
@@ -290,7 +289,7 @@ trait Validator {
      *
      * @param array  $rules
      * @param array  $data
-     * @param string $group
+     * @param string|null $group
      *
      * @return bool
      * @throws ValidateException
