@@ -11,10 +11,10 @@ use wulaphp\util\Annotation;
  *
  * @author  Leo Ning <windywany@gmail.com>
  * @since   1.0.0
- * @property array $_v__fields
- * @property array $_v__formData
  */
 trait Validator {
+    protected $_v__fields   = [];
+    protected $_v__formData = [];
     protected $_v__rules    = [];
     protected $_v__rulesEx  = [];
     protected $_v__rulesIdx = [];
@@ -64,9 +64,9 @@ trait Validator {
      */
     protected final function onInitValidator(array $fields = []) {
         if (empty($fields)) {
-            if (property_exists($this, '_v__fields') && $this->_v__fields) {
+            if ($this->_v__fields) {
                 $fields = $this->_v__fields;
-            } else if (!property_exists($this, '_v__fields')) {
+            } else {
                 $obj  = new \ReflectionObject($this);
                 $vars = $obj->getProperties(\ReflectionProperty::IS_PUBLIC);
                 foreach ($vars as $var) {
@@ -77,6 +77,7 @@ trait Validator {
                     $fields[ $name ] = ['annotation' => new Annotation($var)];
                 }
                 unset($obj, $vars);
+                $this->_v__fields = $fields;
             }
         }
         if ($fields) {
@@ -166,75 +167,21 @@ trait Validator {
     /**
      * 验证数据.
      *
-     * @param array|null $data  待验证的数据.
-     * @param array|null $rules 验证规则.如果为空则使用之前的规则.
+     * @param array|null  $data  待验证的数据.
+     * @param string|null $group 验证组
      *
      * @return bool
      * @throws ValidateException
      */
-    public final function validate(?array $data = null, ?array $rules = null): bool {
+    public final function validate(?array $data = null, ?string $group = null): bool {
         if ($data === null) {
             $data = $this->_v__formData;
         }
         if (empty($data)) {
             throw new ValidateException(['@error' => __('data is empty')]);
         }
-        if ($rules) {
-            $this->_v__rules    = [];
-            $this->_v__rulesIdx = [];
-            $this->_v__ruleKeys = [];
-            foreach ($rules as $field => $rule) {
-                $this->addRule($field, $rule);
-            }
-        }
 
-        return $this->validateNewData($data);
-    }
-
-    /**
-     * 验证新增数据,用于insert语句.
-     *
-     * @param array|null $data
-     *
-     * @return bool
-     * @throws ValidateException
-     */
-    protected final function validateNewData(?array $data = null): bool {
-        if ($data === null) {
-            $data = $this->_v__formData;
-        }
-        if ($this->_v__rules) {
-            return $this->validateData($this->_v__rules, $data);
-        }
-
-        return true;
-    }
-
-    /**
-     * 验证修改数据,用于update.
-     *
-     * @param array|null $data
-     *
-     * @return bool
-     * @throws ValidateException
-     */
-    protected final function validateUpdateData(?array $data = null): bool {
-        if ($data === null) {
-            $data = $this->_v__formData;
-        }
-        if ($this->_v__rules) {
-            $validateRules = [];
-            foreach ($data as $key => $v) {
-                if (isset($this->_v__rules[ $key ])) {
-                    $validateRules[ $key ] = $this->_v__rules[ $key ];
-                }
-            }
-            if ($validateRules) {
-                return $this->validateData($validateRules, $data);
-            }
-        }
-
-        return true;
+        return $this->validateData($this->_v__rules, $data, $group);
     }
 
     /**
@@ -287,8 +234,8 @@ trait Validator {
     /**
      * 校验数据.
      *
-     * @param array  $rules
-     * @param array  $data
+     * @param array       $rules
+     * @param array       $data
      * @param string|null $group
      *
      * @return bool
@@ -320,8 +267,8 @@ trait Validator {
     private function validateField(string $field, array $data, array $rules, ?string $group = null) {
         foreach ($rules as $rule) {
             [$m, $ops, $msg] = $rule;
+            $ms = explode('@', $m);
             if ($group) {
-                $ms = explode('@', $m);
                 if (isset($ms[1])) {
                     if ($ms[1] == $group) {
                         $m = $ms[0];
@@ -329,6 +276,8 @@ trait Validator {
                         continue;
                     }
                 }
+            } else if (isset($ms[1])) {
+                continue;
             }
             $valid_m = 'v_' . $m;
             if (method_exists($this, $valid_m)) {

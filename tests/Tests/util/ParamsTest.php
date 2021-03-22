@@ -37,5 +37,20 @@ class ParamsTest extends TestCase {
         self::assertNull($errors1);
         self::assertEquals('Leo Ning', $data['username']);
         self::assertEquals('123', $data['password']);
+
+        $params1->toArray($errors4);
+        self::assertNull($errors4);
+
+        Request::getInstance()->addUserData(['id' => 'abc']);
+        $params1 = new LoginParams(true);
+        $params1->foru($errors2);
+        self::assertNotNull($errors2);
+        self::assertEquals('Please enter a valid number.', $errors2['id']);
+
+
+        $params2 = new LoginParams(true);
+        $params2->forn($errors3);
+        self::assertNotNull($errors3);
+        self::assertEquals('id must be null', $errors3['id']);
     }
 }

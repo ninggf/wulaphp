@@ -68,24 +68,12 @@ abstract class Params {
      * @return array|null 参数数组
      */
     public function getParams(?array &$errors = null, ?string $group = null): ?array {
-        $ary    = [];
-        $fields = $this->_v__data;
-        foreach ($fields as $field => $v) {
-            $value = $this->{$field};
-            if (is_null($value)) {
-                continue;
-            }
-            $ary[ $field ] = $value;
-        }
-        unset($obj, $vars, $var);
-        if ($fields) {
-            try {
-                $this->validateNewData($ary);
-            } catch (ValidateException $e) {
-                $errors = $e->getErrors();
+        try {
+            $ary = $this->getData($group);
+        } catch (ValidateException $e) {
+            $errors = $e->getErrors();
 
-                return null;
-            }
+            return null;
         }
 
         return $ary;
@@ -117,6 +105,19 @@ abstract class Params {
     }
 
     /**
+     * 获取参数列表用于修改，此时仅校验有值的字段.
+     * 所有未明确指定值或指定值为null的参数将不会出现的结果数组里。
+     * 如果想输出null,请使用imv('null')对参数进行赋值。
+     *
+     * @param array|null $errors 错误信息，如果启用了验证功能且验证出错时的错误信息.
+     *
+     * @return array|null 参数数组
+     */
+    public function foru(?array &$errors = null): ?array {
+        return $this->getParams($errors, 'update');
+    }
+
+    /**
      * 获取数据
      *
      * @param string|null $group
@@ -134,26 +135,9 @@ abstract class Params {
             }
             $ary[ $field ] = $value;
         }
-        unset($obj, $vars, $var);
-        if ($fields) {
-            $this->validateData($this->_v__rules, $ary, $group);
-        } else {
-            throw new ValidateException(['@error' => __('data is empty')]);
-        }
+
+        $this->validate($ary, $group);
 
         return $ary;
-    }
-
-    /**
-     * 获取参数列表用于修改，此时仅校验有值的字段.
-     * 所有未明确指定值或指定值为null的参数将不会出现的结果数组里。
-     * 如果想输出null,请使用imv('null')对参数进行赋值。
-     *
-     * @param array|null $errors 错误信息，如果启用了验证功能且验证出错时的错误信息.
-     *
-     * @return array|null 参数数组
-     */
-    public function foru(?array &$errors = null): ?array {
-        return $this->getParams($errors, 'update');
     }
 }

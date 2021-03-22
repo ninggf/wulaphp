@@ -25,4 +25,12 @@ class LoginParams extends Params {
      * @equalTo (password) => {password1.not.equal}
      */
     public $password1;
+
+    /**
+     * ID
+     * @required<update>
+     * @null<new>
+     * @num
+     */
+    public $id;
 }
