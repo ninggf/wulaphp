@@ -52,7 +52,7 @@ trait PassportSupport {
         //用户登录
         if ($this->passport->uid) {
             if ($this->passport->status != 1) { //1为正常，其它值为锁定状态。
-                return $this->onLocked($view);
+                return $this->onBlocked($view);
             }
             $unlock = $this->methodAnn->has('unlock');
             if (!$unlock && $this->passport->screenLocked) { //不是解锁方法且用户已经锁屏。
@@ -85,8 +85,8 @@ trait PassportSupport {
      *
      * @return mixed
      */
-    protected function onLocked($view) {
-        return $view ? $view : 'user is locked';
+    protected function onBlocked($view) {
+        return $view ? $view : new SimpleView(__('your are blocked'));
     }
 
     /**
@@ -97,6 +97,6 @@ trait PassportSupport {
      * @return mixed
      */
     protected function onScreenLocked($view) {
-        return $view ? $view : 'screen is locked';
+        return $view ? $view : new SimpleView(__('screen is locked'));
     }
 }

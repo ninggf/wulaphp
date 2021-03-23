@@ -18,6 +18,7 @@ use wulaphp\app\Module;
 use wulaphp\auth\PassportSupport;
 use wulaphp\auth\RbacSupport;
 use wulaphp\mvc\view\SimpleView;
+use wulaphp\mvc\view\View;
 
 /**
  * 管理器控制器.
@@ -64,10 +65,10 @@ class AdminController extends Controller {
      *
      * @return mixed|\wulaphp\mvc\view\SimpleView
      */
-    protected function onLocked($view) {
-        $view = apply_filter('mvc\admin\onLocked', $view);
+    protected function onBlocked($view) {
+        $view = apply_filter('mvc\admin\onBlocked', $view);
         if ($view === null) {
-            $view = new SimpleView('you were locked');
+            $view = new SimpleView('you were blocked');
         }
 
         return $view;
@@ -81,7 +82,7 @@ class AdminController extends Controller {
      *
      * @return mixed|\wulaphp\mvc\view\SimpleView
      */
-    protected function onDenied($message, $view) {
+    protected function onDenied(string $message, ?View $view = null): ?View {
         $view = apply_filter('mvc\admin\onDenied', $view, $message);
         if ($view === null) {
             $view = new SimpleView('you are denied');
@@ -90,6 +91,13 @@ class AdminController extends Controller {
         return $view;
     }
 
+    /**
+     * 用户锁屏.
+     *
+     * @param $view
+     *
+     * @return mixed|\wulaphp\mvc\view\SimpleView
+     */
     protected function onScreenLocked($view) {
         $view = apply_filter('mvc\admin\onScreenLocked', $view, $message);
         if ($view === null) {

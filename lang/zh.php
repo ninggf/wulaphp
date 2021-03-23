@@ -54,6 +54,8 @@ return [
     'Update'                                                                  => '更新',
     'Update&Close'                                                            => '更新并关闭',
     'Save'                                                                    => '保存',
+    'Submit'                                                                  => '提交',
+    'Reset'                                                                   => '重置',
     'OK'                                                                      => '确定',
     'Start'                                                                   => '开始',
     'Stop'                                                                    => '停止',

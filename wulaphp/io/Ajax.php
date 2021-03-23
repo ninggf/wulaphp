@@ -110,7 +110,7 @@ class Ajax {
         }
 
         return new JsonView([
-            'code'    => self::ERROR,
+            'code'    => $code,
             'message' => $message,
             'args'    => $args,
             'style'   => 'notice'

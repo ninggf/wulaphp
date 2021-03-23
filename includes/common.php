@@ -465,7 +465,7 @@ function http_out($status, $message = '') {
  */
 function print_invalid_msg(\wulaphp\validator\ValidateException $exception) {
     @ob_start();
-
+    status_header(422);
     @header('Content-type: ' . RESPONSE_ACCEPT);
     $message = [];
     $errors  = $exception->getErrors();
@@ -474,7 +474,7 @@ function print_invalid_msg(\wulaphp\validator\ValidateException $exception) {
     }
     $data['errors']  = $errors;
     $data['message'] = implode("\n", $message);
-    $data['code']    = 405;
+    $data['code']    = 422;
     echo json_encode($data);
     @ob_end_flush();
 }

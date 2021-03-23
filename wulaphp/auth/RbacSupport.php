@@ -111,5 +111,5 @@ trait RbacSupport {
      *
      * @return mixed
      */
-    protected abstract function onDenied($message, $view);
+    protected abstract function onDenied(string $message, ?View $view = null): ?View;
 }
