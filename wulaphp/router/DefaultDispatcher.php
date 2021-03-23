@@ -30,7 +30,7 @@ class DefaultDispatcher implements IURLDispatcher {
      * @return \wulaphp\mvc\view\View
      * @throws \Exception
      */
-    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {
+    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo):?View {
         $controllers = explode('/', $url);
         $pms         = [];
         $len         = count($controllers);
@@ -201,7 +201,7 @@ class DefaultDispatcher implements IURLDispatcher {
                                 $view = new JsonView($view);
                             } else if (!$view instanceof View) {
                                 if (is_object($view)) {
-                                    return $view;
+                                    return new JsonView($view);
                                 }
                                 $view = new SimpleView($view);
                             } else if (!$aryArgs) {

@@ -57,7 +57,9 @@ abstract class DatabaseDialect extends \PDO {
                 $driver                           = isset ($options ['driver']) && !empty ($options ['driver']) ? $options ['driver'] : 'MySQL';
                 $driverClz                        = 'wulaphp\db\dialect\\' . $driver . 'Dialect';
                 if (!is_subclass_of($driverClz, 'wulaphp\db\dialect\DatabaseDialect')) {
-                    throw new DialectException('the dialect ' . $driverClz . ' is not found!');
+                    self::$INSTANCE [ $pid ][ $name ] = new DialectException('the dialect ' . $driverClz . ' is not found!');
+                    self::$lastErrorMassge            = self::$INSTANCE [ $pid ][ $name ]->getMessage();
+                    throw self::$INSTANCE [ $pid ][ $name ];
                 }
                 /**@var \wulaphp\db\dialect\DatabaseDialect $dr */
                 $dr = new $driverClz ($options);
@@ -68,10 +70,16 @@ abstract class DatabaseDialect extends \PDO {
                 self::$lastErrorMassge           = false;
                 self::$INSTANCE[ $pid ][ $name ] = &$dr;//此处要使用引用，不然close将不启作用。
             }
+            if (self::$INSTANCE [ $pid ][ $name ] instanceof \Exception) {
+                self::$lastErrorMassge = self::$INSTANCE [ $pid ][ $name ]->getMessage();
+                throw self::$INSTANCE [ $pid ][ $name ];
+            }
 
             return self::$INSTANCE [ $pid ][ $name ];
-        } catch (\Exception $e) {
-            throw new DialectException($e->getMessage());
+        } catch (\PDOException $e) {
+            self::$lastErrorMassge            = $e->getMessage();
+            self::$INSTANCE [ $pid ][ $name ] = new DialectException($e->getMessage(), 0, $e);
+            throw self::$INSTANCE [ $pid ][ $name ];
         }
     }
 

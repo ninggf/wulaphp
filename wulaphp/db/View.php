@@ -27,7 +27,7 @@ use wulaphp\util\TraitObject;
 abstract class View extends TraitObject {
     /**@var \wulaphp\db\View[] */
     private static $tableClzs   = [];
-    public         $table       = '';//表名
+    protected      $table       = '';//表名
     protected      $originTable;
     protected      $tableName;//带前缀表名
     protected      $qualifiedName;//带AS的表名
@@ -56,8 +56,6 @@ abstract class View extends TraitObject {
      * 创建模型实例.
      *
      * @param string|array|DatabaseConnection|View|null $db 数据库实例.
-     *
-     * @throws \wulaphp\db\DialectException
      */
     public function __construct($db = null) {
         if ($this->table !== null) {
@@ -69,7 +67,7 @@ abstract class View extends TraitObject {
                 $this->dbconnection = $db;
             }
             $tb          = explode("\\", get_class($this));
-            $this->alias = preg_replace('#(View|Table|Model|Form)$#', '', array_pop($tb));
+            $this->alias = preg_replace('#(View|Table|Model|Form|Entity)$#', '', array_pop($tb));
             if (!$this->table) {
                 $table = $this->myTableName();
                 if (!$table) {
@@ -79,14 +77,17 @@ abstract class View extends TraitObject {
                     return '_' . strtolower($r [0]);
                 }, $table);
             }
-            $this->foreignKey    = $this->table . '_id';//被其它表引用时的字段名
-            $this->primaryKey    = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];//本表主键字段
-            $this->originTable   = $this->table;
-            $this->table         = '{' . $this->table . '}';
-            $this->dialect       = $this->dbconnection->getDialect();
-            $this->tableName     = $this->dialect->getTableName($this->table);
+            $this->foreignKey  = $this->table . '_id';//被其它表引用时的字段名
+            $this->primaryKey  = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];//本表主键字段
+            $this->originTable = $this->table;
+            $this->table       = '{' . $this->table . '}';
+            if ($this->dbconnection) {
+                $this->dialect   = $this->dbconnection->getDialect();
+                $this->tableName = $this->dialect->getTableName($this->table);
+            }
             $this->qualifiedName = $this->table . ' AS ' . $this->alias;
         }
+
         parent::__construct('wulaphp\db\View', 'wulaphp\db\Table');
     }
 

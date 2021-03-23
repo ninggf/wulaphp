@@ -12,6 +12,7 @@ namespace wulaphp\router;
 
 use wulaphp\app\App;
 use wulaphp\io\Session;
+use wulaphp\mvc\view\View;
 
 /**
  * 基于路由表的分发器.
@@ -20,7 +21,7 @@ use wulaphp\io\Session;
  * @internal
  */
 class RouteTableDispatcher implements IURLDispatcher {
-    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {
+    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo): ?View {
         $route = RouteTableDispatcher::parseURL($parsedInfo);
         //解析不了
         if (!$route) {

@@ -560,7 +560,7 @@ function get_cts_datasource() {
         $ds        = new \wulaphp\mvc\model\SplitDataSource();
         $providers = apply_filter('regCtsDatasource', [
             'split'   => $ds,
-            'implode' => $ds
+            'explode' => $ds
         ]);
     }
 

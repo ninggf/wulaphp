@@ -11,6 +11,7 @@
 namespace wulaphp\router;
 
 use wulaphp\app\App;
+use wulaphp\mvc\view\View;
 
 /**
  * Class DefaultModuleDispatcher
@@ -27,7 +28,7 @@ class DefaultModuleDispatcher implements IURLDispatcher {
         $this->defaultModule = $defaultModule;
     }
 
-    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo) {
+    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo): ?View {
         if ($url == 'index.html') {
             $url = '';
         }

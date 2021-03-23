@@ -22,5 +22,5 @@ interface IURLDispatcher {
      *
      * @return View View 实例.
      */
-    function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo);
+    function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo): ?View;
 }

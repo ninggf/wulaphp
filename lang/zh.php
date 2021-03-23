@@ -131,6 +131,8 @@ return [
     'Permission denied'                                                       => '没有权限',
     'Internal Error'                                                          => '内部错误',
     'Internal Error - Database'                                               => '内部错误 - 数据库',
+    'Action'                                                                  => '动作',
+    'All'                                                                     => '全部',
     '@validator'                                                              => [
         'required'           => '这是必填字段',
         'datetime'           => '请输入合法的日期时间',

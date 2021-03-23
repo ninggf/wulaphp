@@ -474,16 +474,17 @@ function print_exception(?Throwable $exception) {
         'file' => str_replace(APPROOT, '', $exception->getFile()) . ' ',
         'line' => $exception->getLine()
     ], - 1));
-    $traces  = $exception->getTrace();
-    $i       = 0;
-    $traces  = html_escape(str_replace(APPROOT, '', $exception->getTraceAsString()));
-    $traces  = explode("\n", $traces);
+    $traces  = str_replace(APPROOT, '', $exception->getTraceAsString());
+
     if (strtolower(RESPONSE_ACCEPT) == 'application/json') {
+        $traces         = explode("\n", $traces);
         $msg['message'] = $exception->getMessage();
         array_unshift($traces, $ocurPos);
         $msg['trace'] = $traces;
         echo json_encode($msg);
     } else {
+        $traces             = html_escape($traces);
+        $traces             = explode("\n", $traces);
         $ss['{{title}}']    = __('Error Page');
         $ss['{{Position}}'] = __('Position');
         $ss['{{message}}']  = html_escape(str_replace(APPROOT, '', $exception->getMessage()));
