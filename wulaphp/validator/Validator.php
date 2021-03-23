@@ -125,6 +125,8 @@ trait Validator {
                     $this->addRule($field, $gpRules, $multiple);
                 }
             }
+
+            $this->onValidatorInited();
         }
     }
 
@@ -228,6 +230,9 @@ trait Validator {
             $idx = $this->_v__ruleKeys[ $field ][ $rule ];
             unset($this->_v__rules[ $field ][ $idx ]);
         }
+    }
+
+    protected function onValidatorInited() {
     }
 
     /**
@@ -766,7 +771,7 @@ trait Validator {
         return true;
     }
 
-    protected function notNull($field, $exp, $data, $message) {
+    protected function v_notNull($field, $exp, $data, $message) {
         $rst = isset($data[ $field ]);
         if ($rst) {
             return true;
