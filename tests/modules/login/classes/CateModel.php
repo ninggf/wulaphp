@@ -11,15 +11,8 @@
 namespace tests\modules\login\classes;
 
 use wulaphp\db\Table;
-use wulaphp\validator\Validator;
 
 class CateModel extends Table {
-    use Validator;
-    /**
-     * @digits
-     */
-    public $upid;
-
     public function add($data) {
         return $this->insert($data);
     }

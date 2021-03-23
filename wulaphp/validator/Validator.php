@@ -16,7 +16,6 @@ trait Validator {
     protected $_v__fields   = [];
     protected $_v__formData = [];
     protected $_v__rules    = [];
-    protected $_v__rulesEx  = [];
     protected $_v__rulesIdx = [];
     protected $_v__ruleKeys = [];
     //预定义的验证规则
@@ -132,12 +131,12 @@ trait Validator {
     /**
      * 应用规则.
      *
-     * @param \wulaphp\validator\Validator $form
+     * @param \wulaphp\validator\Validator $v
      *
      * @return $this
      */
-    public final function applyRules(Validator $form): Validator {
-        $this->_v__rules = array_merge($this->_v__rules, $form->getValidateRules());
+    public final function applyRules(Validator $v): Validator {
+        $this->_v__rules = array_merge($this->_v__rules, $v->getValidateRules());
 
         return $this;
     }
@@ -145,14 +144,14 @@ trait Validator {
     /**
      * 数据校验规则.
      *
-     * @param array $fileds 字段.
+     * @param array $fields 字段.
      *
      * @return array
      */
-    public final function getValidateRules(string ...$fileds): array {
-        if ($fileds) {
+    public final function getValidateRules(string ...$fields): array {
+        if ($fields) {
             $rules = [];
-            foreach ($fileds as $f) {
+            foreach ($fields as $f) {
                 if (isset($this->_v__rules[ $f ])) {
                     $rules[ $f ] = $this->_v__rules[ $f ];
                 }
@@ -747,7 +746,7 @@ trait Validator {
         }
         $value = $data[ $field ];
         $exp   = explode(',', $exp);
-        @list($e1, $e2) = $exp;
+        [$e1, $e2] = $exp;
         $exp[1] = $e2;
         $words  = preg_split('/\b\w+\b/u', $value);
         $len    = count($words);

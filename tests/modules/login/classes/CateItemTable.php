@@ -11,23 +11,8 @@
 namespace tests\modules\login\classes;
 
 use wulaphp\db\Table;
-use wulaphp\validator\Validator;
 
 class CateItemTable extends Table {
-    use Validator;
-    /**
-     * @digits
-     */
-    public $id;
-    /**
-     * @pattern (^[01]$) => 只能是0或1
-     */
-    public $deleted;
-    /**
-     * @required
-     */
-    public $name;
-
     public function add($ci) {
         return $this->insert($ci);
     }

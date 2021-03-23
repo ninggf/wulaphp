@@ -16,7 +16,7 @@ use wulaphp\validator\Validator;
  * 如果想输出null,请使用imv('null')对参数进行赋值。
  * 只需定义public属性即可。
  */
-abstract class Params {
+abstract class Params extends TraitObject {
     use Validator;
 
     private $_v__data = [];
@@ -51,10 +51,8 @@ abstract class Params {
                 $fields[ $name ] = ['annotation' => $ann];
             }
         }
-        if ($fields) {
-            $this->onInitValidator($fields);
-        }
         $this->_v__data = $fields;
+        parent::__construct();
     }
 
     /**
@@ -129,7 +127,7 @@ abstract class Params {
         $ary    = [];
         $fields = $this->_v__data;
         foreach ($fields as $field => $v) {
-            $value = $this->{$field};
+            $value = $this->pack($field, $this->{$field});
             if (is_null($value)) {
                 continue;
             }
@@ -139,5 +137,17 @@ abstract class Params {
         $this->validate($ary, $group);
 
         return $ary;
+    }
+
+    /**
+     * 打包数据.
+     *
+     * @param string $field
+     * @param mixed  $value
+     *
+     * @return mixed
+     */
+    protected function pack(string $field, $value) {
+        return $value;
     }
 }
