@@ -459,6 +459,27 @@ function http_out($status, $message = '') {
 }
 
 /**
+ * 打印数据验证异常.
+ *
+ * @param \wulaphp\validator\ValidateException $exception
+ */
+function print_invalid_msg(\wulaphp\validator\ValidateException $exception) {
+    @ob_start();
+
+    @header('Content-type: ' . RESPONSE_ACCEPT);
+    $message = [];
+    $errors  = $exception->getErrors();
+    foreach ($errors as $field => $error) {
+        $message[] = $error;
+    }
+    $data['errors']  = $errors;
+    $data['message'] = implode("\n", $message);
+    $data['code']    = 405;
+    echo json_encode($data);
+    @ob_end_flush();
+}
+
+/**
  * 打印异常信息.
  *
  * @param \Throwable $exception
@@ -505,6 +526,12 @@ set_exception_handler(function (?Throwable $exception) use ($_oldExceptionHandle
     try {
         defined('DEBUG') or define('DEBUG', DEBUG_DEBUG);
         if ($_oldExceptionHandler && ($handled = $_oldExceptionHandler($exception))) {
+            return;
+        }
+        //处理数据校验异常
+        if ($exception instanceof \wulaphp\validator\ValidateException) {
+            print_invalid_msg($exception);
+
             return;
         }
         try {
