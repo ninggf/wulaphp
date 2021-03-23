@@ -5,22 +5,23 @@ namespace wulaphp\util;
 abstract class TraitObject {
     protected $_t_traits = [];
 
-    public function __construct() {
-        $this->parseUsedTraits();
-    }
-
-    private function parseUsedTraits() {
+    public function __construct(string ...$cls) {
         $parents = class_parents($this);
-        unset($parents['wulaphp\util\TraitObject']);
+        $cls[]   = 'wulaphp\util\TraitObject';
+        foreach ($cls as $c) {
+            unset($parents[ $c ]);
+        }
+
         $traits = class_uses($this);
-        if ($parents) {
-            foreach ($parents as $p) {
-                $tt = class_uses($p);
-                if ($tt) {
-                    $traits = array_merge($traits, $tt);
-                }
+        
+        while ($parents) {
+            $p  = array_pop($parents);
+            $tt = class_uses($p);
+            if ($tt) {
+                $traits = array_merge($traits, $tt);
             }
         }
+
         if ($traits) {
             $traits = array_unique($traits);
             foreach ($traits as $trait) {

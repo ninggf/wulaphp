@@ -87,7 +87,7 @@ abstract class View extends TraitObject {
             $this->tableName     = $this->dialect->getTableName($this->table);
             $this->qualifiedName = $this->table . ' AS ' . $this->alias;
         }
-        parent::__construct();
+        parent::__construct('wulaphp\db\View', 'wulaphp\db\Table');
     }
 
     /**

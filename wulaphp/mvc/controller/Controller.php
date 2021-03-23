@@ -45,7 +45,7 @@ abstract class Controller extends TraitObject {
             return '-' . strtolower($ms[1]);
         }, lcfirst($name));
         $this->_ctrName       = strtolower($name);
-        parent::__construct();
+        parent::__construct('wulaphp\mvc\controller\Controller');
         foreach ($this->_t_traits as $trait => $name) {
             $bName                   = 'beforeRunIn' . $name;
             $this->_beforeFeatures[] = $bName;
