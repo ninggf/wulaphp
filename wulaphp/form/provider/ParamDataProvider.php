@@ -8,14 +8,14 @@
  * file that was distributed with this source code.
  */
 
-namespace wulaphp\form\providor;
+namespace wulaphp\form\provider;
 /**
  * 请求参数式数据提供器。
  *
- * @package wulaphp\form\providor
+ * @package wulaphp\form\provider
  */
-class ParamDataProvidor extends FieldDataProvidor {
-    public function getData($search = false) {
+class ParamDataProvider extends FieldDataProvider {
+    public function getData(bool $search = false) {
         if ($this->option) {
             @parse_str($this->option, $data);
 

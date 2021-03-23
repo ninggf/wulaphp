@@ -8,17 +8,17 @@
  * file that was distributed with this source code.
  */
 
-namespace wulaphp\form\providor;
+namespace wulaphp\form\provider;
 
 use wulaphp\form\FormField;
-use wulaphp\form\FormTable;
+use wulaphp\form\IForm;
 
 /**
  * 表单字段数据提供器。
  *
  * @package wulaphp\form\providor
  */
-class FieldDataProvidor {
+class FieldDataProvider {
     /**
      * 选项.
      * @var string|array
@@ -30,7 +30,7 @@ class FieldDataProvidor {
     protected $optionAry;
 
     /**
-     * @var \wulaphp\form\FormTable
+     * @var \wulaphp\form\IForm
      */
     protected $form;
     /**
@@ -41,13 +41,13 @@ class FieldDataProvidor {
     private static $forms = [];
 
     /**
-     * FieldDataProvidor constructor.
+     * FieldDataProvider constructor.
      *
-     * @param \wulaphp\form\FormTable|null $form
+     * @param \wulaphp\form\IForm|null     $form
      * @param \wulaphp\form\FormField|null $field
      * @param string|null                  $option 选项
      */
-    public function __construct(?FormTable $form, ?FormField $field, ?string $option = '') {
+    public function __construct(?IForm $form, ?FormField $field, ?string $option = '') {
         $this->option = $option;
         if (!is_array($option)) {
             $ops             = @json_decode($this->option, true);
@@ -63,9 +63,9 @@ class FieldDataProvidor {
     /**
      * 配置表单.
      *
-     * @return \wulaphp\form\FormTable
+     * @return \wulaphp\form\IForm
      */
-    public function createConfigForm() {
+    public function createConfigForm(): ?IForm {
         $clz = static::class;
         if (isset(self::$forms[ $clz ])) {
             $form = self::$forms[ $clz ];
@@ -84,7 +84,7 @@ class FieldDataProvidor {
      *
      * @return mixed
      */
-    public function getData($search = false) {
+    public function getData(bool $search = false) {
         if ($this->option && method_exists($this->form, $this->option)) {
             return $this->form->{$this->option}(...[$search]);
         }
@@ -94,12 +94,12 @@ class FieldDataProvidor {
 
     /**
      * 获取一个空的数据提供器.
-     * @return \wulaphp\form\providor\FieldDataProvidor
+     * @return \wulaphp\form\providor\FieldDataProvider
      */
-    public static function emptyDatasource() {
+    public static function emptyDatasource(): FieldDataProvider {
         static $dsp = false;
         if ($dsp === false) {
-            $dsp = new FieldDataProvidor(null, null, null);
+            $dsp = new FieldDataProvider(null, null, null);
         }
 
         return $dsp;
@@ -108,12 +108,11 @@ class FieldDataProvidor {
     /**
      * 注册配置表单.
      *
-     * @param string                  $clz
-     * @param \wulaphp\form\FormTable $form
+     * @param string              $clz
+     * @param \wulaphp\form\IForm $form
      */
-    public final static function registerConfigForm(string $clz, FormTable $form) {
-        assert(!empty($clz) && class_exists($clz), 'FieldDataProvidor is invalid');
-        assert($form instanceof FormTable, get_class($form) . ' is not an instance of FormTable');
+    public final static function registerConfigForm(string $clz, IForm $form) {
+        assert(!empty($clz) && class_exists($clz), 'FieldDataProvider is invalid');
         self::$forms[ $clz ] = $form;
     }
 }

@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace wulaphp\form\providor;
+namespace wulaphp\form\provider;
 
 /**
  * 1. 一行一条数据。用=号分隔Key与Value.如：
@@ -18,11 +18,11 @@ namespace wulaphp\form\providor;
  * 2. 或者用Json格式，如：
  * { "1":"你好","2":"我好"}
  *
- * @package wulaphp\form\providor
+ * @package wulaphp\form\provider
  * @since   1.0.0
  */
-class LineDataProvidor extends FieldDataProvidor {
-    public function getData($search = false) {
+class LineDataProvider extends FieldDataProvider {
+    public function getData(bool $search = false) {
         $options = $this->option;
         $datas   = [];
         if ($options instanceof \Closure) {
@@ -34,8 +34,8 @@ class LineDataProvidor extends FieldDataProvidor {
             $datas = $this->optionAry;
         } else if ($options) {
             $data = explode("\n", $options);
-            foreach ($data as $defaut) {
-                list ($key, $d) = explode('=', $defaut);
+            foreach ($data as $default) {
+                [$key, $d] = explode('=', $default);
                 if ($d) {
                     $datas [ $key ] = $d;
                 } else {

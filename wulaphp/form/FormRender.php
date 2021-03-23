@@ -20,7 +20,7 @@ use wulaphp\mvc\view\Renderable;
 abstract class FormRender implements Renderable {
     /**
      * 要绘制的表单.
-     * @var \wulaphp\form\FormTable
+     * @var \wulaphp\form\IForm
      */
     protected $form;
     /**
@@ -32,10 +32,10 @@ abstract class FormRender implements Renderable {
     /**
      * FormRender constructor.
      *
-     * @param \wulaphp\form\FormTable $form
-     * @param array                   $options
+     * @param IForm $form
+     * @param array $options
      */
-    public function __construct(FormTable $form, array $options = []) {
+    public function __construct(IForm $form, array $options = []) {
         $this->form    = $form;
         $this->options = $options;
     }

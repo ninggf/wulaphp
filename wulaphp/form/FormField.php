@@ -10,11 +10,11 @@
 
 namespace wulaphp\form;
 
-use wulaphp\form\providor\FieldDataProvidor;
-use wulaphp\form\providor\JsonDataProvidor;
-use wulaphp\form\providor\LineDataProvidor;
-use wulaphp\form\providor\ParamDataProvidor;
-use wulaphp\form\providor\TableDataProvidor;
+use wulaphp\form\provider\FieldDataProvider;
+use wulaphp\form\provider\JsonDataProvider;
+use wulaphp\form\provider\LineDataProvider;
+use wulaphp\form\provider\ParamDataProvider;
+use wulaphp\form\provider\TableDataProvider;
 
 /**
  * Class FormField
@@ -22,7 +22,7 @@ use wulaphp\form\providor\TableDataProvidor;
  */
 abstract class FormField implements \ArrayAccess {
     /**
-     * @var \wulaphp\form\FormTable
+     * @var \wulaphp\form\IForm
      */
     protected $form = null;
     /**
@@ -35,11 +35,11 @@ abstract class FormField implements \ArrayAccess {
     /**
      * FormField constructor.
      *
-     * @param string                  $name 表单字段名.
-     * @param \wulaphp\form\FormTable $form
-     * @param array                   $options
+     * @param string              $name 表单字段名.
+     * @param \wulaphp\form\IForm $form
+     * @param array               $options
      */
-    public function __construct(string $name, FormTable $form, array $options = []) {
+    public function __construct(string $name, IForm $form, array $options = []) {
         $this->name    = $name;
         $this->form    = $form;
         $this->options = $options;
@@ -67,7 +67,7 @@ abstract class FormField implements \ArrayAccess {
      *
      * @return $this
      */
-    public function opt(string $name, $value) {
+    public function opt(string $name, $value): FormField {
         $this->options[ $name ] = $value;
 
         return $this;
@@ -80,7 +80,7 @@ abstract class FormField implements \ArrayAccess {
      *
      * @return $this
      */
-    public function optionsByArray(array $options) {
+    public function optionsByArray(array $options): FormField {
         if ($options) {
             $this->options = array_merge($this->options, $options);
         }
@@ -93,12 +93,12 @@ abstract class FormField implements \ArrayAccess {
      *
      * @return string
      */
-    public function getValue() {
+    public function getValue(): string {
         return $this->value;
     }
 
     /**
-     * set the value of this field。
+     * set the value of this field
      *
      * @param mixed $value
      */
@@ -111,7 +111,7 @@ abstract class FormField implements \ArrayAccess {
      *
      * @return array
      */
-    public function layout() {
+    public function layout(): array {
         if (isset($this->options['layout'])) {
             return explode(',', $this->options['layout']);
         } else {
@@ -126,7 +126,7 @@ abstract class FormField implements \ArrayAccess {
      *
      * @return string
      */
-    public function render($opts = []) {
+    public function render($opts = []): string {
         if ($this->options['render'] && method_exists($this->form, $this->options['render'])) {
             return $this->form->{$this->options['render']}($this, $opts);
         } else {
@@ -140,7 +140,7 @@ abstract class FormField implements \ArrayAccess {
     }
 
     /**
-     * 获取组件对应的js module。
+     * 获取组件对应的js module
      * @return string
      */
     public function jsModule(): ?string {
@@ -158,9 +158,9 @@ abstract class FormField implements \ArrayAccess {
     /**
      * 取数据提供器.
      *
-     * @return \wulaphp\form\providor\FieldDataProvidor
+     * @return \wulaphp\form\provider\FieldDataProvider
      */
-    public function getDataProvidor() {
+    public function getDataProvider(): FieldDataProvider {
         $option = $this->options;
         $cfg    = isset($this->options['dsCfg']) ? $this->options['dsCfg'] : '';
         if (!is_array($cfg)) {
@@ -169,31 +169,31 @@ abstract class FormField implements \ArrayAccess {
         if (!isset($option['dataSource']) && is_string($cfg)) {
             $cfg1 = ltrim($cfg, ':');
             if (strlen($cfg) - strlen($cfg1) == 2) {
-                return new FieldDataProvidor($this->form, $this, $cfg1);
+                return new FieldDataProvider($this->form, $this, $cfg1);
             }
 
-            return FieldDataProvidor::emptyDatasource();
+            return FieldDataProvider::emptyDatasource();
         }
 
         $dsp = trim($option['dataSource'], '()\\');
         if ($dsp == 'json') {
-            return new JsonDataProvidor($this->form, $this, $cfg);
+            return new JsonDataProvider($this->form, $this, $cfg);
         }
 
         if ($dsp == 'table') {
-            return new TableDataProvidor($this->form, $this, $cfg);
+            return new TableDataProvider($this->form, $this, $cfg);
         }
 
         if ($dsp == 'text') {
-            return new LineDataProvidor($this->form, $this, $cfg);
+            return new LineDataProvider($this->form, $this, $cfg);
         }
 
         if ($dsp == 'param' || $dsp == 'parse_str') {
-            return new ParamDataProvidor($this->form, $this, $cfg);
+            return new ParamDataProvider($this->form, $this, $cfg);
         }
 
-        if (!is_subclass_of($dsp, FieldDataProvidor::class)) {
-            return FieldDataProvidor::emptyDatasource();
+        if (!is_subclass_of($dsp, FieldDataProvider::class)) {
+            return FieldDataProvider::emptyDatasource();
         }
 
         return new $dsp($this->form, $this, $cfg);
@@ -220,7 +220,7 @@ abstract class FormField implements \ArrayAccess {
      *
      * @return string
      */
-    public abstract function getName();
+    public abstract function getName(): string;
 
     /**
      * 绘制.
@@ -229,15 +229,14 @@ abstract class FormField implements \ArrayAccess {
      *
      * @return string
      */
-    protected abstract function renderWidget($opts);
+    protected abstract function renderWidget(array $opts): string;
 
     /**
      * 字段配置表单.
      *
-     *
-     * @return \wulaphp\form\FormTable|null
+     * @return \wulaphp\form\IForm|null
      */
-    public function getOptionForm() {
+    public function getOptionForm(): ?IForm {
         return null;
     }
 }

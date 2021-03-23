@@ -8,14 +8,14 @@
  * file that was distributed with this source code.
  */
 
-namespace wulaphp\form\providor;
+namespace wulaphp\form\provider;
 /**
  * JSON格式数据提供器。
  *
- * @package wulaphp\form\providor
+ * @package wulaphp\form\provider
  */
-class JsonDataProvidor extends FieldDataProvidor {
-    public function getData($search = false) {
+class JsonDataProvider extends FieldDataProvider {
+    public function getData(bool $search = false) {
         return (array)$this->optionAry;
     }
 }

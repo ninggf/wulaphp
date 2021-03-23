@@ -5,7 +5,7 @@
  * Date: 2017/7/14 0014 下午 5:56
  */
 
-namespace wulaphp\form\providor;
+namespace wulaphp\form\provider;
 
 use wulaphp\db\SimpleTable;
 
@@ -18,11 +18,11 @@ use wulaphp\db\SimpleTable;
  * }
  * ```
  *
- * @package wulaphp\form\providor
+ * @package wulaphp\form\provider
  */
-class TableDataProvidor extends FieldDataProvidor {
+class TableDataProvider extends FieldDataProvider {
 
-    public function getData($search = false) {
+    public function getData(bool $search = false) {
         $options = $this->optionAry;
         if (!isset($options['table']) && !isset($options['tableName'])) {
             return [];

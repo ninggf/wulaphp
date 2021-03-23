@@ -9,11 +9,14 @@
  */
 
 namespace wulaphp\form;
+
+use wulaphp\util\TraitObject;
+
 /**
- * 不可操作数据库的表单.
+ * 简单表单.
  *
  * @package wulaphp\form
  */
-class SimpleForm extends FormTable {
-    public $table = null;
+abstract class SimpleForm extends TraitObject implements IForm {
+    use Form;
 }
