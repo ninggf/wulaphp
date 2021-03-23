@@ -12,7 +12,7 @@ namespace wulaphp\mvc\model;
 
 use wulaphp\app\App;
 use wulaphp\db\DatabaseConnection;
-use wulaphp\form\FormTable;
+use wulaphp\form\IForm;
 use wulaphp\router\UrlParsedInfo;
 
 /**
@@ -29,17 +29,17 @@ abstract class CtsDataSource {
      * @param array                         $con      条件.
      * @param string|null                   $db       数据库
      * @param \wulaphp\router\UrlParsedInfo $pageInfo 分页信息
-     * @param array                         $tplvars  模板变量.
+     * @param array                         $tplVars  模板变量.
      *
      * @return CtsData 数据.
      */
-    public final function getList(array $con, ?string $db, UrlParsedInfo $pageInfo, array $tplvars): CtsData {
+    public final function getList(array $con, ?string $db, UrlParsedInfo $pageInfo, array $tplVars): CtsData {
         try {
             $dbx = null;
             if ($db != 'null') {
                 $dbx = App::db($db);
             }
-            $data = $this->getData($con, $dbx, $pageInfo, $tplvars);
+            $data = $this->getData($con, $dbx, $pageInfo, $tplVars);
 
             if ($data instanceof CtsData) {
                 return $data;
@@ -73,14 +73,12 @@ abstract class CtsDataSource {
     /**
      * 条件表单.
      *
-     * @return null|\wulaphp\form\FormTable
+     * @return null|\wulaphp\form\IForm
      */
-    public function getCondForm() {
+    public function getCondForm(): ?IForm {
         $clz = static::class;
         if (isset(self::$forms[ $clz ])) {
-            $form = self::$forms[ $clz ];
-
-            return $form;
+            return self::$forms[ $clz ];
         }
 
         return null;
@@ -106,12 +104,11 @@ abstract class CtsDataSource {
     /**
      * 注册数据源条件表单.
      *
-     * @param string    $clz
-     * @param FormTable $form
+     * @param string $clz
+     * @param IForm  $form
      */
-    public static function registerCondForm(string $clz, $form) {
+    public static function registerCondForm(string $clz, IForm $form) {
         assert(!empty($clz) && class_exists($clz), 'CtsDataSource is invalid');
-        assert($form instanceof FormTable, get_class($form) . ' is not an instance of FormTable');
         self::$forms[ $clz ] = $form;
     }
 }

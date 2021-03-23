@@ -8,6 +8,7 @@ use wulaphp\db\sql\Condition;
 use wulaphp\db\sql\Query;
 use wulaphp\db\sql\QueryBuilder;
 use wulaphp\util\ObjectCaller;
+use wulaphp\util\TraitObject;
 
 /**
  * View 提供查询等与修改无关的操作.
@@ -23,7 +24,7 @@ use wulaphp\util\ObjectCaller;
  * @method static Query sselect(...$fileds)
  * @method static ILock slock($con)
  */
-abstract class View {
+abstract class View extends TraitObject {
     /**@var \wulaphp\db\View[] */
     private static $tableClzs   = [];
     public         $table       = '';//表名
@@ -86,6 +87,7 @@ abstract class View {
             $this->tableName     = $this->dialect->getTableName($this->table);
             $this->qualifiedName = $this->table . ' AS ' . $this->alias;
         }
+        parent::__construct();
     }
 
     /**

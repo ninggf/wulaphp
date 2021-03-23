@@ -6,6 +6,7 @@ use wulaphp\app\Module;
 use wulaphp\io\Response;
 use wulaphp\mvc\view\View;
 use wulaphp\util\Annotation;
+use wulaphp\util\TraitObject;
 
 /**
  * Base Controller.
@@ -20,7 +21,7 @@ use wulaphp\util\Annotation;
  * @property-read string                   $slag                类名格式化后的URL
  * @property-read string                   $action              动作
  */
-abstract class Controller {
+abstract class Controller extends TraitObject {
     protected $_module;  // 所属模块
     protected $_clzName; // 类名
     protected $_ctrName; // 小写类名
@@ -44,7 +45,13 @@ abstract class Controller {
             return '-' . strtolower($ms[1]);
         }, lcfirst($name));
         $this->_ctrName       = strtolower($name);
-        $this->parseTraits();
+        parent::__construct();
+        foreach ($this->_t_traits as $trait => $name) {
+            $bName                   = 'beforeRunIn' . $name;
+            $this->_beforeFeatures[] = $bName;
+            $aName                   = 'afterRunIn' . $name;
+            $this->_afterFeatures[]  = $aName;
+        }
     }
 
     /**
@@ -96,7 +103,9 @@ abstract class Controller {
 
         if ($this->_beforeFeatures) {
             foreach ($this->_beforeFeatures as $feature) {
-                $view = $this->$feature($refMethod, $view);
+                if (method_exists($this, $feature)) {
+                    $view = $this->$feature($refMethod, $view);
+                }
             }
         }
 
@@ -115,45 +124,13 @@ abstract class Controller {
     public function afterRun($action, $view, $method) {
         if ($this->_afterFeatures) {
             foreach ($this->_afterFeatures as $feature) {
-                $view = $this->$feature($action, $view, $method);
+                if (method_exists($this, $feature)) {
+                    $view = $this->$feature($action, $view, $method);
+                }
             }
         }
 
         return $view;
-    }
-
-    private function parseTraits() {
-        $parents = class_parents($this);
-        unset($parents['wulaphp\mvc\controller\Controller']);
-        $traits = class_uses($this);
-        if ($parents) {
-            foreach ($parents as $p) {
-                $tt = class_uses($p);
-                if ($tt) {
-                    $traits = array_merge($traits, $tt);
-                }
-            }
-        }
-        if ($traits) {
-            $traits = array_unique($traits);
-            foreach ($traits as $tts) {
-                $tts   = explode('\\', $tts);
-                $fname = $tts[ count($tts) - 1 ];
-                $func  = 'onInit' . $fname;
-                if (method_exists($this, $func)) {
-                    $this->$func();
-                }
-                $bfname = 'beforeRunIn' . $fname;
-                if (method_exists($this, $bfname)) {
-                    $this->_beforeFeatures[] = $bfname;
-                }
-                $afname = 'afterRunIn' . $fname;
-                if (method_exists($this, $afname)) {
-                    $this->_afterFeatures[] = $afname;
-                }
-            }
-        }
-        unset($parents, $traits);
     }
 
     public function __get($name) {

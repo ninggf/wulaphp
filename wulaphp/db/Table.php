@@ -27,7 +27,6 @@ abstract class Table extends View {
         if ($this->autoIncrement ==true && count($this->primaryKeys) != 1) {
             $this->autoIncrement = false;
         }
-        $this->parseTraits();
     }
 
     /**
@@ -359,34 +358,5 @@ abstract class Table extends View {
         }
 
         return $rtn;
-    }
-
-    /**
-     * 初始化Traits.
-     */
-    private function parseTraits() {
-        $parents = class_parents($this);
-        unset($parents['wulaphp\db\Table'], $parents['wulaphp\db\View']);
-        $traits = class_uses($this);
-        if ($parents) {
-            foreach ($parents as $p) {
-                $tt = class_uses($p);
-                if ($tt) {
-                    $traits = array_merge($traits, $tt);
-                }
-            }
-        }
-        if ($traits) {
-            $traits = array_unique($traits);
-            foreach ($traits as $tt) {
-                $tts   = explode('\\', $tt);
-                $fname = $tts[ count($tts) - 1 ];
-                $func  = 'onInit' . $fname;
-                if (method_exists($this, $func)) {
-                    $this->$func();
-                }
-            }
-        }
-        unset($parents, $traits);
     }
 }

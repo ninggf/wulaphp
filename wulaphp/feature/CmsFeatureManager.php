@@ -20,7 +20,7 @@ class CmsFeatureManager {
     /**
      * 注册一个特性.
      *
-     * @param \system\feature\ICmsFeature $feature
+     * @param \wulaphp\feature\ICmsFeature $feature
      */
     public static function register(ICmsFeature $feature) {
         self::$features[ $feature->getPriority() ][ $feature->getId() ] = $feature;
