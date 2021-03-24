@@ -21,6 +21,8 @@ class AclResource implements \ArrayAccess {
     private $note;
     private $name;
     private $items      = [];
+    private $idx        = 0;
+    private $ops        = [];
 
     public function __construct($id, $uri = '', $name = '') {
         $this->id  = $id;
@@ -80,11 +82,10 @@ class AclResource implements \ArrayAccess {
     }
 
     public function addOperate($op, $name, $extra_url = '') {
-        static $idx = 0, $ops = [];
-        if (isset($ops[ $op ]))
+        if (isset($this->ops[ $op ]))
             return;
-        $ops [ $op ]                  = true;
-        $this->operations [ $idx ++ ] = [
+        $this->ops [ $op ]                  = true;
+        $this->operations [ $this->idx ++ ] = [
             'op'    => $op,
             'uri'   => $this->uri,
             'name'  => $name,
