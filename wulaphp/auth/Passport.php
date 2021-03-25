@@ -13,18 +13,19 @@ namespace wulaphp\auth;
 class Passport implements \ArrayAccess {
     const SESSION_NAME = 'wula_passport';
     /**@var int $uid */
-    public         $uid         = 0;
-    public         $type        = 'default';
-    public         $username    = '';
-    public         $nickname    = '';
-    public         $phone       = '';
-    public         $email       = '';
-    public         $avatar      = '';
-    public         $isLogin     = false;
-    public         $data        = [];
-    public         $error       = null;//错误信息.
-    public         $isSuperUser = false;
-    private static $INSTANCES   = [];
+    public         $uid                 = 0;
+    public         $type                = 'default';
+    public         $username            = '';
+    public         $nickname            = '';
+    public         $phone               = '';
+    public         $email               = '';
+    public         $avatar              = '';
+    public         $isLogin             = false;
+    public         $data                = [];
+    public         $error               = null;//错误信息.
+    public         $isSuperUser         = false;
+    private static $INSTANCES           = [];
+    private static $currentPassportType = null;
 
     /**
      * Passport constructor.
@@ -36,7 +37,9 @@ class Passport implements \ArrayAccess {
     }
 
     /**
-     * @param string $type
+     * 获取通行证。
+     *
+     * @param string $type 通行证类型。
      *
      * @return Passport
      */
@@ -56,6 +59,9 @@ class Passport implements \ArrayAccess {
                 self::$INSTANCES[ $type ] = $defaultPassport;
             }
         }
+        if (!self::$currentPassportType) {
+            self::$currentPassportType = $type;
+        }
 
         return self::$INSTANCES[ $type ];
     }
@@ -71,6 +77,15 @@ class Passport implements \ArrayAccess {
      */
     public static function passwd(string $password): string {
         return password_hash($password, PASSWORD_DEFAULT);
+    }
+
+    /**
+     * 第一次（其实一次会话的通行证类型是固定的）获取的通行证类型.
+     *
+     * @return string
+     */
+    public static function currentType(string $type = 'default'): string {
+        return self::$currentPassportType ? self::$currentPassportType : $type;
     }
 
     /**
