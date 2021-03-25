@@ -50,7 +50,7 @@ trait PassportSupport {
             return $view;
         }
         //用户登录
-        if ($this->passport->uid) {
+        if ($this->passport->isLogin) {
             if ($this->passport->status != 1) { //1为正常，其它值为锁定状态。
                 return $this->onBlocked($view);
             }
