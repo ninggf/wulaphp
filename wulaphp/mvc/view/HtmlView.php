@@ -15,19 +15,25 @@ class HtmlView extends View implements IModuleView {
      * @throws
      */
     public function render() {
+        $ext = strrchr($this->tpl, '.');
+        if ($ext) {
+            $this->tpl = substr($this->tpl, 0, - strlen($ext));
+        } else {
+            $ext = '.php';
+        }
         if (defined('LANGUAGE')) {
-            $tpl = MODULES_PATH . $this->tpl . '_' . LANGUAGE . '.php';
+            $tpl = MODULES_PATH . $this->tpl . '_' . LANGUAGE . $ext;
             if (is_file($tpl)) {
                 $this->tpl .= '_' . LANGUAGE;
             } else if (($pos = strpos(LANGUAGE, '-', 1))) {
                 $lang = substr(LANGUAGE, 0, $pos);
-                $tpl  = MODULES_PATH . $this->tpl . '_' . $lang . '.php';
+                $tpl  = MODULES_PATH . $this->tpl . '_' . $lang . $ext;
                 if (is_file($tpl)) {
                     $this->tpl .= '_' . $lang;
                 }
             }
         }
-        $tpl = MODULES_PATH . $this->tpl . '.php';
+        $tpl = MODULES_PATH . $this->tpl . $ext;
         if (is_file($tpl)) {
             extract($this->data);
             @ob_start();
@@ -37,7 +43,7 @@ class HtmlView extends View implements IModuleView {
 
             return $content;
         } else {
-            throw_exception('tpl is not found:' . $this->tpl . '.php');
+            throw_exception('tpl is not found:' . $this->tpl . $ext);
         }
 
         return '';

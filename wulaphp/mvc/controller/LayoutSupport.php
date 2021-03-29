@@ -55,6 +55,41 @@ trait LayoutSupport {
         return null;
     }
 
+    protected final function renderp($tpl = null, array $data = []) {
+        if ($this instanceof Controller) {
+            if (is_array($tpl)) {
+                $data = $tpl;
+                $tpl  = null;
+            }
+            $ext = ($_SERVER['HTTP_PJAX'] ?? 0) ? '' : '.phtml';
+
+            if ($tpl && $tpl[0] == '~') {
+                $tpl = substr($tpl, 1);
+                $tpl = $tpl . $ext;
+            } else if ($tpl) {
+                $path = str_replace(['\\', 'controllers'], [DS, 'views'], $this->reflectionObj->getNamespaceName());
+                $tpl  = $path . DS . $tpl . $ext;
+            } else {
+                $path = str_replace(['\\', 'controllers'], [DS, 'views'], $this->reflectionObj->getNamespaceName());
+                $tpl  = $path . DS . $this->ctrName . DS . $this->action . $ext;
+            }
+
+            if ($ext) {
+                $layout = '~' . $this->layout;
+                $data   = $this->onInitLayoutData(['pageData' => $data]);
+
+                $data['workspaceHtml'] = pview($data, $tpl)->render();
+                $view                  = view($layout, $data);
+            } else {
+                $view = pview($tpl . '.phtml', $data);
+            }
+
+            return $view;
+        }
+
+        return null;
+    }
+
     protected final function onInitLayoutSupport() {
         if ($this instanceof Controller) {
             if (!property_exists($this, 'layout')) {
