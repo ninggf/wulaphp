@@ -17,8 +17,10 @@ namespace wulaphp\mvc\controller;
 use wulaphp\app\Module;
 use wulaphp\auth\PassportSupport;
 use wulaphp\auth\RbacSupport;
+use wulaphp\io\Request;
 use wulaphp\mvc\view\SimpleView;
 use wulaphp\mvc\view\View;
+use wulaphp\router\Router;
 
 /**
  * 管理器控制器.
@@ -30,7 +32,6 @@ class AdminController extends Controller {
     use SessionSupport, PassportSupport, RbacSupport;
 
     protected $passportType = 'admin';
-    protected $loginBack    = false;
 
     /**
      * AdminController constructor.
@@ -50,6 +51,12 @@ class AdminController extends Controller {
      * @return mixed|\wulaphp\mvc\view\SimpleView
      */
     protected function needLogin($view) {
+        if (Request::isAjaxRequest()) {
+            $_SESSION['loginBack'] = $_SERVER['HTTP_REFERER'];
+        } else {
+            $_SESSION['loginBack'] = Router::getFullURI();
+        }
+
         $view = apply_filter('mvc\admin\needLogin', $view);
         if ($view === null) {
             $view = new SimpleView('need Login');

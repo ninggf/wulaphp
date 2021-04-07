@@ -15,7 +15,6 @@ use wulaphp\util\Annotation;
  * @property-read  Passport                $passport
  * @property-read  Annotation              $ann
  * @property-read \wulaphp\util\Annotation $methodAnn           正在执行动作的注解
- * @property-read  bool                    $loginBack
  */
 trait RbacSupport {
     private $globalRbacSetting = [];
@@ -27,9 +26,6 @@ trait RbacSupport {
             $this->globalRbacSetting['roles']  = $ann->getArray('roles');
             $this->globalRbacSetting['acl']    = $ann->getArray('acl');
             $this->globalRbacSetting['aclmsg'] = $ann->getString('aclmsg');
-            if ($ann->getBool('loginBack')) {
-                $this->loginBack = true;
-            }
         }
     }
 
