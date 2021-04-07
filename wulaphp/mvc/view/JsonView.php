@@ -14,6 +14,9 @@ class JsonView extends View {
      * @param int          $status
      */
     public function __construct($data, $headers = [], $status = 200) {
+        if (is_object($data)) {
+            $data = get_object_vars($data);
+        }
         parent::__construct($data, '', $headers, $status);
     }
 

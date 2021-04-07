@@ -303,7 +303,7 @@ class Response {
         } else if (is_array($view)) {
             $this->view = new JsonView ($view);
         } else if (is_object($view)) {
-            $this->view = new JsonView (get_object_vars($view));
+            $this->view = new JsonView ($view);
         }
 
         if ($this->view instanceof View) {
@@ -328,10 +328,11 @@ class Response {
      * 关闭响应，将内容输出的浏览器，同时触发after_content_output勾子.
      *
      * @param bool $exit
+     * @param int  $code
      *
      * @fire after_content_output $content
      */
-    public function close($exit = true, $code = 0) {
+    public function close(bool $exit = true, int $code = 0) {
         if ($exit) {
             exit ($code);
         } else {
