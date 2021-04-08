@@ -12,16 +12,16 @@ abstract class TraitObject {
             unset($parents[ $c ]);
         }
 
-        $traits = class_uses($this);
-        
+        $traits = [];
+
         while ($parents) {
             $p  = array_pop($parents);
             $tt = class_uses($p);
             if ($tt) {
-                $traits = array_merge($traits, $tt);
+                $traits += $tt;
             }
         }
-
+        $traits += class_uses($this);
         if ($traits) {
             $traits = array_unique($traits);
             foreach ($traits as $trait) {
