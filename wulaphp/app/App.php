@@ -696,7 +696,7 @@ class App {
      *
      * @return string
      */
-    public static function url($url, $replace = true): string {
+    public static function url($url, bool $replace = true): string {
         if (is_array($url)) {
             $host    = $url[0];
             $url     = $url[1];
@@ -712,7 +712,12 @@ class App {
                 if (($host = App::getModuleDomain($urls[0]))) {
                     $urls[0] = '';
                 } else {
-                    $urls[0] = App::id2dir($urls[0]);
+                    $dm = App::cfg('defaultModule');
+                    if ($dm == $urls[0]) {
+                        $urls[0] = '';
+                    } else {
+                        $urls[0] = App::id2dir($urls[0]);
+                    }
                 }
             }
         }
@@ -796,14 +801,19 @@ class App {
             if ($clzs[0]) {
                 $clzs[0] = App::id2dir($clzs[0]);
             }
+            $dm     = App::cfg('defaultModule');
             $prefix = '';
-            if (!isset($host) && method_exists($clz, 'urlGroup')) {
+            if ($dm == $id) {
+                $clzs[0] = '';
+            } else if (!isset($host) && method_exists($clz, 'urlGroup')) {
                 $tprefix = ObjectCaller::callClzMethod($clz, 'urlGroup');
                 if ($tprefix && isset($tprefix[0])) {
                     $prefix = $tprefix[0];
                 }
             }
-
+            if (!$clzs[0]) {//默认模块或配置了域名.
+                unset($clzs[0]);
+            }
             $prefixes[ $clz ] = [$host, $prefix . implode('/', $clzs)];
         }
         if ($action && $action != 'index') {

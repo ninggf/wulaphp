@@ -42,9 +42,12 @@ class Router {
     private function __construct() {
         $this->xssCleaner = new XssCleaner();
         $dd               = new DefaultDispatcher ();
-        $this->register($dd, 0);
+        if (($dm = App::cfg('defaultModule'))) {
+            $this->register(new DefaultModuleDispatcher($dd, $dm), 0);
+        }
+        $this->register($dd, 1);
         //路由表分发器
-        $this->register(new RouteTableDispatcher (), 1);
+        $this->register(new RouteTableDispatcher (), 2);
         try {
             fire('router\registerDispatcher', $this);
         } catch (\Exception $e) {
@@ -182,7 +185,7 @@ class Router {
                 }
                 if ($time !== 0) {
                     Response::cache($expire, $time);
-                } else if ($time==0) {
+                } else if ($time == 0) {
                     Response::nocache();
                 }
                 echo $content;

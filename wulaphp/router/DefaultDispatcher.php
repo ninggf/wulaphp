@@ -30,13 +30,14 @@ class DefaultDispatcher implements IURLDispatcher {
      * @return \wulaphp\mvc\view\View
      * @throws \Exception
      */
-    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo):?View {
+    public function dispatch(string $url, Router $router, UrlParsedInfo $parsedInfo): ?View {
         $controllers = explode('/', $url);
         $pms         = [];
         $len         = count($controllers);
         $module      = '';
         $prefix      = null;
         $action      = 'index';
+        $uact        = null;
         if ($len == 0) {
             return null;
         } else if ($len == 1 && !empty ($controllers [0])) {
@@ -53,20 +54,25 @@ class DefaultDispatcher implements IURLDispatcher {
                 $prefix = $module;
                 $module = $controllers[1];
             } else {
-                $action = $controllers [1];
+                $uact = $action = $controllers [1];
             }
         } else if ($len > 2) {
             $module = $controllers [0];
             if (App::checkUrlPrefix($module)) { # 前缀
                 $prefix = $module;
                 $module = $controllers[1];
-                $action = $controllers [2];
+                $uact   = $action = $controllers [2];
                 $pms    = array_slice($controllers, 3);
             } else {
-                $action = $controllers [1];
-                $pms    = array_slice($controllers, 2);
+                $uact = $action = $controllers [1];
+                $pms  = array_slice($controllers, 2);
             }
         }
+
+        if ($uact == 'index') {
+            return null;
+        }
+
         $module    = strtolower($module);
         $namespace = App::dir2id($module, true);
         if ($namespace) {
@@ -74,6 +80,10 @@ class DefaultDispatcher implements IURLDispatcher {
             $dir = App::id2dir($namespace);
             if ($dir && $dir != $module) {
                 //模块需要通过别名访问.
+                return null;
+            }
+            if (defined('DEFAULT_MODULE_ABUSED') && DEFAULT_MODULE_ABUSED == $namespace) {
+                //默认模块F
                 return null;
             }
             //是否绑定到指定的域名

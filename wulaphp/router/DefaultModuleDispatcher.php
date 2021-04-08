@@ -17,7 +17,6 @@ use wulaphp\mvc\view\View;
  * Class DefaultModuleDispatcher
  * @package    wulaphp\router
  * @internal
- * @deprecated 不在支持默认模块功能
  */
 class DefaultModuleDispatcher implements IURLDispatcher {
     private $dd = null;
@@ -35,6 +34,11 @@ class DefaultModuleDispatcher implements IURLDispatcher {
         if ($url) {
             $urls = explode('/', $url);
             $id   = App::dir2id($urls[0], true);
+            if ($id == $this->defaultModule) {
+                define('DEFAULT_MODULE_ABUSED', $this->defaultModule);
+
+                return null;
+            }
             if ($id) {
                 // 已有模块的URL不分发给默认模块
                 return null;

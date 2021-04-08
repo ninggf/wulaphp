@@ -52,6 +52,9 @@ class SubModuleRouter extends Controller {
             default:
                 $subname = (string)array_shift($args);
                 $action  = array_shift($args);
+                if ($action == 'index') {
+                    return null;
+                }
         }
 
         if (empty($subname) || empty($action)) {
