@@ -26,14 +26,13 @@ trait UploadSupport {
      *
      * @param string|UploadFile|null $dest                  目标目录或文件定义
      * @param int                    $maxSize               最大上传体积
-     * @param bool                   $canUpload             是否可以上传
-     * @param \wulaphp\io\IUploader  $uploader              使用指定文件上传器.
-     * @param \Closure               $fileMetaDataExtractor 上传之前的解析文件数据的回调function($path, $size, $width, $height).
+     * @param null                   $uploader              使用指定文件上传器.
+     * @param \Closure|null          $fileMetaDataExtractor 上传之前的解析文件数据的回调function($path, $size, $width, $height).
      * @param array                  $allowed               允许的域名,默认使用allowd方法检测.
      *
      * @return array 上传结果
      */
-    protected final function upload($dest = null, $maxSize = 10000000, $canUpload = true, $uploader = null, \Closure $fileMetaDataExtractor = null, $allowed = []) {
+    protected final function upload($dest = null, $maxSize = 10000000, $uploader = null, \Closure $fileMetaDataExtractor = null, $allowed = []): array {
         $rtn   = ['jsonrpc' => '2.0', 'done' => 0];
         $water = null;
         if ($dest instanceof UploadFile) {
@@ -45,12 +44,6 @@ trait UploadSupport {
             $dest                  = $dest->dest;
         } else if ($dest != null && !is_string($dest)) {
             $rtn['error'] = ['code' => 421, 'message' => '无效的存储目录'];
-
-            return $rtn;
-        }
-
-        if (!$canUpload) {
-            $rtn['error'] = ['code' => 422, 'message' => '无权限上传文件'];
 
             return $rtn;
         }
@@ -70,7 +63,7 @@ trait UploadSupport {
         @set_time_limit(0);
         // Clean the fileName for security reasons
         if (empty ($name)) {
-            $name = isset ($_FILES ['file'] ['name']) ? $_FILES ['file'] ['name'] : false;
+            $name = $_FILES ['file'] ['name'] ?? false;
         }
         if (empty ($name)) {
             $rtn['error'] = ['code' => 422, 'message' => '文件名为空'];
@@ -203,7 +196,8 @@ trait UploadSupport {
                 if ($in) {
                     do {
                         $buff = fread($in, 4096);
-                        if ($buff) fwrite($out, $buff);
+                        if ($buff)
+                            fwrite($out, $buff);
                     } while ($buff);
                 } else {
                     $rtn['error'] = ['code' => 422, 'message' => '系统错误，无法打开输入流'];
@@ -262,7 +256,7 @@ trait UploadSupport {
                         return $rtn;
                     }
                 }
-                $uploader = $uploader ? $uploader : Uploader::getUploader();
+                $uploader = $uploader ?: Uploader::getUploader();
                 if ($uploader) {
                     try {
                         $rst = $uploader->save($filePath, $dest);
@@ -306,7 +300,7 @@ trait UploadSupport {
      *
      * @return bool
      */
-    protected function allowed($ext) {
+    protected function allowed(string $ext): bool {
         $allowed = 'jpg,gif,png,bmp,jpeg,zip,rar,7z,tar,gz,bz2,doc,docx,txt,ppt,pptx,xls,xlsx,pdf,mp3,avi,mp4,flv,swf,apk';
         $allowed = explode(',', $allowed);
 
@@ -318,7 +312,7 @@ trait UploadSupport {
      *
      * @return string|null
      */
-    protected function watermark() {
+    protected function watermark(): ?string {
         return null;
     }
 }
