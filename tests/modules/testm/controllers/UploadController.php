@@ -20,7 +20,7 @@ class UploadController extends Controller {
     public function index() {
         $uploader = new LocaleUploader();
         $uploader->setup(['path' => TMP_PATH, 'filename' => 'test']);
-        $rst = $this->upload('@abc', 1000000, true, $uploader, null, ['txt']);
+        $rst = $this->upload('@abc', 1000000, $uploader, null, ['txt']);
 
         return is_array($rst) ? $rst : 'error';
     }
