@@ -21,24 +21,23 @@ class LocaleUploader implements IUploader {
     protected $last_error       = '';
     protected $upload_root_path = '';
     protected $filename;
+    protected $config;
 
-    /**
-     * LocaleUploader constructor.
-     *
-     * @param string|null $path     存储路径,不指定时存储到WWWROOT目录
-     * @param string|null $filename 存储为固定文件
-     */
-    public function __construct(?string $path = null, ?string $filename = null) {
+    public function getName(): string {
+        return __('Local File System');
+    }
+
+    public function setup($config = []): bool {
+        $this->config = (array)$config;
+        $path         = aryget('path', $config);
         if (empty ($path)) {
             $this->upload_root_path = WEB_ROOT;
         } else {
             $this->upload_root_path = $path;
         }
-        $this->filename = $filename;
-    }
+        $this->filename = aryget('filename', $config);
 
-    public function getName(): string {
-        return '本地文件上传器';
+        return true;
     }
 
     /**
@@ -50,7 +49,7 @@ class LocaleUploader implements IUploader {
      * @return array|null  成功返回关键数组:
      * url,name,path
      */
-    public function save(string $filepath, ?string $path = null):?array {
+    public function save(string $filepath, ?string $path = null): ?array {
         $path = trailingslashit($this->getDestDir($path));
 
         $destdir  = trailingslashit($this->upload_root_path) . $path;
@@ -82,11 +81,11 @@ class LocaleUploader implements IUploader {
         return ['url' => $fileName, 'name' => $pathinfo ['basename'], 'path' => $fileName];
     }
 
-    public function get_last_error() {
+    public function get_last_error(): ?string {
         return $this->last_error;
     }
 
-    public function delete(string $file) :bool{
+    public function delete(string $file): bool {
         $file = $this->upload_root_path . $file;
         if (file_exists($file)) {
             @unlink($file);
@@ -95,18 +94,19 @@ class LocaleUploader implements IUploader {
         return true;
     }
 
-    public function close() {
+    public function close(): bool {
         // nothing to do.
+        return true;
     }
 
-    public function thumbnail($file, $w, $h) {
+    public function thumbnail(string $file, int $w, int $h) {
     }
 
-    public function configHint():string {
+    public function configHint(): string {
         return '';
     }
 
-    public function configValidate($config) {
+    public function configValidate($config): bool {
         return true;
     }
 
@@ -115,9 +115,9 @@ class LocaleUploader implements IUploader {
      *
      * @return string
      */
-    public function getDestDir(?string $path = null):string {
+    public function getDestDir(?string $path = null): string {
         if (!$path) {
-            $dir =  App::icfg('upload.dir', 1);
+            $dir = App::icfg('upload.dir', 1);
             switch ($dir) {
                 case 0:
                     $path = date('/Y/');
@@ -128,7 +128,7 @@ class LocaleUploader implements IUploader {
                 default:
                     $path = date('/Y/n/d/');
             }
-            $rand_cnt =  App::icfg('upload.group', 0);
+            $rand_cnt = App::icfg('upload.group', 0);
             if ($rand_cnt > 1) {
                 $cnt  = rand(0, $rand_cnt - 1);
                 $path .= $cnt . '/';
@@ -138,9 +138,9 @@ class LocaleUploader implements IUploader {
         if ($path[0] == '@') {
             return substr($path, 1);
         } else if ($path[0] == '~') {
-            return trailingslashit($uploadPath) . ltrim(substr($path, 1),'/\\');
+            return trailingslashit($uploadPath) . ltrim(substr($path, 1), '/\\');
         } else {
-            return trailingslashit($uploadPath) . ltrim($path,'/\\');
+            return trailingslashit($uploadPath) . ltrim($path, '/\\');
         }
     }
 }

@@ -16,8 +16,9 @@ use wulaphp\io\LocaleUploader;
 class UploaderTest extends TestCase {
     public function testUpload() {
         $uploader = new LocaleUploader();
-        $date     = date("/Y/");
-        $file     = STORAGE_PATH . 'a.txt';
+        $uploader->setup();
+        $date = date("/Y/");
+        $file = STORAGE_PATH . 'a.txt';
 
         $rst = $uploader->save($file);
         $this->assertTrue(is_array($rst));
@@ -49,8 +50,8 @@ class UploaderTest extends TestCase {
         $cnt = file_get_contents($fp);
         $this->assertEquals('c.txt', $cnt);
 
-        $uploader1 = new LocaleUploader(STORAGE_PATH, 'd');
-
+        $uploader1 = new LocaleUploader();
+        $uploader1->setup(['path' => STORAGE_PATH, 'filename' => 'd']);
         $file = STORAGE_PATH . 'c.txt';
         $rst  = $uploader1->save($file, '@');
         $this->assertTrue(is_array($rst));

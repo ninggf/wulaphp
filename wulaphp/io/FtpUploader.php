@@ -28,26 +28,23 @@ class FtpUploader extends LocaleUploader {
     private $homedir = '';
     private $ftp     = null;
 
-    /**
-     * FtpUploader constructor.
-     *
-     * @param string|null       $path     指定保存路径
-     * @param string|null       $filename 指定保存文件名
-     * @param string|array|null $config   FTP配置
-     */
-    public function __construct($path = null, $filename = null, $config = null) {
-        parent::__construct(null, $filename);
+    public function getName(): string {
+        return __('Ftp File System');
+    }
+
+    public function setup($config = []): bool {
         if ($config) {
             if (is_array($config)) {
-                $opts = $config;
+                $params = $config;
             } else {
                 $opts = str_replace(["\n", "\r"], ['&', ''], trim($config));
+                @parse_str($opts, $params);
             }
         } else {
             $opts = str_replace(["\n", "\r"], ['&', ''], trim(App::cfg('upload.params')));
+            @parse_str($opts, $params);
         }
-        @parse_str($opts, $params);
-        $path = aryget('path', $params, $path);
+        $path = aryget('path', $params);
         if ($path) {
             $this->path = untrailingslashit($path) . '/';
         }
@@ -57,10 +54,8 @@ class FtpUploader extends LocaleUploader {
         $this->pwd     = aryget('password', $params, '');
         $this->timeout = intval(aryget('timeout', $params, 5));
         $this->passive = boolval(aryget('passive', $params));
-    }
 
-    public function getName(): string {
-        return 'FTP文件上传器';
+        return true;
     }
 
     public function save(string $filepath, ?string $path = null): ?array {
@@ -114,11 +109,13 @@ class FtpUploader extends LocaleUploader {
         return @ftp_delete($this->ftp, $this->homedir . untrailingslashit($file));
     }
 
-    public function close() {
+    public function close(): bool {
         if ($this->ftp) {
             @ftp_close($this->ftp);
         }
         $this->ftp = null;
+
+        return true;
     }
 
     private function checkDir(string $path): bool {
@@ -237,7 +234,7 @@ class FtpUploader extends LocaleUploader {
         return 'host=主机地址&port=端口&user=用户名&password=密码&timeout=超时时间单位秒&passive=是否是被动模式(1|0)&path=路径';
     }
 
-    public function configValidate($config) {
+    public function configValidate($config): bool {
         $opts = str_replace(["\n", "\r"], ['&', ''], trim($config));
         @parse_str($opts, $params);
         $host    = aryget('host', $params, 'localhost');

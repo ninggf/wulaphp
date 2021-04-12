@@ -21,6 +21,15 @@ interface IUploader {
     public function getName(): string;
 
     /**
+     * setup a uploader
+     *
+     * @param string|array $config
+     *
+     * @return bool
+     */
+    public function setup($config = []): bool;
+
+    /**
      * 上传文件.
      *
      * @param string      $filepath 要上传的文件路径.
@@ -40,7 +49,7 @@ interface IUploader {
     /**
      * 返回错误信息.
      */
-    public function get_last_error();
+    public function get_last_error(): ?string;
 
     /**
      * delete the file.
@@ -61,12 +70,12 @@ interface IUploader {
      *
      * @return mixed
      */
-    public function thumbnail($file, $w, $h);
+    public function thumbnail(string $file, int $w, int $h);
 
     /**
      * close connection if there is.
      */
-    public function close();
+    public function close(): bool;
 
     /**
      * 配置提示
@@ -74,5 +83,5 @@ interface IUploader {
      */
     public function configHint(): string;
 
-    public function configValidate($config);
+    public function configValidate($config): bool;
 }

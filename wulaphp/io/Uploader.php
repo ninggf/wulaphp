@@ -20,19 +20,19 @@ use wulaphp\app\App;
 abstract class Uploader implements IUploader {
     protected $error = null;
 
-    public function get_last_error() {
+    public function get_last_error(): ?string {
         return $this->error;
     }
 
-    public function thumbnail($file, $w, $h) {
+    public function thumbnail(string $file, int $w, int $h) {
         return null;
     }
 
-    public function close() {
+    public function close(): bool {
         return true;
     }
 
-    public function configHint():string {
+    public function configHint(): string {
         return '';
     }
 
@@ -40,18 +40,28 @@ abstract class Uploader implements IUploader {
      * 获取文件上传器.
      *
      * @param string|null $id 上传器ID
+     * @param null        $config
      *
      * @return \wulaphp\io\IUploader|null
      */
-    public static function getUploader(?string $id = null): ?IUploader {
+    public static function getUploader(?string $id = null, $config = null): ?IUploader {
         if (!$id) {
-            $id =  App::cfg('upload.uploader', 'file');
+            $id = App::cfg('upload.uploader', 'file');
         }
         $uploaders = self::uploaders();
         if (isset($uploaders[ $id ])) {
-            $uploader = $uploaders[ $id ];
+            $uploaderCls = $uploaders[ $id ];
+            if ($uploaderCls instanceof IUploader) {
+                $uploader = new $uploaderCls();
+                $uploader->setup($config);
+            } else {
+                $uploader = null;
+            }
         } else {
             $uploader = new LocaleUploader();
+        }
+        if ($uploader) {
+            $uploader->setup($config);
         }
 
         return apply_filter('upload\getUploader', $uploader);
@@ -60,14 +70,14 @@ abstract class Uploader implements IUploader {
     /**
      * 系统可用文件上传器.
      *
-     * @return \wulaphp\io\IUploader[]
+     * @return string[]
      */
-    public static function uploaders() {
+    public static function uploaders(): array {
         static $uploaders = [];
         if (!$uploaders) {
-            $uploaders['file'] = new LocaleUploader();
+            $uploaders['file'] = LocaleUploader::class;
             if (extension_loaded('ftp')) {
-                $uploaders['ftp'] = new FtpUploader();
+                $uploaders['ftp'] = FtpUploader::class;
             }
             $uploaders = apply_filter('upload\regUploaders', $uploaders);
         }
