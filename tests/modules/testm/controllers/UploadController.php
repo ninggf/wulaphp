@@ -18,8 +18,9 @@ class UploadController extends Controller {
     use UploadSupport;
 
     public function index() {
-        $uploader = new LocaleUploader(TMP_PATH, 'test');
-        $rst      = $this->upload('@abc', 1000000, true, $uploader, null, ['txt']);
+        $uploader = new LocaleUploader();
+        $uploader->setup(['path' => TMP_PATH, 'filename' => 'test']);
+        $rst = $this->upload('@abc', 1000000, true, $uploader, null, ['txt']);
 
         return is_array($rst) ? $rst : 'error';
     }
