@@ -465,12 +465,12 @@ function http_out($status, $message = '') {
  */
 function print_invalid_msg(\wulaphp\validator\ValidateException $exception) {
     @ob_start();
-    status_header(422);
+    http_response_code(422);
     @header('Content-type: ' . RESPONSE_ACCEPT);
     $message = [];
     $errors  = $exception->getErrors();
     foreach ($errors as $field => $error) {
-        $message[] = $error;
+        $message[] = '"' . $field . '"' . $error;
     }
     $data['errors']  = $errors;
     $data['message'] = implode("\n", $message);
@@ -482,14 +482,21 @@ function print_invalid_msg(\wulaphp\validator\ValidateException $exception) {
 /**
  * 打印异常信息.
  *
- * @param \Throwable $exception
+ * @param \Throwable|null $exception
+ * @param int             $status
  */
-function print_exception(?Throwable $exception) {
+function print_exception(?Throwable $exception, int $status = 500) {
     if (!$exception) {
         return;
     }
     @ob_start();
-
+    if ($status > 0) {
+        $code = $exception->getCode();
+        if (get_status_header_desc($code)) {
+            $status = $code;
+        }
+        http_response_code($status);//输出响应码
+    }
     @header('Content-type: ' . RESPONSE_ACCEPT);
     $ocurPos = trim(CommonLogger::getLine([
         'file' => str_replace(APPROOT, '', $exception->getFile()) . ' ',
@@ -528,7 +535,7 @@ set_exception_handler(function (?Throwable $exception) use ($_oldExceptionHandle
     global $argv;
     try {
         defined('DEBUG') or define('DEBUG', DEBUG_DEBUG);
-        if ($_oldExceptionHandler && ($handled = $_oldExceptionHandler($exception))) {
+        if ($_oldExceptionHandler && $_oldExceptionHandler($exception)) {
             return;
         }
         //处理数据校验异常

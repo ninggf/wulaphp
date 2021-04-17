@@ -216,9 +216,14 @@ class Response {
      * @param string|array|null $message
      */
     public static function respond(int $status = 404, $message = null) {
-        http_response_code($status);
+        $msg = get_status_header_desc($status);
+        if ($msg) {
+            http_response_code($status);
+        } else {
+            http_response_code(500);
+        }
         $resp    = Response::getInstance();
-        $message = $message ?? get_status_header_desc($status);
+        $message = $message ?: $msg;
         try {
             if (strtolower(RESPONSE_ACCEPT) == 'application/json') {
                 $resp->output(new JsonView(['code' => $status, 'message' => $message]));
@@ -251,7 +256,7 @@ class Response {
                 $resp->output($view);
             }
         } catch (\Throwable $e) {
-            print_exception($e);
+            print_exception($e, - 1);
         }
         $resp->close(true, 1);
     }
