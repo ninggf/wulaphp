@@ -23,7 +23,7 @@ defined('WULA_ERROR_PAGE_TPL') or define('WULA_ERROR_PAGE_TPL', <<<'ERP'
 	<div class="info"><div class="title"><h3>{{Position}}</h3></div><div class="text"><p>{{ocurPos}}</p></div></div>
 	<div class="info"><div class="title"><h3>{{TRACE}}</h3></div><div class="text"><p>{{traceStr}}</p></div></div>
 </div></div><div class="copyright">
-<p><a href="https://www.wulaphp.com/">WULAPHP</a><sup>{{ver}}</sup>&nbsp;&nbsp;[ Make you a happy phper ]</p>
+<p><a href="https://www.wulaphp.com/">WULAPHP</a><sup>{{ver}}</sup>&nbsp;&nbsp;[ Make you a happy PHPer! ]</p>
 </div></body></html>
 ERP
 );
