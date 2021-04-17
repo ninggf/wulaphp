@@ -559,10 +559,9 @@ set_exception_handler(function (?Throwable $exception) use ($_oldExceptionHandle
             echo $exception->getMessage(), "\n";
             echo $exception->getTraceAsString(), "\n";
         } else if (DEBUG < DEBUG_INFO || !class_exists('wulaphp\io\Response')) {
-            status_header(503);
             print_exception($exception);
         } else {
-            Response::respond(503, $exception->getMessage());
+            Response::respond(500, $exception->getMessage());
         }
     } catch (Throwable $te) {
         print_exception($te);
