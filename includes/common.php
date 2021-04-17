@@ -499,9 +499,12 @@ function print_exception(?Throwable $exception) {
 
     if (strtolower(RESPONSE_ACCEPT) == 'application/json') {
         $traces         = explode("\n", $traces);
+        $msg['code']    = $exception->getCode() ?: 1;
         $msg['message'] = $exception->getMessage();
-        array_unshift($traces, $ocurPos);
-        $msg['trace'] = $traces;
+        if (DEBUG == DEBUG_DEBUG) {
+            array_unshift($traces, $ocurPos);
+            $msg['trace'] = $traces;
+        }
         echo json_encode($msg);
     } else {
         $traces             = html_escape($traces);

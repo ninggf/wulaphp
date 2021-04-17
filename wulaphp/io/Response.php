@@ -221,7 +221,7 @@ class Response {
         $message = $message ?? get_status_header_desc($status);
         try {
             if (strtolower(RESPONSE_ACCEPT) == 'application/json') {
-                $resp->output(new JsonView(['message' => $message]));
+                $resp->output(new JsonView(['code' => $status, 'message' => $message]));
             } else {
                 if ($status == 404) {
                     $data ['message'] = $message;
@@ -239,7 +239,8 @@ class Response {
                     $view = new SimpleView($message);
                 } else if ($message) {
                     if (is_array($message)) {
-                        $view = new JsonView($message);
+                        $message['code'] = $status;
+                        $view            = new JsonView($message);
                     } else {
                         $view = new SimpleView($message);
                     }
