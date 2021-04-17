@@ -149,6 +149,11 @@ class DefaultDispatcher implements IURLDispatcher {
                         if (!$clz instanceof SubModuleRouter) {
                             define('NEED_CHECK_REQ_M', $rqMethod);
                         }
+                    } else if (method_exists($clz, 'index' . $rm)) {
+                        $actionFound = true;
+                        array_unshift($pms, $action);
+                        $action     = 'index' . $rm;
+                        $actionSlag = 'index-' . strtolower($rm);
                     } else if (method_exists($clz, 'index')) {
                         $actionFound = true;
                         array_unshift($pms, $action);
