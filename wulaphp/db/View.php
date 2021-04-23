@@ -21,7 +21,7 @@ use wulaphp\util\TraitObject;
  * @method static array smap($where, $valueField, $keyField = null, $rows = [])
  * @method static int scount($con, $id = null)
  * @method static bool sexist($con, $id = null)
- * @method static Query sselect(...$fileds)
+ * @method static Query sselect(...$fields)
  * @method static ILock slock($con)
  */
 abstract class View extends TraitObject {
@@ -96,11 +96,11 @@ abstract class View extends TraitObject {
      * 静态魔术方法.
      *
      * @param string $name function with s
-     * @param        $arguments
+     * @param array  $arguments
      *
      * @return mixed
      */
-    public static function __callStatic(string $name, $arguments) {
+    public static function __callStatic(string $name, array $arguments) {
         $clz = static::class;
         try {
             if (!isset(self::$tableClzs[ $clz ])) {
@@ -410,12 +410,12 @@ abstract class View extends TraitObject {
     /**
      * 查询.
      *
-     * @param string|null ...$fileds 字段.
+     * @param string|null ...$fields 字段.
      *
      * @return Query
      */
-    public final function select(?string ...$fileds): Query {
-        return $this->_select(true, ...$fileds);
+    public final function select(?string ...$fields): Query {
+        return $this->_select(true, ...$fields);
     }
 
     /**
@@ -699,14 +699,10 @@ abstract class View extends TraitObject {
      * @return \wulaphp\db\sql\Query
      */
     private function _select(bool $orm, ?string ...$fields): Query {
-        if (empty($fileds) || !isset($fileds[0])) {
-            if (isset($this->fields) && $this->fields) {
-                $fileds = $this->defaultQueryFields;
-            } else {
-                $fileds = '*';
-            }
+        if (empty($fields) || !isset($fields[0])) {
+            $fields = $this->defaultQueryFields;
         }
-        $sql = new Query($fileds);
+        $sql = new Query($fields);
         if ($this->primaryKey && $orm) {
             $sql->orm = new Orm($this, $this->primaryKey);
         }
