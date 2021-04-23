@@ -9,7 +9,6 @@ use wulaphp\db\TableLocker;
 /**
  * Class Query
  * @package wulaphp\db\sql
- * @property Orm $orm
  */
 class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator {
     private $fields         = [];
@@ -22,9 +21,12 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     private $maxIdx         = 0;//最大指针
     private $treeKey        = null;
     private $treePad        = true;
-    private $orm            = null;
-    private $eagerFields    = [];
-    private $forupdate      = false;
+    /**@var Orm */
+    private $orm = null;
+    /**@var \wulaphp\db\View */
+    private $view        = null;
+    private $eagerFields = [];
+    private $forupdate   = false;
 
     /**
      * Query constructor.
@@ -60,8 +62,8 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     }
 
     /**
-     * @param string $table
-     * @param string $alias
+     * @param string      $table
+     * @param string|null $alias
      *
      * @return $this
      */
@@ -76,7 +78,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function groupBy($fields) {
+    public function groupBy($fields): Query {
         if (!empty ($fields)) {
             $this->group [] = $fields;
         }
@@ -89,7 +91,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function having($having) {
+    public function having($having): Query {
         if (!empty ($having)) {
             $this->having [] = $having;
         }
@@ -101,11 +103,11 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * append a field to result set.
      *
      * @param string|Query|\wulaphp\db\sql\ImmutableValue $field
-     * @param string                                      $alias
+     * @param string|null                                 $alias
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function field($field, ?string $alias = null) {
+    public function field($field, ?string $alias = null): Query {
         if (is_string($field)) {
             $fields = explode(',', trim($field));
             foreach ($fields as $field) {
@@ -133,7 +135,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function treeKey(string $key) {
+    public function treeKey(string $key): Query {
         $this->treeKey = $key;
 
         return $this;
@@ -164,8 +166,6 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      * @param int            $level    层级（内部递归时使用)
      */
     public function tree(array &$options, string $keyfield = 'id', string $upfield = 'upid', string $varfield = 'name', $stop = null, int $from = 0, int $level = 0) {
-        $from  = intval($from);
-        $level = intval($level);
         if ($stop && !is_array($stop)) {
             $stop = [$stop];
         }
@@ -205,7 +205,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * check if there is any row in database suits the condition.
      *
-     * @param string $filed
+     * @param string|null $filed
      *
      * @return boolean
      */
@@ -243,7 +243,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @param string $id
      *
-     * @return int|false the number of result set.
+     * @return int the number of result set.
      */
     public function count($id = '*') {
         if (!$this->countperformed) {
@@ -558,13 +558,29 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * eager loading fields
      *
-     * @param string ...$fields
+     * @param string|array ...$fields
      *
      * @return \wulaphp\db\sql\Query
      */
-    public function with(string ...$fields): Query {
+    public function with(...$fields): Query {
         foreach ($fields as $f) {
-            $this->eagerFields[ $f ] = $f;
+            if ($f && is_string($f)) {
+                $this->eagerFields[ $f ] = $f;
+            } else if (is_array($f)) {
+                foreach ($f as $_f => $wf) {
+                    if (is_callable($wf) && method_exists($this->view, $_f)) {
+                        // 获取配置
+                        $orm = $this->view->$_f();
+                        // 构建exist查询子句
+                        [, , , , , $q] = $orm;
+                        call_user_func_array($wf, [$q]);
+                        $con      = new Condition();
+                        $con['@'] = $q;
+                        $this->where($con);
+                    }
+                    $this->eagerFields[ $_f ] = $_f;
+                }
+            }
         }
 
         return $this;
@@ -609,7 +625,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return mixed
      */
-    public function __get($field) {
+    public function __get(string $field) {
         return $this->offsetGet($field);
     }
 

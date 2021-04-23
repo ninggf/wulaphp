@@ -37,6 +37,7 @@ abstract class View extends TraitObject {
     protected      $lastValues  = null;
     protected      $dumpSQL     = null;
     protected      $alias       = null;
+    private        $oalias      = null;
     protected      $foreignKey  = null;//本表主键在其它表中的引用字段
     protected      $primaryKey  = null;//本表主键字段
     /**
@@ -66,8 +67,8 @@ abstract class View extends TraitObject {
             } else {
                 $this->dbconnection = $db;
             }
-            $tb          = explode("\\", get_class($this));
-            $this->alias = preg_replace('#(View|Table|Model|Form|Entity)$#', '', array_pop($tb));
+            $tb           = explode("\\", get_class($this));
+            $this->oalias = $this->alias = preg_replace('#(View|Table|Model|Form|Entity)$#', '', array_pop($tb));
             if (!$this->table) {
                 $table = $this->myTableName();
                 if (!$table) {
@@ -78,7 +79,7 @@ abstract class View extends TraitObject {
                 }, $table);
             }
             $this->foreignKey  = $this->table . '_id';//被其它表引用时的字段名
-            $this->primaryKey  = empty($this->primaryKeys) ? 'id' : $this->primaryKeys[0];//本表主键字段
+            $this->primaryKey  = empty($this->primaryKeys) ? '' : $this->primaryKeys[0];//本表主键字段
             $this->originTable = $this->table;
             $this->table       = '{' . $this->table . '}';
             if ($this->dbconnection) {
@@ -119,7 +120,7 @@ abstract class View extends TraitObject {
      * 魔术方法，用于实现关联映射.
      *
      * @param string $name
-     * @param        $args
+     * @param array  $args
      *
      * @return mixed
      * @throws \BadMethodCallException
@@ -135,12 +136,17 @@ abstract class View extends TraitObject {
     /**
      * 指定此表的别名.
      *
-     * @param string $alias
+     * @param string|null $alias 为空时重置alias
      *
      * @return $this
      */
-    public final function alias(string $alias): View {
-        $this->alias         = $alias;
+    public final function alias(?string $alias = null): View {
+        if ($alias) {
+            $this->oalias = $this->alias;
+            $this->alias  = $alias;
+        } else {
+            $this->alias = $this->oalias;
+        }
         $this->qualifiedName = $this->table . ' AS ' . $this->alias;
 
         return $this;
@@ -241,12 +247,14 @@ abstract class View extends TraitObject {
      * @return Query 记录.
      * @since v3.5.9
      */
-    public final function findOne($id, string $fields = '*'): Query {
+    public final function findOne($id = 0, string $fields = '*'): Query {
         if (is_array($id)) {
             $where = $id;
-        } else {
+        } else if ($id) {
             $idf   = $this->primaryKey;
             $where = [$idf => $id];
+        } else {
+            $where = [];
         }
         if (is_array($fields)) {
             $sql = $this->select(...$fields);
@@ -407,18 +415,7 @@ abstract class View extends TraitObject {
      * @return Query
      */
     public final function select(?string ...$fileds): Query {
-        if (empty($fileds) || !isset($fileds[0])) {
-            if (isset($this->fields) && $this->fields) {
-                $fileds = $this->defaultQueryFields;
-            } else {
-                $fileds = '*';
-            }
-        }
-        $sql      = new Query($fileds);
-        $sql->orm = new Orm($this, $this->primaryKeys[0]);
-        $sql->setDialect($this->dialect)->from($this->qualifiedName);
-
-        return $sql;
+        return $this->_select(true, ...$fileds);
     }
 
     /**
@@ -497,12 +494,12 @@ abstract class View extends TraitObject {
      * one-to-one.
      *
      * @param View|string $tableCls
-     * @param string      $foreign_key $tableCls中的引用字段.
-     * @param string      $value_key   值字段，默认为本表主键.
+     * @param string      $foreign_key $tableCls中的外键字段.
+     * @param string      $local_key   本表字段(默认为本表主键).
      *
      * @return array
      */
-    protected final function hasOne($tableCls, string $foreign_key = '', string $value_key = ''): array {
+    protected final function hasOne($tableCls, string $foreign_key = '', string $local_key = ''): array {
         if (!$tableCls instanceof View) {
             $tableCls = new SimpleTable($tableCls, $this->dbconnection);
         }
@@ -511,25 +508,34 @@ abstract class View extends TraitObject {
             $foreign_key = $this->foreignKey;
         }
 
-        if (!$value_key) {
-            $value_key = $this->primaryKey;
+        if (!$local_key) {
+            $local_key = $this->primaryKey;
         }
 
         $sql = $tableCls->select();
 
-        return [$sql, $foreign_key, $value_key, true, 'hasOne'];
+        return [
+            $sql,//查询数据的SQL
+            $foreign_key,
+            $local_key,
+            true,
+            'hasOne',
+            $tableCls->_select(false)->where([
+                $tableCls->alias . '.' . $foreign_key => imv($this->alias . '.' . $local_key)
+            ]) // exist 过滤查询语句
+        ];
     }
 
     /**
      * one-to-many.
      *
      * @param View|string $tableCls
-     * @param string      $foreign_key 值字段在$tableCls中的引用字段.
-     * @param string      $value_key   值字段，默认为本表主键.
+     * @param string      $foreign_key $tableCls中的外键字段.
+     * @param string      $local_key   本表字段(默认为本表主键).
      *
      * @return array
      */
-    protected final function hasMany($tableCls, string $foreign_key = '', string $value_key = ''): array {
+    protected final function hasMany($tableCls, string $foreign_key = '', string $local_key = ''): array {
         if (!$tableCls instanceof View) {
             $tableCls = new SimpleTable($tableCls, $this->dbconnection);
         }
@@ -537,69 +543,78 @@ abstract class View extends TraitObject {
             $foreign_key = $this->foreignKey;
         }
 
-        if (!$value_key) {
-            $value_key = $this->primaryKey;
+        if (!$local_key) {
+            $local_key = $this->primaryKey;
         }
 
         $sql = $tableCls->select();
 
-        return [$sql, $foreign_key, $value_key, false, 'hasMany'];
+        return [
+            $sql,
+            $foreign_key,
+            $local_key,
+            false,
+            'hasMany',
+            $tableCls->_select(false)->where([
+                $tableCls->alias . '.' . $foreign_key => imv($this->alias . '.' . $local_key)
+            ])
+        ];
     }
 
     /**
      * many-to-many(只能是主键相关).
      *
      * @param View|string  $tableCls
-     * @param string       $mtable     中间表名
-     * @param string|array $value_keys 当前表在$mtable中的外键（本表主键）.
-     * @param string|array $table_keys $tableCls在$mtable中的外键($table的主键).
+     * @param string       $mtable      中间表
+     * @param string|array $local_key   当前表在中间表关联字段(默认为['table_id','pk']).
+     * @param string|array $foreign_key $tableCls在中间表的关联字段(默认为['table_id','pk']).
      *
      * @return array
      */
-    protected final function belongsToMany($tableCls, string $mtable = '', $value_keys = '', $table_keys = ''): array {
+    protected final function belongsToMany($tableCls, string $mtable = '', $local_key = '', $foreign_key = ''): array {
         if (!$tableCls instanceof View) {
             $tableCls = new SimpleTable($tableCls, $this->dbconnection);
         }
 
-        $tableCls->alias('MTB');
+        $tableCls->alias('TB');//右表
 
-        if (!$value_keys) {
-            $value_keys = $this->foreignKey;
+        if (!$local_key) {
+            $local_key = $this->foreignKey;
         }
 
-        if (is_array($value_keys)) {
-            $myPkf      = $value_keys[1];
-            $value_keys = $value_keys[0];
+        if (is_array($local_key)) {
+            $myPkf     = $local_key[1];
+            $local_key = $local_key[0];
         } else {
             $myPkf = $this->primaryKey;
         }
-        // where RTB.$value_keys = MY.$myPkf
-        $value_keys = 'RTB.' . $value_keys;
+        // where MTB.$value_keys = MY.$myPkf
+        $local_key = 'MTB.' . $local_key;
 
-        if (!$table_keys) {
-            $table_keys = $tableCls->foreignKey;
+        if (!$foreign_key) {
+            $foreign_key = $tableCls->foreignKey;
         }
-        if (is_array($table_keys)) {
-            $itPkf      = $table_keys[1];
-            $table_keys = $table_keys[0];
+        if (is_array($foreign_key)) {
+            $itPkf       = $foreign_key[1];
+            $foreign_key = $foreign_key[0];
         } else {
             $itPkf = $tableCls->primaryKey;
         }
-        // JOIN ON RTB.$table_keys = MTB.$itPkf
-        $table_keys = 'RTB.' . $table_keys;
-
+        // JOIN ON MTB.$table_keys = TB.$itPkf
+        $foreign_key = 'MTB.' . $foreign_key;
+        // 中间表
         if (!$mtable) {
             $mtables = [$this->originTable, $tableCls->originTable];
             sort($mtables);
             $mtable = implode('_', $mtables);
         }
         // user has roles
-        // tableCls = roles AS MTB
-        // select MTB.* FROM roles left join user_role ON MTB.id = LTB.role_id WHERE LTB.user_id = ?
-        $sql = $tableCls->select('MTB.*')->inner('{' . $mtable . '} AS RTB', 'MTB.' . $itPkf, $table_keys);
+        // tableCls = roles AS TB
+        // select TB.* FROM roles inner join user_role ON TB.id = LTB.role_id WHERE LTB.user_id = ?
+        $sql  = $tableCls->select('TB.*')->inner('{' . $mtable . '} AS MTB', 'TB.' . $itPkf, $foreign_key);
+        $sql2 = $tableCls->_select(false, 'TB.*')->inner('{' . $mtable . '} AS MTB', 'TB.' . $itPkf, $foreign_key)->where([$local_key => imv($this->alias . '.' . $myPkf)]);
 
-        return [$sql, $value_keys, $myPkf, false, 'belongsToMany'];
-
+        return [$sql, $local_key, $myPkf, false, 'belongsToMany', $sql2];
     }
 
     /**
@@ -607,12 +622,12 @@ abstract class View extends TraitObject {
      *
      *
      * @param View|string $tableCls
-     * @param string      $value_key   值字段(本表通过此字段属于$tableCls),默认为$tableCls_id.
-     * @param string      $foreign_key $tableCls表中的关联字段.
+     * @param string      $local_key   本表外键字段
+     * @param string      $foreign_key $tableCls表中的关联字段(默认为其主键).
      *
      * @return array
      */
-    protected final function belongsTo($tableCls, string $value_key = '', string $foreign_key = ''): array {
+    protected final function belongsTo($tableCls, string $local_key = '', string $foreign_key = ''): array {
         if (!$tableCls instanceof View) {
             $tableCls = new SimpleTable($tableCls, $this->dbconnection);
         }
@@ -621,13 +636,22 @@ abstract class View extends TraitObject {
             $foreign_key = $tableCls->primaryKey;
         }
 
-        if (!$value_key) {
-            $value_key = $tableCls->foreignKey;
+        if (!$local_key) {
+            $local_key = $tableCls->foreignKey;
         }
 
         $sql = $tableCls->select();
 
-        return [$sql, $foreign_key, $value_key, true, 'belongsTo'];
+        return [
+            $sql,
+            $foreign_key,
+            $local_key,
+            true,
+            'belongsTo',
+            $tableCls->_select(false)->where([
+                $tableCls->alias . '.' . $foreign_key => imv($this->alias . '.' . $local_key)
+            ])
+        ];
     }
 
     /**
@@ -666,5 +690,29 @@ abstract class View extends TraitObject {
         }
 
         return $con;
+    }
+
+    /**
+     * @param bool        $orm 是否启用orm
+     * @param string|null ...$fields
+     *
+     * @return \wulaphp\db\sql\Query
+     */
+    private function _select(bool $orm, ?string ...$fields): Query {
+        if (empty($fileds) || !isset($fileds[0])) {
+            if (isset($this->fields) && $this->fields) {
+                $fileds = $this->defaultQueryFields;
+            } else {
+                $fileds = '*';
+            }
+        }
+        $sql = new Query($fileds);
+        if ($this->primaryKey && $orm) {
+            $sql->orm = new Orm($this, $this->primaryKey);
+        }
+        $sql->view = $this;
+        $sql->setDialect($this->dialect)->from($this->qualifiedName);
+
+        return $sql;
     }
 }

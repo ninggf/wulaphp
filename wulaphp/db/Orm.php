@@ -60,7 +60,6 @@ class Orm {
         }
 
         $this->results[ $index ][ $field ] = [];
-        $con                               = null;
         if (isset($this->queries[ $field ])) {
             $con = $this->queries[ $field ];
         } else {
@@ -69,8 +68,8 @@ class Orm {
                 $con = $this->view->{$field}();
                 /**@var Query $query */
                 [$query, $fk, $lk, , $type] = $con;
-                // 预加载数据，只有belongsTo类型的关系才能预加载.
-                if ($eager && $type == 'belongsTo' && !isset($this->ids[ $field ])) {
+                // 预加载数据，只有belongsTo和hasOne类型的关系才能预加载.
+                if ($eager && ($type == 'belongsTo' || $type == 'hasOne') && !isset($this->ids[ $field ])) {
                     $this->prepareIds($result, $lk, $field);
                     $datas                      = $query->where([$fk . ' IN' => $this->ids[ $field ]])->toArray(null, $fk);
                     $this->eagerDatas[ $field ] = $datas;
