@@ -410,7 +410,7 @@ abstract class View extends TraitObject {
     /**
      * 查询.
      *
-     * @param string ...$fileds 字段.
+     * @param string|null ...$fileds 字段.
      *
      * @return Query
      */

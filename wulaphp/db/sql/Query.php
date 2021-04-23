@@ -396,9 +396,9 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * 将行数据转换为字符.
      *
-     * @param string   $field
-     * @param string   $sep
-     * @param \Closure $cb
+     * @param string        $field
+     * @param string        $sep
+     * @param \Closure|null $cb
      *
      * @return string
      */
@@ -420,10 +420,10 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     /**
      * 将结果集变为array或map
      *
-     * @param string   $var  值字段.
-     * @param string   $key  键字段.
-     * @param array    $rows 初始数据
-     * @param \Closure $cb   过滤函数（仅当指定$val或$key时有用）
+     * @param string|null   $var  值字段.
+     * @param string|null   $key  键字段.
+     * @param array|null    $rows 初始数据
+     * @param \Closure|null $cb   过滤函数（仅当指定$val或$key时有用）
      *
      * @return array
      */
@@ -432,10 +432,6 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
             $this->select();
         }
         $rows = is_array($rows) ? $rows : [];
-        if (is_array($var)) {
-            $rows = $var;
-            $var  = null;
-        }
         if ($var == null && $key == null) {
             if ($rows) {
                 foreach ($rows as $row) {
@@ -605,7 +601,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
             foreach ($this->values as $value) {
                 [$name, $val, $type, , $rkey] = $value;
                 if ($this->whereData) {
-                    $val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
+                    $val = $this->whereData[ $rkey ] ?? ($this->whereData[ $name ] ?? $val);
                 }
                 if ($type == \PDO::PARAM_STR) {
                     $sql = str_replace($name, $this->dialect->quote($val), $sql);
@@ -756,7 +752,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
                     foreach ($this->values as $value) {
                         [$name, $val, $type, $field, $rkey] = $value;
                         if ($this->whereData) {
-                            $val = isset($this->whereData[ $rkey ]) ? $this->whereData[ $rkey ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
+                            $val = $this->whereData[ $rkey ] ?? ($this->whereData[ $name ] ?? $val);
                         }
                         if (!$this->statement->bindValue($name, $val, $type)) {
                             $this->errorSQL    = $this->sql;
@@ -850,7 +846,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
                     foreach ($values as $value) {
                         [$name, $val, $type, $field] = $value;
                         if ($this->whereData) {
-                            $val = isset($this->whereData[ $field ]) ? $this->whereData[ $field ] : (isset($this->whereData[ $name ]) ? $this->whereData[ $name ] : $val);
+                            $val = $this->whereData[ $field ] ?? ($this->whereData[ $name ] ?? $val);
                         }
                         if (!$statement->bindValue($name, $val, $type)) {
                             $this->countperformed = true;
@@ -951,7 +947,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
      *
      * @return \wulaphp\db\sql\Query
      */
-    protected function emptyQuery() {
+    protected function emptyQuery(): Query {
         $q                 = new Query();
         $q->resultSets     = [];
         $q->resultSet      = [];
