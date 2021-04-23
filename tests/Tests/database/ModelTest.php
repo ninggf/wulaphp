@@ -359,8 +359,9 @@ SQL;
      * @return CateItemTable
      */
     public function testAdvanceQuery($ci) {
-        $gq = $ci->select('cid')->groupBy('cid')->desc('cid')->implode('cid');
-        self::assertEquals('5,4,3,2,1', $gq, $ci->lastError());
+        $query = $ci->select('cid')->groupBy('cid')->desc('cid');
+        $gq    = $query->implode('cid');
+        self::assertEquals('5,4,3,2,1', $gq, $query->getSqlString());
         $ghq = $ci->select('cid')->groupBy('cid')->having('count(*) = 1')->desc('cid')->limit(0, 2)->implode('cid');
         self::assertEquals('5,4', $ghq, $ci->lastError());
 
