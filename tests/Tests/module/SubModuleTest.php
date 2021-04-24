@@ -12,6 +12,7 @@ namespace tests\Tests\module;
 
 use PHPUnit\Framework\TestCase;
 use wulaphp\app\App;
+use wulaphp\util\CurlClient;
 
 /**
  * Class SubModuleTest
@@ -41,5 +42,26 @@ class SubModuleTest extends TestCase {
         $page = @ob_get_clean();
         self::assertNotEmpty($page);
         self::assertEquals('10', $page);
+    }
+
+    public function testSubmRouter() {
+        $curlient = CurlClient::getClient(5);
+
+        $content = $curlient->get('http://127.0.0.1:9090/subm/user/add/2');
+
+        $this->assertEquals('result = 3', $content);
+
+        $content = $curlient->get('http://127.0.0.1:9090/subm/user/add/2/3');
+
+        $this->assertEquals('result = 5', $content);
+
+        $curlient->get('http://127.0.0.1:9090/subm/user/add');
+
+        self::assertEquals('404', $curlient->errorCode);
+
+        $curlient->get('http://127.0.0.1:9090/subm/user/add/abc');
+
+        self::assertEquals('500', $curlient->errorCode);
+        self::assertContains('Argument #1 ($a) must be of type int, string given', $curlient->errorResponse);
     }
 }

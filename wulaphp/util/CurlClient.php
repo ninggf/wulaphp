@@ -31,9 +31,12 @@ class CurlClient {
     private        $timeout;
     private        $referer;
     private        $customData = [];
-
-    public $error     = null;
-    public $errorCode = 0;
+    public         $error      = null;
+    public         $errorCode  = 0;
+    /**
+     * @var bool|string
+     */
+    public $errorResponse = '';
 
     protected function __construct(int $timeout = 30000, array $headers = [], string $referer = '') {
         $this->ch = curl_init();
@@ -371,9 +374,10 @@ class CurlClient {
         } else {
             $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             if ($code != '200') {
-                $this->error     = '[' . $code . ']' . get_status_header_desc($code);
-                $this->errorCode = $code;
-                $rst             = false;
+                $this->error         = '[' . $code . ']' . get_status_header_desc($code);
+                $this->errorCode     = $code;
+                $this->errorResponse = $rst;
+                $rst                 = false;
             }
         }
         if ($rst) {
