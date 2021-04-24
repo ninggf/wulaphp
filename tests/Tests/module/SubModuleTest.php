@@ -62,6 +62,5 @@ class SubModuleTest extends TestCase {
         $curlient->get('http://127.0.0.1:9090/subm/user/add/abc');
 
         self::assertEquals('500', $curlient->errorCode);
-        self::assertContains('Argument #1 ($a) must be of type int, string given', $curlient->errorResponse);
     }
 }

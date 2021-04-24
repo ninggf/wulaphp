@@ -29,7 +29,7 @@ if (!$gzip && defined('GZIP_ENABLED') && GZIP_ENABLED && extension_loaded('zlib'
 @ob_start();
 define('WULA_VERSION', '3.9.4');
 define('WULA_RELEASE', 'RC');
-defined('BUILD_NUMBER') or define('BUILD_NUMBER', '2021001');
+defined('BUILD_NUMBER') or define('BUILD_NUMBER', '2021002');
 defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 if (version_compare('7.1', phpversion(), '>')) {
     !trigger_error(sprintf('Your php version is %s,but wulaphp required PHP 7.1 or higher', phpversion()), E_USER_ERROR) or exit(1);
