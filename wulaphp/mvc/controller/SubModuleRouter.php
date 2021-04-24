@@ -134,7 +134,7 @@ class SubModuleRouter extends Controller {
                             $idx = 0;
                             foreach ($params as $p) {
                                 $name  = $p->getName();
-                                $def   = isset ($pms [ $idx ]) ? $pms [ $idx ] : ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
+                                $def   = $pms [ $idx ] ?? ($p->isDefaultValueAvailable() ? $p->getDefaultValue() : null);
                                 $value = rqst($name, $def, true);
                                 if ($value !== null) {
                                     $args [] = is_array($value) ? array_map(function ($v) {

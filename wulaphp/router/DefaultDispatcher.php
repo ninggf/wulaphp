@@ -138,94 +138,90 @@ class DefaultDispatcher implements IURLDispatcher {
                     }
                     $rm = ucfirst($rqMethod);
                     // 存在index_get,index_post,add_get add_post这新的方法.
-                    $md          = $action . $rm;
-                    $actionFound = false;
+                    $md = $action . $rm;
                     if (method_exists($clz, $md)) {
-                        $action      = $md;
-                        $actionSlag  = $actionSlag . '-' . $rqMethod;
-                        $actionFound = true;
+                        $action     = $md;
+                        $actionSlag = $actionSlag . '-' . $rqMethod;
                     } else if (method_exists($clz, $action)) {
-                        $actionFound = true;
                         if (!$clz instanceof SubModuleRouter) {
                             define('NEED_CHECK_REQ_M', $rqMethod);
                         }
                     } else if (method_exists($clz, 'index' . $rm)) {
-                        $actionFound = true;
-                        array_unshift($pms, $action);
+                        array_unshift($pms, $actionSlag);
                         $action     = 'index' . $rm;
                         $actionSlag = 'index-' . strtolower($rm);
                     } else if (method_exists($clz, 'index')) {
-                        $actionFound = true;
-                        array_unshift($pms, $action);
+                        array_unshift($pms, $actionSlag);
                         $action     = 'index';
                         $actionSlag = 'index';
                     } else {
                         return null;
                     }
 
-                    if ($actionFound) {
-                        $ref        = $clz->reflectionObj;
-                        $method     = $ref->getMethod($action);
-                        $methodSlag = Router::addSlash($method->getName());
-                        if (!$method->isPublic() || $methodSlag != $actionSlag) {
+                    $ref        = $clz->reflectionObj;
+                    $method     = $ref->getMethod($action);
+                    $methodSlag = Router::addSlash($method->getName());
+                    if (!$method->isPublic() || $methodSlag != $actionSlag) {
+                        return null;
+                    }
+                    $params      = $method->getParameters();
+                    $paramsCount = count($params);// 方法参数个数
+                    $argsCount   = count($pms);// 用户通过url传递过来的参数个数
+
+                    if ($paramsCount < $argsCount) {
+                        if ($paramsCount == 0 || ($paramsCount == 1 && !$params[0]->isVariadic())) {
                             return null;
                         }
-                        $params      = $method->getParameters();
-                        $paramsCount = count($params);// 方法参数个数
-                        $argsCount   = count($pms);// 用户通过url传递过来的参数个数
-                        if ($paramsCount < $argsCount) {
-                            if ($paramsCount == 0 || ($paramsCount == 1 && !$params[0]->isVariadic())) {
-                                return null;
-                            }
-                        }
-
-                        $router->urlParams = (array)$pms;
-
-                        $rtn = $clz->beforeRun($action, $method);
-
-                        //beforeRun可以返回view了
-                        if ($rtn instanceof View) {
-                            self::prepareView($rtn, $namespace, $clz, $action);
-
-                            return $rtn;
-                        }
-                        $args    = [];
-                        $aryArgs = false;//使用可变参数了
-                        if ($paramsCount) {
-                            if ($paramsCount == 1 && $params[0]->isVariadic()) {
-                                $args    = $pms;
-                                $aryArgs = true;
-                            } else {
-                                $idx = 0;
-                                foreach ($params as $p) {
-                                    $name    = $p->getName();
-                                    $da      = $p->isDefaultValueAvailable();
-                                    $def     = isset($pms [ $idx ]) ? $pms [ $idx ] : (($da ? $p->getDefaultValue() : null));
-                                    $value   = rqst($name, $def, true);
-                                    $args [] = is_array($value) ? array_map(function ($v) {
-                                        return is_array($v) ? $v : urldecode($v);
-                                    }, $value) : urldecode($value);
-                                    $idx ++;
-                                }
-                            }
-                        }
-
-                        $view = $clz->{$action}(...$args);
-                        if ($view !== null) {
-                            if (is_array($view)) {
-                                $view = new JsonView($view);
-                            } else if (!$view instanceof View) {
-                                if (is_object($view)) {
-                                    return new JsonView($view);
-                                }
-                                $view = new SimpleView($view);
-                            } else if (!$aryArgs) {
-                                self::prepareView($view, $namespace, $clz, $action);
-                            }
-                        }
-
-                        return $clz->afterRun($action, $view, $method);
                     }
+
+                    $router->urlParams = $pms;
+                    $args              = [];
+                    $aryArgs           = false;//使用可变参数了
+                    if ($paramsCount) {
+                        if ($paramsCount == 1 && $params[0]->isVariadic()) {
+                            $args    = $pms;
+                            $aryArgs = true;
+                        } else {
+                            $idx = 0;
+                            foreach ($params as $p) {
+                                $name  = $p->getName();
+                                $da    = $p->isDefaultValueAvailable();
+                                $def   = $pms [ $idx ] ?? (($da ? $p->getDefaultValue() : null));
+                                $value = rqst($name, $def, true);
+                                if ($value === null) {//未指定URL参数。
+                                    return null;
+                                }
+                                $args [] = is_array($value) ? array_map(function ($v) {
+                                    return is_array($v) ? $v : urldecode($v);
+                                }, $value) : urldecode($value);
+                                $idx ++;
+                            }
+                        }
+                    }
+
+                    $rtn = $clz->beforeRun($action, $method);
+
+                    //beforeRun可以返回view了
+                    if ($rtn instanceof View) {
+                        self::prepareView($rtn, $namespace, $clz, $action);
+
+                        return $rtn;
+                    }
+                    $view = $clz->{$action}(...$args);
+                    if ($view !== null) {
+                        if (is_array($view)) {
+                            $view = new JsonView($view);
+                        } else if (!$view instanceof View) {
+                            if (is_object($view)) {
+                                return new JsonView($view);
+                            }
+                            $view = new SimpleView($view);
+                        } else if (!$aryArgs) {
+                            self::prepareView($view, $namespace, $clz, $action);
+                        }
+                    }
+
+                    return $clz->afterRun($action, $view, $method);
                 }
             }
         }

@@ -45,7 +45,7 @@ class SimpleRouteTest extends TestCase {
     public function testTableRoute() {
         @ob_start();
         try {
-            App::run('/testm/mul.html');
+            App::run('/testm/mul.html', ['i' => 20]);
         } catch (\Exception $e) {
             throw $e;
         }
@@ -78,5 +78,15 @@ class SimpleRouteTest extends TestCase {
         $content = $curlient->get('http://127.0.0.1:9090/testm/mul.html?i=3');
 
         self::assertEquals('result is 30', $content);
+    }
+
+    public function testParamsInPath() {
+        $curlient = CurlClient::getClient(5);
+
+        $content = $curlient->get('http://127.0.0.1:9090/m4/sub-x/a');
+        self::assertEquals('sub-x-a', $content);
+
+        $curlient->get('http://127.0.0.1:9090/m4/sub-x');
+        self::assertEquals(404, $curlient->errorCode);
     }
 }

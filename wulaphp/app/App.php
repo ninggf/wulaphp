@@ -651,7 +651,7 @@ class App {
      * @return null|string
      */
     public static function checkUrlPrefix(string $prefix): ?string {
-        return isset(self::$prefix['check'][ $prefix ]) ? self::$prefix['check'][ $prefix ] : null;
+        return self::$prefix['check'][ $prefix ] ?? null;
     }
 
     /**
@@ -1036,7 +1036,7 @@ class App {
             $_SERVER['REQUEST_TIME'] = time();
         }
         if (!isset ($_SERVER ['REQUEST_URI'])) {
-            Response::respond(500, 'Your web server did not provide REQUEST_URI, stop route request.');
+            Response::respond(503, 'Your web server did not provide REQUEST_URI, stop route request.');
         }
 
         if (!self::$app->router) {

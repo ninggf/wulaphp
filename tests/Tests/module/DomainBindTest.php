@@ -16,11 +16,14 @@ use wulaphp\app\App;
 class DomainBindTest extends TestCase {
     public function testDomainBind() {
         $rtn = $this->httpGet('/test/add', 'login.wulaphp.com');
+        self::assertContains('no route for /test/add', $rtn);
+
+        $rtn = $this->httpGet('/test/add/23', 'login.wulaphp.com');
         self::assertNotEmpty($rtn);
-        self::assertEquals('{"i":"","j":"1"}', $rtn);
+        self::assertEquals('{"i":"23","j":"1"}', $rtn);
 
         //不能访问
-        $rtn = $this->httpGet('/test/add', '127.0.0.1');
+        $rtn = $this->httpGet('/test/add/23', '127.0.0.1');
         self::assertNotEmpty($rtn);
         self::assertContains('no route for /test/add', $rtn);
 
