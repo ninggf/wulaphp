@@ -284,8 +284,8 @@ class ServiceCommand extends ArtisanCommand {
                     $this->output($this->cell([
                         [$id, 20],
                         [$ser['type'], 8],
-                        [isset($ser['worker']) ? $ser['worker'] : 1, 8, STR_PAD_BOTH],
-                        [$this->getStatus($ser['status']), 20],
+                        [$ser['worker'] ?? 1, 8, STR_PAD_BOTH],
+                        [$this->getStatus($ser['status'] ?? 'enabled'), 20],
                     ]), false);
                     if ($ser['status'] == 'error') {
                         $this->output(aryget('msg', $ser, aryget('script', $ser, aryget('workerClass', $ser))));
@@ -341,10 +341,10 @@ class ServiceCommand extends ArtisanCommand {
                 $this->output($this->cell([
                     [$id, 20],
                     [$ser['type'], 10],
-                    [isset($ser['worker']) ? $ser['worker'] : 1, 7],
-                    [isset($ser['sleep']) ? $ser['sleep'] : (isset($ser['interval']) ? $ser['interval'] : 1), 6],
+                    [$ser['worker'] ?? 1, 7],
+                    [$ser['sleep'] ?? ($ser['interval'] ?? 1), 6],
                     [$this->getStatus($ser['status'] ? $ser['status'] : 'enabled'), 20],
-                    [isset($ser['script']) ? $ser['script'] : $ser['workerClass'], 44]
+                    [$ser['script'] ?? $ser['workerClass'], 44]
                 ]));
             }
         }
@@ -400,7 +400,6 @@ class ServiceCommand extends ArtisanCommand {
         $config          = App::config('service', true);
         $bind            = $config->get('bind', 'unix:' . TMP_PATH . 'service.sock');
         $binds           = explode(':', $bind);
-        $sockFile        = null;
         if ($binds[0] == 'unix') {
             $sock = @socket_create(AF_UNIX, SOCK_STREAM, 0);
             if (!$sock) {
@@ -414,8 +413,8 @@ class ServiceCommand extends ArtisanCommand {
             @socket_set_timeout($sock, 5);
             $rtn = @socket_connect($sock, $sockFile);
         } else {
-            $addr = isset($binds[0]) ? $binds[0] : '127.0.0.1';
-            $port = isset($binds[1]) ? $binds[1] : '5858';
+            $addr = $binds[0] ?? '127.0.0.1';
+            $port = $binds[1] ?? '5858';
             $sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if (!$sock) {
                 $this->output($this->color->str(socket_strerror(socket_last_error()), 'red'));

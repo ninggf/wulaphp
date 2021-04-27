@@ -101,7 +101,8 @@ class MonitorService extends Service {
      * 运行
      */
     public function run() {
-        if (!$this->config['foreground']) {
+
+        if (!isset($this->config['foreground']) || !$this->config['foreground']) {
             @fclose(STDIN);
             @fclose(STDOUT);
             @fclose(STDERR);
