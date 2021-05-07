@@ -7,6 +7,7 @@ use wulaphp\conf\DatabaseConfiguration;
 use wulaphp\db\dialect\DatabaseDialect;
 use wulaphp\db\sql\DeleteSQL;
 use wulaphp\db\sql\InsertSQL;
+use wulaphp\db\sql\Procedure;
 use wulaphp\db\sql\Query;
 use wulaphp\db\sql\UpdateSQL;
 
@@ -696,6 +697,66 @@ class DatabaseConnection {
      */
     public function inserts(array $datas): InsertSQL {
         return $this->insert($datas, true);
+    }
+
+    /**
+     * 调用存储过程并返回结果数组.
+     *
+     * @param string $procedure
+     * @param mixed  ...$args
+     *
+     * @return array|null
+     */
+    public function call(string $procedure, ...$args): ?array {
+        $proc = new Procedure($this->dialect, $procedure);
+        foreach ($args as $arg) {
+            if (is_bool($arg)) {
+                $proc->in($arg, \PDO::PARAM_BOOL);
+            } else if (is_int($arg)) {
+                $proc->in($arg, \PDO::PARAM_INT);
+            } else {
+                $proc->in($arg);
+            }
+        }
+        $rst = $proc->call($this->error);
+        if ($rst) {
+            $rst->setFetchMode(\PDO::FETCH_ASSOC);
+            $rows = $rst->fetchAll();
+            $rst->closeCursor();
+
+            return $rows;
+        }
+
+        return null;
+    }
+
+    /**
+     * 调用存储过程并返回PDOStatement实例.
+     *
+     * @param string $procedure
+     * @param mixed  ...$args 参数
+     *
+     * @return \PDOStatement|null
+     */
+    public function xcall(string $procedure, ...$args): ?\PDOStatement {
+        $proc = new Procedure($this->dialect, $procedure);
+        foreach ($args as $arg) {
+            if (is_bool($arg)) {
+                $proc->in($arg, \PDO::PARAM_BOOL);
+            } else if (is_int($arg)) {
+                $proc->in($arg, \PDO::PARAM_INT);
+            } else {
+                $proc->in($arg);
+            }
+        }
+        $rst = $proc->call($this->error);
+        if ($rst) {
+            $rst->setFetchMode(\PDO::FETCH_ASSOC);
+
+            return $rst;
+        }
+
+        return null;
     }
 
     /**

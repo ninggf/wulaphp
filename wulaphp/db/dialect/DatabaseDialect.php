@@ -237,6 +237,17 @@ abstract class DatabaseDialect extends \PDO {
     }
 
     /**
+     *
+     * @param string $procedure
+     * @param int    $argsCount
+     *
+     * @return string
+     */
+    public function getProcedureSQL(string $procedure, int $argsCount): string {
+        return 'CALL `' . $procedure . '` (' . implode(',', array_fill(0, $argsCount, '?')) . ')';
+    }
+
+    /**
      * get a select SQL for retreiving data from database.
      *
      * @param array|string $fields
