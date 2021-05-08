@@ -48,12 +48,14 @@ class FtpUploader extends LocaleUploader {
         if ($path) {
             $this->path = untrailingslashit($path) . '/';
         }
-        $this->host    = aryget('host', $params, 'localhost');
-        $this->port    = aryget('port', $params, '25');
-        $this->user    = aryget('user', $params, 'ftp');
-        $this->pwd     = aryget('password', $params, '');
-        $this->timeout = intval(aryget('timeout', $params, 5));
-        $this->passive = boolval(aryget('passive', $params));
+        $this->host         = aryget('host', $params, 'localhost');
+        $this->port         = aryget('port', $params, '25');
+        $this->user         = aryget('user', $params, 'ftp');
+        $this->pwd          = aryget('password', $params, '');
+        $this->timeout      = intval(aryget('timeout', $params, 5));
+        $this->passive      = boolval(aryget('passive', $params));
+        $this->upload_dir   = aryget('dir', $params, App::icfg('upload.dir', 1));
+        $this->upload_group = aryget('group', $params, App::icfg('upload.group', 0));
 
         return true;
     }
@@ -143,7 +145,7 @@ class FtpUploader extends LocaleUploader {
 
     public function getDestDir(?string $path = null): string {
         if (!$path) {
-            $dir = App::icfg('upload.dir', 1);
+            $dir = $this->upload_dir;
             switch ($dir) {
                 case 0:
                     $path = date('/Y/');
@@ -154,7 +156,7 @@ class FtpUploader extends LocaleUploader {
                 default:
                     $path = date('/Y/n/d/');
             }
-            $rand_cnt = App::icfg('upload.group', 0);
+            $rand_cnt = $this->upload_group;
             if ($rand_cnt > 1) {
                 $cnt  = rand(0, $rand_cnt - 1);
                 $path .= $cnt . '/';

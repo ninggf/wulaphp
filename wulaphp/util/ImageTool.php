@@ -253,11 +253,11 @@ class ImageTool {
      *
      * @param string $mark    水印图片
      * @param string $pos     位置
-     * @param bool   $minSize 最小值
+     * @param string $minSize 最小值
      *
      * @return bool
      */
-    public function watermark($mark, $pos, $minSize = false) {
+    public function watermark(string $mark, string $pos, string $minSize = '', string $transxy = '') {
         if ($this->file && is_file($mark)) {
             $image     = new \image ($this->file);
             $iw        = intval($image->imagesx());
@@ -282,7 +282,7 @@ class ImageTool {
                         $pos = 'br';
                     }
                 }
-                $trans = App::cfg('transxy');
+                $trans = $transxy ?: App::cfg('upload.transxy');
                 if (!preg_match('/^[1-9]\d*x[1-9]\d*$/', $trans)) {
                     $trans = '0x0';
                 }
@@ -365,7 +365,7 @@ class ImageTool {
         $clients  = [];
         foreach ($imgUrls as $imgUrl) {
             if (is_array($imgUrl)) {
-                list ($imgUrl, $mosaic) = $imgUrl;
+                [$imgUrl, $mosaic] = $imgUrl;
             } else {
                 $mosaic = null;
             }
@@ -463,7 +463,7 @@ class ImageDownloadCallback implements CurlMultiExeCallback {
         }
         if ($size !== false && $size > 0) {
             if (isset ($this->mosaics [ $imgUrl ]) && $this->mosaics [ $imgUrl ]) {
-                list ($pos, $size) = $this->mosaics [ $imgUrl ];
+                [$pos, $size] = $this->mosaics [ $imgUrl ];
                 $img = new ImageTool ($tmpName);
                 $img->mosaic($pos, $size);
             }
@@ -477,7 +477,7 @@ class ImageDownloadCallback implements CurlMultiExeCallback {
                 }
             }
             if ($this->watermark) {
-                list ($wimg, $pos, $size) = $this->watermark;
+                [$wimg, $pos, $size] = $this->watermark;
                 $img = new ImageTool ($tmpName);
                 $img->watermark($wimg, $pos, $size);
             }

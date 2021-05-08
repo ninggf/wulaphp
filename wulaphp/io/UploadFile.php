@@ -9,6 +9,7 @@
  */
 
 namespace wulaphp\io;
+
 /**
  * 上传文件.
  * @property-read int                   $maxSize
@@ -16,6 +17,8 @@ namespace wulaphp\io;
  * @property-read string                $error
  * @property-read string                $dest;
  * @property-read string                $watermark
+ * @property-read string                $watermarkPos
+ * @property-read string                $watermarkSize
  * @property-read \Closure              $metaDataExtractor
  * @property-read \wulaphp\io\IUploader $uploader
  * @package wulaphp\io
@@ -29,6 +32,8 @@ class UploadFile {
     private $dest              = null;
     private $uploader          = null;
     private $watermark         = null;
+    private $watermarkPos      = 'br';
+    private $watermarkSize     = '0x0';
 
     /**
      * UploadFile constructor.
@@ -52,9 +57,9 @@ class UploadFile {
     /**
      * 上传出错信息.
      *
-     * @return string
+     * @return string|null
      */
-    public function last_error() {
+    public function last_error(): ?string {
         return $this->error;
     }
 
@@ -67,7 +72,7 @@ class UploadFile {
      *
      * @return bool|string 保存成功返回文件路径,失败返回false。
      */
-    public function save($destdir, $fileName = null, $random = false) {
+    public function save(string $destdir, ?string $fileName = null, bool $random = false) {
         if (!$this->file) {
             $this->error = '无上传的文件要上传';
 
@@ -115,11 +120,7 @@ class UploadFile {
             }
             $name   = thefilename($name);
             $filext = strtolower(strrchr($name, '.'));
-            $fName  = str_replace(['/', '+', '='], [
-                '-',
-                '_',
-                ''
-            ], base64_encode(md5($name, true)));
+            $fName  = str_replace(['/', '+', '='], ['-', '_', '.'], trim(base64_encode(md5($name, true)), '='));
 
             if ($this->exts && !in_array(ltrim($filext, '.'), $this->exts)) {
                 $this->error = '不支持的扩展名';
@@ -127,7 +128,7 @@ class UploadFile {
                 return false;
             }
             if ($random) {
-                $fName = rand_str(5, "a-z,0-9") . $filext;
+                $fName = rand_str(10, "a-z,0-9") . $filext;
             } else if (!$fileName) {
                 $fName = thefilename($fileName) . $filext;
             }
@@ -156,14 +157,14 @@ class UploadFile {
      *
      * @param int $size
      */
-    public function setMaxSize($size) {
+    public function setMaxSize(int $size) {
         $this->maxSize = abs(intval($size));
     }
 
     /**
      * 设置允许的扩展名.
      *
-     * @param array $exts
+     * @param array|string $exts
      */
     public function setExts($exts) {
         $this->exts = (array)$exts;
@@ -174,7 +175,7 @@ class UploadFile {
      *
      * @param string $dest
      */
-    public function setDest($dest) {
+    public function setDest(string $dest) {
         $this->dest = $dest;
     }
 
@@ -183,7 +184,7 @@ class UploadFile {
      *
      * @param \wulaphp\io\IUploader $uploader
      */
-    public function setUploader($uploader) {
+    public function setUploader(IUploader $uploader) {
         $this->uploader = $uploader;
     }
 
@@ -199,14 +200,22 @@ class UploadFile {
     /**
      * 设置水印.
      *
-     * @param string $watermark
+     * @param string      $watermark
+     * @param string|null $pos
+     * @param string|null $minSize
      */
-    public function setWatermark($watermark) {
+    public function setWatermark(?string $watermark, ?string $pos = null, ?string $minSize = null) {
         $this->watermark = $watermark;
+        if ($pos) {
+            $this->watermarkPos = $pos;
+        }
+        if ($minSize) {
+            $this->watermarkSize = $minSize;
+        }
     }
 
-    public function __get($name) {
-        if (isset($this->{$name})) {
+    public function __get(string $name) {
+        if (property_exists($this, $name)) {
             return $this->{$name};
         }
 

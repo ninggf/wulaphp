@@ -22,6 +22,9 @@ class LocaleUploader implements IUploader {
     protected $upload_root_path = '';
     protected $filename;
     protected $config;
+    protected $upload_dir       = '';
+    protected $upload_group     = 0;
+    protected $upload_path      = '';
 
     public function getName(): string {
         return __('Local File System');
@@ -35,7 +38,10 @@ class LocaleUploader implements IUploader {
         } else {
             $this->upload_root_path = $path;
         }
-        $this->filename = aryget('filename', $config);
+        $this->filename     = aryget('filename', $config);
+        $this->upload_dir   = aryget('dir', $config, App::icfg('upload.dir', 1));
+        $this->upload_group = aryget('group', $config, App::icfg('upload.group', 0));
+        $this->upload_path  = aryget('dest', $config, App::cfg('upload.path', 'files'));
 
         return true;
     }
@@ -117,7 +123,7 @@ class LocaleUploader implements IUploader {
      */
     public function getDestDir(?string $path = null): string {
         if (!$path) {
-            $dir = App::icfg('upload.dir', 1);
+            $dir = $this->upload_dir;
             switch ($dir) {
                 case 0:
                     $path = date('/Y/');
@@ -128,13 +134,13 @@ class LocaleUploader implements IUploader {
                 default:
                     $path = date('/Y/n/d/');
             }
-            $rand_cnt = App::icfg('upload.group', 0);
+            $rand_cnt = $this->upload_group;
             if ($rand_cnt > 1) {
                 $cnt  = rand(0, $rand_cnt - 1);
                 $path .= $cnt . '/';
             }
         }
-        $uploadPath = App::cfg('upload.path', 'files');
+        $uploadPath = $this->upload_path;
         if ($path[0] == '@') {
             return substr($path, 1);
         } else if ($path[0] == '~') {

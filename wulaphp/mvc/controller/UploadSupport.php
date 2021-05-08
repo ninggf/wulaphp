@@ -33,14 +33,18 @@ trait UploadSupport {
      * @return array 上传结果
      */
     protected final function upload($dest = null, $maxSize = 10000000, $uploader = null, \Closure $fileMetaDataExtractor = null, $allowed = []): array {
-        $rtn   = ['jsonrpc' => '2.0', 'done' => 0];
-        $water = null;
+        $rtn       = ['jsonrpc' => '2.0', 'done' => 0];
+        $water     = null;
+        $waterPos  = App::cfg('upload.watermark_pos', 'br');
+        $waterSize = App::cfg('upload.watermark_min_size');
         if ($dest instanceof UploadFile) {
             $maxSize               = $dest->maxSize;
             $fileMetaDataExtractor = $dest->metaDataExtractor;
             $allowed               = $dest->exts;
             $uploader              = $dest->uploader;
             $water                 = $dest->watermark;
+            $waterPos              = $dest->watermarkPos ?? $waterPos;
+            $waterSize             = $dest->watermarkSize ?? $waterSize;
             $dest                  = $dest->dest;
         } else if ($dest != null && !is_string($dest)) {
             $rtn['error'] = ['code' => 421, 'message' => '无效的存储目录'];
@@ -49,7 +53,7 @@ trait UploadSupport {
         }
 
         $chunk     = irqst('chunk');
-        $chunks    = irqst('chunks');
+        $chunks    = irqst('chunks', 1);//默认就是1个哈。
         $name      = rqst('name');
         $hasWater  = !rqset('nowater');
         $targetDir = TMP_PATH . "plupload";
@@ -62,7 +66,7 @@ trait UploadSupport {
         $maxFileAge       = 1080000;
         @set_time_limit(0);
         // Clean the fileName for security reasons
-        if (empty ($name)) {
+        if (empty ($name) && isset($_FILES['file'])) {
             $name = $_FILES ['file'] ['name'] ?? false;
         }
         if (empty ($name)) {
@@ -73,11 +77,10 @@ trait UploadSupport {
         $oname    = $name;
         $name     = thefilename($name);
         $filext   = strtolower(strrchr($name, '.'));
-        $fileName = str_replace(['/', '+', '='], [
-                '-',
-                '_',
-                ''
-            ], base64_encode(md5($name . rqst('fid', $chunks), true))) . $filext;
+        $sid      = property_exists($this, 'sessionID') ? $this->sessionID : '';
+        $fn       = md5($name . $sid . rqst('fid', $chunks), true);# 如果有可能上传重名文件，一定要给个随机的fid
+        $fileName = str_replace(['/', '+', '='], ['-', '_', '.'], trim(base64_encode($fn), '='));
+        $fileName .= $filext;
 
         if ($allowed) {
             if (!in_array(ltrim($filext, '.'), $allowed)) {
@@ -124,7 +127,7 @@ trait UploadSupport {
         }
         // Handle non multipart uploads older WebKit versions didn't support multipart in HTML5
         if (strpos($contentType, "multipart") !== false) {
-            if (!empty ($_FILES ['file'] ['error'])) {
+            if (isset($_FILES ['file']) && !empty ($_FILES ['file'] ['error'])) {
                 switch ($_FILES ['file'] ['error']) {
                     case '1' :
                         $error = '超过php.ini允许的大小。';
@@ -182,14 +185,16 @@ trait UploadSupport {
                         @fclose($in);
                         @unlink($_FILES ['file'] ['tmp_name']);
                     } else {
+                        @unlink($_FILES ['file'] ['tmp_name']);
                         $rtn['error'] = ['code' => 422, 'message' => '系统错误，无法保存临时文件[chunk]'];
                     }
                 }
             } else {
+                @unlink($_FILES ['file'] ['tmp_name']);
                 $rtn['error'] = ['code' => 422, 'message' => '系统错误，尝试打开上传的文件错误'];
             }
         } else {//通过php://input流上传
-            $out = @fopen("{$filePath}.part", $chunk == 0 ? "wb" : "ab");
+            $out = @fopen("{$filePath}.part", $chunk == 0 ? 'wb' : 'ab');
             if ($out) {
                 // Read binary input stream and append it to temp file
                 $in = @fopen("php://input", "rb");
@@ -232,7 +237,7 @@ trait UploadSupport {
                     //添加水印
                     if ($hasWater && ($water || ($water = $this->watermark()))) {
                         $img = new ImageTool($filePath);
-                        $img->watermark($water, App::cfg('upload.watermark_pos', 'br'), App::cfg('upload.watermark_min_size'));
+                        $img->watermark($water, $waterPos, $waterSize);
                         unset($img);
                     }
                 }

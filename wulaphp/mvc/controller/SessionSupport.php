@@ -9,9 +9,9 @@ use wulaphp\io\Session;
  * 为控制器提供会话支持.
  *
  * @package wulaphp\mvc\controller
- * @property string $sessionID session id
  */
 trait SessionSupport {
+    protected $sessionID = null;
 
     protected final function onInitSessionSupport() {
         $expire          = App::icfg('expire', 0);
