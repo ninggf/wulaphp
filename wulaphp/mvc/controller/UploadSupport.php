@@ -11,6 +11,8 @@
 namespace wulaphp\mvc\controller;
 
 use wulaphp\app\App;
+use wulaphp\io\IUploader;
+use wulaphp\io\Response;
 use wulaphp\io\Uploader;
 use wulaphp\io\UploadFile;
 use wulaphp\util\ImageTool;
@@ -26,18 +28,20 @@ trait UploadSupport {
      *
      * @param string|UploadFile|null $dest                  目标目录或文件定义
      * @param int                    $maxSize               最大上传体积
-     * @param null                   $uploader              使用指定文件上传器.
+     * @param IUploader|null         $uploader              使用指定文件上传器.
      * @param \Closure|null          $fileMetaDataExtractor 上传之前的解析文件数据的回调function($path, $size, $width, $height).
      * @param array                  $allowed               允许的域名,默认使用allowd方法检测.
      *
      * @return array 上传结果
      */
-    protected final function upload($dest = null, $maxSize = 10000000, $uploader = null, \Closure $fileMetaDataExtractor = null, $allowed = []): array {
+    protected final function upload($dest = null, int $maxSize = 10000000, ?IUploader $uploader = null, ?\Closure $fileMetaDataExtractor = null, array $allowed = []): array {
         $rtn       = ['jsonrpc' => '2.0', 'done' => 0];
         $water     = null;
         $waterPos  = App::cfg('upload.watermark_pos', 'br');
         $waterSize = App::cfg('upload.watermark_min_size');
+        $oFile     = null;
         if ($dest instanceof UploadFile) {
+            $oFile                 = $dest->file;
             $maxSize               = $dest->maxSize;
             $fileMetaDataExtractor = $dest->metaDataExtractor;
             $allowed               = $dest->exts;
@@ -193,6 +197,11 @@ trait UploadSupport {
                 @unlink($_FILES ['file'] ['tmp_name']);
                 $rtn['error'] = ['code' => 422, 'message' => '系统错误，尝试打开上传的文件错误'];
             }
+        } else if ($oFile && is_file($oFile)) {
+            if (!@rename($oFile, "{$filePath}.part")) {
+                $rtn['error'] = ['code' => 422, 'message' => '系统错误，无法保存临时文件'];
+                @unlink($oFile);
+            }
         } else {//通过php://input流上传
             $out = @fopen("{$filePath}.part", $chunk == 0 ? 'wb' : 'ab');
             if ($out) {
@@ -319,5 +328,63 @@ trait UploadSupport {
      */
     protected function watermark(): ?string {
         return null;
+    }
+
+    /**
+     *
+     * @param string      $app
+     * @param string|null $url
+     *
+     * @return \wulaphp\io\UploadFile
+     */
+    protected function prepareFile(string $app, ?string &$url): UploadFile {
+        $uploaderDef = App::acfg('uploader');
+        $apps        = array_filter($uploaderDef, function ($v) {
+            return $v{0} != '#';
+        }, ARRAY_FILTER_USE_KEY);
+
+        if (!$apps) {
+            Response::respond(503, 'missing uploader configuration');
+        }
+
+        if (!isset($apps[ $app ])) {
+            Response::respond(404);
+        }
+        # 应用定义
+        $appDef = $apps[ $app ];
+        $ref    = $appDef['ref'] ?? null;
+        if (!$ref) {
+            Response::respond(503, 'missing ref of ' . $app);
+        }
+        if (!isset($uploaderDef[ $ref ])) {
+            Response::respond(503, 'missing uploader ' . $ref);
+        }
+
+        # 上传器配置
+        $uploaderCnf = array_merge($uploaderDef[ $ref ], $appDef);
+        $uploaderClz = $uploaderCnf['uploader'] ?? '';
+        if (!$uploaderClz || !($uploaderCls = new $uploaderClz()) instanceof IUploader) {
+            Response::respond(503, $uploaderClz . ' is not an implementation of ' . IUploader::class);
+        }
+        /**@var \wulaphp\io\IUploader $uploaderCls */
+        if (!$uploaderCls->setup($uploaderCnf['setup'] ?? [])) {
+            Response::respond(500, $uploaderCls->get_last_error());
+        }
+        $watermark = array_pad((array)($uploaderCnf['watermark'] ?? []), 3, null);
+        $url       = $uploaderCnf['url'] ?? App::base('');
+        $allowed   = (array)($uploaderCnf['allowed'] ?? []);
+        $maxSize   = intval($uploaderCnf['maxSize'] ?? 10000000);
+
+        $file = new UploadFile('', $allowed, $maxSize);
+        $file->setWatermark($watermark[0], $watermark[1], $watermark[2]);
+        $file->setUploader($uploaderCls);
+        if (isset($uploaderCnf['extractor']) && $uploaderCnf['extractor'] instanceof \Closure) {
+            $file->setMetaDataExtractor($uploaderCnf['extractor']);
+        }
+        if (isset($appDef['-watermark'])) {
+            $file->setWatermark(null);
+        }
+
+        return $file;
     }
 }

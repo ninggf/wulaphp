@@ -12,6 +12,7 @@ namespace wulaphp\io;
 
 /**
  * 上传文件.
+ * @property-read mixed                 $file
  * @property-read int                   $maxSize
  * @property-read array                 $exts
  * @property-read string                $error
@@ -42,7 +43,7 @@ class UploadFile {
      * @param array        $ext  扩展名列表.
      * @param int          $max  最大上传尺寸.
      */
-    public function __construct($name = '', $ext = [], $max = 0) {
+    public function __construct($name = '', array $ext = [], int $max = 0) {
         if (is_array($name)) {
             $this->file = $name;
         } else if (isset($_FILES[ $name ])) {
@@ -78,7 +79,17 @@ class UploadFile {
 
             return false;
         }
-        if (isset ($this->file ['error']) && $this->file['error']) {
+
+        if (is_string($this->file) && is_file($this->file)) {
+            $fName    = basename($this->file);
+            $fName    = unique_filename($destdir, $fName);
+            $destfile = trailingslashit($destdir) . $fName;
+            if (@rename($this->file, $destfile)) {
+                return $destfile;
+            }
+
+            return false;
+        } else if (isset ($this->file ['error']) && $this->file['error']) {
             switch ($this->file ['error']) {
                 case '1' :
                     $error = '超过php.ini允许的大小。';
@@ -150,6 +161,15 @@ class UploadFile {
         $this->error = '非法的上传文件';
 
         return false;
+    }
+
+    /**
+     * 设置文件.
+     *
+     * @param string $file
+     */
+    public function setFile(string $file) {
+        $this->file = $file;
     }
 
     /**
