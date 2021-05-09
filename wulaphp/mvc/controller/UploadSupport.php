@@ -340,7 +340,7 @@ trait UploadSupport {
     protected function prepareFile(string $app, ?string &$url): UploadFile {
         $uploaderDef = App::acfg('uploader');
         $apps        = array_filter($uploaderDef, function ($v) {
-            return $v{0} != '#';
+            return $v[0] != '#';
         }, ARRAY_FILTER_USE_KEY);
 
         if (!$apps) {
