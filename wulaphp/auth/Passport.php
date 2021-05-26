@@ -53,8 +53,11 @@ class Passport implements \ArrayAccess {
                     $passport = @unserialize($passport);
                 }
             }
-            if (!$passport) {
-                $passport       = apply_filter('passport\new' . ucfirst($type) . 'Passport', null);
+            if (!$passport instanceof Passport) {
+                $passport = apply_filter('passport\new' . ucfirst($type) . 'Passport', null);
+                if (!$passport instanceof Passport) {
+                    $passport = new Passport();
+                }
                 $passport->type = $type;
             }
             self::$INSTANCES[ $type ] = $passport ?: new Passport();
