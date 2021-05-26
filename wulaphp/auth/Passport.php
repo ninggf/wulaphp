@@ -32,7 +32,7 @@ class Passport implements \ArrayAccess {
      *
      * @param int $uid
      */
-    public function __construct($uid = 0) {
+    public function __construct(int $uid = 0) {
         $this->uid = $uid;
     }
 
@@ -45,19 +45,19 @@ class Passport implements \ArrayAccess {
      */
     public final static function get(string $type = 'default'): Passport {
         if (!isset(self::$INSTANCES[ $type ])) {
-            $defaultPassport       = apply_filter('passport\new' . ucfirst($type) . 'Passport', new Passport());
-            $defaultPassport->type = $type;
-            $passport              = sess_get(self::SESSION_NAME . '_' . $type);
+            $passport = sess_get(self::SESSION_NAME . '_' . $type);
             if ($passport) {
                 if (extension_loaded('igbinary') && ini_get('session.save_handler') == 'redis') {
-                    $pp = @igbinary_unserialize($passport);
+                    $passport = @igbinary_unserialize($passport);
                 } else {
-                    $pp = @unserialize($passport);
+                    $passport = @unserialize($passport);
                 }
-                self::$INSTANCES[ $type ] = $pp ? $pp : $defaultPassport;
-            } else {
-                self::$INSTANCES[ $type ] = $defaultPassport;
             }
+            if (!$passport) {
+                $passport       = apply_filter('passport\new' . ucfirst($type) . 'Passport', null);
+                $passport->type = $type;
+            }
+            self::$INSTANCES[ $type ] = $passport ?: new Passport();
         }
         if (!self::$currentPassportType) {
             self::$currentPassportType = $type;
@@ -82,10 +82,12 @@ class Passport implements \ArrayAccess {
     /**
      * 第一次（其实一次会话的通行证类型是固定的）获取的通行证类型.
      *
+     * @param string $type
+     *
      * @return string
      */
     public static function currentType(string $type = 'default'): string {
-        return self::$currentPassportType ? self::$currentPassportType : $type;
+        return self::$currentPassportType ?: $type;
     }
 
     /**
@@ -149,13 +151,13 @@ class Passport implements \ArrayAccess {
             $_SESSION[ self::SESSION_NAME . '_' . $this->type ] = $s;
         }
 
-        return $s ? true : false;
+        return (bool)$s;
     }
 
     /**
      * 从SESSION中注销.
      */
-    public final function logout() {
+    public function logout() {
         $this->isLogin = false;
         $this->uid     = 0;
         try {
@@ -175,7 +177,7 @@ class Passport implements \ArrayAccess {
      * @return bool
      * @throws \Exception
      */
-    public final function login($data = null): bool {
+    public function login($data = null): bool {
         $this->isLogin = $this->doAuth($data);
         if ($this->isLogin) {
             fire('passport\on' . ucfirst($this->type) . 'PassportLogin', $this);
@@ -193,7 +195,7 @@ class Passport implements \ArrayAccess {
      *
      * @return bool
      */
-    public final function cando(string $opRes, ?array $extra = null): bool {
+    public function cando(string $opRes, ?array $extra = null): bool {
         $resid = explode(':', $opRes);
         $op    = $resid[0];
         if (!isset($resid[1])) {
