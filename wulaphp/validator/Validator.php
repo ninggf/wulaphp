@@ -104,7 +104,7 @@ trait Validator {
                                     $rule = [$an . $r[0], null];
                                 }
                             } else {
-                                $rule = [$an, $r[0]];
+                                $rule = [$an, $r[1]];
                             }
                         }
                         $groups = $ann->getExtra($an);
@@ -269,27 +269,38 @@ trait Validator {
      * @return mixed
      */
     private function validateField(string $field, array $data, array $rules, ?string $group = null) {
+        $validated = [];
         foreach ($rules as $rule) {
             [$m, $ops, $msg] = $rule;
             $ms = explode('@', $m);
             if ($group) {
                 if (isset($ms[1])) {
-                    if ($ms[1] == $group) {
+                    if ($ms[1][0] == '!' && substr($ms[1], 1) != $group) {
+                        $m = $ms[0];
+                    } else if ($ms[1] == $group) {
                         $m = $ms[0];
                     } else {
                         continue;
                     }
                 }
             } else if (isset($ms[1])) {
-                continue;
+                if ($ms[1][0] == '!') {
+                    $m = $ms[0];
+                } else {
+                    continue;
+                }
             }
             $valid_m = 'v_' . $m;
+            if (isset($validated[ $valid_m ])) {
+                continue;
+            }
+            $validated[ $valid_m ] = 1;
             if (method_exists($this, $valid_m)) {
                 if ($msg) {
-                    if (preg_match('#^\{.+\}$#', $msg)) {
+                    if (preg_match('#^{.+}$#', $msg)) {
                         $msg = _tt(substr($msg, 1, - 1));
                     }
-                    $msg = preg_replace('#\{\d+?\}#', '%s', $msg);
+                    $msg = preg_replace('#{\d+?}#', '%s', $msg);
                 }
                 $valid = $this->$valid_m ($field, $ops, $data, $msg);
             } else {
@@ -312,9 +323,12 @@ trait Validator {
      */
     private function parseRule(string $rule): array {
         $parsed = [false];
-        if (preg_match('#^([a-z][a-z\d_]+)\s*\((.+)\)\s*$#i', $rule, $ms)) {
+        if (preg_match('#^([a-z][a-z\d_]+)\s*\((.+)\)\s*(@(.+))?$#i', $rule, $ms)) {
             $method = trim($ms[1]);
-            $ops    = trim($ms[2]);
+            if (isset($ms[3])) {
+                $method .= $ms[3];
+            }
+            $ops = trim($ms[2]);
         } else {
             $method = trim($rule);
             $ops    = '';
@@ -605,7 +619,7 @@ trait Validator {
             return true;
         }
         $value = $data[ $field ];
-        $rst   = preg_match('/^1[34578]\d{9}$/', $value);
+        $rst   = preg_match('/^1[3456789]\d{9}$/', $value);
 
         return $rst ? true : (empty ($message) ? _t('phone@validator') : $message);
     }
@@ -648,7 +662,7 @@ trait Validator {
         if (function_exists('filter_var')) {
             $rst = filter_var($value, FILTER_VALIDATE_IP, $exp == '6' ? FILTER_FLAG_IPV6 : FILTER_FLAG_IPV4);
         } else {
-            $rst = ip2long($value) === false ? false : true;
+            $rst = !(ip2long($value) === false);
         }
 
         return $rst ? true : (empty ($message) ? _t('IP@validator') : $message);
@@ -769,6 +783,15 @@ trait Validator {
         }
 
         return true;
+    }
+
+    protected function v_empty($field, $exp, $data, $message) {
+        $rst = isset($data[ $field ]) && empty($data[ $field ]);
+        if ($rst) {
+            return true;
+        }
+
+        return $message ? sprintf($message, $field) : _t('%s must be empty@validator', $field);
     }
 
     protected function v_notNull($field, $exp, $data, $message) {
