@@ -87,7 +87,7 @@ class PassportTest extends TestCase {
 
     public static function setUpBeforeClass() {
         bind('passport\newVipPassport', function ($p) {
-            if ($p instanceof Passport) {
+            if (!$p instanceof TestPassport) {
                 return new TestPassport();
             }
 

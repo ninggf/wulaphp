@@ -9,14 +9,13 @@ use wulaphp\io\Session;
  * 为控制器提供会话支持.
  *
  * @package wulaphp\mvc\controller
+ * @property-read string|null $sessionID
  */
 trait SessionSupport {
-    protected $sessionID = null;
-
     protected final function onInitSessionSupport() {
         $expire          = App::icfg('expire', 0);
         $this->_session  = new Session ($expire);
-        $this->sessionID = $this->_session->start($this->sessionID);
+        $this->sessionID = $this->_session->start(property_exists($this, 'sessionID') ? $this->sessionID : null);
     }
 
     /**
@@ -27,14 +26,20 @@ trait SessionSupport {
     }
 
     /**
-     * 销毁session。
+     * 销毁 session
+     * @deprecated use destroySession
      */
     protected final function destorySession() {
         $this->_session->destory();
     }
-
     /**
-     * 关闭session。
+     * 销毁 session
+     */
+    protected final function destroySession() {
+        $this->_session->destory();
+    }
+    /**
+     * 关闭 session
      */
     protected final function closeSession() {
         $this->_session->close();
