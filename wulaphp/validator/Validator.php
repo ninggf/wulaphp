@@ -307,6 +307,10 @@ trait Validator {
                 return _t('notsupportmethod@validator', $field, $m);
             }
             if ($valid !== true) {
+                if (preg_match('/%s/', $valid) && isset($data[ $field ])) {
+                    $valid = str_replace('%s', $data[ $field ], $valid);
+                }
+
                 return $valid;
             }
         }
