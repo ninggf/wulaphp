@@ -467,13 +467,9 @@ function print_invalid_msg(\wulaphp\validator\ValidateException $exception) {
     @ob_start();
     http_response_code(422);
     @header('Content-type: ' . RESPONSE_ACCEPT);
-    $message = [];
-    $errors  = $exception->getErrors();
-    foreach ($errors as $field => $error) {
-        $message[] = '"' . $field . '"' . $error;
-    }
+    $errors          = $exception->getErrors();
     $data['errors']  = $errors;
-    $data['message'] = implode("\n", $message);
+    $data['message'] = implode("\n", array_values($errors));
     $data['code']    = 422;
     echo json_encode($data);
     @ob_end_flush();
