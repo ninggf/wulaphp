@@ -22,13 +22,12 @@ class Procedure {
     }
 
     public function call(?string &$error = null): ?\PDOStatement {
-        $sql    = $this->dialect->getProcedureSQL($this->procedure, count($this->args));
-        $result = 0;
+        $sql = $this->dialect->getProcedureSQL($this->procedure, count($this->args));
         try {
             $stmt = $this->dialect->prepare($sql);
-            foreach ($this->args as $i => &$arg) {
+            foreach ($this->args as $i => $arg) {
                 [$value, $type] = $arg;
-                $stmt->bindParam($i + 1, $value, $type);
+                $stmt->bindValue($i + 1, $value, $type);
             }
 
             $rst = $stmt->execute();
