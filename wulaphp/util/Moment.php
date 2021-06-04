@@ -143,27 +143,24 @@ class Moment {
     /**
      * 此刻所在月的第一天
      *
-     * @param bool $withTime
-     *
      * @return \wulaphp\util\Moment
      */
     public function firstDayOfMonth(): Moment {
         $str = date('Y-m-01', $this->timestamp);
 
-        return new self(strtotime($str));
+        return new self(strtotime($str), $this->timezone);
     }
 
     /**
      * 此刻所在月的最后一天.
      *
-     * @param bool $withTime
      *
      * @return \wulaphp\util\Moment
      */
     public function lastDayOfMonth(): Moment {
         $str = date('Y-m-t', $this->timestamp);
 
-        return new self(strtotime($str));
+        return new self(strtotime($str), $this->timezone);
     }
 
     /**
@@ -174,7 +171,7 @@ class Moment {
         $dayOfWeek = $this->dayOfWeek;
         $delta     = ($dayOfWeek - 1) * 86400;
 
-        return new self($this->timestamp - $delta);
+        return new self($this->timestamp - $delta, $this->timezone);
     }
 
     /**
@@ -186,7 +183,57 @@ class Moment {
         $dayOfWeek = $this->dayOfWeek;
         $delta     = (7 - $dayOfWeek) * 86400;
 
-        return new self($this->timestamp + $delta);
+        return new self($this->timestamp + $delta, $this->timezone);
+    }
+
+    /**
+     * 此刻所在季度的第一天
+     *
+     * @return \wulaphp\util\Moment
+     */
+    public function firstDayOfQuarter(): Moment {
+        $month = $this->month1;
+        switch ($month) {
+            case 1:
+            case 2:
+            case 3:
+                return Moment::parse(date('Y-01-01', $this->timestamp), $this->timezone);
+            case 4:
+            case 5:
+            case 6:
+                return Moment::parse(date('Y-04-01', $this->timestamp), $this->timezone);
+            case 7:
+            case 8:
+            case 9:
+                return Moment::parse(date('Y-07-01', $this->timestamp), $this->timezone);
+            default:
+                return Moment::parse(date('Y-10-01', $this->timestamp), $this->timezone);
+        }
+    }
+
+    /**
+     * 此刻所在季度的最后一天
+     *
+     * @return \wulaphp\util\Moment
+     */
+    public function lastDayOfQuarter(): Moment {
+        $month = $this->month1;
+        switch ($month) {
+            case 1:
+            case 2:
+            case 3:
+                return Moment::parse(date('Y-03-31', $this->timestamp), $this->timezone);
+            case 4:
+            case 5:
+            case 6:
+                return Moment::parse(date('Y-06-30', $this->timestamp), $this->timezone);
+            case 7:
+            case 8:
+            case 9:
+                return Moment::parse(date('Y-09-30', $this->timestamp), $this->timezone);
+            default:
+                return Moment::parse(date('Y-12-31', $this->timestamp), $this->timezone);
+        }
     }
 
     /**
@@ -197,7 +244,7 @@ class Moment {
     public function firstDayOfYear(): Moment {
         $str = date('Y-01-01', $this->timestamp);
 
-        return new self(strtotime($str));
+        return new self(strtotime($str), $this->timezone);
     }
 
     /**
@@ -208,7 +255,7 @@ class Moment {
     public function lastDayOfYear(): Moment {
         $str = date('Y-12-31', $this->timestamp);
 
-        return new self(strtotime($str));
+        return new self(strtotime($str), $this->timezone);
     }
 
     /**
@@ -393,7 +440,7 @@ class Moment {
             'second' => 0
         ];
         $size        = abs($size);
-        
+
         if ($size == 0) {
             return $delta;
         } else if ($size < 60) {
