@@ -20,10 +20,10 @@ namespace wulaphp\db;
  */
 trait MetaTable {
     protected final function onInitMetaTable() {
-        if (!isset($this->metaIdField) || !$this->metaIdField) {
+        if (!property_exists($this, 'metaIdField') || !$this->metaIdField) {
             $this->metaIdField = strtolower(preg_replace('/_meta$/', '', $this->originTable)) . '_id';
         }
-        if (!isset($this->metaNameField) || !$this->metaNameField) {
+        if (!property_exists($this, 'metaNameField') || !$this->metaNameField) {
             $this->metaNameField = 'name';
         }
     }

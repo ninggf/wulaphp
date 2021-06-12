@@ -663,7 +663,7 @@ class Query extends QueryBuilder implements \Countable, \ArrayAccess, \Iterator 
     }
 
     /**
-     * @return \wulaphp\db\sql\Query|mixed
+     * @return \wulaphp\db\sql\Query
      * @see \Iterator::current()
      */
     public function current() {

@@ -23,6 +23,9 @@ use wulaphp\util\TraitObject;
  * @method static bool sexist($con, $id = null)
  * @method static Query sselect(...$fields)
  * @method static ILock slock($con)
+ * @property-read string $alias
+ * @property-read string $originTable
+ * @property-read string $primaryKey
  */
 abstract class View extends TraitObject {
     /**@var \wulaphp\db\View[] */
@@ -114,6 +117,24 @@ abstract class View extends TraitObject {
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * 获取内部变量.
+     *
+     * @param string $name
+     *
+     * @return string|null
+     * @author Leo Ning <windywany@gmail.com>
+     * @date   2021-06-12 11:42:50
+     * @since  1.0.0
+     */
+    public function __get(string $name) {
+        if (property_exists($this, $name)) {
+            return $this->{$name};
+        }
+
+        return null;
     }
 
     /**

@@ -22,6 +22,7 @@ class Passport implements \ArrayAccess {
     public         $avatar              = '';
     public         $isLogin             = false;
     public         $data                = [];
+    public         $meta                = [];# 元数据
     public         $error               = null;//错误信息.
     public         $isSuperUser         = false;
     private static $INSTANCES           = [];
@@ -314,6 +315,8 @@ class Passport implements \ArrayAccess {
             return $this->{$name};
         } else if (isset($this->data[ $name ])) {
             return $this->data[ $name ];
+        } else if (isset($this->meta[ $name ])) {
+            return $this->meta[ $name ];
         }
 
         return null;

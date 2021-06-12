@@ -15,7 +15,7 @@ class SimpleTable extends Table {
      * @param string                          $table
      * @param string|array|DatabaseConnection $db
      *
-     * @throws \InvalidArgumentException|\wulaphp\db\DialectException
+     * @throws \InvalidArgumentException
      */
     public function __construct(string $table, $db = null) {
         if (empty($table)) {
