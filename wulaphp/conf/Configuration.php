@@ -28,9 +28,9 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
 
     public function setConfigs($settings) {
         if ($settings instanceof Configuration) {
-            $this->settings = array_merge($this->settings, $settings->settings);
+            ary_deep_merge($this->settings, $settings->settings);
         } else if ($settings && is_array($settings)) {
-            $this->settings = array_merge($this->settings, $settings);
+            ary_deep_merge($this->settings, $settings);
         }
     }
 
@@ -71,7 +71,7 @@ class Configuration implements \ArrayAccess, \IteratorAggregate {
             }
         }
 
-        return isset($setting [ $lname ]) ? $setting [ $lname ] : $default;
+        return $setting [ $lname ] ?? $default;
     }
 
     /**

@@ -447,15 +447,39 @@ function http_send($sock, array $request, ?int &$size = 0) {
 /**
  * 输出http响应输出。
  *
- * @param string|int $status 状态
- * @param string     $message
+ * @param int    $status 状态
+ * @param string $message
  */
-function http_out($status, $message = '') {
+function http_out(int $status, string $message = '') {
     http_response_code($status);
     if ($message) {
         echo $message;
     }
     exit();
+}
+
+/**
+ * 深度合并
+ *
+ * @param array $old
+ * @param array $settings
+ *
+ * @author Leo Ning <windywany@gmail.com>
+ * @date   2021-06-15 18:01:25
+ * @since  1.0.0
+ */
+function ary_deep_merge(array &$old, array $settings) {
+    foreach ($settings as $key => $setting) {
+        if (is_array($setting)) {
+            if (isset($old[ $key ])) {
+                ary_deep_merge($old[ $key ], $setting);
+            } else {
+                $old[ $key ] = $setting;
+            }
+        } else {
+            $old[ $key ] = $setting;
+        }
+    }
 }
 
 /**
