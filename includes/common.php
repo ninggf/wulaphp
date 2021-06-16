@@ -469,6 +469,11 @@ function http_out(int $status, string $message = '') {
  * @since  1.0.0
  */
 function ary_deep_merge(array &$old, array $settings) {
+    if (empty($old)) {
+        $old = $settings;
+
+        return;
+    }
     foreach ($settings as $key => $setting) {
         if (is_array($setting)) {
             if (isset($old[ $key ])) {
