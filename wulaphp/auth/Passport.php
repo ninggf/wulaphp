@@ -115,11 +115,10 @@ class Passport implements \ArrayAccess {
     }
 
     public function __wakeup() {
-        if ($this->restore()) {
-            try {
-                fire('passport\restore' . ucfirst($this->type) . 'Passport', $this);
-            } catch (\Exception $e) {
-            }
+        $this->data['restored'] = $this->restore();
+        try {
+            fire('passport\restore' . ucfirst($this->type) . 'Passport', $this);
+        } catch (\Exception $e) {
         }
         $this->store();
     }
