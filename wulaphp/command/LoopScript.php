@@ -9,7 +9,7 @@
  */
 
 namespace wulaphp\command;
-pcntl_async_signals(true);
+function_exists('pcntl_async_signals') && pcntl_async_signals(true);
 
 /**
  * 后台死循环脚本，可以通过输入"@shutdown@"停止。
@@ -28,15 +28,17 @@ abstract class LoopScript {
      * 启动脚本
      */
     public function start() {
-        if (!@stream_set_blocking(STDIN, 0)) {
+        if (function_exists('stream_set_blocking') && !@stream_set_blocking(STDIN, 0)) {
             echo 'cannot set STDIN to noblock mode';
             exit(1); // 退出，不会被拉起
         }
         if ($this->setUp()) {
-            $signals = [SIGTERM, SIGINT, SIGHUP, SIGUSR1, SIGTSTP, SIGTTOU];
-            $onSig   = \Closure::fromCallable([$this, 'onSignal']);
-            foreach (array_unique($signals) as $signal) {
-                @pcntl_signal($signal, $onSig);
+            if (function_exists('pcntl_signal')) {
+                $signals = [SIGTERM, SIGINT, SIGHUP, SIGUSR1, SIGTSTP, SIGTTOU];
+                $onSig   = \Closure::fromCallable([$this, 'onSignal']);
+                foreach (array_unique($signals) as $signal) {
+                    @pcntl_signal($signal, $onSig);
+                }
             }
             while ($this->running) {
                 try {
