@@ -115,12 +115,13 @@ class Passport implements \ArrayAccess {
     }
 
     public function __wakeup() {
-        $this->restore();
-        try {
-            fire('passport\restore' . ucfirst($this->type) . 'Passport', $this);
-        } catch (\Exception $e) {
-
+        if ($this->restore()) {
+            try {
+                fire('passport\restore' . ucfirst($this->type) . 'Passport', $this);
+            } catch (\Exception $e) {
+            }
         }
+        $this->store();
     }
 
     /**
@@ -302,8 +303,10 @@ class Passport implements \ArrayAccess {
     /**
      * 从session中恢复后调用。
      * 可以用来更新需要实时修改的数据。
+     * @return bool 如果返回false将不会触发勾子
      */
     protected function restore() {
+        return false;
     }
 
     public final function __toString() {
